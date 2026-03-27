@@ -50,6 +50,15 @@ Sub-goals:
 - [x] G4.4: Frontend — Side-by-side branch comparison dashboard
 - [x] G4.5: Backend + Frontend — "What-if" injection (add new info, re-run from injection point)
 
+### G5: Autonomous Strategy Optimizer
+_Status: Complete | Added: 2026-03-27_
+Autoresearch-inspired loop that autonomously proposes, tests, and refines decision strategies.
+
+Sub-goals:
+- [x] G5.1: Backend — autonomous_lab.py service (propose → simulate → evaluate → iterate loop)
+- [x] G5.2: Backend — /auto/start, /auto/status, /auto/stop API endpoints
+- [x] G5.3: Frontend — Goal input, iteration config, live progress with KEEP/DISCARD verdicts
+
 ## Completed Goals
 
 ## Goal Log
