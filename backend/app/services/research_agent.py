@@ -84,12 +84,20 @@ def _generate_search_queries(topic: str) -> List[str]:
     """Use LLM to generate targeted search queries for a topic."""
     client = create_llm_client()
     prompt = SEARCH_PLAN_PROMPT.format(topic=topic)
-    response = client.chat_json(
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.3,
-    )
-    if isinstance(response, list):
-        return [str(q) for q in response[:8]]
+    try:
+        response = client.chat_json(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+        )
+        # Handle both list and dict-with-list responses
+        if isinstance(response, list):
+            return [str(q) for q in response[:8]]
+        if isinstance(response, dict):
+            for key in ("queries", "search_queries", "results"):
+                if key in response and isinstance(response[key], list):
+                    return [str(q) for q in response[key][:8]]
+    except Exception as err:
+        logger.warning(f"LLM query generation failed: {err}")
     return [topic]
 
 
@@ -101,15 +109,16 @@ def _search_ddg(queries: List[str], max_results_per_query: int = 5) -> List[Dict
     for query in queries:
         try:
             with DDGS() as ddgs:
-                results = list(ddgs.text(query, max_results=max_results_per_query))
+                # Use news endpoint for better English results globally
+                results = list(ddgs.news(query, region="wt-wt", max_results=max_results_per_query))
             for result in results:
-                url = result.get("href", "")
+                url = result.get("url", "") or result.get("href", "")
                 if url and url not in seen_urls:
                     seen_urls.add(url)
                     all_results.append({
                         "url": url,
                         "title": result.get("title", ""),
-                        "snippet": result.get("body", ""),
+                        "snippet": result.get("body", "") or result.get("excerpt", ""),
                         "query": query,
                     })
         except Exception as search_err:
@@ -136,6 +145,11 @@ def _rank_results(topic: str, results: List[Dict], max_keep: int = 10) -> List[D
             messages=[{"role": "user", "content": prompt}],
             temperature=0.1,
         )
+        if isinstance(ranked, dict):
+            for key in ("results", "rankings", "ranked"):
+                if key in ranked and isinstance(ranked[key], list):
+                    ranked = ranked[key]
+                    break
         if isinstance(ranked, list):
             scored_urls = {item["url"]: item.get("score", 0) for item in ranked if isinstance(item, dict)}
             for result in results:
