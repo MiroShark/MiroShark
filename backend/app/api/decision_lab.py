@@ -16,6 +16,7 @@ from ..services.decision_lab_manager import (
     run_all_branches,
     get_lab_status_detail,
 )
+from ..services.consequence_extractor import extract_consequences
 from ..utils.logger import get_logger
 
 logger = get_logger("miroshark.api.decision_lab")
@@ -183,6 +184,34 @@ def run_lab(lab_id: str):
         return jsonify({"success": False, "error": str(val_err)}), 400
     except Exception as exc:
         logger.error(f"Failed to run lab: {exc}")
+        return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
+
+
+@decision_lab_bp.route("/<lab_id>/consequences/<branch_id>", methods=["GET"])
+def get_consequences(lab_id: str, branch_id: str):
+    """
+    Extract consequence tree for a completed branch simulation.
+    Returns a hierarchical causal chain with unintended consequences flagged.
+    """
+    try:
+        lab = DecisionLabManager.get_lab(lab_id)
+        if not lab:
+            return jsonify({"success": False, "error": f"Lab not found: {lab_id}"}), 404
+
+        branch = next((b for b in lab.branches if b.branch_id == branch_id), None)
+        if not branch:
+            return jsonify({"success": False, "error": f"Branch not found: {branch_id}"}), 404
+        if not branch.simulation_id:
+            return jsonify({"success": False, "error": "Branch has no simulation"}), 400
+
+        tree = extract_consequences(
+            simulation_id=branch.simulation_id,
+            decision_text=branch.decision_text,
+        )
+        return jsonify({"success": True, "data": tree.to_dict()})
+
+    except Exception as exc:
+        logger.error(f"Failed to extract consequences: {exc}")
         return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
 
 

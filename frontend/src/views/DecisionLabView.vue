@@ -109,7 +109,20 @@
               <span v-if="branch.reddit_actions">Reddit: {{ branch.reddit_actions }}</span>
             </div>
             <div v-if="branch.error" class="progress-error">{{ branch.error }}</div>
+            <button
+              v-if="branch.status === 'completed' && branch.simulation_id"
+              class="consequence-btn"
+              @click="loadConsequences(branch)"
+            >
+              View Consequence Tree
+            </button>
           </div>
+        </div>
+
+        <!-- Consequence Tree -->
+        <div v-if="activeConsequenceTree" class="consequence-section">
+          <h2 class="section-label">Consequence Tree — {{ activeConsequenceBranch }}</h2>
+          <ConsequenceTree :tree-data="activeConsequenceTree" :loading="loadingConsequences" />
         </div>
       </section>
     </main>
@@ -124,6 +137,8 @@ import {
   createLab, getLab, listLabs, addBranch, removeBranch,
   prepareLab, runLab, getLabStatus
 } from '../api/decisionLab'
+import ConsequenceTree from '../components/ConsequenceTree.vue'
+import service from '../api/index'
 
 const route = useRoute()
 const router = useRouter()
@@ -138,6 +153,27 @@ const running = ref(false)
 const newBranchLabel = ref('')
 const newBranchText = ref('')
 const branchDetails = ref([])
+
+const activeConsequenceTree = ref(null)
+const activeConsequenceBranch = ref('')
+const loadingConsequences = ref(false)
+
+const loadConsequences = async (branch) => {
+  loadingConsequences.value = true
+  activeConsequenceBranch.value = branch.label
+  activeConsequenceTree.value = null
+  try {
+    const res = await service({
+      url: `/api/decision-lab/${lab.value.lab_id}/consequences/${branch.branch_id}`,
+      method: 'get'
+    })
+    if (res.success) {
+      activeConsequenceTree.value = res.data
+    }
+  } finally {
+    loadingConsequences.value = false
+  }
+}
 
 let pollTimer = null
 
@@ -553,6 +589,29 @@ onUnmounted(stopPolling)
   font-size: 11px;
   color: #c62828;
   margin-top: 4px;
+}
+
+.consequence-btn {
+  margin-top: 8px;
+  width: 100%;
+  background: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+}
+.consequence-btn:hover { background: #e0e0e0; }
+
+.consequence-section {
+  margin-top: 24px;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  padding: 16px;
+  min-height: 400px;
 }
 
 .branch-progress-list {
