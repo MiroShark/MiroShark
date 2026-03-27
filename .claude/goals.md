@@ -29,15 +29,15 @@ Sub-goals:
 - [ ] G2.5: Add real health checks (Neo4j + Ollama)
 
 ### G3: Build Decision Lab — Foundation
-_Status: Not Started | Added: 2026-03-27_
+_Status: Complete | Added: 2026-03-27_
 Create the Decision Lab page with scenario setup, multi-branch definition, and parallel simulation execution.
 
 Sub-goals:
-- [ ] G3.1: Backend — Decision Lab API blueprint + data model (lab_id, branches, decision_text)
-- [ ] G3.2: Backend — Branch config generator (inject decision text into simulation config)
-- [ ] G3.3: Backend — Parallel branch runner (orchestrate 2-3 concurrent simulations)
-- [ ] G3.4: Frontend — Decision Lab page with scenario builder + branch definition UI
-- [ ] G3.5: Frontend — Branch monitoring dashboard (parallel progress tracking)
+- [x] G3.1: Backend — Decision Lab API blueprint + data model (lab_id, branches, decision_text)
+- [x] G3.2: Backend — Branch config generator (inject decision text into simulation config)
+- [x] G3.3: Backend — Parallel branch runner (orchestrate 2-3 concurrent simulations)
+- [x] G3.4: Frontend — Decision Lab page with scenario builder + branch definition UI
+- [x] G3.5: Frontend — Branch monitoring dashboard (parallel progress tracking)
 
 ### G4: Build Decision Lab — Consequence Engine
 _Status: Not Started | Added: 2026-03-27_
@@ -55,6 +55,7 @@ Sub-goals:
 ## Goal Log
 <!-- Append-only log of goal evolution. Newest at top. -->
 <!-- Format: {date} | {action} | {details} -->
+2026-03-27 | completed | G3: Decision Lab — Foundation (all 5 sub-goals)
 2026-03-27 | added | G4: Decision Lab — Consequence Engine
 2026-03-27 | added | G3: Decision Lab — Foundation
 2026-03-27 | restructured | G2: renamed from "Explore codebase" to "Harden base platform" — exploration done via audit
