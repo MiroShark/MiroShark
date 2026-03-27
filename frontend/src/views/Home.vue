@@ -4,8 +4,11 @@
     <nav class="navbar">
       <div class="nav-brand">MIROSHARK</div>
       <div class="nav-links">
+        <router-link to="/decision-lab/new" class="github-link">
+          Decision Lab <span class="arrow">↗</span>
+        </router-link>
         <a href="https://github.com/aaronjmars/MiroShark" target="_blank" class="github-link">
-          Visit Our GitHub Homepage <span class="arrow">↗</span>
+          GitHub <span class="arrow">↗</span>
         </a>
       </div>
     </nav>

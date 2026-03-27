@@ -5,12 +5,19 @@ import SimulationView from '../views/SimulationView.vue'
 import SimulationRunView from '../views/SimulationRunView.vue'
 import ReportView from '../views/ReportView.vue'
 import InteractionView from '../views/InteractionView.vue'
+import DecisionLabView from '../views/DecisionLabView.vue'
 
 const routes = [
   {
     path: '/',
     name: 'Home',
     component: Home
+  },
+  {
+    path: '/decision-lab/:labId?',
+    name: 'DecisionLab',
+    component: DecisionLabView,
+    props: true
   },
   {
     path: '/process/:projectId',

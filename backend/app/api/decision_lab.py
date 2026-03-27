@@ -6,9 +6,16 @@ Manages decision labs with parallel simulation branches for comparative analysis
 import traceback
 from flask import request, jsonify
 
+from flask import current_app
+
 from . import decision_lab_bp
 from ..models.decision_lab import DecisionLabManager, LabStatus, BranchStatus
 from ..models.project import ProjectManager
+from ..services.decision_lab_manager import (
+    prepare_all_branches,
+    run_all_branches,
+    get_lab_status_detail,
+)
 from ..utils.logger import get_logger
 
 logger = get_logger("miroshark.api.decision_lab")
@@ -131,21 +138,52 @@ def remove_branch(lab_id: str, branch_id: str):
 
 @decision_lab_bp.route("/<lab_id>/status", methods=["GET"])
 def get_lab_status(lab_id: str):
-    """Get aggregated status of all branches in a lab."""
-    lab = DecisionLabManager.get_lab(lab_id)
-    if not lab:
+    """Get detailed status including per-branch simulation progress."""
+    detail = get_lab_status_detail(lab_id)
+    if not detail:
         return jsonify({"success": False, "error": f"Lab not found: {lab_id}"}), 404
+    return jsonify({"success": True, "data": detail})
 
-    branch_statuses = [b.to_dict() for b in lab.branches]
-    return jsonify({
-        "success": True,
-        "data": {
-            "lab_id": lab.lab_id,
-            "status": lab.status.value if isinstance(lab.status, LabStatus) else lab.status,
-            "branches": branch_statuses,
-            "total_branches": len(lab.branches),
-        },
-    })
+
+@decision_lab_bp.route("/<lab_id>/prepare", methods=["POST"])
+def prepare_lab(lab_id: str):
+    """
+    Prepare all branches (generate profiles + configs) in parallel.
+    Returns immediately — poll /status for progress.
+    """
+    try:
+        storage = current_app.extensions.get("neo4j_storage")
+        if not storage:
+            return jsonify({"success": False, "error": "Neo4j storage not initialized"}), 503
+        prepare_all_branches(lab_id, storage)
+        logger.info(f"Started preparation for lab {lab_id}")
+        return jsonify({"success": True, "data": {"lab_id": lab_id, "message": "Preparation started"}})
+    except ValueError as val_err:
+        return jsonify({"success": False, "error": str(val_err)}), 400
+    except Exception as exc:
+        logger.error(f"Failed to prepare lab: {exc}")
+        return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
+
+
+@decision_lab_bp.route("/<lab_id>/run", methods=["POST"])
+def run_lab(lab_id: str):
+    """
+    Start simulations for all ready branches in parallel.
+
+    Request (JSON, optional):
+        { "max_rounds": 72 }
+    """
+    try:
+        data = request.get_json() or {}
+        max_rounds = data.get("max_rounds", 72)
+        run_all_branches(lab_id, max_rounds=max_rounds)
+        logger.info(f"Started simulations for lab {lab_id}")
+        return jsonify({"success": True, "data": {"lab_id": lab_id, "message": "Simulations started"}})
+    except ValueError as val_err:
+        return jsonify({"success": False, "error": str(val_err)}), 400
+    except Exception as exc:
+        logger.error(f"Failed to run lab: {exc}")
+        return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
 
 
 @decision_lab_bp.route("/<lab_id>", methods=["DELETE"])
