@@ -40,21 +40,22 @@ Sub-goals:
 - [x] G3.5: Frontend — Branch monitoring dashboard (parallel progress tracking)
 
 ### G4: Build Decision Lab — Consequence Engine
-_Status: Not Started | Added: 2026-03-27_
+_Status: Complete | Added: 2026-03-27_
 Extract causal consequence trees from simulation results and build comparison/injection UI.
 
 Sub-goals:
-- [ ] G4.1: Backend — Consequence extractor service (3-stage: event graph → LLM scoring → tree construction)
-- [ ] G4.2: Backend — Branch comparison metrics (sentiment, agent stance shifts, divergence points)
-- [ ] G4.3: Frontend — Consequence tree visualization (D3.js horizontal collapsible tree)
-- [ ] G4.4: Frontend — Side-by-side branch comparison dashboard
-- [ ] G4.5: Backend + Frontend — "What-if" injection (add new info, re-run from injection point)
+- [x] G4.1: Backend — Consequence extractor service (3-stage: event graph → LLM scoring → tree construction)
+- [x] G4.2: Backend — Branch comparison metrics (posts, comments, engagement, net sentiment, top posters)
+- [x] G4.3: Frontend — Consequence tree visualization (D3.js horizontal collapsible tree)
+- [x] G4.4: Frontend — Side-by-side branch comparison dashboard
+- [x] G4.5: Backend + Frontend — "What-if" injection (add new info, re-run from injection point)
 
 ## Completed Goals
 
 ## Goal Log
 <!-- Append-only log of goal evolution. Newest at top. -->
 <!-- Format: {date} | {action} | {details} -->
+2026-03-27 | completed | G4: Decision Lab — Consequence Engine (all 5 sub-goals)
 2026-03-27 | completed | G3: Decision Lab — Foundation (all 5 sub-goals)
 2026-03-27 | added | G4: Decision Lab — Consequence Engine
 2026-03-27 | added | G3: Decision Lab — Foundation
