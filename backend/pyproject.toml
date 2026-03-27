@@ -12,29 +12,24 @@ dependencies = [
     # Core framework
     "flask>=3.0.0",
     "flask-cors>=6.0.0",
-
     # LLM related
     "openai>=1.0.0",
-
     # Neo4j
     "neo4j>=5.15.0",
-
     # HTTP requests (for Ollama embedding API)
     "requests>=2.31.0",
-
     # OASIS social media simulation
     "camel-oasis==0.2.5",
     "camel-ai==0.2.78",
-
     # File processing
     "PyMuPDF>=1.24.0",
     # Encoding detection (supports non-UTF-8 encoded text files)
     "charset-normalizer>=3.0.0",
     "chardet>=5.0.0",
-
     # Utility libraries
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
+    "duckduckgo-search>=8.1.1",
 ]
 
 [project.optional-dependencies]

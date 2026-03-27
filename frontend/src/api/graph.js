@@ -68,3 +68,19 @@ export function getProject(projectId) {
     method: 'get'
   })
 }
+
+/**
+ * Research a topic — LLM generates search queries, fetches web sources
+ * @param {String} topic - Topic to research
+ * @param {Number} maxSources - Max sources to fetch (default 10)
+ * @returns {Promise}
+ */
+export function researchTopic(topic, maxSources = 10) {
+  return requestWithRetry(() =>
+    service({
+      url: '/api/graph/research',
+      method: 'post',
+      data: { topic, max_sources: maxSources }
+    })
+  )
+}

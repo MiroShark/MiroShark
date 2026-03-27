@@ -176,10 +176,35 @@
                   class="code-input url-input"
                   placeholder="https://example.com/article-about-iran-conflict&#10;https://example.com/policy-analysis.pdf&#10;https://example.com/another-source"
                   rows="4"
-                  :disabled="loading"
+                  :disabled="loading || researching"
                 ></textarea>
                 <div class="url-count" v-if="urlCount > 0">{{ urlCount }} URL{{ urlCount > 1 ? 's' : '' }}</div>
               </div>
+            </div>
+
+            <!-- Topic Research -->
+            <div class="console-section">
+              <div class="console-header">
+                <span class="console-label">or / Research a Topic</span>
+                <span class="console-meta">AI finds and gathers relevant sources automatically</span>
+              </div>
+              <div class="research-row">
+                <input
+                  v-model="researchTopic"
+                  class="code-input research-input"
+                  placeholder="e.g. Iran nuclear conflict 2026"
+                  :disabled="loading || researching"
+                  @keydown.enter="handleResearch"
+                />
+                <button
+                  class="research-btn"
+                  @click="handleResearch"
+                  :disabled="!researchTopic.trim() || researching"
+                >
+                  {{ researching ? 'Searching...' : 'Research' }}
+                </button>
+              </div>
+              <div v-if="researchStatus" class="research-status">{{ researchStatus }}</div>
             </div>
 
             <!-- Divider -->
@@ -235,6 +260,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import HistoryDatabase from '../components/HistoryDatabase.vue'
+import { researchTopic as apiResearchTopic } from '../api/graph'
 
 const router = useRouter()
 
@@ -254,6 +280,35 @@ const isDragOver = ref(false)
 
 // File input ref
 const fileInput = ref(null)
+
+// Research state
+const researchTopic = ref('')
+const researching = ref(false)
+const researchStatus = ref('')
+
+const handleResearch = async () => {
+  if (!researchTopic.value.trim() || researching.value) return
+  researching.value = true
+  researchStatus.value = 'Generating search queries...'
+  try {
+    const res = await apiResearchTopic(researchTopic.value.trim())
+    if (res.success && res.data) {
+      const urls = res.data.urls || ''
+      if (urls) {
+        formData.value.urls = formData.value.urls
+          ? formData.value.urls + '\n' + urls
+          : urls
+      }
+      researchStatus.value = `Found ${res.data.fetched_count} sources (${Math.round(res.data.total_chars / 1000)}k chars)`
+    } else {
+      researchStatus.value = 'Research failed: ' + (res.error || 'Unknown error')
+    }
+  } catch (err) {
+    researchStatus.value = 'Research failed: ' + err.message
+  } finally {
+    researching.value = false
+  }
+}
 
 // Computed: count valid URLs
 const urlCount = computed(() => {
@@ -799,6 +854,44 @@ const startSimulation = () => {
   cursor: pointer;
   font-size: 1.2rem;
   color: #999;
+}
+
+.research-row {
+  display: flex;
+  gap: 8px;
+}
+
+.research-input {
+  flex: 1;
+  border: 1px solid #DDD;
+  background: #FAFAFA;
+  padding: 12px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.research-btn {
+  background: var(--black);
+  color: var(--white);
+  border: none;
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+}
+
+.research-btn:hover:not(:disabled) { opacity: 0.8; }
+.research-btn:disabled { background: #CCC; cursor: not-allowed; }
+
+.research-status {
+  margin-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--orange);
+  font-weight: 500;
 }
 
 .url-input-wrapper {

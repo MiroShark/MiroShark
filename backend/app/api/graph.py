@@ -16,6 +16,7 @@ from ..services.ontology_generator import OntologyGenerator
 from ..services.graph_builder import GraphBuilderService
 from ..services.text_processor import TextProcessor
 from ..utils.file_parser import FileParser, fetch_url_text
+from ..services.research_agent import research_topic
 from ..utils.logger import get_logger
 from ..models.task import TaskManager, TaskStatus
 from ..models.project import ProjectManager, ProjectStatus
@@ -488,6 +489,60 @@ def get_task(task_id: str):
         "success": True,
         "data": task.to_dict()
     })
+
+
+# ============== Topic Research API ==============
+
+@graph_bp.route('/research', methods=['POST'])
+def research():
+    """
+    Research a topic: LLM generates search queries, fetches web results,
+    and returns gathered URLs and content for use in simulation.
+
+    Request (JSON):
+        {
+            "topic": "Iran nuclear conflict escalation",
+            "max_sources": 10
+        }
+
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "topic": "...",
+                "queries": ["query1", "query2"],
+                "results": [{"url": "...", "title": "...", "text_length": 1234}],
+                "total_chars": 50000,
+                "fetched_count": 8,
+                "urls": "url1\\nurl2\\n..."
+            }
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        topic = data.get('topic', '').strip()
+        if not topic:
+            return jsonify({"success": False, "error": "topic is required"}), 400
+
+        max_sources = data.get('max_sources', 10)
+        logger.info(f"Starting topic research: {topic}")
+
+        report = research_topic(topic, max_sources=max_sources)
+        result = report.to_dict()
+
+        fetched_urls = [r.url for r in report.results if r.text]
+        result["urls"] = "\n".join(fetched_urls)
+
+        logger.info(f"Research complete: {result['fetched_count']} sources, {result['total_chars']} chars")
+        return jsonify({"success": True, "data": result})
+
+    except Exception as exc:
+        logger.error(f"Research failed: {exc}")
+        return jsonify({
+            "success": False,
+            "error": str(exc),
+            "traceback": traceback.format_exc()
+        }), 500
 
 
 # ============== Graph Data APIs ==============
