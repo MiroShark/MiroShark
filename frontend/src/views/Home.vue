@@ -161,6 +161,24 @@
               </div>
             </div>
 
+            <!-- URL Input Area -->
+            <div class="console-section">
+              <div class="console-header">
+                <span class="console-label">or / Paste URLs</span>
+                <span class="console-meta">One URL per line — articles, reports, PDFs</span>
+              </div>
+              <div class="input-wrapper url-input-wrapper">
+                <textarea
+                  v-model="formData.urls"
+                  class="code-input url-input"
+                  placeholder="https://example.com/article-about-iran-conflict&#10;https://example.com/policy-analysis.pdf&#10;https://example.com/another-source"
+                  rows="4"
+                  :disabled="loading"
+                ></textarea>
+                <div class="url-count" v-if="urlCount > 0">{{ urlCount }} URL{{ urlCount > 1 ? 's' : '' }}</div>
+              </div>
+            </div>
+
             <!-- Divider -->
             <div class="console-divider">
               <span>Input Parameters</span>
@@ -219,7 +237,8 @@ const router = useRouter()
 
 // Form data
 const formData = ref({
-  simulationRequirement: ''
+  simulationRequirement: '',
+  urls: ''
 })
 
 // File list
@@ -233,9 +252,18 @@ const isDragOver = ref(false)
 // File input ref
 const fileInput = ref(null)
 
-// Computed: whether the form can be submitted
+// Computed: count valid URLs
+const urlCount = computed(() => {
+  if (!formData.value.urls.trim()) return 0
+  return formData.value.urls.split('\n').filter(u => u.trim().startsWith('http')).length
+})
+
+// Computed: whether the form can be submitted (need files OR urls, plus a requirement)
 const canSubmit = computed(() => {
-  return formData.value.simulationRequirement.trim() !== '' && files.value.length > 0
+  const hasRequirement = formData.value.simulationRequirement.trim() !== ''
+  const hasFiles = files.value.length > 0
+  const hasUrls = urlCount.value > 0
+  return hasRequirement && (hasFiles || hasUrls)
 })
 
 // Trigger file selection
@@ -298,7 +326,7 @@ const startSimulation = () => {
   
   // Store data pending upload
   import('../store/pendingUpload.js').then(({ setPendingUpload }) => {
-    setPendingUpload(files.value, formData.value.simulationRequirement)
+    setPendingUpload(files.value, formData.value.simulationRequirement, formData.value.urls)
     
     // Navigate immediately to Process page (using special identifier for new project)
     router.push({
@@ -768,6 +796,25 @@ const startSimulation = () => {
   cursor: pointer;
   font-size: 1.2rem;
   color: #999;
+}
+
+.url-input-wrapper {
+  position: relative;
+}
+
+.url-input {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.url-count {
+  position: absolute;
+  bottom: 10px;
+  right: 15px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--orange);
+  font-weight: 600;
 }
 
 .console-divider {

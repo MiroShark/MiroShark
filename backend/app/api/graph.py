@@ -15,7 +15,7 @@ from ..config import Config
 from ..services.ontology_generator import OntologyGenerator
 from ..services.graph_builder import GraphBuilderService
 from ..services.text_processor import TextProcessor
-from ..utils.file_parser import FileParser
+from ..utils.file_parser import FileParser, fetch_url_text
 from ..utils.logger import get_logger
 from ..models.task import TaskManager, TaskStatus
 from ..models.project import ProjectManager, ProjectStatus
@@ -101,12 +101,14 @@ def generate_ontology():
                 "error": "Please provide a simulation requirement description (simulation_requirement)"
             }), 400
         
-        # Get uploaded files
+        # Get uploaded files and URLs
         uploaded_files = request.files.getlist('files')
-        if not uploaded_files or all(not f.filename for f in uploaded_files):
+        has_files = uploaded_files and any(f.filename for f in uploaded_files)
+        has_urls = bool(request.form.get('urls', '').strip())
+        if not has_files and not has_urls:
             return jsonify({
                 "success": False,
-                "error": "Please upload at least one document file"
+                "error": "Please upload at least one document file or provide URLs"
             }), 400
         
         # Create project
@@ -137,11 +139,32 @@ def generate_ontology():
                 document_texts.append(text)
                 all_text += f"\n\n=== {file_info['original_filename']} ===\n{text}"
         
+        # Process URLs if provided
+        urls_raw = request.form.get('urls', '')
+        if urls_raw:
+            url_list = [u.strip() for u in urls_raw.splitlines() if u.strip()]
+            for url in url_list:
+                try:
+                    logger.info(f"Fetching URL: {url}")
+                    text = fetch_url_text(url)
+                    text = TextProcessor.preprocess_text(text)
+                    if text.strip():
+                        document_texts.append(text)
+                        domain = url.split('/')[2] if len(url.split('/')) > 2 else url
+                        all_text += f"\n\n=== URL: {domain} ===\n{text}"
+                        project.files.append({
+                            "filename": url,
+                            "size": len(text)
+                        })
+                        logger.info(f"URL fetched successfully: {len(text)} chars")
+                except Exception as url_err:
+                    logger.warning(f"Failed to fetch URL {url}: {url_err}")
+
         if not document_texts:
             ProjectManager.delete_project(project.project_id)
             return jsonify({
                 "success": False,
-                "error": "No documents were successfully processed, please check file formats"
+                "error": "No documents were successfully processed, please check file formats or URLs"
             }), 400
         
         # Save extracted text

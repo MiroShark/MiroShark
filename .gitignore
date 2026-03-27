@@ -1,60 +1,30 @@
-# OS
-.DS_Store
-Thumbs.db
+# Dependencies
+node_modules/
 
-# Environment variables (protect sensitive information)
+# Environment
 .env
-.env.local
-.env.*.local
-.env.development
-.env.test
-.env.production
 
 # Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-.venv/
-venv/
-ENV/
-.eggs/
-*.egg-info/
-dist/
-build/
+*.pyc
+*.pyo
+backend/.venv/
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# Runtime data
+backend/logs/
+backend/uploads/
 
 # IDE
 .vscode/
 .idea/
-*.swp
-*.swo
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
+# Build output
+frontend/dist/
 
-# Cursor
-.cursor/
-.claude/
+# Claude harness
+.claude/settings.local.json
+.claude/*.lock
 
-# Documentation and test programs
-mydoc/
-mytest/
-
-# Log files
-backend/logs/
-*.log
-
-# Uploaded files
-backend/uploads/
-
-# Docker data
-data/
+# Legacy webapp copy
+webapp/
+backend/webapp/
