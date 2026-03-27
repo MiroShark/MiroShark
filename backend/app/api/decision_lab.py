@@ -18,6 +18,7 @@ from ..services.decision_lab_manager import (
 )
 from ..services.consequence_extractor import extract_consequences
 from ..services.branch_comparison import compare_branches
+from ..services.autonomous_lab import start_auto_lab, get_auto_state, stop_auto_lab
 from ..utils.logger import get_logger
 
 logger = get_logger("miroshark.api.decision_lab")
@@ -286,6 +287,63 @@ def inject_info(lab_id: str):
     except Exception as exc:
         logger.error(f"Failed to inject info: {exc}")
         return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
+
+
+@decision_lab_bp.route("/<lab_id>/auto/start", methods=["POST"])
+def start_auto(lab_id: str):
+    """
+    Start autonomous strategy optimization.
+    LLM proposes, tests, and refines branches iteratively.
+
+    Request (JSON):
+        {
+            "goal": "Find the decision that minimizes escalation risk",
+            "max_iterations": 5,
+            "max_rounds_per_sim": 20,
+            "branches_per_iteration": 3
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        goal = data.get("goal", "").strip()
+        if not goal:
+            return jsonify({"success": False, "error": "goal is required"}), 400
+
+        storage = current_app.extensions.get("neo4j_storage")
+        if not storage:
+            return jsonify({"success": False, "error": "Neo4j storage not initialized"}), 503
+
+        state = start_auto_lab(
+            lab_id=lab_id,
+            goal=goal,
+            storage=storage,
+            max_iterations=data.get("max_iterations", 5),
+            max_rounds_per_sim=data.get("max_rounds_per_sim", 20),
+            branches_per_iteration=data.get("branches_per_iteration", 3),
+        )
+        return jsonify({"success": True, "data": state.to_dict()})
+
+    except Exception as exc:
+        logger.error(f"Failed to start auto lab: {exc}")
+        return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
+
+
+@decision_lab_bp.route("/<lab_id>/auto/status", methods=["GET"])
+def auto_status(lab_id: str):
+    """Get autonomous optimization status and results."""
+    state = get_auto_state(lab_id)
+    if not state:
+        return jsonify({"success": False, "error": "No autonomous run found for this lab"}), 404
+    return jsonify({"success": True, "data": state.to_dict()})
+
+
+@decision_lab_bp.route("/<lab_id>/auto/stop", methods=["POST"])
+def stop_auto(lab_id: str):
+    """Stop a running autonomous optimization."""
+    stopped = stop_auto_lab(lab_id)
+    if not stopped:
+        return jsonify({"success": False, "error": "No running auto lab found"}), 404
+    return jsonify({"success": True, "data": {"message": "Auto lab stopping after current iteration"}})
 
 
 @decision_lab_bp.route("/<lab_id>", methods=["DELETE"])

@@ -96,9 +96,59 @@
           </button>
         </div>
 
+        <!-- Autonomous Optimizer -->
+        <div v-if="lab && lab.branches.length >= 1" class="setup-section">
+          <h2 class="section-label">04 / Autonomous Optimizer</h2>
+          <p class="section-desc">Set a goal — AI proposes, tests, and refines strategies overnight.</p>
+          <input
+            v-model="autoGoal"
+            class="text-input"
+            placeholder="e.g. Find the decision that minimizes escalation risk"
+            :disabled="autoRunning"
+          />
+          <div class="auto-config">
+            <label class="input-label">Iterations
+              <input v-model.number="autoIterations" type="number" min="1" max="20" class="num-input" :disabled="autoRunning" />
+            </label>
+            <label class="input-label">Rounds/sim
+              <input v-model.number="autoRounds" type="number" min="5" max="72" class="num-input" :disabled="autoRunning" />
+            </label>
+          </div>
+          <button
+            v-if="!autoRunning"
+            class="action-btn"
+            @click="handleStartAuto"
+            :disabled="!autoGoal.trim()"
+          >
+            Start Autonomous Optimization
+          </button>
+          <button v-else class="action-btn secondary" @click="handleStopAuto">
+            Stop After Current Iteration
+          </button>
+          <div v-if="autoState" class="auto-status">
+            <div class="auto-progress">
+              Iteration {{ autoState.current_iteration }} / {{ autoState.max_iterations }}
+              <span class="auto-status-badge" :class="autoState.status">{{ autoState.status }}</span>
+            </div>
+            <div v-if="autoState.best_strategy" class="auto-best">
+              Best so far: <strong>{{ autoState.best_strategy.label }}</strong>
+              (score {{ autoState.best_strategy.score }}/10)
+              <p class="auto-reasoning">{{ autoState.best_strategy.reasoning }}</p>
+            </div>
+            <div v-for="(result, idx) in autoState.results" :key="idx" class="auto-iteration-card">
+              <div class="auto-iter-header">Iteration {{ result.iteration }}</div>
+              <div v-for="branch in result.branches" :key="branch.label" class="auto-branch-result">
+                <span class="auto-verdict" :class="branch.verdict.toLowerCase()">{{ branch.verdict }}</span>
+                <span class="auto-branch-label">{{ branch.label }}</span>
+                <span class="auto-branch-score">{{ branch.score }}/10</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- What-If Injection -->
         <div v-if="lab && lab.status !== 'created'" class="setup-section">
-          <h2 class="section-label">04 / What-If Injection</h2>
+          <h2 class="section-label">05 / What-If Injection</h2>
           <p class="section-desc">Add new information and re-run to see how outcomes change.</p>
           <textarea
             v-model="injectText"
@@ -219,6 +269,70 @@ const running = ref(false)
 const newBranchLabel = ref('')
 const newBranchText = ref('')
 const branchDetails = ref([])
+
+const autoGoal = ref('')
+const autoIterations = ref(5)
+const autoRounds = ref(20)
+const autoRunning = ref(false)
+const autoState = ref(null)
+let autoPollTimer = null
+
+const handleStartAuto = async () => {
+  autoRunning.value = true
+  try {
+    const res = await service({
+      url: `/api/decision-lab/${lab.value.lab_id}/auto/start`,
+      method: 'post',
+      data: {
+        goal: autoGoal.value.trim(),
+        max_iterations: autoIterations.value,
+        max_rounds_per_sim: autoRounds.value,
+      }
+    })
+    if (res.success) {
+      autoState.value = res.data
+      startAutoPoll()
+    }
+  } catch (_err) {
+    autoRunning.value = false
+  }
+}
+
+const handleStopAuto = async () => {
+  await service({
+    url: `/api/decision-lab/${lab.value.lab_id}/auto/stop`,
+    method: 'post'
+  })
+}
+
+const pollAutoStatus = async () => {
+  if (!lab.value) return
+  try {
+    const res = await service({
+      url: `/api/decision-lab/${lab.value.lab_id}/auto/status`,
+      method: 'get'
+    })
+    if (res.success) {
+      autoState.value = res.data
+      if (res.data.status === 'completed' || res.data.status === 'failed') {
+        autoRunning.value = false
+        stopAutoPoll()
+      }
+    }
+  } catch (_err) { /* silent */ }
+}
+
+const startAutoPoll = () => {
+  stopAutoPoll()
+  autoPollTimer = setInterval(pollAutoStatus, 10000)
+}
+
+const stopAutoPoll = () => {
+  if (autoPollTimer) {
+    clearInterval(autoPollTimer)
+    autoPollTimer = null
+  }
+}
 
 const comparisonData = ref(null)
 const comparing = ref(false)
@@ -403,7 +517,10 @@ onMounted(async () => {
   }
 })
 
-onUnmounted(stopPolling)
+onUnmounted(() => {
+  stopPolling()
+  stopAutoPoll()
+})
 </script>
 
 <style scoped>
@@ -691,6 +808,104 @@ onUnmounted(stopPolling)
   font-size: 11px;
   color: #c62828;
   margin-top: 4px;
+}
+
+.auto-config {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.num-input {
+  width: 60px;
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  border-radius: 4px;
+  margin-left: 6px;
+}
+
+.auto-status {
+  margin-top: 12px;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.auto-progress {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.auto-status-badge {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: 8px;
+  background: #f0f0f0;
+  color: #666;
+}
+.auto-status-badge.running { background: #fff3e0; color: #e65100; }
+.auto-status-badge.completed { background: #e8f5e9; color: #2e7d32; }
+.auto-status-badge.failed { background: #ffebee; color: #c62828; }
+
+.auto-best {
+  background: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.auto-reasoning {
+  font-size: 11px;
+  color: #555;
+  margin-top: 4px;
+}
+
+.auto-iteration-card {
+  border: 1px solid #eaeaea;
+  border-radius: 4px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+
+.auto-iter-header {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: #999;
+  margin-bottom: 6px;
+}
+
+.auto-branch-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 3px 0;
+}
+
+.auto-verdict {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 2px;
+}
+.auto-verdict.keep { background: #e8f5e9; color: #2e7d32; }
+.auto-verdict.discard { background: #ffebee; color: #c62828; }
+
+.auto-branch-label { font-weight: 500; flex: 1; }
+.auto-branch-score {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: #666;
 }
 
 .comparison-section {
