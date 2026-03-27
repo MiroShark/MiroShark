@@ -17,6 +17,7 @@ from ..services.decision_lab_manager import (
     get_lab_status_detail,
 )
 from ..services.consequence_extractor import extract_consequences
+from ..services.branch_comparison import compare_branches
 from ..utils.logger import get_logger
 
 logger = get_logger("miroshark.api.decision_lab")
@@ -212,6 +213,78 @@ def get_consequences(lab_id: str, branch_id: str):
 
     except Exception as exc:
         logger.error(f"Failed to extract consequences: {exc}")
+        return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
+
+
+@decision_lab_bp.route("/<lab_id>/compare", methods=["GET"])
+def compare_lab_branches(lab_id: str):
+    """
+    Compare all branches side-by-side: activity metrics, engagement rates,
+    per-round timelines, top posters.
+    """
+    try:
+        result = compare_branches(lab_id)
+        return jsonify({"success": True, "data": result})
+    except ValueError as val_err:
+        return jsonify({"success": False, "error": str(val_err)}), 400
+    except Exception as exc:
+        logger.error(f"Failed to compare branches: {exc}")
+        return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
+
+
+@decision_lab_bp.route("/<lab_id>/inject", methods=["POST"])
+def inject_info(lab_id: str):
+    """
+    Inject new information into a lab and re-run affected branches.
+
+    Request (JSON):
+        {
+            "info_text": "Russia announces joint military exercises with Iran",
+            "branch_ids": ["branch_xxx"],  // optional — re-run specific branches, or all
+            "max_rounds": 72
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        info_text = data.get("info_text", "").strip()
+        if not info_text:
+            return jsonify({"success": False, "error": "info_text is required"}), 400
+
+        lab = DecisionLabManager.get_lab(lab_id)
+        if not lab:
+            return jsonify({"success": False, "error": f"Lab not found: {lab_id}"}), 404
+
+        branch_ids = data.get("branch_ids") or [b.branch_id for b in lab.branches]
+        max_rounds = data.get("max_rounds", 72)
+
+        for branch in lab.branches:
+            if branch.branch_id in branch_ids:
+                original_text = branch.decision_text
+                branch.decision_text = f"{original_text}\n\nNEW DEVELOPMENT: {info_text}"
+                branch.status = BranchStatus.PENDING
+                branch.simulation_id = None
+                branch.error = None
+
+        lab.status = LabStatus.CREATED
+        DecisionLabManager.save_lab(lab)
+
+        storage = current_app.extensions.get("neo4j_storage")
+        if storage:
+            prepare_all_branches(lab_id, storage)
+
+        logger.info(f"Injected new info into lab {lab_id}, re-preparing {len(branch_ids)} branches")
+        return jsonify({
+            "success": True,
+            "data": {
+                "lab_id": lab_id,
+                "injected_text": info_text,
+                "affected_branches": branch_ids,
+                "message": "Branches re-preparing with new information",
+            },
+        })
+
+    except Exception as exc:
+        logger.error(f"Failed to inject info: {exc}")
         return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
 
 

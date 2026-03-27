@@ -85,6 +85,34 @@
           <div v-if="lab.status === 'running'" class="status-msg">
             Simulations running. See progress on the right.
           </div>
+          <button
+            v-if="lab.status === 'completed' || lab.status === 'running'"
+            class="action-btn secondary"
+            @click="handleCompare"
+            :disabled="comparing"
+            style="margin-top: 8px"
+          >
+            {{ comparing ? 'Comparing...' : 'Compare Branches' }}
+          </button>
+        </div>
+
+        <!-- What-If Injection -->
+        <div v-if="lab && lab.status !== 'created'" class="setup-section">
+          <h2 class="section-label">04 / What-If Injection</h2>
+          <p class="section-desc">Add new information and re-run to see how outcomes change.</p>
+          <textarea
+            v-model="injectText"
+            class="text-area"
+            placeholder="e.g. Russia announces joint military exercises with Iran in the Strait of Hormuz"
+            rows="3"
+          ></textarea>
+          <button
+            class="action-btn"
+            @click="handleInject"
+            :disabled="!injectText.trim() || injecting"
+          >
+            {{ injecting ? 'Injecting...' : 'Inject & Re-run' }}
+          </button>
         </div>
       </section>
 
@@ -116,6 +144,44 @@
             >
               View Consequence Tree
             </button>
+          </div>
+        </div>
+
+        <!-- Comparison Dashboard -->
+        <div v-if="comparisonData" class="comparison-section">
+          <h2 class="section-label">Branch Comparison</h2>
+          <div class="comparison-grid">
+            <div v-for="(metrics, label) in comparisonData.branches" :key="label" class="comparison-card">
+              <div class="comparison-label">{{ label }}</div>
+              <div class="comparison-stats">
+                <div class="comp-stat">
+                  <span class="comp-value">{{ metrics.total_posts }}</span>
+                  <span class="comp-key">Posts</span>
+                </div>
+                <div class="comp-stat">
+                  <span class="comp-value">{{ metrics.total_comments }}</span>
+                  <span class="comp-key">Comments</span>
+                </div>
+                <div class="comp-stat">
+                  <span class="comp-value">{{ metrics.engagement_rate }}</span>
+                  <span class="comp-key">Engagement</span>
+                </div>
+                <div class="comp-stat">
+                  <span class="comp-value">{{ metrics.active_agents }}</span>
+                  <span class="comp-key">Active Agents</span>
+                </div>
+                <div class="comp-stat">
+                  <span class="comp-value">{{ metrics.total_likes - metrics.total_dislikes }}</span>
+                  <span class="comp-key">Net Sentiment</span>
+                </div>
+              </div>
+              <div class="comp-top-posters" v-if="metrics.top_posters?.length">
+                <span class="comp-key">Top posters:</span>
+                <span v-for="([name, count], idx) in metrics.top_posters" :key="idx" class="top-poster">
+                  {{ name }} ({{ count }})
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -153,6 +219,42 @@ const running = ref(false)
 const newBranchLabel = ref('')
 const newBranchText = ref('')
 const branchDetails = ref([])
+
+const comparisonData = ref(null)
+const comparing = ref(false)
+const injectText = ref('')
+const injecting = ref(false)
+
+const handleCompare = async () => {
+  comparing.value = true
+  try {
+    const res = await service({
+      url: `/api/decision-lab/${lab.value.lab_id}/compare`,
+      method: 'get'
+    })
+    if (res.success) comparisonData.value = res.data
+  } finally {
+    comparing.value = false
+  }
+}
+
+const handleInject = async () => {
+  injecting.value = true
+  try {
+    const res = await service({
+      url: `/api/decision-lab/${lab.value.lab_id}/inject`,
+      method: 'post',
+      data: { info_text: injectText.value.trim() }
+    })
+    if (res.success) {
+      injectText.value = ''
+      await loadLab(lab.value.lab_id)
+      startPolling()
+    }
+  } finally {
+    injecting.value = false
+  }
+}
 
 const activeConsequenceTree = ref(null)
 const activeConsequenceBranch = ref('')
@@ -589,6 +691,69 @@ onUnmounted(stopPolling)
   font-size: 11px;
   color: #c62828;
   margin-top: 4px;
+}
+
+.comparison-section {
+  margin-bottom: 24px;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.comparison-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.comparison-card {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid #eaeaea;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.comparison-label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.comparison-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.comp-stat {
+  text-align: center;
+}
+
+.comp-value {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.comp-key {
+  font-size: 9px;
+  color: #999;
+  text-transform: uppercase;
+}
+
+.comp-top-posters {
+  font-size: 10px;
+  color: #666;
+}
+
+.top-poster {
+  font-family: 'JetBrains Mono', monospace;
+  margin-left: 4px;
 }
 
 .consequence-btn {
