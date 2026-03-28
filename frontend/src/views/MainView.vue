@@ -221,12 +221,19 @@ const handleNewProject = async () => {
     if (res.success) {
       clearPendingUpload()
       currentProjectId.value = res.data.project_id
-      projectData.value = res.data
-      
       router.replace({ name: 'Process', params: { projectId: res.data.project_id } })
-      ontologyProgress.value = null
-      addLog(`Ontology generated successfully for project ${res.data.project_id}`)
-      await startBuildGraph()
+
+      // Poll for ontology completion if task_id returned (async mode)
+      if (res.data.task_id && !res.data.ontology?.entity_types?.length) {
+        addLog('Ontology generation started in background...')
+        ontologyProgress.value = { message: 'Generating ontology (refresh-safe)...' }
+        await pollOntologyTask(res.data.task_id, res.data.project_id)
+      } else {
+        projectData.value = res.data
+        ontologyProgress.value = null
+        addLog(`Ontology generated for project ${res.data.project_id}`)
+        await startBuildGraph()
+      }
     } else {
       error.value = res.error || 'Ontology generation failed'
       toast.error(error.value)
@@ -234,10 +241,43 @@ const handleNewProject = async () => {
     }
   } catch (err) {
     error.value = err.message
+    toast.error(err.message)
     addLog(`Exception in handleNewProject: ${err.message}`)
   } finally {
     loading.value = false
   }
+}
+
+const pollOntologyTask = async (taskId, projectId) => {
+  for (let i = 0; i < 120; i++) {
+    await new Promise(r => setTimeout(r, 3000))
+    try {
+      const res = await getTaskStatus(taskId)
+      if (res.success) {
+        const task = res.data
+        ontologyProgress.value = { message: task.message || 'Generating ontology...' }
+        addLog(`Ontology progress: ${task.progress}% - ${task.message}`)
+        if (task.status === 'completed') {
+          ontologyProgress.value = null
+          const projRes = await getProject(projectId)
+          if (projRes.success) {
+            projectData.value = projRes.data
+            toast.success('Ontology generated successfully')
+            addLog('Ontology complete — starting graph build')
+            await startBuildGraph()
+          }
+          return
+        }
+        if (task.status === 'failed') {
+          error.value = task.error || 'Ontology generation failed'
+          toast.error(error.value)
+          ontologyProgress.value = null
+          return
+        }
+      }
+    } catch (_err) { /* polling error, continue */ }
+  }
+  toast.error('Ontology generation timed out')
 }
 
 const loadProject = async () => {

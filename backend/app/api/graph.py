@@ -173,38 +173,58 @@ def generate_ontology():
         ProjectManager.save_extracted_text(project.project_id, all_text)
         logger.info(f"Text extraction complete, {len(all_text)} characters total")
 
-        # Generate ontology
-        logger.info("Calling LLM to generate ontology definition...")
-        generator = OntologyGenerator()
-        ontology = generator.generate(
-            document_texts=document_texts,
-            simulation_requirement=simulation_requirement,
-            additional_context=additional_context if additional_context else None
+        # Generate ontology in background thread
+        task_manager = TaskManager()
+        task = task_manager.create_task(
+            task_type="ontology_generation",
+            project_id=project.project_id,
         )
-        
-        # Save ontology to project
-        entity_count = len(ontology.get("entity_types", []))
-        edge_count = len(ontology.get("edge_types", []))
-        logger.info(f"Ontology generation complete: {entity_count} entity types, {edge_count} relationship types")
-        
-        project.ontology = {
-            "entity_types": ontology.get("entity_types", []),
-            "edge_types": ontology.get("edge_types", [])
-        }
-        project.analysis_summary = ontology.get("analysis_summary", "")
-        project.status = ProjectStatus.ONTOLOGY_GENERATED
-        ProjectManager.save_project(project)
-        logger.info(f"=== Ontology generation complete === Project ID: {project.project_id}")
-        
+
+        def _generate_ontology_bg():
+            try:
+                task_manager.update_task(task.task_id, status=TaskStatus.PROCESSING, progress=10, message="Generating ontology...")
+                generator = OntologyGenerator()
+                ontology = generator.generate(
+                    document_texts=document_texts,
+                    simulation_requirement=simulation_requirement,
+                    additional_context=additional_context if additional_context else None
+                )
+                entity_count = len(ontology.get("entity_types", []))
+                edge_count = len(ontology.get("edge_types", []))
+                logger.info(f"Ontology generation complete: {entity_count} entity types, {edge_count} relationship types")
+                project.ontology = {
+                    "entity_types": ontology.get("entity_types", []),
+                    "edge_types": ontology.get("edge_types", [])
+                }
+                project.analysis_summary = ontology.get("analysis_summary", "")
+                project.status = ProjectStatus.ONTOLOGY_GENERATED
+                ProjectManager.save_project(project)
+                task_manager.update_task(
+                    task.task_id, status=TaskStatus.COMPLETED, progress=100,
+                    message="Ontology generated",
+                    result={"project_id": project.project_id, "entity_count": entity_count, "edge_count": edge_count}
+                )
+            except Exception as bg_err:
+                logger.error(f"Background ontology generation failed: {bg_err}")
+                project.status = ProjectStatus.FAILED
+                ProjectManager.save_project(project)
+                task_manager.update_task(task.task_id, status=TaskStatus.FAILED, error=str(bg_err))
+
+        import threading
+        threading.Thread(target=_generate_ontology_bg, daemon=True).start()
+        logger.info(f"=== Ontology generation started in background === Project ID: {project.project_id}, Task: {task.task_id}")
+
         return jsonify({
             "success": True,
             "data": {
                 "project_id": project.project_id,
                 "project_name": project.name,
+                "task_id": task.task_id,
                 "ontology": project.ontology,
                 "analysis_summary": project.analysis_summary,
                 "files": project.files,
-                "total_text_length": project.total_text_length
+                "total_text_length": project.total_text_length,
+                "message": "Ontology generation started. Poll /api/graph/task/{task_id} for progress."
             }
         })
         
