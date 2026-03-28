@@ -12,8 +12,9 @@
     <main class="lab-content">
       <!-- Left: Scenario Setup -->
       <section class="setup-panel">
+        <div v-if="initialLoading" class="loading-state">Loading lab...</div>
         <!-- Project Selection (if no lab yet) -->
-        <div v-if="!lab" class="setup-section">
+        <div v-else-if="!lab" class="setup-section">
           <h2 class="section-label">01 / Select Project</h2>
           <p class="section-desc">Choose a project with a completed knowledge graph.</p>
           <select v-model="selectedProjectId" class="project-select" :disabled="creating">
@@ -264,6 +265,7 @@ const projects = ref([])
 const selectedProjectId = ref('')
 const labName = ref('')
 const creating = ref(false)
+const initialLoading = ref(true)
 const preparing = ref(false)
 const running = ref(false)
 const newBranchLabel = ref('')
@@ -515,6 +517,7 @@ onMounted(async () => {
   } else {
     await loadProjects()
   }
+  initialLoading.value = false
 })
 
 onUnmounted(() => {
@@ -722,6 +725,13 @@ onUnmounted(() => {
   padding: 12px;
   background: #fff3e0;
   border-radius: 4px;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 40px;
+  color: #999;
+  font-size: 13px;
 }
 
 .empty-state {
