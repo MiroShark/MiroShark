@@ -88,6 +88,9 @@ import Step1GraphBuild from '../components/Step1GraphBuild.vue'
 import Step2EnvSetup from '../components/Step2EnvSetup.vue'
 import { generateOntology, getProject, buildGraph, getTaskStatus, getGraphData } from '../api/graph'
 import { getPendingUpload, clearPendingUpload } from '../store/pendingUpload'
+import { useToast } from '../composables/useToast'
+
+const toast = useToast()
 
 const route = useRoute()
 const router = useRouter()
@@ -196,6 +199,7 @@ const handleNewProject = async () => {
   const pending = getPendingUpload()
   if (!pending.isPending || (pending.files.length === 0 && !pending.urls)) {
     error.value = 'No pending files or URLs found.'
+    toast.error('No pending files or URLs found.')
     addLog('Error: No pending files or URLs found for new project.')
     return
   }
@@ -225,6 +229,7 @@ const handleNewProject = async () => {
       await startBuildGraph()
     } else {
       error.value = res.error || 'Ontology generation failed'
+      toast.error(error.value)
       addLog(`Error generating ontology: ${error.value}`)
     }
   } catch (err) {

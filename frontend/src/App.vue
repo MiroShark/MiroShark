@@ -1,9 +1,15 @@
 <template>
   <router-view />
+  <Toast ref="toastComponent" />
 </template>
 
 <script setup>
-// Using Vue Router for page management
+import { ref, onMounted } from 'vue'
+import Toast from './components/Toast.vue'
+import { setToastRef } from './composables/useToast'
+
+const toastComponent = ref(null)
+onMounted(() => setToastRef(toastComponent.value))
 </script>
 
 <style>
