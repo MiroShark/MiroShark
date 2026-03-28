@@ -76,6 +76,19 @@ export function getProject(projectId) {
  * @param {String} intent - Optional intent for gap-guided research
  * @returns {Promise}
  */
+/**
+ * Suggest a simulation requirement based on topic and intent
+ */
+export function suggestRequirement(topic, intent = '', urls = '') {
+  return requestWithRetry(() =>
+    service({
+      url: '/api/graph/suggest-requirement',
+      method: 'post',
+      data: { topic, intent, urls }
+    })
+  )
+}
+
 export function researchTopic(topic, maxSources = 10, intent = '') {
   const data = { topic, max_sources: maxSources }
   if (intent) data.intent = intent

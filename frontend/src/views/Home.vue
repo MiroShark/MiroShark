@@ -227,12 +227,19 @@
             <div class="console-section">
               <div class="console-header">
                 <span class="console-label">>_ 02 / Simulation Prompt</span>
+                <button
+                  class="suggest-btn"
+                  @click="handleSuggest"
+                  :disabled="suggesting || (!researchTopic.trim() && !formData.urls.trim())"
+                >
+                  {{ suggesting ? 'Generating...' : 'AI Suggest' }}
+                </button>
               </div>
               <div class="input-wrapper">
                 <textarea
                   v-model="formData.simulationRequirement"
                   class="code-input"
-                  placeholder="// Enter your simulation or prediction requirements in natural language (e.g., If a university announces the revocation of a disciplinary action against a student, what public opinion trends will emerge?)"
+                  placeholder="// Enter your simulation or prediction requirements in natural language, or click 'AI Suggest' to auto-generate from your topic and intent"
                   rows="6"
                   :disabled="loading"
                 ></textarea>
@@ -271,7 +278,7 @@
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import HistoryDatabase from '../components/HistoryDatabase.vue'
-import { researchTopic as apiResearchTopic } from '../api/graph'
+import { researchTopic as apiResearchTopic, suggestRequirement } from '../api/graph'
 
 const router = useRouter()
 
@@ -298,6 +305,23 @@ const researchIntent = ref('')
 const researching = ref(false)
 const researchStatus = ref('')
 const researchGaps = ref([])
+const suggesting = ref(false)
+
+const handleSuggest = async () => {
+  suggesting.value = true
+  try {
+    const res = await suggestRequirement(
+      researchTopic.value.trim() || formData.value.urls.split('\n')[0] || '',
+      researchIntent.value.trim(),
+      formData.value.urls
+    )
+    if (res.success && res.data?.suggestion) {
+      formData.value.simulationRequirement = res.data.suggestion
+    }
+  } finally {
+    suggesting.value = false
+  }
+}
 
 const handleResearch = async () => {
   if (!researchTopic.value.trim() || researching.value) return
@@ -939,6 +963,21 @@ const startSimulation = () => {
 }
 
 .gap-item:last-child { border-bottom: none; }
+
+.suggest-btn {
+  background: none;
+  border: 1px solid var(--orange);
+  color: var(--orange);
+  padding: 3px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+.suggest-btn:hover:not(:disabled) { background: var(--orange); color: #fff; }
+.suggest-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .research-status {
   margin-top: 8px;

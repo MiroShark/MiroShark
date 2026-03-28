@@ -493,6 +493,56 @@ def get_task(task_id: str):
 
 # ============== Topic Research API ==============
 
+@graph_bp.route('/suggest-requirement', methods=['POST'])
+def suggest_requirement():
+    """
+    LLM generates a simulation requirement from topic, intent, and content.
+
+    Request (JSON):
+        {
+            "topic": "Life Biosciences ER-100 gene therapy",
+            "intent": "Understand the science behind gene modification",
+            "urls": "url1\\nurl2"  (optional — content already gathered)
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        topic = data.get('topic', '').strip()
+        intent = data.get('intent', '').strip()
+        urls = data.get('urls', '').strip()
+
+        if not topic and not intent:
+            return jsonify({"success": False, "error": "topic or intent required"}), 400
+
+        from ..utils.llm_client import create_llm_client
+        client = create_llm_client()
+
+        prompt = f"""Generate a simulation requirement for MiroShark — a swarm intelligence engine that simulates public/expert reaction to topics using AI agents.
+
+Topic: {topic}
+{"User Intent: " + intent if intent else ""}
+{"Sources gathered: " + str(len(urls.splitlines())) + " URLs" if urls else ""}
+
+Write a detailed simulation requirement (2-3 sentences) that would produce the most insightful simulation. It should specify:
+1. What phenomenon to simulate (e.g., public reaction, expert debate, stakeholder dynamics)
+2. What perspectives to include (scientists, investors, patients, regulators, media)
+3. What specific questions the simulation should answer
+
+Return ONLY the requirement text, no JSON wrapping or explanation."""
+
+        result = client.chat(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,
+            max_tokens=300,
+        )
+        logger.info(f"Generated simulation requirement suggestion")
+        return jsonify({"success": True, "data": {"suggestion": result.strip()}})
+
+    except Exception as exc:
+        logger.error(f"Failed to suggest requirement: {exc}")
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @graph_bp.route('/research', methods=['POST'])
 def research():
     """
