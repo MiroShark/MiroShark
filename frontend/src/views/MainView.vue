@@ -21,9 +21,15 @@
       </div>
 
       <div class="header-right">
-        <div class="workflow-step">
-          <span class="step-num">Step {{ currentStep }}/5</span>
-          <span class="step-name">{{ stepNames[currentStep - 1] }}</span>
+        <div class="project-nav" v-if="projectData?.project_id">
+          <router-link
+            :to="{ name: 'Process', params: { projectId: projectData.project_id }}"
+            class="nav-tab active"
+          >Pipeline</router-link>
+          <router-link
+            :to="{ name: 'DecisionLab', params: { labId: 'new' }, query: { project: projectData.project_id }}"
+            class="nav-tab"
+          >Decision Lab</router-link>
         </div>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
@@ -484,6 +490,27 @@ onUnmounted(() => {
   align-items: center;
   gap: 16px;
 }
+
+.project-nav {
+  display: flex;
+  gap: 4px;
+  background: #F5F5F5;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.nav-tab {
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.nav-tab:hover { color: #333; background: #eee; }
+.nav-tab.active { background: #fff; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 
 .workflow-step {
   display: flex;

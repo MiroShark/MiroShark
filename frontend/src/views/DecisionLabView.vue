@@ -3,7 +3,14 @@
     <!-- Header -->
     <header class="lab-header">
       <div class="brand" @click="$router.push('/')">MIROSHARK</div>
-      <div class="lab-title">Decision Lab</div>
+      <div class="project-nav" v-if="lab?.project_id || selectedProjectId">
+        <router-link
+          :to="{ name: 'Process', params: { projectId: lab?.project_id || selectedProjectId }}"
+          class="nav-tab"
+        >Pipeline</router-link>
+        <span class="nav-tab active">Decision Lab</span>
+      </div>
+      <div v-else class="lab-title">Decision Lab</div>
       <div class="lab-status-badge" :class="lab?.status || 'empty'">
         {{ lab?.status || 'new' }}
       </div>
@@ -516,6 +523,11 @@ onMounted(async () => {
     }
   } else {
     await loadProjects()
+    // Auto-select project if coming from Pipeline tab
+    const projectFromQuery = route.query.project
+    if (projectFromQuery) {
+      selectedProjectId.value = projectFromQuery
+    }
   }
   initialLoading.value = false
 })
@@ -557,6 +569,28 @@ onUnmounted(() => {
   font-size: 14px;
   color: #666;
 }
+
+.project-nav {
+  display: flex;
+  gap: 4px;
+  background: #F5F5F5;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.nav-tab {
+  padding: 5px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.nav-tab:hover { color: #333; background: #eee; }
+.nav-tab.active { background: #fff; color: #000; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 
 .lab-status-badge {
   font-family: 'JetBrains Mono', monospace;
