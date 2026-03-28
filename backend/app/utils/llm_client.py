@@ -5,8 +5,11 @@ Supports OpenAI-compatible APIs and Claude Code CLI.
 """
 
 import json
+import logging
 import os
 import re
+
+logger = logging.getLogger("miroshark.llm_client")
 from typing import Optional, Dict, Any, List
 from openai import OpenAI
 
@@ -116,11 +119,21 @@ class LLMClient:
                 "options": {"num_ctx": self._num_ctx}
             }
 
-        response = self.client.chat.completions.create(**kwargs)
-        content = response.choices[0].message.content
-        # Some models (e.g., MiniMax M2.5) include <think> reasoning content in the content field, which needs to be removed
-        content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
-        return content
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self.client.chat.completions.create(**kwargs)
+                content = response.choices[0].message.content
+                # Some models include <think> reasoning that needs removal
+                content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
+                return content
+            except Exception as exc:
+                if attempt == max_retries - 1:
+                    raise
+                wait = 2 ** attempt
+                logger.warning(f"LLM call failed (attempt {attempt + 1}/{max_retries}), retrying in {wait}s: {exc}")
+                import time
+                time.sleep(wait)
 
     def chat_json(
         self,
