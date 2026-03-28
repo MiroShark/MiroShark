@@ -21,10 +21,13 @@
       </div>
 
       <div class="header-right">
-        <div class="workflow-step">
-          <span class="step-num">Step 4/5</span>
-          <span class="step-name">Report Generation</span>
-        </div>
+        <button
+          v-if="reportId"
+          class="download-btn"
+          @click="downloadReport"
+        >
+          Download Report
+        </button>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
           <span class="dot"></span>
@@ -83,6 +86,12 @@ const viewMode = ref('workbench')
 
 // Data State
 const currentReportId = ref(route.params.reportId)
+
+const downloadReport = () => {
+  if (currentReportId.value) {
+    window.open(`/api/report/${currentReportId.value}/download`, '_blank')
+  }
+}
 const simulationId = ref(null)
 const projectData = ref(null)
 const graphData = ref(null)
@@ -280,6 +289,18 @@ onMounted(() => {
   align-items: center;
   gap: 16px;
 }
+
+.download-btn {
+  background: #000;
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.download-btn:hover { opacity: 0.8; }
 
 .workflow-step {
   display: flex;

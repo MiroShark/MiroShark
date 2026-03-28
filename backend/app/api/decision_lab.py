@@ -289,6 +289,33 @@ def inject_info(lab_id: str):
         return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
 
 
+@decision_lab_bp.route("/<lab_id>/export", methods=["GET"])
+def export_lab(lab_id: str):
+    """Export full Decision Lab data (lab config + comparison + consequences) as JSON."""
+    try:
+        lab = DecisionLabManager.get_lab(lab_id)
+        if not lab:
+            return jsonify({"success": False, "error": f"Lab not found: {lab_id}"}), 404
+        export_data = {"lab": lab.to_dict()}
+        try:
+            export_data["comparison"] = compare_branches(lab_id)
+        except Exception:
+            export_data["comparison"] = None
+        for branch in lab.branches:
+            if branch.simulation_id:
+                try:
+                    tree = extract_consequences(branch.simulation_id, branch.decision_text)
+                    export_data.setdefault("consequences", {})[branch.label] = tree.to_dict()
+                except Exception:
+                    pass
+        response = jsonify(export_data)
+        response.headers['Content-Disposition'] = f'attachment; filename={lab_id}_export.json'
+        return response
+    except Exception as exc:
+        logger.error(f"Failed to export lab: {exc}")
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @decision_lab_bp.route("/<lab_id>/auto/start", methods=["POST"])
 def start_auto(lab_id: str):
     """

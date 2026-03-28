@@ -493,6 +493,23 @@ def get_task(task_id: str):
 
 # ============== Topic Research API ==============
 
+@graph_bp.route('/data/<graph_id>/export', methods=['GET'])
+def export_graph_data(graph_id: str):
+    """Export graph data as downloadable JSON."""
+    try:
+        storage = current_app.extensions.get('neo4j_storage')
+        if not storage:
+            return jsonify({"success": False, "error": "Storage not initialized"}), 503
+        data = storage.get_graph_data(graph_id)
+        if not data:
+            return jsonify({"success": False, "error": "Graph not found"}), 404
+        response = jsonify(data)
+        response.headers['Content-Disposition'] = f'attachment; filename={graph_id}.json'
+        return response
+    except Exception as exc:
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @graph_bp.route('/suggest-requirement', methods=['POST'])
 def suggest_requirement():
     """
