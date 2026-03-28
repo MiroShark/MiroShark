@@ -217,6 +217,30 @@ def get_consequences(lab_id: str, branch_id: str):
         return jsonify({"success": False, "error": str(exc), "traceback": traceback.format_exc()}), 500
 
 
+@decision_lab_bp.route("/<lab_id>/branch/<branch_id>/retry", methods=["POST"])
+def retry_branch(lab_id: str, branch_id: str):
+    """Retry a failed branch — resets it to pending and re-triggers preparation."""
+    try:
+        lab = DecisionLabManager.get_lab(lab_id)
+        if not lab:
+            return jsonify({"success": False, "error": f"Lab not found: {lab_id}"}), 404
+        branch = next((b for b in lab.branches if b.branch_id == branch_id), None)
+        if not branch:
+            return jsonify({"success": False, "error": f"Branch not found: {branch_id}"}), 404
+        branch.status = BranchStatus.PENDING
+        branch.simulation_id = None
+        branch.error = None
+        lab.status = LabStatus.CREATED
+        DecisionLabManager.save_lab(lab)
+        storage = current_app.extensions.get("neo4j_storage")
+        if storage:
+            prepare_all_branches(lab_id, storage)
+        return jsonify({"success": True, "data": lab.to_dict()})
+    except Exception as exc:
+        logger.error(f"Failed to retry branch: {exc}")
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+
 @decision_lab_bp.route("/<lab_id>/compare", methods=["GET"])
 def compare_lab_branches(lab_id: str):
     """

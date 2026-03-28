@@ -194,7 +194,10 @@
               <span v-if="branch.twitter_actions">Twitter: {{ branch.twitter_actions }}</span>
               <span v-if="branch.reddit_actions">Reddit: {{ branch.reddit_actions }}</span>
             </div>
-            <div v-if="branch.error" class="progress-error">{{ branch.error }}</div>
+            <div v-if="branch.error" class="progress-error">
+              {{ branch.error }}
+              <button class="retry-btn" @click="retryBranch(branch.branch_id)">Retry</button>
+            </div>
             <button
               v-if="branch.status === 'completed' && branch.simulation_id"
               class="consequence-btn"
@@ -397,6 +400,18 @@ const loadConsequences = async (branch) => {
     }
   } finally {
     loadingConsequences.value = false
+  }
+}
+
+const retryBranch = async (branchId) => {
+  const res = await service({
+    url: `/api/decision-lab/${lab.value.lab_id}/branch/${branchId}/retry`,
+    method: 'post'
+  })
+  if (res.success) {
+    lab.value = res.data
+    branchDetails.value = res.data.branches
+    startPolling()
   }
 }
 
@@ -1014,6 +1029,19 @@ onUnmounted(() => {
   font-family: 'JetBrains Mono', monospace;
   margin-left: 4px;
 }
+
+.retry-btn {
+  margin-left: 8px;
+  background: #c62828;
+  color: #fff;
+  border: none;
+  padding: 3px 10px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.retry-btn:hover { opacity: 0.8; }
 
 .consequence-btn {
   margin-top: 8px;
