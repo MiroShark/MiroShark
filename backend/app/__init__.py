@@ -81,10 +81,29 @@ def create_app(config_class=Config):
     app.register_blueprint(report_bp, url_prefix='/api/report')
     app.register_blueprint(decision_lab_bp, url_prefix='/api/decision-lab')
     
-    # Health check
+    # Health check — verifies Neo4j and Ollama connectivity
     @app.route('/health')
     def health():
-        return {'status': 'ok', 'service': 'MiroShark Backend'}
+        import requests as http_req
+        checks = {}
+        try:
+            storage = app.extensions.get("neo4j_storage")
+            if storage:
+                storage._driver.verify_connectivity()
+                checks['neo4j'] = 'ok'
+            else:
+                checks['neo4j'] = 'not configured'
+        except Exception as exc:
+            checks['neo4j'] = f'error: {str(exc)[:80]}'
+        try:
+            llm_url = Config.LLM_BASE_URL.replace('/v1', '')
+            resp = http_req.get(f'{llm_url}/api/version', timeout=3)
+            checks['ollama'] = 'ok' if resp.ok else f'error: {resp.status_code}'
+        except Exception as exc:
+            checks['ollama'] = f'error: {str(exc)[:80]}'
+        all_ok = all(v == 'ok' for v in checks.values())
+        status_code = 200 if all_ok else 503
+        return {'status': 'healthy' if all_ok else 'degraded', 'checks': checks}, status_code
     
     if should_log_startup:
         logger.info("MiroShark Backend startup complete")
