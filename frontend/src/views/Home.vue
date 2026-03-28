@@ -188,21 +188,32 @@
                 <span class="console-label">or / Research a Topic</span>
                 <span class="console-meta">AI finds and gathers relevant sources automatically</span>
               </div>
-              <div class="research-row">
-                <input
-                  v-model="researchTopic"
-                  class="code-input research-input"
-                  placeholder="e.g. Iran nuclear conflict 2026"
-                  :disabled="loading || researching"
-                  @keydown.enter="handleResearch"
-                />
-                <button
-                  class="research-btn"
-                  @click="handleResearch"
-                  :disabled="!researchTopic.trim() || researching"
-                >
-                  {{ researching ? 'Searching...' : 'Research' }}
-                </button>
+              <input
+                v-model="researchTopic"
+                class="code-input"
+                placeholder="Topic: e.g. Life Biosciences ER-100 gene therapy"
+                :disabled="loading || researching"
+                style="margin-bottom: 6px"
+              />
+              <input
+                v-model="researchIntent"
+                class="code-input"
+                placeholder="Intent (optional): e.g. Understand the science behind how they modify the genes"
+                :disabled="loading || researching"
+                style="margin-bottom: 6px"
+              />
+              <button
+                class="research-btn full-width"
+                @click="handleResearch"
+                :disabled="!researchTopic.trim() || researching"
+              >
+                {{ researching ? 'Researching...' : researchIntent.trim() ? 'Research with Intent' : 'Research' }}
+              </button>
+              <div v-if="researchGaps.length" class="research-gaps">
+                <div class="gaps-header">Knowledge gaps identified:</div>
+                <div v-for="(gap, idx) in researchGaps" :key="idx" class="gap-item">
+                  {{ gap.gap }}
+                </div>
               </div>
               <div v-if="researchStatus" class="research-status">{{ researchStatus }}</div>
             </div>
@@ -283,15 +294,27 @@ const fileInput = ref(null)
 
 // Research state
 const researchTopic = ref('')
+const researchIntent = ref('')
 const researching = ref(false)
 const researchStatus = ref('')
+const researchGaps = ref([])
 
 const handleResearch = async () => {
   if (!researchTopic.value.trim() || researching.value) return
   researching.value = true
-  researchStatus.value = 'Generating search queries...'
+  researchGaps.value = []
+  researchStatus.value = researchIntent.value.trim()
+    ? 'Analyzing knowledge gaps...'
+    : 'Generating search queries...'
   try {
-    const res = await apiResearchTopic(researchTopic.value.trim())
+    const payload = {
+      topic: researchTopic.value.trim(),
+      max_sources: 10,
+    }
+    if (researchIntent.value.trim()) {
+      payload.intent = researchIntent.value.trim()
+    }
+    const res = await apiResearchTopic(payload.topic, payload.max_sources, payload.intent)
     if (res.success && res.data) {
       const urls = res.data.urls || ''
       if (urls) {
@@ -299,7 +322,11 @@ const handleResearch = async () => {
           ? formData.value.urls + '\n' + urls
           : urls
       }
-      researchStatus.value = `Found ${res.data.fetched_count} sources (${Math.round(res.data.total_chars / 1000)}k chars)`
+      if (res.data.gaps && res.data.gaps.length) {
+        researchGaps.value = res.data.gaps
+      }
+      const assessment = res.data.content_assessment ? ` | ${res.data.content_assessment}` : ''
+      researchStatus.value = `Found ${res.data.fetched_count} sources (${Math.round(res.data.total_chars / 1000)}k chars)${assessment}`
     } else {
       researchStatus.value = 'Research failed: ' + (res.error || 'Unknown error')
     }
@@ -885,6 +912,33 @@ const startSimulation = () => {
 
 .research-btn:hover:not(:disabled) { opacity: 0.8; }
 .research-btn:disabled { background: #CCC; cursor: not-allowed; }
+.research-btn.full-width { width: 100%; }
+
+.research-gaps {
+  margin-top: 8px;
+  border: 1px solid #e3f2fd;
+  background: #f5f9ff;
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.gaps-header {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #1565c0;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.gap-item {
+  font-size: 0.8rem;
+  color: #333;
+  padding: 3px 0;
+  border-bottom: 1px solid #e3f2fd;
+}
+
+.gap-item:last-child { border-bottom: none; }
 
 .research-status {
   margin-top: 8px;

@@ -17,6 +17,25 @@ from ..utils.logger import get_logger
 
 logger = get_logger("miroshark.research_agent")
 
+GAP_ANALYSIS_PROMPT = """You are a research analyst. The user has provided some content and stated their intent.
+Analyze what information is MISSING from the content to fulfill the user's intent.
+
+USER INTENT: {intent}
+
+CONTENT SUMMARY (first 3000 chars):
+{content_preview}
+
+Identify 5-8 specific knowledge gaps. For each gap, provide a targeted search query.
+Return JSON:
+{{
+  "gaps": [
+    {{"gap": "What's missing", "search_query": "specific search query to fill this gap"}},
+    ...
+  ],
+  "content_assessment": "Brief assessment of what the content already covers well",
+  "missing_depth": "What type of deeper information is needed (mechanisms, data, comparisons, etc.)"
+}}"""
+
 SEARCH_PLAN_PROMPT = """You are a research assistant. Given a topic, generate search queries
 to find diverse, high-quality sources for understanding this topic from multiple perspectives.
 
@@ -56,6 +75,9 @@ class ResearchResult:
 @dataclass
 class ResearchReport:
     topic: str
+    intent: str = ""
+    gaps: List[Dict] = field(default_factory=list)
+    content_assessment: str = ""
     queries: List[str] = field(default_factory=list)
     results: List[ResearchResult] = field(default_factory=list)
     total_chars: int = 0
@@ -63,6 +85,9 @@ class ResearchReport:
     def to_dict(self) -> Dict:
         return {
             "topic": self.topic,
+            "intent": self.intent,
+            "gaps": self.gaps,
+            "content_assessment": self.content_assessment,
             "queries": self.queries,
             "results": [
                 {
@@ -217,4 +242,81 @@ def research_topic(topic: str, max_sources: int = 10) -> ResearchReport:
     fetched = sum(1 for r in report.results if r.text)
     logger.info(f"Research complete: {fetched}/{len(report.results)} sources fetched, {report.total_chars} total chars")
 
+    return report
+
+
+def _analyze_gaps(intent: str, content: str) -> Dict:
+    """Use LLM to identify knowledge gaps between content and user intent."""
+    client = create_llm_client()
+    prompt = GAP_ANALYSIS_PROMPT.format(
+        intent=intent,
+        content_preview=content[:3000],
+    )
+    try:
+        result = client.chat_json(
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.3,
+        )
+        if isinstance(result, dict):
+            return result
+    except Exception as err:
+        logger.warning(f"Gap analysis failed: {err}")
+    return {"gaps": [], "content_assessment": "", "missing_depth": ""}
+
+
+def research_with_intent(
+    topic: str,
+    intent: str,
+    initial_content: str = "",
+    max_sources: int = 10,
+) -> ResearchReport:
+    """
+    Intent-guided research: analyze what's missing, then search to fill gaps.
+
+    Args:
+        topic: The topic or URL content summary.
+        intent: What the user wants to understand (e.g., "the science behind gene modification").
+        initial_content: Any content already provided (article text, URL content).
+        max_sources: Maximum sources to fetch.
+
+    Returns:
+        ResearchReport with gap analysis and targeted sources.
+    """
+    logger.info(f"Starting intent-guided research: intent='{intent[:80]}', topic='{topic[:80]}'")
+    report = ResearchReport(topic=topic, intent=intent)
+
+    # Step 1: Analyze gaps between content and intent
+    logger.info("Step 1: Analyzing knowledge gaps...")
+    gap_analysis = _analyze_gaps(intent, initial_content or topic)
+    report.gaps = gap_analysis.get("gaps", [])
+    report.content_assessment = gap_analysis.get("content_assessment", "")
+
+    logger.info(f"Found {len(report.gaps)} knowledge gaps")
+    for gap in report.gaps:
+        logger.info(f"  Gap: {gap.get('gap', '')[:60]}")
+
+    # Step 2: Generate search queries from gaps (targeted, not generic)
+    gap_queries = [g["search_query"] for g in report.gaps if "search_query" in g]
+    if not gap_queries:
+        gap_queries = _generate_search_queries(f"{topic} {intent}")
+    report.queries = gap_queries
+
+    # Step 3: Search
+    logger.info(f"Step 2: Searching with {len(gap_queries)} targeted queries...")
+    raw_results = _search_ddg(gap_queries)
+
+    # Step 4: Rank with intent awareness
+    logger.info("Step 3: Ranking results against intent...")
+    ranked = _rank_results(f"{topic} — Intent: {intent}", raw_results, max_keep=max_sources)
+
+    # Step 5: Fetch content
+    logger.info(f"Step 4: Fetching content from {len(ranked)} sources...")
+    report.results = _fetch_content(ranked)
+    report.total_chars = sum(len(r.text) for r in report.results)
+
+    fetched = sum(1 for r in report.results if r.text)
+    logger.info(
+        f"Intent research complete: {fetched}/{len(report.results)} sources, "
+        f"{report.total_chars} chars, {len(report.gaps)} gaps addressed"
+    )
     return report

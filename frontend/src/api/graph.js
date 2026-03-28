@@ -73,14 +73,17 @@ export function getProject(projectId) {
  * Research a topic — LLM generates search queries, fetches web sources
  * @param {String} topic - Topic to research
  * @param {Number} maxSources - Max sources to fetch (default 10)
+ * @param {String} intent - Optional intent for gap-guided research
  * @returns {Promise}
  */
-export function researchTopic(topic, maxSources = 10) {
+export function researchTopic(topic, maxSources = 10, intent = '') {
+  const data = { topic, max_sources: maxSources }
+  if (intent) data.intent = intent
   return requestWithRetry(() =>
     service({
       url: '/api/graph/research',
       method: 'post',
-      data: { topic, max_sources: maxSources }
+      data
     })
   )
 }

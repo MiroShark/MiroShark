@@ -16,7 +16,7 @@ from ..services.ontology_generator import OntologyGenerator
 from ..services.graph_builder import GraphBuilderService
 from ..services.text_processor import TextProcessor
 from ..utils.file_parser import FileParser, fetch_url_text
-from ..services.research_agent import research_topic
+from ..services.research_agent import research_topic, research_with_intent
 from ..utils.logger import get_logger
 from ..models.task import TaskManager, TaskStatus
 from ..models.project import ProjectManager, ProjectStatus
@@ -502,20 +502,9 @@ def research():
     Request (JSON):
         {
             "topic": "Iran nuclear conflict escalation",
+            "intent": "Understand the science behind nuclear enrichment", (optional)
+            "initial_content": "...", (optional — existing article text for gap analysis)
             "max_sources": 10
-        }
-
-    Returns:
-        {
-            "success": true,
-            "data": {
-                "topic": "...",
-                "queries": ["query1", "query2"],
-                "results": [{"url": "...", "title": "...", "text_length": 1234}],
-                "total_chars": 50000,
-                "fetched_count": 8,
-                "urls": "url1\\nurl2\\n..."
-            }
         }
     """
     try:
@@ -525,9 +514,15 @@ def research():
             return jsonify({"success": False, "error": "topic is required"}), 400
 
         max_sources = data.get('max_sources', 10)
-        logger.info(f"Starting topic research: {topic}")
+        intent = data.get('intent', '').strip()
+        initial_content = data.get('initial_content', '').strip()
 
-        report = research_topic(topic, max_sources=max_sources)
+        if intent:
+            logger.info(f"Starting intent-guided research: topic='{topic[:50]}', intent='{intent[:50]}'")
+            report = research_with_intent(topic, intent, initial_content, max_sources=max_sources)
+        else:
+            logger.info(f"Starting topic research: {topic}")
+            report = research_topic(topic, max_sources=max_sources)
         result = report.to_dict()
 
         fetched_urls = [r.url for r in report.results if r.text]
