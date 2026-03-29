@@ -18,15 +18,15 @@ Sub-goals:
 - [x] G1.6: Verify full stack starts and serves UI
 
 ### G2: Harden the base platform
-_Status: In Progress | Added: 2026-03-25_
+_Status: Complete | Added: 2026-03-25_
 Fix critical reliability and security issues before building on top.
 
 Sub-goals:
 - [x] G2.1: Add URL input support (docs + links)
 - [x] G2.2: Fix axios baseURL / CORS lockdown
-- [ ] G2.3: Add LLM retry logic to llm_client.py
-- [ ] G2.4: Make ontology generation async (refresh-safe)
-- [ ] G2.5: Add real health checks (Neo4j + Ollama)
+- [x] G2.3: Add LLM retry logic to llm_client.py (commit c7bf020, F3)
+- [x] G2.4: Make ontology generation async (commit 02c47ce, F8)
+- [x] G2.5: Add real health checks (commit 409d0b4, F4)
 
 ### G3: Build Decision Lab — Foundation
 _Status: Complete | Added: 2026-03-27_
