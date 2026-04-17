@@ -1112,8 +1112,21 @@ def get_simulation_history():
             else:
                 sim_dict["resolution"] = None
 
+            # Include quality diagnostics if cached
+            quality_path = os.path.join(
+                Config.WONDERWALL_SIMULATION_DATA_DIR, sim.simulation_id, "quality.json"
+            )
+            if os.path.exists(quality_path):
+                try:
+                    with open(quality_path, 'r', encoding='utf-8') as _qf:
+                        sim_dict["quality"] = json.load(_qf)
+                except Exception:
+                    sim_dict["quality"] = None
+            else:
+                sim_dict["quality"] = None
+
             enriched_simulations.append(sim_dict)
-        
+
         return jsonify({
             "success": True,
             "data": enriched_simulations,
@@ -2544,6 +2557,206 @@ def get_belief_drift(simulation_id: str):
             "error": str(e),
             "traceback": traceback.format_exc()
         }), 500
+
+
+# ============== Quality Diagnostics ==============
+
+@simulation_bp.route('/<simulation_id>/quality', methods=['GET'])
+def get_simulation_quality(simulation_id: str):
+    """
+    Compute post-completion quality diagnostics for a simulation.
+
+    Measures participation rate, stance entropy, convergence speed,
+    and cross-platform interaction rate. Returns an overall health
+    badge (Excellent / Good / Low) plus actionable suggestions.
+    Results are cached in quality.json inside the simulation directory.
+    """
+    try:
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        if not os.path.exists(sim_dir):
+            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+
+        quality_path = os.path.join(sim_dir, "quality.json")
+        if os.path.exists(quality_path):
+            with open(quality_path, 'r', encoding='utf-8') as f:
+                return jsonify({"success": True, "data": json.load(f)})
+
+        quality = _compute_quality_diagnostics(simulation_id, sim_dir)
+        if quality is None:
+            return jsonify({
+                "success": True,
+                "data": None,
+                "message": "Insufficient data to compute quality diagnostics."
+            })
+
+        with open(quality_path, 'w', encoding='utf-8') as f:
+            json.dump(quality, f, indent=2)
+
+        return jsonify({"success": True, "data": quality})
+
+    except Exception as e:
+        logger.error(f"Failed to compute quality diagnostics: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
+def _compute_quality_diagnostics(simulation_id: str, sim_dir: str):
+    """Compute quality metrics from trajectory.json and action logs."""
+    import math
+
+    trajectory_path = os.path.join(sim_dir, "trajectory.json")
+    has_trajectory = os.path.exists(trajectory_path)
+
+    all_actions = SimulationRunner.get_all_actions(simulation_id=simulation_id)
+    if not all_actions and not has_trajectory:
+        return None
+
+    # --- Participation rate ---
+    run_state = SimulationRunner.get_run_state(simulation_id)
+    total_agents = 0
+    if run_state:
+        total_agents = run_state.total_agents if hasattr(run_state, 'total_agents') and run_state.total_agents else 0
+
+    active_agent_ids = set()
+    content_actions = {'CREATE_POST', 'QUOTE_POST', 'CREATE_COMMENT', 'BUY_SHARES', 'SELL_SHARES'}
+    platform_actions = {}
+    agent_platforms = {}
+    for a in all_actions:
+        a_dict = a.to_dict() if hasattr(a, 'to_dict') else a
+        aid = a_dict.get('agent_id')
+        atype = a_dict.get('action_type', '')
+        platform = a_dict.get('platform', '')
+        if atype in content_actions:
+            active_agent_ids.add(aid)
+        if platform:
+            platform_actions[platform] = platform_actions.get(platform, 0) + 1
+            if aid not in agent_platforms:
+                agent_platforms[aid] = set()
+            agent_platforms[aid].add(platform)
+
+    if total_agents == 0:
+        total_agents = len(set(
+            (a.to_dict() if hasattr(a, 'to_dict') else a).get('agent_id')
+            for a in all_actions
+        )) or 1
+
+    participation_rate = round(len(active_agent_ids) / max(total_agents, 1), 3)
+
+    # --- Cross-platform interaction rate ---
+    cross_platform_agents = sum(1 for p in agent_platforms.values() if len(p) > 1)
+    total_interacting = len(agent_platforms) or 1
+    cross_platform_rate = round(cross_platform_agents / total_interacting, 3)
+
+    # --- Belief trajectory metrics ---
+    stance_entropy = None
+    convergence_round = None
+    total_rounds = 0
+
+    if has_trajectory:
+        with open(trajectory_path, 'r', encoding='utf-8') as f:
+            traj = json.load(f)
+
+        snapshots = traj.get("snapshots", [])
+        total_rounds = len(snapshots)
+
+        if snapshots:
+            for snap in snapshots:
+                round_num = snap.get("round_num", 0)
+                belief_positions = snap.get("belief_positions", {})
+                if not belief_positions:
+                    continue
+
+                agent_stances = []
+                for positions in belief_positions.values():
+                    if positions:
+                        avg = sum(positions.values()) / len(positions)
+                        agent_stances.append(avg)
+
+                if not agent_stances:
+                    continue
+
+                total = len(agent_stances)
+                n_bullish = sum(1 for s in agent_stances if s > 0.2)
+                n_bearish = sum(1 for s in agent_stances if s < -0.2)
+                n_neutral = total - n_bullish - n_bearish
+
+                pcts = [n_bullish / total, n_neutral / total, n_bearish / total]
+
+                if convergence_round is None:
+                    for p in pcts:
+                        if p > 0.6:
+                            convergence_round = round_num
+                            break
+
+            last_snap = snapshots[-1]
+            bp = last_snap.get("belief_positions", {})
+            if bp:
+                stances = []
+                for positions in bp.values():
+                    if positions:
+                        avg = sum(positions.values()) / len(positions)
+                        stances.append(avg)
+                if stances:
+                    total = len(stances)
+                    n_b = sum(1 for s in stances if s > 0.2)
+                    n_be = sum(1 for s in stances if s < -0.2)
+                    n_n = total - n_b - n_be
+                    pcts = [n_b / total, n_n / total, n_be / total]
+                    entropy = -sum(p * math.log(p) for p in pcts if p > 0)
+                    max_entropy = math.log(3)
+                    stance_entropy = round(entropy / max_entropy, 3) if max_entropy > 0 else 0
+    else:
+        if run_state:
+            total_rounds = run_state.total_rounds if hasattr(run_state, 'total_rounds') else 0
+
+    # --- Health badge ---
+    health = "Good"
+    if (participation_rate >= 0.8
+            and (stance_entropy is None or stance_entropy >= 0.5)
+            and (convergence_round is None or convergence_round >= 4)
+            and cross_platform_rate >= 0.2):
+        health = "Excellent"
+    elif (participation_rate < 0.6
+            or (stance_entropy is not None and stance_entropy < 0.2)):
+        health = "Low"
+
+    # --- Suggestions ---
+    suggestions = []
+    if participation_rate < 0.6:
+        suggestions.append(
+            f"Participation rate was {round(participation_rate * 100)}%. "
+            "Try reducing agent count by 30% for this document complexity."
+        )
+    if convergence_round is not None and convergence_round < 3:
+        suggestions.append(
+            f"Consensus formed by round {convergence_round}. "
+            "Consider increasing rounds to 12+ to allow more debate development."
+        )
+    if cross_platform_rate < 0.1:
+        suggestions.append(
+            "Cross-platform interaction rate is very low. "
+            "Enable the cross-platform digest option to increase inter-platform agent awareness."
+        )
+    if stance_entropy is not None and stance_entropy < 0.3:
+        suggestions.append(
+            "Stance diversity is low — agents are in strong agreement. "
+            "Consider adding agents with contrarian backgrounds to stimulate debate."
+        )
+
+    return {
+        "participation_rate": participation_rate,
+        "stance_entropy": stance_entropy,
+        "convergence_round": convergence_round,
+        "cross_platform_rate": cross_platform_rate,
+        "total_rounds": total_rounds,
+        "active_agents": len(active_agent_ids),
+        "total_agents": total_agents,
+        "health": health,
+        "suggestions": suggestions,
+    }
 
 
 # ============== Database Query Endpoints ==============

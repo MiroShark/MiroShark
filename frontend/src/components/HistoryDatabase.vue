@@ -107,6 +107,12 @@
               title="Awaiting outcome resolution"
             >⏳</span>
             <span
+              v-if="project.quality && project.quality.health"
+              class="quality-dot"
+              :class="project.quality.health.toLowerCase()"
+              :title="getQualityTooltip(project.quality)"
+            >●</span>
+            <span
               class="status-icon"
               :class="{ available: project.project_id, unavailable: !project.project_id }"
               title="Graph Build"
@@ -355,6 +361,53 @@
               </div>
             </div>
 
+            <!-- Quality Diagnostics Section -->
+            <div v-if="selectedQuality" class="modal-quality-section">
+              <div class="modal-divider">
+                <span class="divider-line"></span>
+                <span class="divider-text">Simulation Quality</span>
+                <span class="divider-line"></span>
+              </div>
+
+              <div class="quality-overview">
+                <div class="quality-health-badge" :class="selectedQuality.health.toLowerCase()">
+                  {{ selectedQuality.health }}
+                </div>
+                <div class="quality-metrics">
+                  <div class="quality-metric">
+                    <span class="metric-label">Participation</span>
+                    <div class="metric-bar-wrap">
+                      <div class="metric-bar" :class="selectedQuality.participation_rate >= 0.8 ? 'bar-good' : selectedQuality.participation_rate >= 0.6 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.round(selectedQuality.participation_rate * 100) + '%' }"></div>
+                    </div>
+                    <span class="metric-value">{{ Math.round(selectedQuality.participation_rate * 100) }}%</span>
+                  </div>
+                  <div class="quality-metric" v-if="selectedQuality.stance_entropy !== null">
+                    <span class="metric-label">Stance Diversity</span>
+                    <div class="metric-bar-wrap">
+                      <div class="metric-bar" :class="selectedQuality.stance_entropy >= 0.5 ? 'bar-good' : selectedQuality.stance_entropy >= 0.3 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.round(selectedQuality.stance_entropy * 100) + '%' }"></div>
+                    </div>
+                    <span class="metric-value">{{ Math.round(selectedQuality.stance_entropy * 100) }}%</span>
+                  </div>
+                  <div class="quality-metric">
+                    <span class="metric-label">Cross-Platform</span>
+                    <div class="metric-bar-wrap">
+                      <div class="metric-bar" :class="selectedQuality.cross_platform_rate >= 0.2 ? 'bar-good' : selectedQuality.cross_platform_rate >= 0.1 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.min(Math.round(selectedQuality.cross_platform_rate * 100), 100) + '%' }"></div>
+                    </div>
+                    <span class="metric-value">{{ Math.round(selectedQuality.cross_platform_rate * 100) }}%</span>
+                  </div>
+                  <div class="quality-metric" v-if="selectedQuality.convergence_round !== null">
+                    <span class="metric-label">Consensus</span>
+                    <span class="metric-value convergence-tag">Round {{ selectedQuality.convergence_round }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="selectedQuality.suggestions && selectedQuality.suggestions.length" class="quality-suggestions">
+                <div class="suggestions-label">Try for next run:</div>
+                <div v-for="(s, i) in selectedQuality.suggestions" :key="i" class="suggestion-chip">{{ s }}</div>
+              </div>
+            </div>
+
             <!-- Fork Section -->
             <div class="modal-fork-section">
               <div class="modal-divider">
@@ -399,7 +452,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, onActivated, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getSimulationHistory, forkSimulation, resolveSimulation } from '../api/simulation'
+import { getSimulationHistory, forkSimulation, resolveSimulation, getSimulationQuality } from '../api/simulation'
 
 const router = useRouter()
 const route = useRoute()
@@ -718,13 +771,25 @@ const truncateFilename = (filename, maxLength) => {
 }
 
 // Open project detail modal
+const selectedQuality = ref(null)
+
 const navigateToProject = (simulation) => {
   selectedProject.value = simulation
+  selectedQuality.value = simulation.quality || null
+  if (!selectedQuality.value && simulation.current_round > 0) {
+    getSimulationQuality(simulation.simulation_id).then(res => {
+      if (res?.data?.success && res.data.data) {
+        selectedQuality.value = res.data.data
+        simulation.quality = res.data.data
+      }
+    }).catch(() => {})
+  }
 }
 
 // Close modal
 const closeModal = () => {
   selectedProject.value = null
+  selectedQuality.value = null
   showForkPanel.value = false
   forkError.value = ''
   showResolvePanel.value = false
@@ -867,6 +932,20 @@ const getResolutionLabel = (project) => {
     return { text: `✗ Incorrect${pct ? ` — ${pct}% confident` : ''}`, cls: 'resolved-wrong' }
   }
   return { text: '~ Split', cls: 'resolved-split' }
+}
+
+const getQualityTooltip = (q) => {
+  if (!q) return ''
+  const parts = [`Simulation Health: ${q.health}`]
+  parts.push(`Participation ${Math.round(q.participation_rate * 100)}%`)
+  if (q.stance_entropy !== null && q.stance_entropy !== undefined) {
+    const level = q.stance_entropy >= 0.7 ? 'high' : q.stance_entropy >= 0.4 ? 'medium' : 'low'
+    parts.push(`Stance diversity: ${level}`)
+  }
+  if (q.convergence_round !== null && q.convergence_round !== undefined) {
+    parts.push(`Consensus at round ${q.convergence_round}`)
+  }
+  return parts.join(' · ')
 }
 
 const openResolvePanel = () => {
@@ -2051,6 +2130,15 @@ onUnmounted(() => {
 .resolution-badge.neutral  { color: #a78bfa; background: rgba(167,139,250,0.1); }
 .resolution-badge.pending  { font-size: 8px; color: rgba(10,10,10,0.4); border-color: rgba(10,10,10,0.2); background: transparent; }
 
+.quality-dot {
+  font-size: 8px;
+  line-height: 1;
+  cursor: default;
+}
+.quality-dot.excellent { color: #22c55e; }
+.quality-dot.good      { color: #eab308; }
+.quality-dot.low       { color: #ef4444; }
+
 /* ── Track Record bar ── */
 .track-record-bar {
   display: flex;
@@ -2387,5 +2475,110 @@ onUnmounted(() => {
 .clear-filters-btn:hover {
   border-color: #FF6B1A;
   color: #FF6B1A;
+}
+
+/* ── Quality Diagnostics Section ── */
+.modal-quality-section {
+  padding: 0 24px 16px;
+}
+
+.quality-overview {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  margin-top: 12px;
+}
+
+.quality-health-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+.quality-health-badge.excellent { color: #22c55e; border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); }
+.quality-health-badge.good      { color: #eab308; border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.06); }
+.quality-health-badge.low       { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
+
+.quality-metrics {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quality-metric {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.metric-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.4);
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.metric-bar-wrap {
+  flex: 1;
+  height: 4px;
+  background: rgba(10,10,10,0.06);
+  position: relative;
+}
+
+.metric-bar {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+.metric-bar.bar-good { background: #22c55e; }
+.metric-bar.bar-ok   { background: #eab308; }
+.metric-bar.bar-low  { background: #ef4444; }
+
+.metric-value {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(10,10,10,0.6);
+  width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.convergence-tag {
+  width: auto;
+  font-size: 10px;
+  color: rgba(10,10,10,0.5);
+}
+
+.quality-suggestions {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(10,10,10,0.06);
+}
+
+.suggestions-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.35);
+  margin-bottom: 8px;
+}
+
+.suggestion-chip {
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(10,10,10,0.55);
+  padding: 6px 10px;
+  background: rgba(10,10,10,0.03);
+  border: 1px solid rgba(10,10,10,0.06);
+  margin-bottom: 4px;
 }
 </style>

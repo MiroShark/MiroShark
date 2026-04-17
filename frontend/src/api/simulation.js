@@ -345,3 +345,12 @@ export const getDirectorEvents = (simulationId) => {
   return service.get(`/api/simulation/${simulationId}/director/events`)
 }
 
+/**
+ * Get quality diagnostics for a completed simulation.
+ * @param {string} simulationId
+ * @returns {Promise<{participation_rate, stance_entropy, convergence_round, cross_platform_rate, health, suggestions}>}
+ */
+export const getSimulationQuality = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/quality`)
+}
+

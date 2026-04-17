@@ -119,6 +119,48 @@
       <span class="events-platform">Polymarket <span class="events-count">{{ runStatus.polymarket_actions_count || 0 }}</span></span>
 
       <!-- Status dot removed — page title shows status instead -->
+
+      <!-- Quality Badge (completed simulations) -->
+      <span
+        v-if="qualityData"
+        class="quality-chip"
+        :class="qualityData.health.toLowerCase()"
+        :title="qualityTooltip"
+        @click="showQualityPanel = !showQualityPanel"
+      >{{ qualityData.health }}</span>
+    </div>
+
+    <!-- Quality Diagnostics Panel (expandable) -->
+    <div v-if="showQualityPanel && qualityData" class="quality-panel">
+      <div class="qp-header">
+        <span class="qp-title">QUALITY DIAGNOSTICS</span>
+        <button class="qp-close" @click="showQualityPanel = false">×</button>
+      </div>
+      <div class="qp-metrics">
+        <div class="qp-metric">
+          <span class="qp-label">Participation</span>
+          <div class="qp-bar-wrap"><div class="qp-bar" :class="qualityData.participation_rate >= 0.8 ? 'qp-good' : qualityData.participation_rate >= 0.6 ? 'qp-ok' : 'qp-low'" :style="{ width: Math.round(qualityData.participation_rate * 100) + '%' }"></div></div>
+          <span class="qp-val">{{ Math.round(qualityData.participation_rate * 100) }}%</span>
+        </div>
+        <div v-if="qualityData.stance_entropy !== null" class="qp-metric">
+          <span class="qp-label">Stance Diversity</span>
+          <div class="qp-bar-wrap"><div class="qp-bar" :class="qualityData.stance_entropy >= 0.5 ? 'qp-good' : qualityData.stance_entropy >= 0.3 ? 'qp-ok' : 'qp-low'" :style="{ width: Math.round(qualityData.stance_entropy * 100) + '%' }"></div></div>
+          <span class="qp-val">{{ Math.round(qualityData.stance_entropy * 100) }}%</span>
+        </div>
+        <div class="qp-metric">
+          <span class="qp-label">Cross-Platform</span>
+          <div class="qp-bar-wrap"><div class="qp-bar" :class="qualityData.cross_platform_rate >= 0.2 ? 'qp-good' : qualityData.cross_platform_rate >= 0.1 ? 'qp-ok' : 'qp-low'" :style="{ width: Math.min(Math.round(qualityData.cross_platform_rate * 100), 100) + '%' }"></div></div>
+          <span class="qp-val">{{ Math.round(qualityData.cross_platform_rate * 100) }}%</span>
+        </div>
+        <div v-if="qualityData.convergence_round !== null" class="qp-metric">
+          <span class="qp-label">Consensus</span>
+          <span class="qp-val qp-convergence">Round {{ qualityData.convergence_round }}</span>
+        </div>
+      </div>
+      <div v-if="qualityData.suggestions && qualityData.suggestions.length" class="qp-suggestions">
+        <div class="qp-suggestions-title">Try for next run:</div>
+        <div v-for="(s, i) in qualityData.suggestions" :key="i" class="qp-suggestion">{{ s }}</div>
+      </div>
     </div>
 
     <!-- Platform Status Rows -->
@@ -596,6 +638,7 @@ import {
   generateSimulationArticle,
   injectDirectorEvent,
   getDirectorEvents,
+  getSimulationQuality,
 } from '../api/simulation'
 import { generateReport } from '../api/report'
 import { renderMarkdown } from '../utils/markdown'
@@ -649,6 +692,20 @@ const directorPendingEvents = ref([])
 const directorEventsTotal = ref(0)
 const isInjectingEvent = ref(false)
 const directorError = ref(null)
+
+// Quality diagnostics state
+const qualityData = ref(null)
+const showQualityPanel = ref(false)
+const qualityTooltip = computed(() => {
+  const q = qualityData.value
+  if (!q) return ''
+  const parts = [`Health: ${q.health}`, `Participation ${Math.round(q.participation_rate * 100)}%`]
+  if (q.stance_entropy !== null) {
+    const level = q.stance_entropy >= 0.7 ? 'high' : q.stance_entropy >= 0.4 ? 'medium' : 'low'
+    parts.push(`Diversity: ${level}`)
+  }
+  return parts.join(' · ')
+})
 
 // Page title status indicator
 const articleError = ref(null)
@@ -1368,6 +1425,16 @@ const downloadArticle = () => {
   URL.revokeObjectURL(url)
 }
 
+watch(phase, (newPhase) => {
+  if (newPhase === 2 && !qualityData.value && props.simulationId) {
+    getSimulationQuality(props.simulationId).then(res => {
+      if (res?.data?.success && res.data.data) {
+        qualityData.value = res.data.data
+      }
+    }).catch(() => {})
+  }
+})
+
 onMounted(() => {
   addLog('Step3 Simulation Run initialized')
   tryResumeOrStart()
@@ -1456,6 +1523,133 @@ onUnmounted(() => {
 
 .events-slash {
   color: rgba(10,10,10,0.15);
+}
+
+/* Quality chip in events bar */
+.quality-chip {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 2px 10px;
+  border: 1px solid;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.quality-chip.excellent { color: #22c55e; border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); }
+.quality-chip.good      { color: #eab308; border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.06); }
+.quality-chip.low       { color: #ef4444; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.06); }
+.quality-chip:hover { opacity: 0.8; }
+
+/* Quality diagnostics panel */
+.quality-panel {
+  background: #FAFAFA;
+  border: 2px solid rgba(10,10,10,0.08);
+  padding: 16px 20px;
+  margin: 0 12px 8px;
+}
+
+.qp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.qp-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(10,10,10,0.35);
+}
+
+.qp-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: rgba(10,10,10,0.3);
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.qp-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.qp-metric {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qp-label {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.4);
+  width: 110px;
+  flex-shrink: 0;
+}
+
+.qp-bar-wrap {
+  flex: 1;
+  height: 4px;
+  background: rgba(10,10,10,0.06);
+}
+
+.qp-bar {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+.qp-good { background: #22c55e; }
+.qp-ok   { background: #eab308; }
+.qp-low  { background: #ef4444; }
+
+.qp-val {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(10,10,10,0.6);
+  width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.qp-convergence {
+  width: auto;
+  font-size: 10px;
+  color: rgba(10,10,10,0.5);
+}
+
+.qp-suggestions {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(10,10,10,0.06);
+}
+
+.qp-suggestions-title {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.35);
+  margin-bottom: 8px;
+}
+
+.qp-suggestion {
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(10,10,10,0.55);
+  padding: 6px 10px;
+  background: rgba(10,10,10,0.03);
+  border: 1px solid rgba(10,10,10,0.06);
+  margin-bottom: 4px;
 }
 
 .status-group {
