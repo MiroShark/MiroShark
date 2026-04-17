@@ -4318,3 +4318,275 @@ def get_director_events(simulation_id: str):
     except Exception as e:
         logger.error(f"Failed to get director events: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+@simulation_bp.route('/<simulation_id>/interaction-network', methods=['GET'])
+def get_interaction_network(simulation_id: str):
+    """
+    Build an agent interaction network from simulation action JSONL logs.
+
+    Extracts agent-to-agent edges (likes, reposts, quotes, comments, follows),
+    computes degree centrality, bridge score, and echo chamber metrics.
+    Results are cached in network.json.
+    """
+    import math
+
+    try:
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        if not os.path.exists(sim_dir):
+            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+
+        cache_path = os.path.join(sim_dir, "network.json")
+        if os.path.exists(cache_path):
+            with open(cache_path, 'r', encoding='utf-8') as f:
+                cached = json.load(f)
+            return jsonify({"success": True, "data": cached})
+
+        INTERACTION_TYPES = frozenset({
+            'LIKE_POST', 'REPOST', 'QUOTE_POST', 'CREATE_COMMENT',
+            'LIKE_COMMENT', 'DISLIKE_POST', 'DISLIKE_COMMENT', 'FOLLOW',
+        })
+
+        agents = {}
+        edges = {}
+
+        def _ensure_agent(name, platform):
+            if name not in agents:
+                agents[name] = {'name': name, 'platforms': set(), 'actions': 0}
+            agents[name]['platforms'].add(platform)
+
+        for platform in ('twitter', 'reddit', 'polymarket'):
+            actions_path = os.path.join(sim_dir, platform, 'actions.jsonl')
+            if not os.path.exists(actions_path):
+                continue
+
+            with open(actions_path, 'r', encoding='utf-8') as fh:
+                for raw_line in fh:
+                    raw_line = raw_line.strip()
+                    if not raw_line:
+                        continue
+                    try:
+                        event = json.loads(raw_line)
+                    except json.JSONDecodeError:
+                        continue
+
+                    if event.get('event_type') in (
+                        'simulation_start', 'round_start', 'round_end', 'simulation_end'
+                    ):
+                        continue
+
+                    agent_name = event.get('agent_name')
+                    if not agent_name:
+                        continue
+
+                    action_type = event.get('action_type', '')
+                    args = event.get('action_args') or {}
+                    _ensure_agent(agent_name, platform)
+                    agents[agent_name]['actions'] += 1
+
+                    if action_type == 'CREATE_POST':
+                        continue
+
+                    if action_type not in INTERACTION_TYPES:
+                        continue
+
+                    target = None
+                    if action_type == 'FOLLOW':
+                        target = args.get('target_user_name')
+                    else:
+                        target = (
+                            args.get('post_author_name')
+                            or args.get('original_author_name')
+                            or args.get('comment_author_name')
+                        )
+
+                    if not target or target == agent_name:
+                        continue
+
+                    _ensure_agent(target, platform)
+
+                    edge_key = (agent_name, target)
+                    if edge_key not in edges:
+                        edges[edge_key] = {
+                            'source': agent_name,
+                            'target': target,
+                            'weight': 0,
+                            'types': {},
+                            'platforms': set(),
+                        }
+                    edges[edge_key]['weight'] += 1
+                    edges[edge_key]['types'][action_type] = edges[edge_key]['types'].get(action_type, 0) + 1
+                    edges[edge_key]['platforms'].add(platform)
+
+        if not agents:
+            return jsonify({
+                "success": True,
+                "data": None,
+                "message": "No interaction data available."
+            })
+
+        # Read stance data from trajectory.json
+        stance_map = {}
+        trajectory_path = os.path.join(sim_dir, "trajectory.json")
+        if os.path.exists(trajectory_path):
+            try:
+                with open(trajectory_path, 'r', encoding='utf-8') as f:
+                    traj = json.load(f)
+                snapshots = traj.get("snapshots", [])
+                if snapshots:
+                    last_snap = snapshots[-1]
+                    for agent_id, positions in last_snap.get("belief_positions", {}).items():
+                        if positions:
+                            avg = sum(positions.values()) / len(positions)
+                            stance_map[agent_id] = avg
+            except Exception:
+                pass
+
+        # Build influence ranking for node sizing
+        ranked = _compute_influence_ranked(simulation_id)
+        influence_map = {a['agent_name']: a['influence_score'] for a in ranked}
+        rank_map = {a['agent_name']: a['rank'] for a in ranked}
+
+        # Map agent names to agent IDs from profiles for stance lookup
+        agent_name_to_stance = {}
+        profiles_path = os.path.join(sim_dir, "profiles.json")
+        if os.path.exists(profiles_path) and stance_map:
+            try:
+                with open(profiles_path, 'r', encoding='utf-8') as f:
+                    profiles = json.load(f)
+                if isinstance(profiles, list):
+                    for p in profiles:
+                        aid = str(p.get('agent_id', p.get('id', '')))
+                        name = p.get('name', p.get('agent_name', ''))
+                        if aid in stance_map and name:
+                            agent_name_to_stance[name] = stance_map[aid]
+            except Exception:
+                pass
+
+        # Compute graph metrics
+        in_degree = {}
+        out_degree = {}
+        cross_platform_edges = 0
+        total_edges = len(edges)
+
+        for edge in edges.values():
+            out_degree[edge['source']] = out_degree.get(edge['source'], 0) + edge['weight']
+            in_degree[edge['target']] = in_degree.get(edge['target'], 0) + edge['weight']
+            if len(edge['platforms']) > 1:
+                cross_platform_edges += 1
+
+        max_possible = max(len(agents) - 1, 1)
+
+        # Build node list
+        nodes = []
+        for name, data in agents.items():
+            total_degree = in_degree.get(name, 0) + out_degree.get(name, 0)
+            stance_val = agent_name_to_stance.get(name)
+            if stance_val is not None:
+                stance = 'bullish' if stance_val > 0.2 else ('bearish' if stance_val < -0.2 else 'neutral')
+            else:
+                stance = 'neutral'
+
+            nodes.append({
+                'id': name,
+                'name': name,
+                'platforms': sorted(data['platforms']),
+                'primary_platform': sorted(data['platforms'])[0] if data['platforms'] else 'unknown',
+                'stance': stance,
+                'influence_score': influence_map.get(name, 0),
+                'rank': rank_map.get(name, len(agents)),
+                'in_degree': in_degree.get(name, 0),
+                'out_degree': out_degree.get(name, 0),
+                'total_degree': total_degree,
+                'degree_centrality': round(total_degree / max_possible, 4) if max_possible > 0 else 0,
+            })
+
+        # Serialize edges
+        edge_list = []
+        for edge in edges.values():
+            edge_list.append({
+                'source': edge['source'],
+                'target': edge['target'],
+                'weight': edge['weight'],
+                'types': edge['types'],
+                'platforms': sorted(edge['platforms']),
+                'is_cross_platform': len(edge['platforms']) > 1,
+            })
+
+        edge_list.sort(key=lambda e: e['weight'], reverse=True)
+
+        # Compute insights
+        top_hub = max(nodes, key=lambda n: n['in_degree']) if nodes else None
+        top_bridge = None
+        if nodes:
+            bridge_scores = []
+            for n in nodes:
+                cross = sum(
+                    1 for e in edge_list
+                    if (e['source'] == n['id'] or e['target'] == n['id']) and e['is_cross_platform']
+                )
+                bridge_scores.append((n, cross))
+            bridge_scores.sort(key=lambda x: x[1], reverse=True)
+            if bridge_scores and bridge_scores[0][1] > 0:
+                top_bridge = {
+                    'agent': bridge_scores[0][0]['name'],
+                    'cross_platform_edges': bridge_scores[0][1],
+                }
+
+        # Platform clustering
+        platform_agents = {}
+        for n in nodes:
+            for p in n['platforms']:
+                platform_agents.setdefault(p, set()).add(n['id'])
+
+        same_platform_edges = 0
+        for e in edge_list:
+            if not e['is_cross_platform']:
+                same_platform_edges += 1
+
+        echo_chamber_score = round(same_platform_edges / total_edges * 100, 1) if total_edges > 0 else 0
+
+        insights = {
+            'top_hub': {
+                'agent': top_hub['name'],
+                'in_degree': top_hub['in_degree'],
+                'description': f"{top_hub['name']} received {top_hub['in_degree']} interactions — more than any other agent.",
+            } if top_hub and top_hub['in_degree'] > 0 else None,
+            'top_bridge': {
+                'agent': top_bridge['agent'],
+                'cross_platform_edges': top_bridge['cross_platform_edges'],
+                'description': f"{top_bridge['agent']} had the highest cross-platform interaction rate ({top_bridge['cross_platform_edges']} cross-platform edges).",
+            } if top_bridge else None,
+            'echo_chamber': {
+                'score': echo_chamber_score,
+                'description': f"{echo_chamber_score}% of interactions were within the same platform." + (
+                    " Agents mostly stayed in their silos." if echo_chamber_score > 80
+                    else " Moderate cross-platform activity." if echo_chamber_score > 50
+                    else " Strong cross-platform engagement."
+                ),
+            },
+            'total_nodes': len(nodes),
+            'total_edges': total_edges,
+        }
+
+        result = {
+            'nodes': nodes,
+            'edges': edge_list,
+            'insights': insights,
+        }
+
+        try:
+            with open(cache_path, 'w', encoding='utf-8') as f:
+                json.dump(result, f, indent=2)
+        except Exception:
+            pass
+
+        return jsonify({"success": True, "data": result})
+
+    except Exception as e:
+        logger.error(f"Failed to compute interaction network: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500

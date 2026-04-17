@@ -329,6 +329,15 @@ export const testPushNotification = (simulationId) => {
 }
 
 /**
+ * Get agent interaction network graph data for a completed simulation.
+ * @param {string} simulationId
+ * @returns {Promise<{nodes: Array, edges: Array, insights: Object}>}
+ */
+export const getInteractionNetwork = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/interaction-network`)
+}
+
+/**
  * Inject a breaking event into a running simulation (Director Mode).
  * @param {string} simulationId
  * @param {Object} data - { event_text: string }

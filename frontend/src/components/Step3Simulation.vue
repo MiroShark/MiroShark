@@ -54,7 +54,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showInfluence }"
-        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false"
+        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false; showNetwork = false"
         title="Agent influence leaderboard"
       >
         ◈ Influence
@@ -65,10 +65,21 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showBeliefDrift }"
-        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false"
+        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false; showNetwork = false"
         title="Aggregate belief drift chart"
       >
         ◎ Drift
+      </button>
+
+      <!-- Interaction Network toggle -->
+      <button
+        v-if="allActions.length > 0"
+        class="action-btn secondary"
+        :class="{ active: showNetwork }"
+        @click="showNetwork = !showNetwork; showInfluence = false; showBeliefDrift = false; showDirector = false"
+        title="Agent interaction network graph"
+      >
+        ⬡ Network
       </button>
 
       <!-- Director Mode toggle (only while simulation is running) -->
@@ -76,7 +87,7 @@
         v-if="phase === 1"
         class="action-btn secondary director-btn"
         :class="{ active: showDirector }"
-        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false"
+        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false; showNetwork = false"
         :title="directorEventsTotal >= 10 ? 'Director Mode — max events reached' : 'Director Mode — inject a breaking event into the simulation'"
       >
         ⚡ Director
@@ -188,6 +199,14 @@
       class="influence-overlay"
     />
 
+    <!-- Interaction Network (overlay when toggled) -->
+    <InteractionNetwork
+      v-if="showNetwork"
+      :simulationId="simulationId"
+      :visible="showNetwork"
+      class="influence-overlay"
+    />
+
     <!-- Director Mode Panel (overlay when toggled) -->
     <div v-if="showDirector" class="influence-overlay director-panel">
       <div class="director-header">
@@ -254,7 +273,7 @@
     </div>
 
     <!-- Main Content: Dual Timeline -->
-    <div v-show="!showInfluence && !showBeliefDrift && !showDirector" class="main-content-area" ref="scrollContainer" @scroll="onTimelineScroll">
+    <div v-show="!showInfluence && !showBeliefDrift && !showDirector && !showNetwork" class="main-content-area" ref="scrollContainer" @scroll="onTimelineScroll">
       <!-- Scroll to bottom button -->
       <button
         v-if="showScrollBtn"
@@ -601,6 +620,7 @@ import { generateReport } from '../api/report'
 import { renderMarkdown } from '../utils/markdown'
 import InfluenceLeaderboard from './InfluenceLeaderboard.vue'
 import BeliefDriftChart from './BeliefDriftChart.vue'
+import InteractionNetwork from './InteractionNetwork.vue'
 
 const props = defineProps({
   simulationId: String,
@@ -635,6 +655,7 @@ const filteredAgent = ref(null)
 const filteredPlatform = ref(null)
 const showInfluence = ref(false)
 const showBeliefDrift = ref(false)
+const showNetwork = ref(false)
 
 // Article drawer state
 const showArticleDrawer = ref(false)
