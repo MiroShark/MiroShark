@@ -363,3 +363,12 @@ export const getSimulationQuality = (simulationId) => {
   return service.get(`/api/simulation/${simulationId}/quality`)
 }
 
+/**
+ * Get a minimal summary for rendering the embeddable widget.
+ * @param {string} simulationId
+ * @returns {Promise<{simulation_id, scenario, status, current_round, total_rounds, profiles_count, belief, quality, resolution}>}
+ */
+export const getEmbedSummary = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/embed-summary`)
+}
+

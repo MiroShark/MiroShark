@@ -48,6 +48,12 @@ const routes = [
     name: 'Compare',
     component: () => import('../views/ComparisonView.vue'),
     props: true
+  },
+  {
+    path: '/embed/:simulationId',
+    name: 'Embed',
+    component: () => import('../views/EmbedView.vue'),
+    props: true
   }
 ]
 

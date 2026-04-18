@@ -2759,6 +2759,175 @@ def _compute_quality_diagnostics(simulation_id: str, sim_dir: str):
     }
 
 
+# ============== Embed Widget ==============
+
+@simulation_bp.route('/<simulation_id>/embed-summary', methods=['GET'])
+def get_embed_summary(simulation_id: str):
+    """
+    Return a minimal summary for rendering the embeddable widget.
+
+    Bundles only the fields the embed iframe needs — scenario, round counts,
+    agent count, belief drift sparkline, optional consensus/resolution/health —
+    so a single request powers the read-only widget without the full simulation
+    payload.
+    """
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}"
+            }), 404
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+
+        # Scenario & timing
+        config = manager.get_simulation_config(simulation_id)
+        scenario = ""
+        if config:
+            scenario = (config.get("simulation_requirement") or "").strip()
+
+        run_state = SimulationRunner.get_run_state(simulation_id)
+        if run_state:
+            current_round = run_state.current_round
+            total_rounds = run_state.total_rounds if getattr(run_state, 'total_rounds', 0) else 0
+            runner_status = run_state.runner_status.value if hasattr(run_state.runner_status, 'value') else str(run_state.runner_status)
+        else:
+            current_round = 0
+            total_rounds = 0
+            runner_status = "idle"
+
+        if total_rounds == 0 and config:
+            time_config = config.get("time_config", {})
+            minutes_per_round = max(int(time_config.get("minutes_per_round", 60) or 60), 1)
+            hours = int(time_config.get("total_simulation_hours", 0) or 0)
+            total_rounds = int(hours * 60 / minutes_per_round)
+
+        # Belief drift sparkline
+        belief = None
+        trajectory_path = os.path.join(sim_dir, "trajectory.json") if os.path.exists(sim_dir) else None
+        if trajectory_path and os.path.exists(trajectory_path):
+            try:
+                with open(trajectory_path, 'r', encoding='utf-8') as f:
+                    traj = json.load(f)
+
+                rounds = []
+                bullish = []
+                neutral = []
+                bearish = []
+                for snap in traj.get("snapshots", []):
+                    positions = snap.get("belief_positions", {}) or {}
+                    if not positions:
+                        continue
+                    stances = []
+                    for p in positions.values():
+                        if p:
+                            stances.append(sum(p.values()) / len(p))
+                    if not stances:
+                        continue
+                    total = len(stances)
+                    nb = sum(1 for s in stances if s > 0.2)
+                    nbe = sum(1 for s in stances if s < -0.2)
+                    nn = total - nb - nbe
+                    rounds.append(snap.get("round_num", len(rounds)))
+                    bullish.append(round(nb / total * 100, 1))
+                    neutral.append(round(nn / total * 100, 1))
+                    bearish.append(round(nbe / total * 100, 1))
+
+                consensus_round = None
+                consensus_stance = None
+                for i, _ in enumerate(rounds):
+                    if bullish[i] > 50:
+                        consensus_round = rounds[i]
+                        consensus_stance = "bullish"
+                        break
+                    if bearish[i] > 50:
+                        consensus_round = rounds[i]
+                        consensus_stance = "bearish"
+                        break
+
+                if rounds:
+                    belief = {
+                        "rounds": rounds,
+                        "bullish": bullish,
+                        "neutral": neutral,
+                        "bearish": bearish,
+                        "final": {
+                            "bullish": bullish[-1],
+                            "neutral": neutral[-1],
+                            "bearish": bearish[-1],
+                        },
+                        "consensus_round": consensus_round,
+                        "consensus_stance": consensus_stance,
+                    }
+            except Exception as exc:
+                logger.warning(f"Embed summary: failed to parse trajectory for {simulation_id}: {exc}")
+
+        # Quality (cached)
+        quality = None
+        quality_path = os.path.join(sim_dir, "quality.json") if os.path.exists(sim_dir) else None
+        if quality_path and os.path.exists(quality_path):
+            try:
+                with open(quality_path, 'r', encoding='utf-8') as f:
+                    q = json.load(f)
+                quality = {
+                    "health": q.get("health"),
+                    "participation_rate": q.get("participation_rate"),
+                }
+            except Exception:
+                quality = None
+
+        # Resolution (cached)
+        resolution = None
+        resolution_path = os.path.join(sim_dir, "resolution.json") if os.path.exists(sim_dir) else None
+        if resolution_path and os.path.exists(resolution_path):
+            try:
+                with open(resolution_path, 'r', encoding='utf-8') as f:
+                    r = json.load(f)
+                resolution = {
+                    "actual_outcome": r.get("actual_outcome"),
+                    "predicted_consensus": r.get("predicted_consensus"),
+                    "accuracy_score": r.get("accuracy_score"),
+                }
+            except Exception:
+                resolution = None
+
+        created_date = ""
+        try:
+            created_date = (state.created_at or "")[:10]
+        except Exception:
+            pass
+
+        summary = {
+            "simulation_id": simulation_id,
+            "scenario": scenario,
+            "status": state.status.value if hasattr(state.status, 'value') else str(state.status),
+            "runner_status": runner_status,
+            "current_round": current_round,
+            "total_rounds": total_rounds,
+            "profiles_count": state.profiles_count,
+            "created_date": created_date,
+            "parent_simulation_id": state.parent_simulation_id,
+            "belief": belief,
+            "quality": quality,
+            "resolution": resolution,
+        }
+
+        response = jsonify({"success": True, "data": summary})
+        # Widget is read-only and explicitly designed to be embedded anywhere.
+        response.headers["Cache-Control"] = "public, max-age=60"
+        return response
+
+    except Exception as e:
+        logger.error(f"Failed to build embed summary: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
 # ============== Database Query Endpoints ==============
 
 @simulation_bp.route('/<simulation_id>/posts', methods=['GET'])

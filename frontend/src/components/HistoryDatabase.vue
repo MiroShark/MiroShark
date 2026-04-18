@@ -408,6 +408,20 @@
               </div>
             </div>
 
+            <!-- Embed Section -->
+            <div class="modal-embed-section">
+              <div class="modal-divider">
+                <span class="divider-line"></span>
+                <span class="divider-text">Embed</span>
+                <span class="divider-line"></span>
+              </div>
+
+              <div class="embed-intro">
+                <p class="embed-desc">Drop this simulation into a Notion page, blog post, or README as a live widget — updates automatically as the simulation progresses.</p>
+                <button class="embed-trigger-btn" @click="openEmbedDialog">⌘ Get Embed Code</button>
+              </div>
+            </div>
+
             <!-- Fork Section -->
             <div class="modal-fork-section">
               <div class="modal-divider">
@@ -446,6 +460,13 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Embed Dialog -->
+    <EmbedDialog
+      :open="embedDialogOpen"
+      :simulation-id="embedSimulationId"
+      @close="closeEmbedDialog"
+    />
   </div>
 </template>
 
@@ -453,6 +474,7 @@
 import { ref, computed, onMounted, onUnmounted, onActivated, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { getSimulationHistory, forkSimulation, resolveSimulation, getSimulationQuality } from '../api/simulation'
+import EmbedDialog from './EmbedDialog.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -487,6 +509,20 @@ const forkError = ref('')
 const showResolvePanel = ref(false)
 const resolving = ref(false)
 const resolveError = ref('')
+
+// Embed dialog
+const embedDialogOpen = ref(false)
+const embedSimulationId = ref('')
+
+const openEmbedDialog = () => {
+  if (!selectedProject.value) return
+  embedSimulationId.value = selectedProject.value.simulation_id
+  embedDialogOpen.value = true
+}
+
+const closeEmbedDialog = () => {
+  embedDialogOpen.value = false
+}
 
 // Filtered and sorted project list
 const filteredProjects = computed(() => {
@@ -1960,6 +1996,47 @@ onUnmounted(() => {
   color: #FFB347;
   opacity: 0.8;
   cursor: default;
+}
+
+/* ===== Embed section in modal ===== */
+.modal-embed-section {
+  background: #FAFAFA;
+  padding: 0 0 22px;
+}
+
+.embed-intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 34px 0;
+}
+
+.embed-desc {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(10, 10, 10, 0.4);
+  letter-spacing: 1px;
+  text-align: center;
+  margin: 0;
+}
+
+.embed-trigger-btn {
+  padding: 8px 22px;
+  border: 1px solid rgba(234, 88, 12, 0.45);
+  background: rgba(234, 88, 12, 0.06);
+  color: #EA580C;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.embed-trigger-btn:hover {
+  border-color: #EA580C;
+  background: rgba(234, 88, 12, 0.12);
 }
 
 /* ===== Fork section in modal ===== */
