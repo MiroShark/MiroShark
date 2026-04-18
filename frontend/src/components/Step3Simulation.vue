@@ -54,7 +54,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showInfluence }"
-        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false; showNetwork = false"
+        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false"
         title="Agent influence leaderboard"
       >
         ◈ Influence
@@ -65,7 +65,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showBeliefDrift }"
-        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false; showNetwork = false"
+        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false; showNetwork = false; showDemographics = false"
         title="Aggregate belief drift chart"
       >
         ◎ Drift
@@ -76,10 +76,21 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showNetwork }"
-        @click="showNetwork = !showNetwork; showInfluence = false; showBeliefDrift = false; showDirector = false"
+        @click="showNetwork = !showNetwork; showInfluence = false; showBeliefDrift = false; showDirector = false; showDemographics = false"
         title="Agent interaction network graph"
       >
         ⬡ Network
+      </button>
+
+      <!-- Demographic Breakdown toggle -->
+      <button
+        v-if="allActions.length > 0"
+        class="action-btn secondary"
+        :class="{ active: showDemographics }"
+        @click="showDemographics = !showDemographics; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false"
+        title="Agent demographic breakdown (age, gender, country, actor type, platform)"
+      >
+        ◇ Demographics
       </button>
 
       <!-- Director Mode toggle (only while simulation is running) -->
@@ -87,7 +98,7 @@
         v-if="phase === 1"
         class="action-btn secondary director-btn"
         :class="{ active: showDirector }"
-        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false; showNetwork = false"
+        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false; showNetwork = false; showDemographics = false"
         :title="directorEventsTotal >= 10 ? 'Director Mode — max events reached' : 'Director Mode — inject a breaking event into the simulation'"
       >
         ⚡ Director
@@ -249,6 +260,14 @@
       class="influence-overlay"
     />
 
+    <!-- Demographic Breakdown (overlay when toggled) -->
+    <DemographicBreakdown
+      v-if="showDemographics"
+      :simulationId="simulationId"
+      :visible="showDemographics"
+      class="influence-overlay"
+    />
+
     <!-- Director Mode Panel (overlay when toggled) -->
     <div v-if="showDirector" class="influence-overlay director-panel">
       <div class="director-header">
@@ -315,7 +334,7 @@
     </div>
 
     <!-- Main Content: Dual Timeline -->
-    <div v-show="!showInfluence && !showBeliefDrift && !showDirector && !showNetwork" class="main-content-area" ref="scrollContainer" @scroll="onTimelineScroll">
+    <div v-show="!showInfluence && !showBeliefDrift && !showDirector && !showNetwork && !showDemographics" class="main-content-area" ref="scrollContainer" @scroll="onTimelineScroll">
       <!-- Scroll to bottom button -->
       <button
         v-if="showScrollBtn"
@@ -664,6 +683,7 @@ import { renderMarkdown } from '../utils/markdown'
 import InfluenceLeaderboard from './InfluenceLeaderboard.vue'
 import BeliefDriftChart from './BeliefDriftChart.vue'
 import InteractionNetwork from './InteractionNetwork.vue'
+import DemographicBreakdown from './DemographicBreakdown.vue'
 
 const props = defineProps({
   simulationId: String,
@@ -699,6 +719,7 @@ const filteredPlatform = ref(null)
 const showInfluence = ref(false)
 const showBeliefDrift = ref(false)
 const showNetwork = ref(false)
+const showDemographics = ref(false)
 
 // Article drawer state
 const showArticleDrawer = ref(false)

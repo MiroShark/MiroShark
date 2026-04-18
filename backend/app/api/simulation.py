@@ -4803,3 +4803,432 @@ def get_interaction_network(simulation_id: str):
             "error": str(e),
             "traceback": traceback.format_exc()
         }), 500
+
+
+# ============== Demographic Breakdown ==============
+
+# Age buckets in display order. "unknown" is appended at the end when populated.
+_DEMO_AGE_BUCKETS = ["<18", "18-24", "25-34", "35-44", "45-54", "55+"]
+
+# Entity-type classification (mirrors OasisProfileGenerator's taxonomy).
+_INDIVIDUAL_ENTITY_TYPES = frozenset({
+    "student", "alumni", "professor", "person", "publicfigure",
+    "expert", "faculty", "official", "journalist", "activist",
+    "politician", "scientist", "researcher", "athlete", "artist",
+    "musician", "author", "entrepreneur", "investor", "diplomat",
+    "celebrity", "ceo", "executive", "regulator",
+})
+_INDIVIDUAL_TYPE_KEYWORDS = (
+    "founder", "forecaster", "user", "trader", "influencer",
+    "analyst", "advisor", "leader", "critic", "advocate",
+    "commentator", "blogger", "developer", "engineer",
+)
+_GROUP_ENTITY_TYPES = frozenset({
+    "university", "governmentagency", "organization", "ngo",
+    "mediaoutlet", "company", "institution", "group", "community",
+    "agency", "platform", "network", "protocol", "framework",
+    "fund", "exchange", "consortium", "coalition",
+})
+
+
+def _demo_age_bucket(age) -> str:
+    try:
+        a = int(age)
+    except (TypeError, ValueError):
+        return "unknown"
+    if a < 18:
+        return "<18"
+    if a <= 24:
+        return "18-24"
+    if a <= 34:
+        return "25-34"
+    if a <= 44:
+        return "35-44"
+    if a <= 54:
+        return "45-54"
+    return "55+"
+
+
+def _demo_classify_archetype(entity_type) -> str:
+    if not entity_type:
+        return "unknown"
+    et = str(entity_type).lower().replace(" ", "").replace("_", "")
+    if et in _INDIVIDUAL_ENTITY_TYPES:
+        return "individual"
+    if et in _GROUP_ENTITY_TYPES:
+        return "institutional"
+    for kw in _INDIVIDUAL_TYPE_KEYWORDS:
+        if kw in et:
+            return "individual"
+    return "unknown"
+
+
+def _demo_load_profiles(sim_dir: str) -> list:
+    """Load agent profiles from reddit_profiles.json (primary) or twitter_profiles.csv.
+
+    Returns a list of dicts with normalized demographic fields.
+    """
+    profiles = []
+    reddit_path = os.path.join(sim_dir, "reddit_profiles.json")
+    if os.path.exists(reddit_path):
+        try:
+            with open(reddit_path, 'r', encoding='utf-8') as f:
+                profiles = json.load(f)
+        except Exception as e:
+            logger.warning(f"Failed to load reddit_profiles.json: {e}")
+
+    if not profiles:
+        twitter_path = os.path.join(sim_dir, "twitter_profiles.csv")
+        if os.path.exists(twitter_path):
+            try:
+                with open(twitter_path, 'r', encoding='utf-8') as f:
+                    reader = csv.DictReader(f)
+                    profiles = list(reader)
+            except Exception as e:
+                logger.warning(f"Failed to load twitter_profiles.csv: {e}")
+
+    return profiles if isinstance(profiles, list) else []
+
+
+def _demo_extract_stances(sim_dir: str):
+    """Return (initial_stance_map, final_stance_map), keyed by string agent_id."""
+    initial_map: dict = {}
+    final_map: dict = {}
+    trajectory_path = os.path.join(sim_dir, "trajectory.json")
+    if not os.path.exists(trajectory_path):
+        return initial_map, final_map
+
+    try:
+        with open(trajectory_path, 'r', encoding='utf-8') as f:
+            traj = json.load(f)
+    except Exception:
+        return initial_map, final_map
+
+    snapshots = traj.get("snapshots", [])
+    if not snapshots:
+        return initial_map, final_map
+
+    def _avg_by_agent(snap):
+        out = {}
+        for aid, positions in (snap.get("belief_positions") or {}).items():
+            if positions:
+                out[str(aid)] = sum(positions.values()) / len(positions)
+        return out
+
+    initial_map = _avg_by_agent(snapshots[0])
+    final_map = _avg_by_agent(snapshots[-1])
+    return initial_map, final_map
+
+
+def _demo_bucket_accumulator():
+    return {
+        "count": 0,
+        "stances": [],
+        "deltas": [],
+        "influences": [],
+        "bullish": 0,
+        "neutral": 0,
+        "bearish": 0,
+    }
+
+
+def _demo_finalize_bucket(acc: dict) -> dict:
+    """Convert accumulator lists into summary statistics."""
+    import math as _math
+    n = acc["count"]
+    result = {
+        "count": n,
+        "final_stance_mean": None,
+        "final_stance_std": None,
+        "stance_volatility": None,
+        "influence_mean": None,
+        "bullish_pct": 0.0,
+        "neutral_pct": 0.0,
+        "bearish_pct": 0.0,
+        "dominant_stance": "neutral",
+    }
+    if n <= 0:
+        return result
+
+    if acc["stances"]:
+        mean = sum(acc["stances"]) / len(acc["stances"])
+        var = sum((s - mean) ** 2 for s in acc["stances"]) / len(acc["stances"])
+        result["final_stance_mean"] = round(mean, 3)
+        result["final_stance_std"] = round(_math.sqrt(var), 3)
+
+    if acc["deltas"]:
+        result["stance_volatility"] = round(
+            sum(acc["deltas"]) / len(acc["deltas"]), 3
+        )
+
+    if acc["influences"]:
+        result["influence_mean"] = round(
+            sum(acc["influences"]) / len(acc["influences"]), 2
+        )
+
+    stance_total = acc["bullish"] + acc["neutral"] + acc["bearish"]
+    if stance_total > 0:
+        result["bullish_pct"] = round(acc["bullish"] / stance_total * 100, 1)
+        result["neutral_pct"] = round(acc["neutral"] / stance_total * 100, 1)
+        result["bearish_pct"] = round(acc["bearish"] / stance_total * 100, 1)
+        pcts = [
+            (result["bullish_pct"], "bullish"),
+            (result["neutral_pct"], "neutral"),
+            (result["bearish_pct"], "bearish"),
+        ]
+        pcts.sort(reverse=True)
+        result["dominant_stance"] = pcts[0][1]
+
+    return result
+
+
+def _demo_top_divergence(breakdown: dict):
+    """Pick the most striking subgroup divergence across all dimensions.
+
+    Returns a dict with {dimension, segment_a, segment_b, delta, headline} or None.
+    """
+    best = None
+    dimension_labels = {
+        "by_age_range": "Age",
+        "by_gender": "Gender",
+        "by_country": "Country",
+        "by_archetype": "Actor type",
+        "by_platform": "Primary platform",
+    }
+
+    for dim_key, dim_label in dimension_labels.items():
+        segments = breakdown.get(dim_key, {})
+        entries = [
+            (seg, data)
+            for seg, data in segments.items()
+            if data.get("final_stance_mean") is not None and data.get("count", 0) >= 2
+        ]
+        if len(entries) < 2:
+            continue
+
+        entries.sort(key=lambda x: x[1]["final_stance_mean"], reverse=True)
+        top = entries[0]
+        bottom = entries[-1]
+        delta = round(top[1]["final_stance_mean"] - bottom[1]["final_stance_mean"], 3)
+
+        if delta <= 0.05:
+            continue
+
+        if best is None or delta > best["delta"]:
+            best = {
+                "dimension": dim_label,
+                "dimension_key": dim_key,
+                "segment_a": top[0],
+                "segment_a_mean": top[1]["final_stance_mean"],
+                "segment_b": bottom[0],
+                "segment_b_mean": bottom[1]["final_stance_mean"],
+                "delta": delta,
+                "headline": (
+                    f"{dim_label.lower()}: {top[0]} agents landed {delta} more bullish "
+                    f"than {bottom[0]} agents on average."
+                ),
+            }
+
+    return best
+
+
+@simulation_bp.route('/<simulation_id>/demographics', methods=['GET'])
+def get_demographic_breakdown(simulation_id: str):
+    """
+    Cross-tab agent demographics (age range, gender, country, archetype, primary
+    platform) against final stance, stance volatility, and influence score.
+
+    Uses data that already exists — persona JSON + trajectory.json + action logs —
+    so no extra collection is required. Results are cached in demographics.json
+    inside the simulation directory.
+    """
+    try:
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        if not os.path.exists(sim_dir):
+            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+
+        force_refresh = request.args.get('refresh', '').lower() in ('1', 'true', 'yes')
+        cache_path = os.path.join(sim_dir, "demographics.json")
+        if os.path.exists(cache_path) and not force_refresh:
+            with open(cache_path, 'r', encoding='utf-8') as f:
+                return jsonify({"success": True, "data": json.load(f)})
+
+        profiles = _demo_load_profiles(sim_dir)
+        if not profiles:
+            return jsonify({
+                "success": True,
+                "data": None,
+                "message": "No agent profiles available yet."
+            })
+
+        initial_stance, final_stance = _demo_extract_stances(sim_dir)
+        influence_ranked = _compute_influence_ranked(simulation_id) or []
+        influence_by_name = {
+            a.get('agent_name'): a.get('influence_score', 0)
+            for a in influence_ranked
+            if a.get('agent_name')
+        }
+        primary_platform_by_name = {}
+        for a in influence_ranked:
+            name = a.get('agent_name')
+            platforms = a.get('platforms') or []
+            if name and platforms:
+                primary_platform_by_name[name] = platforms[0]
+
+        # Prepare bucket containers
+        buckets = {
+            "by_age_range": {b: _demo_bucket_accumulator() for b in _DEMO_AGE_BUCKETS},
+            "by_gender": {},
+            "by_country": {},
+            "by_archetype": {
+                "individual": _demo_bucket_accumulator(),
+                "institutional": _demo_bucket_accumulator(),
+            },
+            "by_platform": {},
+        }
+        buckets["by_age_range"]["unknown"] = _demo_bucket_accumulator()
+        buckets["by_archetype"]["unknown"] = _demo_bucket_accumulator()
+
+        agents_in_profiles = 0
+        agents_with_stance = 0
+
+        for p in profiles:
+            if not isinstance(p, dict):
+                continue
+            agents_in_profiles += 1
+
+            user_id = p.get('user_id') or p.get('agent_id') or p.get('id')
+            user_name = (
+                p.get('user_name')
+                or p.get('username')
+                or p.get('name')
+                or ''
+            )
+
+            age_bucket = _demo_age_bucket(p.get('age'))
+            gender_raw = p.get('gender') or 'unknown'
+            gender = str(gender_raw).strip().lower() or 'unknown'
+            country_raw = p.get('country') or 'unknown'
+            country = str(country_raw).strip() or 'unknown'
+            archetype = _demo_classify_archetype(p.get('source_entity_type'))
+            primary_platform = primary_platform_by_name.get(user_name) or 'inactive'
+
+            # Lookup stance + delta
+            stance_val = None
+            delta_val = None
+            if user_id is not None:
+                key = str(user_id)
+                if key in final_stance:
+                    stance_val = final_stance[key]
+                    agents_with_stance += 1
+                    if key in initial_stance:
+                        delta_val = abs(stance_val - initial_stance[key])
+
+            influence = influence_by_name.get(user_name)
+
+            if gender not in buckets["by_gender"]:
+                buckets["by_gender"][gender] = _demo_bucket_accumulator()
+            if country not in buckets["by_country"]:
+                buckets["by_country"][country] = _demo_bucket_accumulator()
+            if primary_platform not in buckets["by_platform"]:
+                buckets["by_platform"][primary_platform] = _demo_bucket_accumulator()
+
+            target_buckets = [
+                buckets["by_age_range"][age_bucket],
+                buckets["by_gender"][gender],
+                buckets["by_country"][country],
+                buckets["by_archetype"][archetype],
+                buckets["by_platform"][primary_platform],
+            ]
+
+            for b in target_buckets:
+                b["count"] += 1
+                if stance_val is not None:
+                    b["stances"].append(stance_val)
+                    if stance_val > 0.2:
+                        b["bullish"] += 1
+                    elif stance_val < -0.2:
+                        b["bearish"] += 1
+                    else:
+                        b["neutral"] += 1
+                if delta_val is not None:
+                    b["deltas"].append(delta_val)
+                if influence is not None:
+                    b["influences"].append(influence)
+
+        # Drop unknown buckets if empty so UI stays clean
+        for dim in ("by_age_range", "by_archetype"):
+            if buckets[dim].get("unknown", {}).get("count", 0) == 0:
+                buckets[dim].pop("unknown", None)
+
+        def _finalize_dimension(dim_buckets, preferred_order=None):
+            # Finalize each segment to a summary dict.
+            result = {seg: _demo_finalize_bucket(data) for seg, data in dim_buckets.items()}
+
+            if preferred_order is not None:
+                ordered = {k: result[k] for k in preferred_order if k in result}
+                extras = {k: v for k, v in result.items() if k not in ordered}
+                if extras:
+                    sorted_extras = sorted(
+                        extras.items(), key=lambda kv: kv[1]["count"], reverse=True
+                    )
+                    for k, v in sorted_extras:
+                        ordered[k] = v
+                result = ordered
+            else:
+                # Sort by descending count for readability, then alphabetically on ties.
+                result = dict(sorted(
+                    result.items(),
+                    key=lambda kv: (-kv[1]["count"], kv[0]),
+                ))
+            return result
+
+        breakdown = {
+            "by_age_range": _finalize_dimension(
+                buckets["by_age_range"],
+                preferred_order=_DEMO_AGE_BUCKETS + ["unknown"],
+            ),
+            "by_gender": _finalize_dimension(buckets["by_gender"]),
+            "by_country": _finalize_dimension(buckets["by_country"]),
+            "by_archetype": _finalize_dimension(
+                buckets["by_archetype"],
+                preferred_order=["individual", "institutional", "unknown"],
+            ),
+            "by_platform": _finalize_dimension(buckets["by_platform"]),
+        }
+
+        top_divergence = _demo_top_divergence(breakdown)
+
+        # Cap country breakdown to the 10 largest segments to avoid noisy tails.
+        if len(breakdown["by_country"]) > 10:
+            top_countries = list(breakdown["by_country"].items())[:10]
+            breakdown["by_country"] = dict(top_countries)
+
+        result = {
+            "dimensions": breakdown,
+            "top_divergence": top_divergence,
+            "meta": {
+                "total_agents": agents_in_profiles,
+                "agents_with_stance": agents_with_stance,
+                "has_trajectory": bool(final_stance),
+                "source": "reddit_profiles.json" if os.path.exists(
+                    os.path.join(sim_dir, "reddit_profiles.json")
+                ) else "twitter_profiles.csv",
+            },
+        }
+
+        try:
+            with open(cache_path, 'w', encoding='utf-8') as f:
+                json.dump(result, f, indent=2)
+        except Exception:
+            pass
+
+        return jsonify({"success": True, "data": result})
+
+    except Exception as e:
+        logger.error(f"Failed to compute demographic breakdown: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
