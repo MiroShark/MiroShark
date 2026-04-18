@@ -372,3 +372,15 @@ export const getEmbedSummary = (simulationId) => {
   return service.get(`/api/simulation/${simulationId}/embed-summary`)
 }
 
+/**
+ * Get demographic breakdown (age / gender / country / archetype / primary
+ * platform) cross-tabbed against final stance, stance volatility, and
+ * influence.
+ * @param {string} simulationId
+ * @param {Object} options - { refresh?: boolean }
+ */
+export const getDemographicBreakdown = (simulationId, options = {}) => {
+  const params = options.refresh ? { refresh: 'true' } : {}
+  return service.get(`/api/simulation/${simulationId}/demographics`, { params })
+}
+
