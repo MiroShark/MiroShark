@@ -13,6 +13,8 @@ import os
 import json
 import time
 import re
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -1000,10 +1002,16 @@ class ReportAgent:
     MAX_TOOL_CALLS_PER_SECTION = 6
 
     # Maximum reflection rounds
-    MAX_REFLECTION_ROUNDS = 3
+    # Reduced from 3 to 1: each extra reflection round added ~30% latency + cost
+    # with marginal quality gain. Set to 0 to disable reflection entirely.
+    MAX_REFLECTION_ROUNDS = 1
 
     # Maximum tool calls per chat
     MAX_TOOL_CALLS_PER_CHAT = 2
+
+    # Max parallel section workers. Claude/Gemini/GPT APIs comfortably handle
+    # 5-8 parallel requests per key. OpenRouter's rate limit is well above this.
+    MAX_PARALLEL_SECTIONS = 6
     
     def __init__(
         self, 
@@ -2277,72 +2285,91 @@ Write in the same analytical style as the report. Use **bold** for emphasis. Do 
             
             logger.info(f"Outline saved to file: {report_id}/outline.json")
             
-            # Phase 2: Generate section by section (save per section)
+            # Phase 2: Generate sections IN PARALLEL (huge latency win).
+            # Sections no longer see each other's drafts — Phase 2.5 synthesis
+            # below stitches cross-section coherence afterwards.
             report.status = ReportStatus.GENERATING
-            
+
             total_sections = len(outline.sections)
-            generated_sections = []  # Save content for context
-            
-            for i, section in enumerate(outline.sections):
-                section_num = i + 1
-                base_progress = 20 + int((i / total_sections) * 70)
-                
-                # Update progress
-                ReportManager.update_progress(
-                    report_id, "generating", base_progress,
-                    f"Generating section: {section.title} ({section_num}/{total_sections})",
-                    current_section=section.title,
-                    completed_sections=completed_section_titles
-                )
+            generated_sections: list = [None] * total_sections  # positional slots
+            completed_count = 0
+            lock = threading.Lock()
 
-                if progress_callback:
-                    progress_callback(
-                        "generating",
-                        base_progress,
-                        f"Generating section: {section.title} ({section_num}/{total_sections})"
-                    )
-                
-                # Generate main section content
-                section_content = self._generate_section_react(
-                    section=section,
-                    outline=outline,
-                    previous_sections=generated_sections,
-                    progress_callback=lambda stage, prog, msg:
-                        progress_callback(
-                            stage, 
-                            base_progress + int(prog * 0.7 / total_sections),
-                            msg
-                        ) if progress_callback else None,
-                    section_index=section_num
-                )
-                
-                section.content = section_content
-                generated_sections.append(f"## {section.title}\n\n{section_content}")
-
-                # Save section
-                ReportManager.save_section(report_id, section_num, section)
-                completed_section_titles.append(section.title)
-
-                # Record section complete log
-                full_section_content = f"## {section.title}\n\n{section_content}"
-
-                if self.report_logger:
-                    self.report_logger.log_section_full_complete(
-                        section_title=section.title,
+            def _generate_one(idx: int, section) -> tuple:
+                """Runs in a worker thread. Returns (idx, title, content)."""
+                section_num = idx + 1
+                try:
+                    content = self._generate_section_react(
+                        section=section,
+                        outline=outline,
+                        previous_sections=[],  # parallel: sections don't see each other
+                        progress_callback=None,  # per-section granular progress lost in parallel; overall reported below
                         section_index=section_num,
-                        full_content=full_section_content.strip()
                     )
+                except Exception as e:
+                    logger.error(f"Section {section_num} ({section.title}) failed: {e}")
+                    content = (
+                        f"*(Section generation error: {e})*"
+                    )
+                return (idx, section.title, content)
 
-                logger.info(f"Section saved: {report_id}/section_{section_num:02d}.md")
-                
-                # Update progress
-                ReportManager.update_progress(
-                    report_id, "generating", 
-                    base_progress + int(70 / total_sections),
-                    f"Section {section.title} completed",
-                    current_section=None,
-                    completed_sections=completed_section_titles
+            if progress_callback:
+                progress_callback(
+                    "generating",
+                    22,
+                    f"Generating {total_sections} sections in parallel "
+                    f"(max {self.MAX_PARALLEL_SECTIONS} concurrent)..."
                 )
+            ReportManager.update_progress(
+                report_id, "generating", 22,
+                f"Generating {total_sections} sections in parallel...",
+                completed_sections=completed_section_titles,
+            )
+
+            workers = min(self.MAX_PARALLEL_SECTIONS, total_sections)
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                futures = {
+                    ex.submit(_generate_one, i, section): (i, section)
+                    for i, section in enumerate(outline.sections)
+                }
+                for fut in as_completed(futures):
+                    idx, title, content = fut.result()
+                    section = outline.sections[idx]
+                    section.content = content
+                    generated_sections[idx] = f"## {title}\n\n{content}"
+
+                    # Save section immediately as it finishes
+                    ReportManager.save_section(report_id, idx + 1, section)
+
+                    with lock:
+                        completed_count += 1
+                        completed_section_titles.append(title)
+
+                        full_section_content = f"## {title}\n\n{content}"
+                        if self.report_logger:
+                            self.report_logger.log_section_full_complete(
+                                section_title=title,
+                                section_index=idx + 1,
+                                full_content=full_section_content.strip(),
+                            )
+
+                        logger.info(
+                            f"Section saved: {report_id}/section_{idx+1:02d}.md "
+                            f"({completed_count}/{total_sections})"
+                        )
+
+                        # Overall progress 20→90 linearly with completions
+                        pct = 20 + int((completed_count / total_sections) * 70)
+                        msg = (
+                            f"Section complete: {title} "
+                            f"({completed_count}/{total_sections})"
+                        )
+                        ReportManager.update_progress(
+                            report_id, "generating", pct, msg,
+                            completed_sections=completed_section_titles,
+                        )
+                        if progress_callback:
+                            progress_callback("generating", pct, msg)
             
             # Phase 2.5: Cross-section synthesis
             if progress_callback:
