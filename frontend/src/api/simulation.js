@@ -253,6 +253,21 @@ export const getBeliefDrift = (simulationId) => {
 }
 
 /**
+ * Recompute belief drift excluding a subset of agents ("What If?" analysis).
+ * Pure data transform — no re-simulation, returns both original and
+ * counterfactual drift curves plus headline deltas.
+ * @param {string} simulationId
+ * @param {string[]} excludeAgents - agent usernames to remove from analysis
+ */
+export const getCounterfactualDrift = (simulationId, excludeAgents = []) => {
+  const params = {}
+  if (excludeAgents && excludeAgents.length) {
+    params.exclude_agents = excludeAgents.join(',')
+  }
+  return service.get(`/api/simulation/${simulationId}/counterfactual`, { params })
+}
+
+/**
  * Fork a simulation — copies agent profiles and config into a new simulation
  * that is immediately ready to run.
  * @param {Object} data - { parent_simulation_id, simulation_requirement? }

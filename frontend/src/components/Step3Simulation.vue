@@ -54,7 +54,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showInfluence }"
-        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false"
+        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false; showWhatIf = false"
         title="Agent influence leaderboard"
       >
         ◈ Influence
@@ -65,7 +65,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showBeliefDrift }"
-        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false; showNetwork = false; showDemographics = false"
+        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false; showNetwork = false; showDemographics = false; showWhatIf = false"
         title="Aggregate belief drift chart"
       >
         ◎ Drift
@@ -76,7 +76,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showNetwork }"
-        @click="showNetwork = !showNetwork; showInfluence = false; showBeliefDrift = false; showDirector = false; showDemographics = false"
+        @click="showNetwork = !showNetwork; showInfluence = false; showBeliefDrift = false; showDirector = false; showDemographics = false; showWhatIf = false"
         title="Agent interaction network graph"
       >
         ⬡ Network
@@ -87,10 +87,21 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showDemographics }"
-        @click="showDemographics = !showDemographics; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false"
+        @click="showDemographics = !showDemographics; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false; showWhatIf = false"
         title="Agent demographic breakdown (age, gender, country, actor type, platform)"
       >
         ◇ Demographics
+      </button>
+
+      <!-- What If? Counterfactual toggle -->
+      <button
+        v-if="allActions.length > 0"
+        class="action-btn secondary"
+        :class="{ active: showWhatIf }"
+        @click="showWhatIf = !showWhatIf; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false"
+        title="What If? — remove agents and recompute belief drift from existing trajectory"
+      >
+        ◐ What If?
       </button>
 
       <!-- Director Mode toggle (only while simulation is running) -->
@@ -98,7 +109,7 @@
         v-if="phase === 1"
         class="action-btn secondary director-btn"
         :class="{ active: showDirector }"
-        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false; showNetwork = false; showDemographics = false"
+        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false; showNetwork = false; showDemographics = false; showWhatIf = false"
         :title="directorEventsTotal >= 10 ? 'Director Mode — max events reached' : 'Director Mode — inject a breaking event into the simulation'"
       >
         ⚡ Director
@@ -265,6 +276,14 @@
       v-if="showDemographics"
       :simulationId="simulationId"
       :visible="showDemographics"
+      class="influence-overlay"
+    />
+
+    <!-- What If? Counterfactual (overlay when toggled) -->
+    <WhatIfPanel
+      v-if="showWhatIf"
+      :simulationId="simulationId"
+      :visible="showWhatIf"
       class="influence-overlay"
     />
 
@@ -684,6 +703,7 @@ import InfluenceLeaderboard from './InfluenceLeaderboard.vue'
 import BeliefDriftChart from './BeliefDriftChart.vue'
 import InteractionNetwork from './InteractionNetwork.vue'
 import DemographicBreakdown from './DemographicBreakdown.vue'
+import WhatIfPanel from './WhatIfPanel.vue'
 
 const props = defineProps({
   simulationId: String,
@@ -720,6 +740,7 @@ const showInfluence = ref(false)
 const showBeliefDrift = ref(false)
 const showNetwork = ref(false)
 const showDemographics = ref(false)
+const showWhatIf = ref(false)
 
 // Article drawer state
 const showArticleDrawer = ref(false)

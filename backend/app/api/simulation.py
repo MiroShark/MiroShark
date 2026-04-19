@@ -2559,6 +2559,235 @@ def get_belief_drift(simulation_id: str):
         }), 500
 
 
+# ============== Counterfactual Explorer ("What If?") ==============
+
+
+def _drift_from_positions_by_agent(snapshots, allowed_agent_ids=None):
+    """Compute per-round bullish/neutral/bearish % from trajectory snapshots.
+
+    If allowed_agent_ids is None, includes every agent. Otherwise only agents
+    whose stringified id is in the set are counted.
+
+    Returns a dict with the same shape as the belief-drift endpoint plus
+    a `final_bullish_pct` convenience key.
+    """
+    rounds = []
+    bullish = []
+    neutral = []
+    bearish = []
+
+    for snap in snapshots:
+        belief_positions = snap.get("belief_positions") or {}
+        if not belief_positions:
+            continue
+
+        agent_stances = []
+        for aid, positions in belief_positions.items():
+            if allowed_agent_ids is not None and str(aid) not in allowed_agent_ids:
+                continue
+            if positions:
+                agent_stances.append(sum(positions.values()) / len(positions))
+
+        if not agent_stances:
+            continue
+
+        total = len(agent_stances)
+        n_bullish = sum(1 for s in agent_stances if s > 0.2)
+        n_bearish = sum(1 for s in agent_stances if s < -0.2)
+        n_neutral = total - n_bullish - n_bearish
+
+        rounds.append(snap.get("round_num", 0))
+        bullish.append(round(n_bullish / total * 100, 1))
+        neutral.append(round(n_neutral / total * 100, 1))
+        bearish.append(round(n_bearish / total * 100, 1))
+
+    consensus_round = None
+    consensus_stance = None
+    for i, r in enumerate(rounds):
+        if bullish[i] > 50:
+            consensus_round = r
+            consensus_stance = "bullish"
+            break
+        if bearish[i] > 50:
+            consensus_round = r
+            consensus_stance = "bearish"
+            break
+
+    return {
+        "rounds": rounds,
+        "bullish": bullish,
+        "neutral": neutral,
+        "bearish": bearish,
+        "consensus_round": consensus_round,
+        "consensus_stance": consensus_stance,
+        "final_bullish_pct": bullish[-1] if bullish else None,
+        "final_neutral_pct": neutral[-1] if neutral else None,
+        "final_bearish_pct": bearish[-1] if bearish else None,
+        "agent_count": None,
+    }
+
+
+@simulation_bp.route('/<simulation_id>/counterfactual', methods=['GET'])
+def get_counterfactual_drift(simulation_id: str):
+    """
+    Recompute belief drift with a subset of agents excluded ("What If?" analysis).
+
+    Query params:
+        exclude_agents: comma-separated agent usernames to remove from the analysis.
+
+    Returns both the original drift and the counterfactual drift so the UI can
+    render them on shared axes, plus the headline `delta_final_bullish` which is
+    the finding researchers typically cite (e.g. "removing Agent X shifted
+    consensus by 23 points").
+
+    Pure data transform over trajectory.json — no LLM calls, no re-simulation.
+    """
+    try:
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        if not os.path.exists(sim_dir):
+            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+
+        trajectory_path = os.path.join(sim_dir, "trajectory.json")
+        if not os.path.exists(trajectory_path):
+            return jsonify({
+                "success": True,
+                "data": None,
+                "message": (
+                    "No belief trajectory data available. The simulation may not "
+                    "have used the belief tracking system."
+                )
+            })
+
+        with open(trajectory_path, 'r', encoding='utf-8') as f:
+            traj = json.load(f)
+
+        snapshots = traj.get("snapshots", [])
+        topics = traj.get("topics", [])
+
+        raw_exclude = request.args.get('exclude_agents', '') or ''
+        exclude_names = [n.strip() for n in raw_exclude.split(',') if n.strip()]
+
+        # Build username -> str(user_id) map from the profiles file.
+        profiles = _demo_load_profiles(sim_dir)
+        name_to_id = {}
+        for p in profiles:
+            if not isinstance(p, dict):
+                continue
+            uid = p.get('user_id') or p.get('agent_id') or p.get('id')
+            uname = p.get('user_name') or p.get('username') or p.get('name')
+            if uid is not None and uname:
+                name_to_id[str(uname)] = str(uid)
+
+        # Resolve names to ids, tracking which we matched vs. missed.
+        excluded_ids = set()
+        resolved = []
+        unresolved = []
+        for n in exclude_names:
+            aid = name_to_id.get(n)
+            if aid is not None:
+                excluded_ids.add(aid)
+                resolved.append({"agent_name": n, "agent_id": aid})
+            else:
+                unresolved.append(n)
+
+        # Set of agent ids present in the trajectory (all snapshots union).
+        all_ids = set()
+        for snap in snapshots:
+            for aid in (snap.get("belief_positions") or {}).keys():
+                all_ids.add(str(aid))
+
+        allowed_ids = all_ids - excluded_ids
+
+        original = _drift_from_positions_by_agent(snapshots, allowed_agent_ids=None)
+        original["agent_count"] = len(all_ids)
+
+        if excluded_ids:
+            counterfactual = _drift_from_positions_by_agent(
+                snapshots, allowed_agent_ids=allowed_ids
+            )
+            counterfactual["agent_count"] = len(allowed_ids)
+        else:
+            counterfactual = None
+
+        def _delta(a, b):
+            if a is None or b is None:
+                return None
+            return round(a - b, 1)
+
+        delta_final_bullish = None
+        delta_final_bearish = None
+        delta_consensus_round = None
+        if counterfactual is not None:
+            delta_final_bullish = _delta(
+                counterfactual.get("final_bullish_pct"),
+                original.get("final_bullish_pct"),
+            )
+            delta_final_bearish = _delta(
+                counterfactual.get("final_bearish_pct"),
+                original.get("final_bearish_pct"),
+            )
+            cf_r = counterfactual.get("consensus_round")
+            or_r = original.get("consensus_round")
+            if cf_r is not None and or_r is not None:
+                delta_consensus_round = cf_r - or_r
+
+        def _impact_badge(delta):
+            if delta is None:
+                return None
+            mag = abs(delta)
+            if mag >= 15:
+                return "strong"
+            if mag >= 5:
+                return "moderate"
+            return "minimal"
+
+        impact = _impact_badge(delta_final_bullish)
+
+        summary = None
+        if counterfactual is not None and delta_final_bullish is not None:
+            names_str = ", ".join(r["agent_name"] for r in resolved) or "selected agents"
+            direction = "increased" if delta_final_bullish > 0 else (
+                "decreased" if delta_final_bullish < 0 else "did not change"
+            )
+            if delta_final_bullish == 0:
+                summary = (
+                    f"Removing {names_str} did not change final bullish share "
+                    f"({original['final_bullish_pct']}%)."
+                )
+            else:
+                summary = (
+                    f"Removing {names_str} would have {direction} final bullish "
+                    f"share from {original['final_bullish_pct']}% to "
+                    f"{counterfactual['final_bullish_pct']}% "
+                    f"({'+' if delta_final_bullish > 0 else ''}{delta_final_bullish} pts)."
+                )
+
+        return jsonify({
+            "success": True,
+            "data": {
+                "original": original,
+                "counterfactual": counterfactual,
+                "excluded_requested": exclude_names,
+                "excluded_resolved": resolved,
+                "excluded_unresolved": unresolved,
+                "topics": topics,
+                "delta_final_bullish": delta_final_bullish,
+                "delta_final_bearish": delta_final_bearish,
+                "delta_consensus_round": delta_consensus_round,
+                "impact": impact,
+                "summary": summary,
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Failed to compute counterfactual drift: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
 # ============== Quality Diagnostics ==============
 
 @simulation_bp.route('/<simulation_id>/quality', methods=['GET'])
