@@ -13,7 +13,7 @@ from datetime import datetime, timezone
 from flask import request, jsonify, send_file, current_app
 
 from . import simulation_bp
-from ..utils.llm_client import create_smart_llm_client
+from ..utils.llm_client import create_smart_llm_client, create_llm_client
 from ..utils.validation import validate_simulation_id
 from ..config import Config
 from ..services.entity_reader import EntityReader
@@ -110,6 +110,235 @@ def optimize_interview_prompt(prompt: str) -> str:
     if prompt.startswith(INTERVIEW_PROMPT_PREFIX):
         return prompt
     return f"{INTERVIEW_PROMPT_PREFIX}{prompt}"
+
+
+# ============== Scenario Auto-Suggest ==============
+
+# In-memory LRU-style cache for scenario suggestions.
+# Keyed by SHA-256 of the normalized text preview so re-renders / brief edits
+# above/below the sampled window don't re-hit the LLM.
+_SCENARIO_SUGGEST_CACHE: "dict[str, dict]" = {}
+_SCENARIO_SUGGEST_CACHE_ORDER: "list[str]" = []
+_SCENARIO_SUGGEST_CACHE_MAX = 64
+
+# Characters of preview sent to the LLM. Keeps prompt cost bounded even for
+# 500K-token documents.
+_SCENARIO_PREVIEW_CHAR_LIMIT = 2000
+
+_SCENARIO_SUGGEST_SYSTEM_PROMPT = (
+    "You generate concise prediction-market-style scenario questions for an "
+    "agent-based social simulation.\n"
+    "Given a document excerpt, return exactly 3 scenarios that cover a "
+    "bullish, a bearish, and a neutral framing of an outcome the document "
+    "could drive. Scenarios must be:\n"
+    "- Concrete, answerable YES/NO questions with a specific outcome\n"
+    "- Grounded in the document (reference named actors, events, or "
+    "institutions where possible)\n"
+    "- Non-trivial (not 'will X happen this year' with no stake)\n"
+    "Each expected_yes_range must be two integers 0-100 reflecting a "
+    "plausible initial market probability band for that framing.\n"
+    "Return JSON exactly of this shape:\n"
+    '{ "suggestions": [ { "question": str, "label": "Bull"|"Bear"|"Neutral", '
+    '"expected_yes_range": [int, int], "rationale": str } ] }\n'
+    "The rationale field is a single sentence (<= 140 chars) explaining why "
+    "this framing follows from the document. Do not include any other fields."
+)
+
+
+def _normalize_preview(text: str) -> str:
+    """Whitespace-collapse + length-clamp the preview before hashing/sending."""
+    collapsed = " ".join((text or "").split())
+    return collapsed[:_SCENARIO_PREVIEW_CHAR_LIMIT]
+
+
+def _scenario_cache_get(key: str):
+    entry = _SCENARIO_SUGGEST_CACHE.get(key)
+    if entry is None:
+        return None
+    try:
+        _SCENARIO_SUGGEST_CACHE_ORDER.remove(key)
+    except ValueError:
+        pass
+    _SCENARIO_SUGGEST_CACHE_ORDER.append(key)
+    return entry
+
+
+def _scenario_cache_put(key: str, value: dict) -> None:
+    if key in _SCENARIO_SUGGEST_CACHE:
+        try:
+            _SCENARIO_SUGGEST_CACHE_ORDER.remove(key)
+        except ValueError:
+            pass
+    _SCENARIO_SUGGEST_CACHE[key] = value
+    _SCENARIO_SUGGEST_CACHE_ORDER.append(key)
+    while len(_SCENARIO_SUGGEST_CACHE_ORDER) > _SCENARIO_SUGGEST_CACHE_MAX:
+        oldest = _SCENARIO_SUGGEST_CACHE_ORDER.pop(0)
+        _SCENARIO_SUGGEST_CACHE.pop(oldest, None)
+
+
+_VALID_SCENARIO_LABELS = ("Bull", "Bear", "Neutral")
+
+
+def _clean_suggestions(payload) -> list:
+    """Validate and normalize the LLM's suggestions array.
+
+    Silently drops malformed entries and clamps the result to 3.
+    Returns [] if nothing survives — the endpoint treats that as a graceful
+    no-op (UI hides the panel).
+    """
+    if not isinstance(payload, dict):
+        return []
+    raw = payload.get("suggestions")
+    if not isinstance(raw, list):
+        return []
+
+    out = []
+    for item in raw:
+        if not isinstance(item, dict):
+            continue
+        question = (item.get("question") or "").strip()
+        label = (item.get("label") or "").strip().capitalize()
+        if label not in _VALID_SCENARIO_LABELS:
+            continue
+        yes_range = item.get("expected_yes_range")
+        if (
+            not isinstance(yes_range, (list, tuple))
+            or len(yes_range) != 2
+        ):
+            continue
+        try:
+            lo = max(0, min(100, int(yes_range[0])))
+            hi = max(0, min(100, int(yes_range[1])))
+        except (TypeError, ValueError):
+            continue
+        if lo > hi:
+            lo, hi = hi, lo
+        rationale = (item.get("rationale") or "").strip()
+        if len(question) < 8 or len(question) > 240:
+            continue
+        if len(rationale) > 200:
+            rationale = rationale[:197].rstrip() + "..."
+        out.append({
+            "question": question,
+            "label": label,
+            "expected_yes_range": [lo, hi],
+            "rationale": rationale,
+        })
+        if len(out) == 3:
+            break
+    return out
+
+
+@simulation_bp.route('/suggest-scenarios', methods=['POST'])
+def suggest_scenarios():
+    """
+    Generate 3 prediction-market-style simulation scenarios from a document
+    preview, so new users don't face the blank-page problem at setup.
+
+    Request (JSON):
+        {
+            "text_preview": "<document text — first ~2000 chars is enough>",
+            "no_cache": false   // optional; forces a fresh LLM call
+        }
+
+    Returns:
+        {
+            "success": true,
+            "data": {
+                "suggestions": [
+                    {
+                        "question": "Will the EU AI Act pass with its stricter
+                                     biometrics provisions intact by June 2026?",
+                        "label": "Bull" | "Bear" | "Neutral",
+                        "expected_yes_range": [60, 70],
+                        "rationale": "Document emphasizes regulator unity on
+                                      biometric safeguards."
+                    },
+                    ...  // up to 3 entries, possibly 0 if the LLM failed
+                ],
+                "cached": false,
+                "model": "gpt-4o-mini"   // whatever provider is configured
+            }
+        }
+    """
+    try:
+        data = request.get_json(silent=True) or {}
+        preview = data.get('text_preview') or data.get('document_preview') or ''
+        if not isinstance(preview, str):
+            return jsonify({
+                "success": False,
+                "error": "text_preview must be a string"
+            }), 400
+
+        normalized = _normalize_preview(preview)
+        # Require at least ~80 chars so we don't spin the LLM on keystroke fragments.
+        if len(normalized) < 80:
+            return jsonify({
+                "success": True,
+                "data": {"suggestions": [], "cached": False, "reason": "preview_too_short"}
+            })
+
+        import hashlib
+        cache_key = hashlib.sha256(normalized.encode('utf-8')).hexdigest()
+
+        if not data.get('no_cache'):
+            cached = _scenario_cache_get(cache_key)
+            if cached is not None:
+                return jsonify({
+                    "success": True,
+                    "data": {**cached, "cached": True}
+                })
+
+        try:
+            llm = create_llm_client(timeout=20.0)
+        except Exception as exc:
+            logger.warning(f"suggest-scenarios: LLM client unavailable: {exc}")
+            return jsonify({
+                "success": True,
+                "data": {"suggestions": [], "cached": False, "reason": "llm_unavailable"}
+            })
+
+        messages = [
+            {"role": "system", "content": _SCENARIO_SUGGEST_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": (
+                    "Document excerpt (truncated):\n\n"
+                    f"{normalized}\n\n"
+                    "Generate the 3 scenarios now."
+                ),
+            },
+        ]
+
+        try:
+            parsed = llm.chat_json(messages, temperature=0.4, max_tokens=700)
+        except Exception as exc:
+            # Don't 500 — scenario auto-suggest is best-effort; the form still works.
+            logger.warning(f"suggest-scenarios: LLM call failed: {exc}")
+            return jsonify({
+                "success": True,
+                "data": {"suggestions": [], "cached": False, "reason": "llm_error"}
+            })
+
+        suggestions = _clean_suggestions(parsed)
+
+        result = {
+            "suggestions": suggestions,
+            "model": getattr(llm, 'model', None) or Config.LLM_MODEL_NAME,
+        }
+
+        if suggestions:
+            _scenario_cache_put(cache_key, result)
+
+        return jsonify({"success": True, "data": {**result, "cached": False}})
+
+    except Exception as e:
+        logger.error(f"Failed to suggest scenarios: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
 
 
 # ============== Entity Reading Endpoints ==============

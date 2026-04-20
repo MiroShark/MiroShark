@@ -384,3 +384,29 @@ export const getDemographicBreakdown = (simulationId, options = {}) => {
   return service.get(`/api/simulation/${simulationId}/demographics`, { params })
 }
 
+/**
+ * Generate 3 prediction-market-style scenario suggestions from a document
+ * preview. Used by the Home screen to eliminate the blank-page problem at
+ * simulation setup — the user pastes a URL or drops a file, and within a
+ * couple of seconds three scenario cards appear.
+ *
+ * Response shape (best-effort):
+ *   {
+ *     suggestions: [
+ *       { question, label: 'Bull'|'Bear'|'Neutral',
+ *         expected_yes_range: [lo, hi], rationale }
+ *     ],
+ *     cached: boolean,
+ *     model: string | null,
+ *     reason?: 'preview_too_short' | 'llm_unavailable' | 'llm_error'
+ *   }
+ *
+ * An empty `suggestions` array (with a `reason`) is normal — the caller should
+ * simply not render the panel.
+ *
+ * @param {Object} data - { text_preview: string, no_cache?: boolean }
+ */
+export const suggestScenarios = (data) => {
+  return service.post('/api/simulation/suggest-scenarios', data, { timeout: 25000 })
+}
+

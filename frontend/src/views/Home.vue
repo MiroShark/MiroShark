@@ -192,6 +192,10 @@
               <div class="console-header">
                 <span class="console-label">>_ 02 / Simulation Prompt</span>
               </div>
+              <ScenarioSuggestions
+                :text-preview="scenarioSuggestPreview"
+                @use="handleSuggestionUse"
+              />
               <div class="input-wrapper">
                 <textarea
                   v-model="formData.simulationRequirement"
@@ -236,6 +240,7 @@ import { useRouter } from 'vue-router'
 import HistoryDatabase from '../components/HistoryDatabase.vue'
 import TemplateGallery from '../components/TemplateGallery.vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
+import ScenarioSuggestions from '../components/ScenarioSuggestions.vue'
 import { fetchUrl } from '../api/graph'
 
 const settingsOpen = ref(false)
@@ -302,6 +307,41 @@ const handleDrop = (e) => {
   addFiles(droppedFiles)
 }
 
+// Client-readable file previews (.md / .txt), keyed by File identity so we
+// don't re-read when the `files` array gets reordered. PDFs are skipped here
+// — their text is extracted server-side during graph build, so they simply
+// won't trigger scenario auto-suggest on their own. A .md/.txt sibling (or a
+// URL doc) will still drive suggestions.
+const filePreviewText = ref('')
+
+const refreshFilePreviewText = async () => {
+  const textish = files.value.filter(f => {
+    const ext = (f.name.split('.').pop() || '').toLowerCase()
+    return ext === 'md' || ext === 'txt'
+  })
+  if (textish.length === 0) {
+    filePreviewText.value = ''
+    return
+  }
+
+  try {
+    const chunks = await Promise.all(textish.map(async (f) => {
+      try {
+        // Only read the first ~6KB per file to keep the combined preview
+        // bounded. The backend further clamps to 2000 chars.
+        const slice = f.slice ? f.slice(0, 6000) : f
+        const txt = await slice.text()
+        return (txt || '').slice(0, 3000)
+      } catch (_) {
+        return ''
+      }
+    }))
+    filePreviewText.value = chunks.filter(Boolean).join('\n\n').slice(0, 6000)
+  } catch (_) {
+    filePreviewText.value = ''
+  }
+}
+
 // Add files
 const addFiles = (newFiles) => {
   const validFiles = newFiles.filter(file => {
@@ -309,11 +349,38 @@ const addFiles = (newFiles) => {
     return ['pdf', 'md', 'txt'].includes(ext)
   })
   files.value.push(...validFiles)
+  refreshFilePreviewText()
 }
 
 // Remove file
 const removeFile = (index) => {
   files.value.splice(index, 1)
+  refreshFilePreviewText()
+}
+
+// Combined text preview handed to ScenarioSuggestions.  Includes every
+// fetched URL's extracted text plus any client-side-readable file text.
+// Kept to ~6KB on the client; the backend trims again.
+const scenarioSuggestPreview = computed(() => {
+  const urlChunks = (urlDocs.value || [])
+    .map(d => {
+      const head = d.title ? `# ${d.title}\n` : ''
+      const body = (d.text || '').slice(0, 3000)
+      return body ? head + body : ''
+    })
+    .filter(Boolean)
+
+  const combined = [...urlChunks]
+  if (filePreviewText.value) combined.push(filePreviewText.value)
+  return combined.join('\n\n').slice(0, 6000)
+})
+
+// User picked one of the 3 scenario cards — fill the textarea but don't
+// submit.  We overwrite whatever was there (including any earlier pick); if
+// the user had already typed a partial scenario they can undo with Ctrl+Z.
+const handleSuggestionUse = ({ question }) => {
+  if (!question) return
+  formData.value.simulationRequirement = question
 }
 
 // Scroll to bottom
