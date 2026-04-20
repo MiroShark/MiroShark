@@ -33,22 +33,46 @@ class EmbeddingService:
         max_retries: int = 3,
         timeout: int = 30,
     ):
-        self.provider = (provider or Config.EMBEDDING_PROVIDER).lower()
-        self.model = model or Config.EMBEDDING_MODEL
-        self.base_url = (base_url or Config.EMBEDDING_BASE_URL).rstrip('/')
-        self.api_key = api_key or Config.EMBEDDING_API_KEY
-        self.dimensions = dimensions or Config.EMBEDDING_DIMENSIONS
+        # Explicit overrides (rare — tests, alternate pipelines). When None,
+        # every property below falls through to Config at call time, so
+        # POST /api/settings edits take effect without a restart.
+        self._provider_override = provider.lower() if provider else None
+        self._model_override = model
+        self._base_url_override = base_url.rstrip('/') if base_url else None
+        self._api_key_override = api_key
+        self._dimensions_override = dimensions
         self.max_retries = max_retries
         self.timeout = timeout
-
-        if self.provider == 'openai':
-            self._embed_url = f"{self.base_url}/v1/embeddings"
-        else:
-            self._embed_url = f"{self.base_url}/api/embed"
 
         # Simple in-memory cache (text -> embedding vector)
         self._cache: dict[str, List[float]] = {}
         self._cache_max_size = 2000
+
+    @property
+    def provider(self) -> str:
+        return (self._provider_override or Config.EMBEDDING_PROVIDER).lower()
+
+    @property
+    def model(self) -> str:
+        return self._model_override or Config.EMBEDDING_MODEL
+
+    @property
+    def base_url(self) -> str:
+        return (self._base_url_override or Config.EMBEDDING_BASE_URL).rstrip('/')
+
+    @property
+    def api_key(self) -> str:
+        return self._api_key_override or Config.EMBEDDING_API_KEY
+
+    @property
+    def dimensions(self) -> int:
+        return self._dimensions_override or Config.EMBEDDING_DIMENSIONS
+
+    @property
+    def _embed_url(self) -> str:
+        if self.provider == 'openai':
+            return f"{self.base_url}/v1/embeddings"
+        return f"{self.base_url}/api/embed"
 
     def embed(self, text: str) -> List[float]:
         """
