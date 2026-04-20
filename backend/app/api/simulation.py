@@ -121,6 +121,13 @@ _SCENARIO_SUGGEST_CACHE: "dict[str, dict]" = {}
 _SCENARIO_SUGGEST_CACHE_ORDER: "list[str]" = []
 _SCENARIO_SUGGEST_CACHE_MAX = 64
 
+# Per-IP sliding-window rate limit for the unauthenticated /suggest-scenarios
+# endpoint. Prevents a runaway client (or attacker) from torching the LLM
+# budget by hammering the endpoint. Bounds: 10 calls / 60s / IP.
+_SCENARIO_RATE_WINDOW_SEC = 60
+_SCENARIO_RATE_MAX_CALLS = 10
+_SCENARIO_RATE_HITS: "dict[str, list[float]]" = {}
+
 # Characters of preview sent to the LLM. Keeps prompt cost bounded even for
 # 500K-token documents.
 _SCENARIO_PREVIEW_CHAR_LIMIT = 2000
@@ -149,6 +156,26 @@ def _normalize_preview(text: str) -> str:
     """Whitespace-collapse + length-clamp the preview before hashing/sending."""
     collapsed = " ".join((text or "").split())
     return collapsed[:_SCENARIO_PREVIEW_CHAR_LIMIT]
+
+
+def _scenario_rate_limited(client_ip: str) -> bool:
+    """Return True if this IP has exceeded the per-window call budget."""
+    import time
+    now = time.monotonic()
+    cutoff = now - _SCENARIO_RATE_WINDOW_SEC
+    hits = _SCENARIO_RATE_HITS.get(client_ip, [])
+    hits = [t for t in hits if t > cutoff]
+    if len(hits) >= _SCENARIO_RATE_MAX_CALLS:
+        _SCENARIO_RATE_HITS[client_ip] = hits
+        return True
+    hits.append(now)
+    _SCENARIO_RATE_HITS[client_ip] = hits
+    # Opportunistic GC so the dict doesn't grow unbounded across distinct IPs.
+    if len(_SCENARIO_RATE_HITS) > 1024:
+        for ip in list(_SCENARIO_RATE_HITS.keys()):
+            if not _SCENARIO_RATE_HITS[ip] or _SCENARIO_RATE_HITS[ip][-1] < cutoff:
+                _SCENARIO_RATE_HITS.pop(ip, None)
+    return False
 
 
 def _scenario_cache_get(key: str):
@@ -262,6 +289,17 @@ def suggest_scenarios():
         }
     """
     try:
+        client_ip = (
+            request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+            or request.remote_addr
+            or 'unknown'
+        )
+        if _scenario_rate_limited(client_ip):
+            return jsonify({
+                "success": True,
+                "data": {"suggestions": [], "cached": False, "reason": "rate_limited"}
+            }), 429
+
         data = request.get_json(silent=True) or {}
         preview = data.get('text_preview') or data.get('document_preview') or ''
         if not isinstance(preview, str):
@@ -333,11 +371,14 @@ def suggest_scenarios():
         return jsonify({"success": True, "data": {**result, "cached": False}})
 
     except Exception as e:
-        logger.error(f"Failed to suggest scenarios: {str(e)}")
+        # Log internals server-side; surface only a generic error to the client
+        # since this endpoint is unauthenticated.
+        logger.error(
+            f"Failed to suggest scenarios: {e}\n{traceback.format_exc()}"
+        )
         return jsonify({
             "success": False,
-            "error": str(e),
-            "traceback": traceback.format_exc()
+            "error": "scenario_suggest_failed"
         }), 500
 
 
