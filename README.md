@@ -48,6 +48,12 @@ The Simulation Prompt field is the single blank-page barrier between uploading a
 
 Click **Use this →** on any card to fill the Simulation Prompt field, or dismiss them and type your own. Suggestions are cached per-document (SHA-256 of the preview) so navigating away and back doesn't re-hit the LLM. If the LLM call fails or times out, the panel silently doesn't appear — your typed scenario still works exactly as before. The endpoint is `POST /api/simulation/suggest-scenarios`.
 
+### What's Trending (Auto-Discovery)
+
+Smart Setup handles users who arrive with a document. **What's Trending** handles the other half — people who want to simulate *something* about AI, crypto, or geopolitics but don't have a specific article in mind. The panel sits below the URL Import box and shows the 5 most recent items across a configurable list of public RSS/Atom feeds (defaults: Reuters tech, The Verge, Hacker News, CoinDesk).
+
+Click any card and MiroShark pre-fills the URL field, fetches the article, and immediately fires Scenario Auto-Suggest on the resulting text — blank page to three scenario cards in one click. Operators can override the feed list with the `TRENDING_FEEDS` env var (comma-separated URLs). Server-side cache holds results for 15 minutes; if every feed errors the panel disappears silently. The endpoint is `GET /api/simulation/trending`.
+
 ## Screenshots
 
 <div align="center">

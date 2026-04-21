@@ -382,6 +382,436 @@ def suggest_scenarios():
         }), 500
 
 
+# ============== Trending Topics ==============
+#
+# Closes the remaining onboarding gap left by Scenario Auto-Suggest (PR #39).
+# Auto-Suggest helps users who already pasted a document; Trending Topics
+# helps users who arrive without one — they pick a current headline, the URL
+# is fetched, and Auto-Suggest fires immediately on the resulting text.
+
+# Curated default feed list — broadly newsworthy, free, public.
+# Operators can override via TRENDING_FEEDS env var (comma-separated URLs).
+_TRENDING_DEFAULT_FEEDS = (
+    "https://feeds.reuters.com/reuters/technologyNews",
+    "https://www.theverge.com/rss/index.xml",
+    "https://hnrss.org/frontpage",
+    "https://www.coindesk.com/arc/outboundfeeds/rss/",
+)
+
+# Items returned to the client per request.
+_TRENDING_ITEM_LIMIT = 5
+
+# Per-feed fetch timeout. Keeps a slow upstream from stalling the whole call.
+_TRENDING_FEED_TIMEOUT_SEC = 5.0
+
+# Cache freshness window. Avoids re-hitting upstream feeds on every page load.
+_TRENDING_CACHE_TTL_SEC = 900   # 15 minutes
+
+# Per-IP rate limit. RSS fetches are cheaper than LLM calls, so the budget is
+# higher than scenario-suggest's, but still bounded.
+_TRENDING_RATE_WINDOW_SEC = 60
+_TRENDING_RATE_MAX_CALLS = 30
+_TRENDING_RATE_HITS: "dict[str, list[float]]" = {}
+
+# Cache: keyed by feed-list hash → (expires_at_monotonic, items)
+_TRENDING_CACHE: "dict[str, tuple[float, list[dict]]]" = {}
+
+# RSS/Atom XML namespaces we care about. Atom uses default namespaces; RSS
+# 2.0 sometimes injects Dublin Core for dates. ElementTree exposes namespaces
+# as "{uri}localname" in tag names.
+_TRENDING_NS = {
+    "atom": "http://www.w3.org/2005/Atom",
+    "dc": "http://purl.org/dc/elements/1.1/",
+}
+
+
+def _trending_get_feeds() -> "list[str]":
+    """Resolve the configured feed list from env, falling back to defaults."""
+    raw = (os.environ.get('TRENDING_FEEDS') or '').strip()
+    if not raw:
+        return list(_TRENDING_DEFAULT_FEEDS)
+    feeds = [u.strip() for u in raw.split(',') if u.strip()]
+    return feeds or list(_TRENDING_DEFAULT_FEEDS)
+
+
+def _trending_rate_limited(client_ip: str) -> bool:
+    """Sliding-window per-IP rate limit, mirroring scenario-suggest's pattern."""
+    import time
+    now = time.monotonic()
+    cutoff = now - _TRENDING_RATE_WINDOW_SEC
+    hits = _TRENDING_RATE_HITS.get(client_ip, [])
+    hits = [t for t in hits if t > cutoff]
+    if len(hits) >= _TRENDING_RATE_MAX_CALLS:
+        _TRENDING_RATE_HITS[client_ip] = hits
+        return True
+    hits.append(now)
+    _TRENDING_RATE_HITS[client_ip] = hits
+    if len(_TRENDING_RATE_HITS) > 1024:
+        for ip in list(_TRENDING_RATE_HITS.keys()):
+            if not _TRENDING_RATE_HITS[ip] or _TRENDING_RATE_HITS[ip][-1] < cutoff:
+                _TRENDING_RATE_HITS.pop(ip, None)
+    return False
+
+
+def _trending_parse_pubdate(raw: str):
+    """Best-effort parse of RSS/Atom date strings into a UTC datetime.
+
+    Handles RFC 822 (RSS pubDate), RFC 3339 / ISO 8601 (Atom updated/published),
+    and a couple of common malformed variants seen in the wild. Returns None
+    on failure — callers fall back to "now-ish" sort order.
+    """
+    if not raw:
+        return None
+    raw = raw.strip()
+    # Try ISO 8601 first (Atom + many modern RSS feeds use it).
+    try:
+        # Python's fromisoformat needs "+00:00" not "Z".
+        iso = raw.replace('Z', '+00:00')
+        dt = datetime.fromisoformat(iso)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except (ValueError, TypeError):
+        pass
+    # Fall back to RFC 822 / 2822 via email.utils (RSS pubDate format).
+    try:
+        from email.utils import parsedate_to_datetime
+        dt = parsedate_to_datetime(raw)
+        if dt is None:
+            return None
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def _trending_strip_localname(tag: str) -> str:
+    """Strip XML namespace prefix from a tag name: '{ns}foo' → 'foo'."""
+    if tag.startswith('{'):
+        return tag.split('}', 1)[1]
+    return tag
+
+
+def _trending_text(elem) -> str:
+    """Return the trimmed text of an XML element, or '' if missing/empty."""
+    if elem is None:
+        return ''
+    return (elem.text or '').strip()
+
+
+def _trending_extract_link(item) -> str:
+    """Pull the first usable URL from an RSS or Atom entry.
+
+    Atom feeds emit multiple <link> elements per entry: rel="alternate" is
+    the article URL, rel="self" is the entry's own representation, and other
+    rels (enclosure, replies) point at non-article resources. We always
+    prefer rel="alternate" (or an unspecified rel, which Atom treats as
+    alternate by default).
+    """
+    # First pass: prefer Atom <link rel="alternate" href="..."/> entries.
+    for child in item:
+        if _trending_strip_localname(child.tag) != 'link':
+            continue
+        href = (child.get('href') or '').strip()
+        if not href:
+            continue
+        rel = (child.get('rel') or 'alternate').lower()
+        if rel == 'alternate' and href.startswith('http'):
+            return href
+    # Second pass: RSS 2.0 — <link>https://...</link> with no attributes.
+    for child in item:
+        if _trending_strip_localname(child.tag) != 'link':
+            continue
+        text = (child.text or '').strip()
+        if text.startswith('http'):
+            return text
+    # Last resort: <guid isPermaLink="true"> may carry the article URL.
+    for child in item:
+        if _trending_strip_localname(child.tag) != 'guid':
+            continue
+        text = (child.text or '').strip()
+        is_perma = (child.get('isPermaLink', 'true').lower() != 'false')
+        if is_perma and text.startswith('http'):
+            return text
+    return ''
+
+
+def _trending_extract_published(item) -> str:
+    """Pull the best available timestamp from an RSS or Atom entry."""
+    # Try in priority order: published > updated > pubDate > dc:date.
+    candidates = []
+    for child in item:
+        local = _trending_strip_localname(child.tag)
+        if local in ('published', 'updated', 'pubDate', 'date'):
+            text = (child.text or '').strip()
+            if text:
+                candidates.append((local, text))
+    priority = {'published': 0, 'updated': 1, 'pubDate': 2, 'date': 3}
+    candidates.sort(key=lambda t: priority.get(t[0], 99))
+    return candidates[0][1] if candidates else ''
+
+
+def _trending_extract_source(root, feed_url: str) -> str:
+    """Pick a human-readable source name from the channel/feed metadata."""
+    # RSS: <channel><title>...</title>
+    channel = root.find('channel')
+    if channel is not None:
+        title = _trending_text(channel.find('title'))
+        if title:
+            return title[:80]
+    # Atom: <feed><title>...</title>. ElementTree elements evaluate as falsy
+    # when they have no children, even if they have .text — so use explicit
+    # `is not None` rather than `or` chaining.
+    title_elem = root.find('atom:title', _TRENDING_NS)
+    if title_elem is None:
+        title_elem = root.find('title')
+    title = _trending_text(title_elem)
+    if title:
+        return title[:80]
+    # Last resort: derive from the feed URL host.
+    try:
+        from urllib.parse import urlparse
+        host = (urlparse(feed_url).netloc or feed_url)
+        if host.startswith('www.'):
+            host = host[4:]
+        return host[:80] or 'Unknown'
+    except Exception:
+        return 'Unknown'
+
+
+def _trending_fetch_one(feed_url: str) -> "list[dict]":
+    """Fetch and parse a single feed. Returns [] on any failure."""
+    import xml.etree.ElementTree as ET
+    from urllib.request import Request, urlopen
+    from urllib.error import URLError
+
+    try:
+        # User-Agent header — some feeds (Reuters, Atom-based blogs) reject the
+        # default Python urllib UA with 403.
+        req = Request(
+            feed_url,
+            headers={
+                'User-Agent': 'MiroShark/1.0 (+https://github.com/aaronjmars/MiroShark)',
+                'Accept': 'application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8',
+            },
+        )
+        with urlopen(req, timeout=_TRENDING_FEED_TIMEOUT_SEC) as resp:
+            # Cap read at 1 MB to avoid hostile/oversized feeds.
+            body = resp.read(1024 * 1024)
+    except (URLError, TimeoutError, OSError) as exc:
+        logger.info(f"trending: feed fetch failed for {feed_url}: {exc}")
+        return []
+
+    if not body:
+        return []
+
+    try:
+        root = ET.fromstring(body)
+    except ET.ParseError as exc:
+        logger.info(f"trending: feed parse failed for {feed_url}: {exc}")
+        return []
+
+    source_name = _trending_extract_source(root, feed_url)
+
+    # RSS 2.0: items live under <channel><item>. Atom: <entry> directly under
+    # <feed>. Try both — empty list is fine.
+    items = []
+    channel = root.find('channel')
+    if channel is not None:
+        items.extend(channel.findall('item'))
+    items.extend(root.findall('atom:entry', _TRENDING_NS))
+    items.extend(root.findall('entry'))
+
+    out = []
+    for item in items:
+        title = ''
+        for child in item:
+            if _trending_strip_localname(child.tag) == 'title':
+                title = (child.text or '').strip()
+                break
+        url = _trending_extract_link(item)
+        if not title or not url or not url.startswith('http'):
+            continue
+        published_raw = _trending_extract_published(item)
+        published_at = _trending_parse_pubdate(published_raw)
+        out.append({
+            "title": title[:240],
+            "url": url,
+            "source_name": source_name,
+            "published_at": (
+                published_at.isoformat() if published_at else None
+            ),
+            "_sort_ts": (
+                published_at.timestamp() if published_at else 0.0
+            ),
+        })
+    return out
+
+
+def _trending_fetch_all(feeds: "list[str]") -> "list[dict]":
+    """Fetch every feed in parallel and merge the results, newest first."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    if not feeds:
+        return []
+
+    merged = []
+    # Bound workers so a long feed list doesn't open hundreds of sockets.
+    max_workers = min(len(feeds), 8)
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {pool.submit(_trending_fetch_one, url): url for url in feeds}
+        for fut in as_completed(futures):
+            try:
+                merged.extend(fut.result() or [])
+            except Exception as exc:
+                logger.info(
+                    f"trending: worker failed for {futures[fut]}: {exc}"
+                )
+
+    # Drop duplicates by URL while preserving the newest occurrence.
+    seen = {}
+    for item in merged:
+        prev = seen.get(item['url'])
+        if prev is None or item['_sort_ts'] > prev['_sort_ts']:
+            seen[item['url']] = item
+
+    deduped = list(seen.values())
+    deduped.sort(key=lambda i: i['_sort_ts'], reverse=True)
+
+    # Strip the internal sort key before returning.
+    for item in deduped:
+        item.pop('_sort_ts', None)
+    return deduped
+
+
+@simulation_bp.route('/trending', methods=['GET'])
+def trending_topics():
+    """Return the most recent items across the configured RSS/Atom feeds.
+
+    Query params:
+        feeds:   optional comma-separated URL list to override TRENDING_FEEDS
+        refresh: pass any truthy value to bypass the in-memory cache
+
+    Response:
+        {
+          "success": true,
+          "data": {
+            "items": [
+              {"title": "...", "url": "...", "source_name": "...",
+               "published_at": "2026-04-21T13:45:00+00:00"}
+            ],
+            "feeds_used": [...],
+            "cached": true,
+            "fetched_at": "2026-04-21T13:50:00+00:00"
+          }
+        }
+
+    On total failure (every feed errored), `items` is an empty array — the
+    UI hides the panel silently. The endpoint never 5xx's the client.
+    """
+    try:
+        client_ip = (
+            request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+            or request.remote_addr
+            or 'unknown'
+        )
+        if _trending_rate_limited(client_ip):
+            return jsonify({
+                "success": True,
+                "data": {
+                    "items": [],
+                    "feeds_used": [],
+                    "cached": False,
+                    "reason": "rate_limited",
+                }
+            }), 429
+
+        # Resolve feeds: ?feeds=... overrides; otherwise env / default list.
+        feeds_param = (request.args.get('feeds') or '').strip()
+        if feeds_param:
+            feeds = [u.strip() for u in feeds_param.split(',') if u.strip()]
+        else:
+            feeds = _trending_get_feeds()
+
+        # Defensive: cap at 12 feeds per request to bound work.
+        if len(feeds) > 12:
+            feeds = feeds[:12]
+
+        if not feeds:
+            return jsonify({
+                "success": True,
+                "data": {
+                    "items": [],
+                    "feeds_used": [],
+                    "cached": False,
+                    "reason": "no_feeds_configured",
+                }
+            })
+
+        import time
+        import hashlib
+        cache_key = hashlib.sha1(
+            ('|'.join(feeds)).encode('utf-8')
+        ).hexdigest()
+
+        force_refresh = (request.args.get('refresh') or '').lower() in (
+            '1', 'true', 'yes'
+        )
+
+        now = time.monotonic()
+        if not force_refresh:
+            cached = _TRENDING_CACHE.get(cache_key)
+            if cached and cached[0] > now:
+                items = cached[1][:_TRENDING_ITEM_LIMIT]
+                return jsonify({
+                    "success": True,
+                    "data": {
+                        "items": items,
+                        "feeds_used": feeds,
+                        "cached": True,
+                        "fetched_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                })
+
+        items = _trending_fetch_all(feeds)
+        # Cache even an empty list briefly so we don't retry every page load
+        # when all upstreams are down — but use a shorter TTL (60s) for the
+        # empty case so recovery is fast.
+        ttl = _TRENDING_CACHE_TTL_SEC if items else 60
+        _TRENDING_CACHE[cache_key] = (now + ttl, items)
+        # Bound cache size — feed-list permutations can otherwise leak.
+        if len(_TRENDING_CACHE) > 64:
+            # Drop the oldest expiring entry.
+            oldest_key = min(_TRENDING_CACHE, key=lambda k: _TRENDING_CACHE[k][0])
+            _TRENDING_CACHE.pop(oldest_key, None)
+
+        return jsonify({
+            "success": True,
+            "data": {
+                "items": items[:_TRENDING_ITEM_LIMIT],
+                "feeds_used": feeds,
+                "cached": False,
+                "fetched_at": datetime.now(timezone.utc).isoformat(),
+            }
+        })
+
+    except Exception as exc:
+        logger.error(
+            f"Failed to fetch trending topics: {exc}\n{traceback.format_exc()}"
+        )
+        # Never 5xx — the panel is non-essential and should silently disappear.
+        return jsonify({
+            "success": True,
+            "data": {
+                "items": [],
+                "feeds_used": [],
+                "cached": False,
+                "reason": "internal_error",
+            }
+        })
+
+
 # ============== Entity Reading Endpoints ==============
 
 @simulation_bp.route('/entities/<graph_id>', methods=['GET'])

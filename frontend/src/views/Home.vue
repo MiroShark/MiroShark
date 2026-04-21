@@ -180,6 +180,10 @@
                   <button @click.stop="removeUrlDoc(index)" class="remove-btn">×</button>
                 </div>
               </div>
+              <TrendingTopics
+                :busy="urlFetching"
+                @select="handleTrendingSelect"
+              />
             </div>
 
             <!-- Divider -->
@@ -241,6 +245,7 @@ import HistoryDatabase from '../components/HistoryDatabase.vue'
 import TemplateGallery from '../components/TemplateGallery.vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
 import ScenarioSuggestions from '../components/ScenarioSuggestions.vue'
+import TrendingTopics from '../components/TrendingTopics.vue'
 import { fetchUrl } from '../api/graph'
 
 const settingsOpen = ref(false)
@@ -417,6 +422,21 @@ const fetchUrlDoc = async () => {
   } finally {
     urlFetching.value = false
   }
+}
+
+// User picked a "What's Trending" card — push the URL into the input and
+// reuse the existing fetch pipeline. ScenarioSuggestions already watches
+// urlDocs and will fire once the fetched doc lands, so the user goes from
+// blank-page to three scenario cards in one click.
+const handleTrendingSelect = ({ url }) => {
+  if (!url || urlFetching.value) return
+  if (urlDocs.value.some(d => d.url === url)) {
+    urlError.value = 'This URL is already loaded.'
+    return
+  }
+  urlInput.value = url
+  urlError.value = ''
+  fetchUrlDoc()
 }
 
 // Remove a URL document from the list

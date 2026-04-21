@@ -400,6 +400,38 @@ export const getDemographicBreakdown = (simulationId, options = {}) => {
 }
 
 /**
+ * Fetch the most recent items across configured RSS/Atom feeds. Used by the
+ * Home screen "What's Trending" panel — gives users who arrive without a
+ * specific document a one-click starting point. Clicking a card pre-fills
+ * the URL field and immediately fires the existing fetch + scenario-suggest
+ * pipeline.
+ *
+ * Response shape:
+ *   {
+ *     items: [
+ *       { title, url, source_name, published_at }
+ *     ],
+ *     feeds_used: [...],
+ *     cached: boolean,
+ *     fetched_at?: string,
+ *     reason?: 'rate_limited' | 'no_feeds_configured' | 'internal_error'
+ *   }
+ *
+ * An empty `items` array is normal when every feed errored — the caller
+ * should hide the panel silently.
+ *
+ * @param {Object} options - { feeds?: string[], refresh?: boolean }
+ */
+export const getTrendingTopics = (options = {}) => {
+  const params = {}
+  if (Array.isArray(options.feeds) && options.feeds.length) {
+    params.feeds = options.feeds.join(',')
+  }
+  if (options.refresh) params.refresh = 'true'
+  return service.get('/api/simulation/trending', { params, timeout: 12000 })
+}
+
+/**
  * Generate 3 prediction-market-style scenario suggestions from a document
  * preview. Used by the Home screen to eliminate the blank-page problem at
  * simulation setup — the user pastes a URL or drops a file, and within a
