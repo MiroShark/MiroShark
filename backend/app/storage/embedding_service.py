@@ -95,10 +95,17 @@ class EmbeddingService:
         self._cache_put(text, vector)
         return vector
 
-    def embed_batch(self, texts: List[str], batch_size: int = 32) -> List[List[float]]:
+    def embed_batch(self, texts: List[str], batch_size: Optional[int] = None) -> List[List[float]]:
         """
         Generate embeddings for multiple texts in batches.
+
+        batch_size defaults to Config.EMBEDDING_BATCH_SIZE (128). Most providers
+        (OpenAI, text-embedding-3-*, OpenRouter, Cohere, Ollama nomic-embed-text)
+        accept 128-2048 inputs per request; 128 is a safe default that cuts
+        wall-clock time ~4x vs the old default of 32 for typical document sizes.
         """
+        if batch_size is None:
+            batch_size = getattr(Config, "EMBEDDING_BATCH_SIZE", 128)
         if not texts:
             return []
 

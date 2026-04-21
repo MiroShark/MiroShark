@@ -654,6 +654,35 @@ and trader portfolios with P&L.
 - Trader portfolios with cash, positions, and profit/loss
 - Price movement from initial to final"""
 
+TOOL_DESC_ANALYZE_EQUILIBRIUM = """\
+[Analyze Equilibrium - Nash Game-Theoretic View]
+Fits a 2-player game on top of the simulation's final belief distribution and
+returns its Nash equilibria. Inspired by MiroJiang's predictive-history
+framework: agents are grouped into a bullish/bearish axis by their mean stance,
+payoffs are weighted by group sizes and confidence, and equilibria are solved
+via support enumeration (nashpy).
+
+[Parameters]
+- topic: Optional specific topic/issue from the trajectory. Leave empty to use
+  the topic with the widest final spread (most contested).
+
+[Return Content]
+- Pure and mixed-strategy Nash equilibria (up to 3)
+- Group sizes and mean stances for both coalitions
+- A short qualitative reading (polarized / coordinated / mixed)
+
+[When to use]
+- When the report needs to reason about *strategic* dynamics, not just
+  observed outcomes (e.g. "would rational actors have sustained consensus?")
+- For policy / market scenarios with a clear binary choice
+- As a cross-check: if the observed simulation outcome matches a Nash
+  equilibrium, the trajectory is consistent with self-interested play
+
+[Caveats]
+- This synthesizes a 2-player game from N-agent data; treat equilibria as
+  qualitative hints, not precise predictions.
+- Requires trajectory.json (belief tracking enabled) and `nashpy` installed."""
+
 TOOL_DESC_BROWSE_CLUSTERS = """\
 [Browse Clusters - Zoom-Out Over the Graph]
 Returns LLM-summarized community clusters — the major themes of the knowledge
@@ -1171,6 +1200,13 @@ class ReportAgent:
                     "query": "Optional semantic query to find clusters relevant to a topic. Leave empty to list the largest clusters.",
                     "limit": "Optional cap on clusters returned (default 8)"
                 }
+            },
+            "analyze_equilibrium": {
+                "name": "analyze_equilibrium",
+                "description": TOOL_DESC_ANALYZE_EQUILIBRIUM,
+                "parameters": {
+                    "topic": "Optional specific topic from trajectory.json (leave empty to pick the most-contested topic automatically)"
+                }
             }
         }
     
@@ -1253,6 +1289,10 @@ class ReportAgent:
                 # Belief trajectory analysis — reads trajectory.json from simulation
                 focus = parameters.get("focus", "all")
                 return self._execute_trajectory_analysis(focus)
+
+            elif tool_name == "analyze_equilibrium":
+                topic = (parameters.get("topic") or "").strip()
+                return self._execute_equilibrium_analysis(topic or None)
 
             elif tool_name == "analyze_graph_structure":
                 # Graph structure analysis — centrality, communities, bridges
@@ -1435,6 +1475,161 @@ class ReportAgent:
                 lines.append("")
 
         return "\n".join(lines)
+
+    def _execute_equilibrium_analysis(self, topic: Optional[str] = None) -> str:
+        """Synthesize a 2-player stance game from trajectory.json and solve via nashpy.
+
+        This is a qualitative bridge between MiroShark's belief state and
+        game-theoretic reasoning. We split agents into two coalitions along
+        their final stance on ``topic`` (or the most-contested topic), build a
+        2x2 payoff matrix parameterized by coalition size and mean stance, and
+        enumerate pure / mixed-strategy Nash equilibria. nashpy is optional;
+        missing ⇒ graceful error.
+        """
+        sim_dir = self._get_simulation_dir()
+        trajectory_path = os.path.join(sim_dir, "trajectory.json")
+        if not os.path.exists(trajectory_path):
+            return (
+                "No trajectory.json available — belief tracking must be enabled "
+                "on the simulation for analyze_equilibrium to work."
+            )
+
+        try:
+            import nashpy  # type: ignore
+            import numpy as np  # type: ignore
+        except ImportError:
+            return (
+                "nashpy is not installed. Add `nashpy` and `numpy` to the "
+                "backend environment to enable this tool "
+                "(pip install nashpy numpy)."
+            )
+
+        try:
+            with open(trajectory_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+        except Exception as e:
+            return f"Failed to read trajectory.json: {e}"
+
+        trajectories = data.get("belief_trajectories", {}) or {}
+        if not trajectories:
+            return "trajectory.json has no belief_trajectories — nothing to analyze."
+
+        # Pick topic — explicit, else widest final spread.
+        if topic and topic in trajectories:
+            chosen_topic = topic
+        else:
+            def _final_spread(rounds):
+                return (rounds[-1].get("spread") or 0) if rounds else 0
+            chosen_topic = max(trajectories, key=lambda k: _final_spread(trajectories[k]))
+
+        rounds = trajectories.get(chosen_topic, [])
+        if not rounds:
+            return f"Topic '{chosen_topic}' has no round data."
+
+        # Extract per-agent final stance from belief_positions at the last snapshot.
+        snapshots = data.get("snapshots") or []
+        positions_final = {}
+        if snapshots:
+            last_snap = snapshots[-1]
+            raw_positions = last_snap.get("belief_positions") or {}
+            for agent_id, topics in raw_positions.items():
+                if isinstance(topics, dict) and chosen_topic in topics:
+                    positions_final[agent_id] = float(topics[chosen_topic])
+
+        # Fallback: synthesize stances from the round-level mean+spread when
+        # per-agent positions are not persisted.
+        if not positions_final:
+            mean = float(rounds[-1].get("mean", 0.0))
+            spread = float(rounds[-1].get("spread", 0.5))
+            # Heuristic split: assume 50/50 around the mean with ±spread width.
+            positions_final = {
+                "_synthetic_bull": max(mean + spread / 2, 0.01),
+                "_synthetic_bear": min(mean - spread / 2, -0.01),
+            }
+
+        stances = list(positions_final.values())
+        n_total = len(stances)
+        bull = [s for s in stances if s > 0.05]
+        bear = [s for s in stances if s < -0.05]
+        n_bull, n_bear = len(bull), len(bear)
+        if n_bull < 1 or n_bear < 1:
+            return (
+                f"Topic '{chosen_topic}' does not split into bullish and bearish "
+                f"coalitions at endpoint (n_bull={n_bull}, n_bear={n_bear}). "
+                "Nash analysis requires a contested axis."
+            )
+
+        mean_bull = sum(bull) / n_bull
+        mean_bear = sum(bear) / n_bear  # negative
+
+        # Construct a 2x2 payoff matrix.
+        # Row player = bullish coalition, Column player = bearish coalition.
+        # Strategy 1 = HOLD (post stance), Strategy 2 = CONCEDE (soften).
+        # Payoffs scale with own coalition size × conviction, minus loss from
+        # the other side's conviction when both hold (costly conflict).
+        import math
+        conv_b = abs(mean_bull)
+        conv_s = abs(mean_bear)
+        # Row (bull) payoffs
+        r11 = n_bull * conv_b - 0.5 * n_bear * conv_s   # both hold → contested
+        r12 = n_bull * conv_b                            # bull holds, bear concedes
+        r21 = 0.2 * n_bull                               # bull concedes, bear holds
+        r22 = 0.3 * n_bull * conv_b                      # both concede (partial credit)
+        row_matrix = [[r11, r12], [r21, r22]]
+        # Col (bear) payoffs — symmetric
+        c11 = n_bear * conv_s - 0.5 * n_bull * conv_b
+        c12 = 0.2 * n_bear
+        c21 = n_bear * conv_s
+        c22 = 0.3 * n_bear * conv_s
+        col_matrix = [[c11, c12], [c21, c22]]
+
+        try:
+            game = nashpy.Game(np.array(row_matrix), np.array(col_matrix))
+            equilibria = list(game.support_enumeration())[:3]
+        except Exception as e:
+            return f"Nash solver failed: {e}"
+
+        out_lines = [
+            f"=== Nash Equilibrium — topic: {chosen_topic} ===",
+            f"n_total={n_total}  n_bull={n_bull} (μ={mean_bull:.2f})  "
+            f"n_bear={n_bear} (μ={mean_bear:.2f})",
+            "",
+            "Actions: HOLD (maintain stance) vs CONCEDE (soften)",
+            "Payoff matrix (row=bull, col=bear):",
+            f"  [{r11:+.2f} / {c11:+.2f}]  [{r12:+.2f} / {c12:+.2f}]",
+            f"  [{r21:+.2f} / {c21:+.2f}]  [{r22:+.2f} / {c22:+.2f}]",
+            "",
+            "Equilibria:",
+        ]
+        if not equilibria:
+            out_lines.append("  (no pure or mixed-strategy NE found — payoffs may be degenerate)")
+        else:
+            for idx, (bull_strat, bear_strat) in enumerate(equilibria, 1):
+                def _describe(strat):
+                    if len(strat) < 2:
+                        return "?"
+                    hold_p = float(strat[0])
+                    if hold_p > 0.95: return "HOLD (pure)"
+                    if hold_p < 0.05: return "CONCEDE (pure)"
+                    return f"HOLD with prob {hold_p:.2f}"
+                out_lines.append(
+                    f"  #{idx}: bull → {_describe(bull_strat)}, bear → {_describe(bear_strat)}"
+                )
+
+        # Qualitative reading
+        if equilibria:
+            bull0 = float(equilibria[0][0][0]) if len(equilibria[0][0]) >= 1 else 0.5
+            bear0 = float(equilibria[0][1][0]) if len(equilibria[0][1]) >= 1 else 0.5
+            if bull0 > 0.8 and bear0 > 0.8:
+                reading = "Polarized equilibrium: both sides hold. Sustained conflict is self-enforcing."
+            elif bull0 < 0.2 and bear0 < 0.2:
+                reading = "Coordinated concession: both sides soften. Consensus is stable."
+            else:
+                reading = "Mixed equilibrium: at least one side randomizes. Outcomes are sensitive to shocks."
+            out_lines.append("")
+            out_lines.append(f"Reading: {reading}")
+
+        return "\n".join(out_lines)
 
     def _get_simulation_dir(self) -> str:
         """Find the simulation directory (tries multiple locations)."""

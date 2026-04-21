@@ -57,7 +57,15 @@ class OasisAgentProfile:
     # Source entity information
     source_entity_uuid: Optional[str] = None
     source_entity_type: Optional[str] = None
-    
+
+    # Per-agent MCP tools — OpenMiro-style. Personas with tools_enabled=True
+    # are allowed to invoke MCP servers configured in MCP_SERVERS_CONFIG
+    # (or a future settings entry). The global MCP_AGENT_TOOLS_ENABLED flag
+    # must also be on for this to take effect in the simulation loop; when
+    # off, this field is metadata only.
+    tools_enabled: bool = False
+    allowed_tools: List[str] = field(default_factory=list)
+
     created_at: str = field(default_factory=lambda: datetime.now().strftime("%Y-%m-%d"))
     
     def to_reddit_format(self) -> Dict[str, Any]:

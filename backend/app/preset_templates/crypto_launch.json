@@ -15,5 +15,32 @@
     "enable_twitter": true,
     "enable_reddit": true,
     "enable_polymarket": true
-  }
+  },
+  "oracle_tools": [
+    {"server": "feedoracle_core", "tool": "macro_risk",      "args": {}},
+    {"server": "feedoracle_core", "tool": "peg_deviation",   "args": {"token_symbol": "USDT"}}
+  ],
+  "counterfactual_branches": [
+    {
+      "id": "rug_pull",
+      "label": "Team wallet drains liquidity",
+      "description": "The team pulls liquidity around the 12h mark — rug-pull.",
+      "trigger_round": 12,
+      "injection": "On-chain monitors are flagging an unusual multi-sig transaction draining $1.8M of $NRAL liquidity. The team's wallet addresses have gone silent."
+    },
+    {
+      "id": "cex_listing",
+      "label": "Tier-1 CEX listing confirmed",
+      "description": "A top-5 centralized exchange announces $NRAL listing at round 18.",
+      "trigger_round": 18,
+      "injection": "Binance has officially announced a $NRAL/USDT perpetual listing going live in 6 hours. The token is up 70% on the news."
+    },
+    {
+      "id": "sec_notice",
+      "label": "SEC issues Wells notice",
+      "description": "The SEC sends a Wells notice framing $NRAL as an unregistered security.",
+      "trigger_round": 24,
+      "injection": "The SEC has just sent NeuralCoin a Wells notice stating the token may qualify as an unregistered security. The team has 30 days to respond."
+    }
+  ]
 }

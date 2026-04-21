@@ -171,6 +171,25 @@ from market_media_bridge import (
 )
 from round_memory import RoundMemory, inject_round_memory
 
+# Per-agent MCP tools (OpenMiro-style). Entirely optional — gated by
+# MCP_AGENT_TOOLS_ENABLED and by each persona's own tools_enabled flag.
+try:
+    from mcp_agent_bridge import (
+        MCPAgentBridge,
+        parse_tool_calls as _mcp_parse_tool_calls,
+    )
+    from mcp_agent_injection import (
+        inject_mcp_catalogue,
+        inject_mcp_results,
+    )
+    _MCP_IMPORT_OK = True
+except Exception:  # noqa: BLE001 — runner must run without MCP deps
+    MCPAgentBridge = None  # type: ignore
+    _mcp_parse_tool_calls = None  # type: ignore
+    inject_mcp_catalogue = None  # type: ignore
+    inject_mcp_results = None  # type: ignore
+    _MCP_IMPORT_OK = False
+
 try:
     from camel.models import ModelFactory
     from camel.types import ModelPlatformType
@@ -1037,7 +1056,12 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
     
     # If no model name in .env, use config as fallback
     if not llm_model:
-        llm_model = config.get("llm_model", "gpt-4o-mini")
+        llm_model = config.get("llm_model", "")
+    if not llm_model:
+        raise ValueError(
+            "No LLM model configured. Set OASIS_MODEL_NAME or LLM_MODEL_NAME in .env, "
+            "or pass llm_model in the simulation config."
+        )
     
     # Set environment variables required by camel-ai
     if llm_api_key:
@@ -1104,6 +1128,63 @@ def _build_social_summary_for_traders(round_memory, current_round: int, bridge) 
         return ""
 
     return "\n".join(parts)
+
+
+def _mcp_inject_and_dispatch_pre_round(active_agents, bridge, server_names, tool_agent_ids, pending_results):
+    """Inject MCP tool catalogue + prior results into tool-enabled agents.
+
+    Called once per platform per round. No-ops when bridge is None.
+    """
+    if bridge is None or not tool_agent_ids:
+        return
+    try:
+        catalogue = bridge.tool_catalogue(server_names)
+    except Exception as exc:
+        catalogue = f"(MCP catalogue unavailable: {exc})"
+    for agent_id, agent in active_agents:
+        if agent_id not in tool_agent_ids:
+            continue
+        try:
+            inject_mcp_catalogue(agent, catalogue)
+        except Exception:
+            pass
+        prior = pending_results.pop(agent_id, None)
+        if prior:
+            try:
+                inject_mcp_results(agent, prior)
+            except Exception:
+                pass
+
+
+def _mcp_dispatch_from_actions(actions, bridge, tool_agent_ids, pending_results):
+    """After a round, parse CREATE_POST content for <mcp_call> tags.
+
+    Dispatched results are queued in ``pending_results[agent_id]`` for
+    injection on the agent's next activation.
+    """
+    if bridge is None or not actions:
+        return
+    for a in actions:
+        if a.get("action_type") not in ("CREATE_POST", "CREATE_COMMENT", "QUOTE_POST"):
+            continue
+        aid = a.get("agent_id")
+        if aid is None or int(aid) not in tool_agent_ids:
+            continue
+        content = (a.get("action_args") or {}).get("content") or ""
+        if "<mcp_call" not in content:
+            continue
+        try:
+            calls = _mcp_parse_tool_calls(content)
+        except Exception:
+            calls = []
+        if not calls:
+            continue
+        try:
+            results = bridge.dispatch_calls(calls)
+        except Exception as exc:
+            results = []
+        if results:
+            pending_results.setdefault(int(aid), []).extend(results)
 
 
 def get_active_agents_for_round(
@@ -2239,6 +2320,46 @@ async def run_synchronized_simulation(
     reddit_last_rowid = 0
     polymarket_last_rowid = 0
 
+    # ── Per-agent MCP bridge (optional) ─────────────────────────────────────
+    # When MCP_AGENT_TOOLS_ENABLED=true, spin up the MCP server subprocesses
+    # listed in config/mcp_servers.yaml and build a map of which agent ids
+    # are allowed to call them (set per-persona in profile JSON).
+    mcp_bridge = None
+    mcp_tool_agent_ids: set = set()
+    mcp_server_names: list = []
+    # agent_id -> list[MCPCallResult] pending injection next round
+    mcp_pending_results: "dict[int, list]" = {}
+
+    if _MCP_IMPORT_OK and os.environ.get("MCP_AGENT_TOOLS_ENABLED", "false").lower() == "true":
+        try:
+            # Defer import to avoid pulling flask config at module import time.
+            from app.services.agent_mcp_tools import load_registry  # type: ignore
+            registry = load_registry()
+            if registry:
+                mcp_bridge = MCPAgentBridge(registry)
+                mcp_server_names = list(registry.keys())
+                # Collect tools_enabled agent_ids from profile JSONs.
+                for fname in ("reddit_profiles.json", "polymarket_profiles.json"):
+                    fpath = os.path.join(simulation_dir, fname)
+                    if not os.path.exists(fpath):
+                        continue
+                    try:
+                        with open(fpath, "r", encoding="utf-8") as fh:
+                            profs = json.load(fh)
+                        for p in profs:
+                            if p.get("tools_enabled"):
+                                mcp_tool_agent_ids.add(int(p.get("user_id") or p.get("agent_id") or -1))
+                    except Exception as exc:
+                        log_info(f"[MCP] Failed to read {fname}: {exc}")
+                mcp_tool_agent_ids.discard(-1)
+                log_info(
+                    f"[MCP] Bridge ready: {len(registry)} server(s), "
+                    f"{len(mcp_tool_agent_ids)} tool-enabled agent(s)"
+                )
+        except Exception as exc:
+            log_info(f"[MCP] Bridge init failed ({exc}); continuing without per-agent MCP")
+            mcp_bridge = None
+
     start_time = datetime.now()
     log_info(f"Starting synchronized simulation: {total_rounds} rounds")
 
@@ -2292,6 +2413,9 @@ async def run_synchronized_simulation(
                 if director_text:
                     for _, agent in active:
                         inject_director_event_context(agent, director_text)
+                _mcp_inject_and_dispatch_pre_round(
+                    active, mcp_bridge, mcp_server_names, mcp_tool_agent_ids, mcp_pending_results
+                )
 
                 async def _step_twitter(active_agents=active):
                     actions = {agent: LLMAction() for _, agent in active_agents}
@@ -2322,6 +2446,9 @@ async def run_synchronized_simulation(
                 if director_text:
                     for _, agent in active:
                         inject_director_event_context(agent, director_text)
+                _mcp_inject_and_dispatch_pre_round(
+                    active, mcp_bridge, mcp_server_names, mcp_tool_agent_ids, mcp_pending_results
+                )
 
                 async def _step_reddit(active_agents=active):
                     actions = {agent: LLMAction() for _, agent in active_agents}
@@ -2355,6 +2482,9 @@ async def run_synchronized_simulation(
                 if director_text:
                     for _, agent in active:
                         inject_director_event_context(agent, director_text)
+                _mcp_inject_and_dispatch_pre_round(
+                    active, mcp_bridge, mcp_server_names, mcp_tool_agent_ids, mcp_pending_results
+                )
 
                 # Inject social media summary directly into the observation prompt
                 # so traders see it alongside portfolio/market data (not buried in system msg)
@@ -2387,6 +2517,7 @@ async def run_synchronized_simulation(
         # ── Post-round: fetch actions, update beliefs, record to memory ──
         if "twitter" in platform_results:
             actual_actions, twitter_last_rowid = fetch_new_actions_from_db(twitter_db, twitter_last_rowid, agent_names)
+            _mcp_dispatch_from_actions(actual_actions, mcp_bridge, mcp_tool_agent_ids, mcp_pending_results)
             if twitter_belief:
                 twitter_belief.after_round(twitter_db, twitter_result.env, platform_results["twitter"], round_num, actual_actions)
                 bridge.update_sentiment(twitter_belief.belief_states, actual_actions, round_num, "twitter")
@@ -2402,6 +2533,7 @@ async def run_synchronized_simulation(
 
         if "reddit" in platform_results:
             actual_actions, reddit_last_rowid = fetch_new_actions_from_db(reddit_db, reddit_last_rowid, agent_names)
+            _mcp_dispatch_from_actions(actual_actions, mcp_bridge, mcp_tool_agent_ids, mcp_pending_results)
             if reddit_belief:
                 reddit_belief.after_round(reddit_db, reddit_result.env, platform_results["reddit"], round_num, actual_actions)
                 bridge.update_sentiment(reddit_belief.belief_states, actual_actions, round_num, "reddit")
@@ -2418,6 +2550,7 @@ async def run_synchronized_simulation(
         if "polymarket" in platform_results:
             bridge.update_prices(polymarket_db, round_num)
             actual_actions, polymarket_last_rowid = _fetch_polymarket_actions_from_db(polymarket_db, polymarket_last_rowid, agent_names)
+            _mcp_dispatch_from_actions(actual_actions, mcp_bridge, mcp_tool_agent_ids, mcp_pending_results)
             if polymarket_belief:
                 polymarket_belief.after_round(polymarket_db, polymarket_result.env, platform_results["polymarket"], round_num, actual_actions)
             if cross_platform_log and actual_actions:
@@ -2451,6 +2584,11 @@ async def run_synchronized_simulation(
             )
 
     # ── Finalize ──
+    if mcp_bridge is not None:
+        try:
+            mcp_bridge.shutdown()
+        except Exception:
+            pass
     elapsed = (datetime.now() - start_time).total_seconds()
     log_info(f"Simulation complete! {elapsed:.0f}s total")
 

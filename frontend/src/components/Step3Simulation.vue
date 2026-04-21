@@ -54,7 +54,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showInfluence }"
-        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false; showWhatIf = false"
+        @click="showInfluence = !showInfluence; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false; showWhatIf = false; showBranch = false"
         title="Agent influence leaderboard"
       >
         ◈ Influence
@@ -65,7 +65,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showBeliefDrift }"
-        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false; showNetwork = false; showDemographics = false; showWhatIf = false"
+        @click="showBeliefDrift = !showBeliefDrift; showInfluence = false; showDirector = false; showNetwork = false; showDemographics = false; showWhatIf = false; showBranch = false"
         title="Aggregate belief drift chart"
       >
         ◎ Drift
@@ -76,7 +76,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showNetwork }"
-        @click="showNetwork = !showNetwork; showInfluence = false; showBeliefDrift = false; showDirector = false; showDemographics = false; showWhatIf = false"
+        @click="showNetwork = !showNetwork; showInfluence = false; showBeliefDrift = false; showDirector = false; showDemographics = false; showWhatIf = false; showBranch = false"
         title="Agent interaction network graph"
       >
         ⬡ Network
@@ -87,7 +87,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showDemographics }"
-        @click="showDemographics = !showDemographics; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false; showWhatIf = false"
+        @click="showDemographics = !showDemographics; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false; showWhatIf = false; showBranch = false"
         title="Agent demographic breakdown (age, gender, country, actor type, platform)"
       >
         ◇ Demographics
@@ -98,7 +98,7 @@
         v-if="allActions.length > 0"
         class="action-btn secondary"
         :class="{ active: showWhatIf }"
-        @click="showWhatIf = !showWhatIf; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false"
+        @click="showWhatIf = !showWhatIf; showInfluence = false; showBeliefDrift = false; showDirector = false; showNetwork = false; showDemographics = false; showBranch = false"
         title="What If? — remove agents and recompute belief drift from existing trajectory"
       >
         ◐ What If?
@@ -109,11 +109,22 @@
         v-if="phase === 1"
         class="action-btn secondary director-btn"
         :class="{ active: showDirector }"
-        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false; showNetwork = false; showDemographics = false; showWhatIf = false"
+        @click="showDirector = !showDirector; showInfluence = false; showBeliefDrift = false; showNetwork = false; showDemographics = false; showWhatIf = false; showBranch = false"
         :title="directorEventsTotal >= 10 ? 'Director Mode — max events reached' : 'Director Mode — inject a breaking event into the simulation'"
       >
         ⚡ Director
         <span v-if="directorEventsTotal > 0" class="director-badge">{{ directorEventsTotal }}/10</span>
+      </button>
+
+      <!-- Counterfactual Branch toggle — fork with an injection at a future round -->
+      <button
+        v-if="phase !== 0"
+        class="action-btn secondary"
+        :class="{ active: showBranch }"
+        @click="showBranch = !showBranch; showInfluence = false; showBeliefDrift = false; showNetwork = false; showDemographics = false; showWhatIf = false; showDirector = false"
+        title="Fork this simulation with a narrative injection scheduled for a specific round"
+      >
+        ⤷ Branch
       </button>
 
       <!-- Resume (when paused/stopped/failed with partial data) -->
@@ -287,6 +298,17 @@
       class="influence-overlay"
     />
 
+    <!-- Counterfactual Branch (overlay when toggled) -->
+    <div v-if="showBranch" class="influence-overlay">
+      <CounterfactualBranchPanel
+        :simulationId="simulationId"
+        :currentRound="runStatus.current_round || 0"
+        :totalRounds="runStatus.total_rounds || 0"
+        :presetBranches="presetCounterfactualBranches"
+        @close="showBranch = false"
+      />
+    </div>
+
     <!-- Director Mode Panel (overlay when toggled) -->
     <div v-if="showDirector" class="influence-overlay director-panel">
       <div class="director-header">
@@ -353,7 +375,7 @@
     </div>
 
     <!-- Main Content: Dual Timeline -->
-    <div v-show="!showInfluence && !showBeliefDrift && !showDirector && !showNetwork && !showDemographics" class="main-content-area" ref="scrollContainer" @scroll="onTimelineScroll">
+    <div v-show="!showInfluence && !showBeliefDrift && !showDirector && !showNetwork && !showDemographics && !showBranch && !showWhatIf" class="main-content-area" ref="scrollContainer" @scroll="onTimelineScroll">
       <!-- Scroll to bottom button -->
       <button
         v-if="showScrollBtn"
@@ -704,6 +726,7 @@ import BeliefDriftChart from './BeliefDriftChart.vue'
 import InteractionNetwork from './InteractionNetwork.vue'
 import DemographicBreakdown from './DemographicBreakdown.vue'
 import WhatIfPanel from './WhatIfPanel.vue'
+import CounterfactualBranchPanel from './CounterfactualBranchPanel.vue'
 
 const props = defineProps({
   simulationId: String,
@@ -741,6 +764,12 @@ const showBeliefDrift = ref(false)
 const showNetwork = ref(false)
 const showDemographics = ref(false)
 const showWhatIf = ref(false)
+const showBranch = ref(false)
+// Preset counterfactual branches carried over from the template that
+// seeded this simulation (if any). The runner's currently-active simulation
+// object exposes no template_id, so we best-effort resolve via the parent
+// project on mount. Populated in fetchPresetBranches() below.
+const presetCounterfactualBranches = ref([])
 
 // Article drawer state
 const showArticleDrawer = ref(false)

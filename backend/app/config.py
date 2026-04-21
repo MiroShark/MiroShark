@@ -57,6 +57,10 @@ class Config:
     EMBEDDING_BASE_URL = os.environ.get('EMBEDDING_BASE_URL', 'http://localhost:11434')
     EMBEDDING_API_KEY = os.environ.get('EMBEDDING_API_KEY', '')
     EMBEDDING_DIMENSIONS = int(os.environ.get('EMBEDDING_DIMENSIONS', '768'))
+    # How many texts to send per embedding HTTP request. OpenAI/OpenRouter
+    # text-embedding-3-* accepts 2048; Ollama nomic-embed-text happily chews
+    # through 128+. Lower if your provider 413s you.
+    EMBEDDING_BATCH_SIZE = int(os.environ.get('EMBEDDING_BATCH_SIZE', '128'))
 
     # Reranker configuration — cross-encoder reranking over hybrid search results.
     # Default: BAAI/bge-reranker-v2-m3 (multilingual, ~568M params). Downloaded on first
@@ -155,6 +159,14 @@ class Config:
     # Observability configuration
     MIROSHARK_LOG_PROMPTS = os.environ.get('MIROSHARK_LOG_PROMPTS', 'false').lower() == 'true'
     MIROSHARK_LOG_LEVEL = os.environ.get('MIROSHARK_LOG_LEVEL', 'info')  # debug|info|warn
+
+    # Anthropic prompt caching — when true and the active model is a Claude
+    # variant, LLMClient attaches cache_control:{"type":"ephemeral"} to the
+    # system message so repeated calls with the same prefix pay ~10% on cache
+    # reads. Biggest wins: report ReACT loop (~N iterations per section × M
+    # sections, all with the same system prompt) and graph-building NER.
+    # Silently no-ops for non-Anthropic models.
+    LLM_PROMPT_CACHING_ENABLED = os.environ.get('LLM_PROMPT_CACHING_ENABLED', 'true').lower() == 'true'
 
     # Report Agent configuration
     REPORT_AGENT_MAX_TOOL_CALLS = int(os.environ.get('REPORT_AGENT_MAX_TOOL_CALLS', '5'))

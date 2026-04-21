@@ -76,14 +76,66 @@ def add_event(simulation_dir: str, event_text: str, round_num: int) -> Dict[str,
     return event
 
 
+def _counterfactual_path(simulation_dir: str) -> str:
+    return os.path.join(simulation_dir, "counterfactual_injection.json")
+
+
+def _promote_counterfactual_if_due(simulation_dir: str, current_round: int) -> None:
+    """Convert a queued counterfactual into a director event when its round arrives.
+
+    Preset branches and the /branch-counterfactual endpoint write a one-shot
+    spec to ``counterfactual_injection.json``. This function checks for it at
+    round start and, when ``current_round >= trigger_round``, enqueues the
+    narrative as a director event (consumed alongside hand-submitted ones).
+    Idempotent — after promotion the file is rewritten with
+    ``"consumed": true`` so it won't fire a second time.
+    """
+    path = _counterfactual_path(simulation_dir)
+    if not os.path.exists(path):
+        return
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            spec = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return
+    if not isinstance(spec, dict) or spec.get("consumed"):
+        return
+    try:
+        trigger = int(spec.get("trigger_round", -1))
+    except (TypeError, ValueError):
+        return
+    text = (spec.get("injection_text") or "").strip()
+    if trigger < 0 or not text or current_round < trigger:
+        return
+
+    label = spec.get("label") or "counterfactual event"
+    event_text = f"[COUNTERFACTUAL — {label}] {text}"
+    try:
+        add_event(simulation_dir, event_text, round_num=current_round)
+    except Exception:
+        # If enqueue fails we still want to mark as consumed so we don't spam.
+        pass
+    spec["consumed"] = True
+    spec["consumed_at_round"] = current_round
+    try:
+        _atomic_write_json(path, spec)
+    except Exception:
+        pass
+
+
 def consume_pending_events(simulation_dir: str, current_round: int) -> List[Dict[str, Any]]:
     """
     Read and clear all pending events. Called by the simulation loop
     at the start of each round.
 
+    Counterfactual injections (from /branch-counterfactual) are promoted to
+    director events when their trigger_round arrives, so they flow through
+    the same injection path as operator-submitted events.
+
     Returns:
         List of event dicts that should be injected this round.
     """
+    _promote_counterfactual_if_due(simulation_dir, current_round)
     path = _events_path(simulation_dir)
 
     if not os.path.exists(path):

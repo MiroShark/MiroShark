@@ -80,6 +80,11 @@ class SimulationState:
     parent_simulation_id: Optional[str] = None
     config_diff: Optional[Dict] = None
 
+    # Public-embed visibility. Embed endpoints require this to be True; otherwise
+    # they 403. Defaults to False so existing simulations remain private until
+    # their owner explicitly publishes.
+    is_public: bool = False
+
     def to_dict(self) -> Dict[str, Any]:
         """Full state dictionary (for internal use)"""
         return {
@@ -103,6 +108,7 @@ class SimulationState:
             "error": self.error,
             "parent_simulation_id": self.parent_simulation_id,
             "config_diff": self.config_diff,
+            "is_public": self.is_public,
         }
     
     def to_simple_dict(self) -> Dict[str, Any]:
@@ -198,6 +204,7 @@ class SimulationManager:
             error=data.get("error"),
             parent_simulation_id=data.get("parent_simulation_id"),
             config_diff=data.get("config_diff"),
+            is_public=data.get("is_public", False),
         )
         
         self._simulations[simulation_id] = state
@@ -533,6 +540,78 @@ class SimulationManager:
         with open(config_path, 'r', encoding='utf-8') as f:
             return json.load(f)
     
+    def branch_counterfactual(
+        self,
+        parent_simulation_id: str,
+        injection_text: str,
+        trigger_round: int,
+        label: Optional[str] = None,
+        branch_id: Optional[str] = None,
+    ) -> SimulationState:
+        """Fork a simulation and schedule a counterfactual injection at trigger_round.
+
+        Semantics (runner-contract):
+            1. Forks the parent → new sim, READY to run (reuses profiles).
+            2. Writes ``counterfactual_injection.json`` into the new sim's
+               directory so ``run_parallel_simulation.py`` (or any future
+               runner) can read it at round-start and inject ``injection_text``
+               into every agent's observation prompt for rounds
+               ``>= trigger_round``.
+            3. Marks the new simulation's ``config_diff`` with the counterfactual
+               metadata so the UI can highlight the branch lineage.
+
+        The runner is expected to read the injection file; if it doesn't
+        (older runner versions), the branch still runs — it just behaves
+        identically to a plain fork. Graceful degradation.
+        """
+        import uuid
+
+        if trigger_round < 0:
+            raise ValueError("trigger_round must be >= 0")
+        if not injection_text or not injection_text.strip():
+            raise ValueError("injection_text is required")
+
+        parent = self._load_simulation_state(parent_simulation_id)
+        if not parent:
+            raise ValueError(f"Parent simulation not found: {parent_simulation_id}")
+
+        # Delegate the copy/profile machinery to the existing fork path so we
+        # stay DRY.
+        child = self.fork_simulation(parent_simulation_id=parent_simulation_id)
+
+        injection_payload = {
+            "parent_simulation_id": parent_simulation_id,
+            "trigger_round": int(trigger_round),
+            "injection_text": injection_text.strip(),
+            "label": (label or f"counterfactual_{uuid.uuid4().hex[:6]}").strip(),
+            "branch_id": branch_id,
+            "created_at": datetime.now().isoformat(),
+        }
+
+        sim_dir = self._get_simulation_dir(child.simulation_id)
+        injection_path = os.path.join(sim_dir, "counterfactual_injection.json")
+        with open(injection_path, "w", encoding="utf-8") as fh:
+            json.dump(injection_payload, fh, ensure_ascii=False, indent=2)
+
+        diff = dict(child.config_diff or {})
+        diff["counterfactual"] = {
+            "trigger_round": injection_payload["trigger_round"],
+            "label": injection_payload["label"],
+            "preview": injection_payload["injection_text"][:140],
+        }
+        child.config_diff = diff
+        child.config_reasoning = (
+            f"Branched from {parent_simulation_id} with counterfactual "
+            f"'{injection_payload['label']}' at round {trigger_round}"
+        )
+        self._save_simulation_state(child)
+
+        logger.info(
+            f"Counterfactual branch: {child.simulation_id} "
+            f"<- {parent_simulation_id} @ r{trigger_round} ({injection_payload['label']})"
+        )
+        return child
+
     def fork_simulation(
         self,
         parent_simulation_id: str,

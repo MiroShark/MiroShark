@@ -1,0 +1,44 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit:
+    name: Backend unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # Install only the thin dependencies the unit suite needs.
+      # The full ``requirements.txt`` pulls in torch/transformers etc., which
+      # are not required for the offline unit tests and slow CI cold-start.
+      - name: Install unit-test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            "pytest>=8.0.0" \
+            pyyaml \
+            "openai>=1.0.0" \
+            "flask>=3.0.0" \
+            "flask-cors>=6.0.0" \
+            "flask-compress>=1.17" \
+            "python-dotenv>=1.0.0" \
+            "pydantic>=2.0.0" \
+            "requests>=2.31.0"
+
+      - name: Run unit tests
+        run: pytest -m "not integration"
+

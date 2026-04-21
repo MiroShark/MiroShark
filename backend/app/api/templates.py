@@ -4,14 +4,32 @@ Template API routes — serves preset simulation templates
 
 import os
 import json
-from flask import jsonify
+from flask import jsonify, request
 
 from . import templates_bp
 from ..utils.logger import get_logger
+from ..services.oracle_seed import resolve_oracle_tools
 
 logger = get_logger('miroshark.api.templates')
 
 TEMPLATES_DIR = os.path.join(os.path.dirname(__file__), '..', 'preset_templates')
+
+
+@templates_bp.route('/capabilities', methods=['GET'])
+def get_template_capabilities():
+    """Expose backend feature flags that control template behaviour.
+
+    Lets the frontend gray out toggles (e.g. "Live oracle data") when the
+    corresponding server-side env flag is off — cleaner than surprising the
+    user with a silent no-op.
+    """
+    return jsonify({
+        "success": True,
+        "data": {
+            "oracle_seed_enabled": os.environ.get("ORACLE_SEED_ENABLED", "false").lower() == "true",
+            "mcp_agent_tools_enabled": os.environ.get("MCP_AGENT_TOOLS_ENABLED", "false").lower() == "true",
+        },
+    })
 
 
 def _load_templates():
@@ -47,6 +65,8 @@ def list_templates():
 
         summaries = []
         for t in templates:
+            branches = t.get("counterfactual_branches", []) or []
+            oracle_tools = t.get("oracle_tools", []) or []
             summaries.append({
                 "id": t["id"],
                 "name": t["name"],
@@ -58,6 +78,10 @@ def list_templates():
                 "estimated_rounds": t.get("estimated_rounds", 0),
                 "platforms": t.get("platforms", []),
                 "tags": t.get("tags", []),
+                "has_counterfactuals": len(branches) > 0,
+                "counterfactual_count": len(branches),
+                "has_oracle_tools": len(oracle_tools) > 0,
+                "oracle_tool_count": len(oracle_tools),
             })
 
         return jsonify({
@@ -95,6 +119,19 @@ def get_template(template_id: str):
 
         with open(filepath, 'r', encoding='utf-8') as f:
             template = json.load(f)
+
+        # Opt-in oracle enrichment: ?enrich=true causes declared oracle_tools
+        # to be resolved against the FeedOracle MCP endpoint and appended to
+        # seed_document. Silent no-op if disabled or any call fails.
+        if (request.args.get('enrich', '').lower() == 'true'):
+            try:
+                block = resolve_oracle_tools(template)
+                if block:
+                    template = dict(template)
+                    template['seed_document'] = (template.get('seed_document') or '') + '\n\n' + block
+                    template['oracle_enriched'] = True
+            except Exception as exc:
+                logger.warning(f"oracle enrichment failed for {template_id}: {exc}")
 
         return jsonify({
             "success": True,

@@ -388,6 +388,66 @@ export const getEmbedSummary = (simulationId) => {
 }
 
 /**
+ * Publish or unpublish a simulation so the embed-summary endpoint returns
+ * 200 vs 403. Defaults to publishing; pass {public:false} to unpublish.
+ * @param {string} simulationId
+ * @param {boolean} publicFlag
+ */
+export const publishSimulation = (simulationId, publicFlag = true) => {
+  return service.post(`/api/simulation/${simulationId}/publish`, { public: publicFlag })
+}
+
+/**
+ * Branch a simulation with a narrative injection at a specific round.
+ * The new simulation is READY and shares the parent's agent population;
+ * when the runner hits trigger_round it auto-promotes the injection into
+ * a director event so agents see "breaking news" starting that round.
+ *
+ * @param {string} parentSimulationId
+ * @param {{ injectionText: string, triggerRound: number, label?: string, branchId?: string }} opts
+ */
+export const branchCounterfactual = (parentSimulationId, opts) => {
+  return service.post('/api/simulation/branch-counterfactual', {
+    parent_simulation_id: parentSimulationId,
+    injection_text: opts.injectionText,
+    trigger_round: opts.triggerRound,
+    label: opts.label,
+    branch_id: opts.branchId,
+  })
+}
+
+/**
+ * Get a single round's snapshot — actions in the round, market prices at
+ * that round, and belief state. Lightweight alternative to
+ * getRunStatusDetail for scrubbing UIs on large simulations.
+ * @param {string} simulationId
+ * @param {number} roundNum
+ * @param {{ platforms?: string[], includeBelief?: boolean, includeMarket?: boolean }} opts
+ */
+export const getSimulationFrame = (simulationId, roundNum, opts = {}) => {
+  const params = {}
+  if (opts.platforms && opts.platforms.length) params.platforms = opts.platforms.join(',')
+  if (opts.includeBelief === false) params.include_belief = 'false'
+  if (opts.includeMarket === false) params.include_market = 'false'
+  return service.get(`/api/simulation/${simulationId}/frame/${roundNum}`, { params })
+}
+
+/**
+ * Ask mode: turn a single question into a synthesized seed document +
+ * simulation_requirement. The result plugs directly into
+ * /api/graph/ontology/generate as a url_docs entry, so the downstream pipeline
+ * (ontology, graph build, profiles, sim) is unchanged.
+ * @param {string} question
+ * @param {{ noCache?: boolean }} opts
+ */
+export const askMode = (question, opts = {}) => {
+  return service.post('/api/simulation/ask', {
+    question,
+    no_cache: !!opts.noCache,
+  })
+}
+
+/**
  * Get demographic breakdown (age / gender / country / archetype / primary
  * platform) cross-tabbed against final stance, stance volatility, and
  * influence.

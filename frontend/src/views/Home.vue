@@ -145,6 +145,34 @@
               </div>
             </div>
 
+            <!-- Ask Mode (no document needed) -->
+            <div class="console-section url-section">
+              <div class="console-header">
+                <span class="console-label">01a / Just Ask</span>
+                <span class="console-meta">No document? Type a question, we synthesize a briefing.</span>
+              </div>
+              <div class="url-input-row">
+                <input
+                  v-model="askQuestion"
+                  class="url-input"
+                  type="text"
+                  placeholder="e.g. Will the EU AI Act's biometrics clause survive the final trilogue?"
+                  :disabled="loading || askBusy"
+                  @keydown.enter.prevent="runAskMode"
+                />
+                <button
+                  class="url-fetch-btn"
+                  @click="runAskMode"
+                  :disabled="!askQuestion.trim() || loading || askBusy"
+                >
+                  <span v-if="askBusy">...</span>
+                  <span v-else>Research →</span>
+                </button>
+              </div>
+              <div v-if="askError" class="url-error">{{ askError }}</div>
+              <div v-if="askBusy" class="url-doc-meta" style="margin-top:6px">Synthesizing briefing — this uses the Smart model and takes ~20–30s.</div>
+            </div>
+
             <!-- URL Input Section -->
             <div class="console-section url-section">
               <div class="console-header">
@@ -247,6 +275,7 @@ import SettingsPanel from '../components/SettingsPanel.vue'
 import ScenarioSuggestions from '../components/ScenarioSuggestions.vue'
 import TrendingTopics from '../components/TrendingTopics.vue'
 import { fetchUrl } from '../api/graph'
+import { askMode } from '../api/simulation'
 
 const settingsOpen = ref(false)
 
@@ -265,6 +294,11 @@ const urlInput = ref('')
 const urlDocs = ref([])   // [{title, url, text, char_count}]
 const urlFetching = ref(false)
 const urlError = ref('')
+
+// Ask-mode state — question-only pipeline
+const askQuestion = ref('')
+const askBusy = ref(false)
+const askError = ref('')
 
 // State
 const loading = ref(false)
@@ -421,6 +455,43 @@ const fetchUrlDoc = async () => {
     urlError.value = err.message || 'Failed to fetch URL.'
   } finally {
     urlFetching.value = false
+  }
+}
+
+// Ask mode: ask → synthesized briefing becomes a url_doc; we also prefill the
+// simulation_requirement textarea with the LLM's framing. Rest of the flow is
+// unchanged.
+const runAskMode = async () => {
+  const q = askQuestion.value.trim()
+  if (!q || askBusy.value) return
+  askBusy.value = true
+  askError.value = ''
+  try {
+    const res = await askMode(q)
+    if (!res.success) {
+      askError.value = res.error || 'Ask mode failed.'
+      return
+    }
+    const d = res.data
+    const synthUrl = `miroshark://ask/${encodeURIComponent(q.slice(0, 64))}`
+    // Don't duplicate if re-run.
+    const idx = urlDocs.value.findIndex(x => x.url === synthUrl)
+    const payload = {
+      title: d.title,
+      url: synthUrl,
+      text: d.seed_document,
+      char_count: (d.seed_document || '').length,
+    }
+    if (idx >= 0) urlDocs.value.splice(idx, 1, payload)
+    else urlDocs.value.push(payload)
+    if (!formData.value.simulationRequirement) {
+      formData.value.simulationRequirement = d.simulation_requirement
+    }
+    askQuestion.value = ''
+  } catch (err) {
+    askError.value = err?.response?.data?.error || err?.message || 'Ask mode failed.'
+  } finally {
+    askBusy.value = false
   }
 }
 

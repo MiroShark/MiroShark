@@ -48,7 +48,39 @@
 
         <div class="card-platforms">
           <span v-for="p in template.platforms" :key="p" class="platform-badge">{{ p }}</span>
+          <span
+            v-if="template.has_counterfactuals"
+            class="platform-badge platform-badge--cf"
+            :title="`${template.counterfactual_count} preset counterfactual branches`"
+          >
+            ⤷ {{ template.counterfactual_count }} branches
+          </span>
+          <span
+            v-if="template.has_oracle_tools"
+            class="platform-badge platform-badge--oracle"
+            :title="`${template.oracle_tool_count} FeedOracle tools declared`"
+          >
+            ◎ live data
+          </span>
         </div>
+
+        <label
+          v-if="template.has_oracle_tools"
+          class="oracle-toggle"
+          :class="{ disabled: !capabilities.oracle_seed_enabled }"
+          :title="capabilities.oracle_seed_enabled
+            ? 'Dispatch this template\'s oracle_tools against FeedOracle MCP before ingest.'
+            : 'Oracle seeds disabled server-side. Set ORACLE_SEED_ENABLED=true in .env to enable.'"
+          @click.stop
+        >
+          <input
+            type="checkbox"
+            :checked="oracleOptIn[template.id] || false"
+            :disabled="!capabilities.oracle_seed_enabled"
+            @change="toggleOracleOpt(template.id, $event.target.checked)"
+          />
+          <span>Use live oracle data</span>
+        </label>
 
         <button
           class="launch-btn"
@@ -56,6 +88,7 @@
           @click.stop="launchTemplate(template)"
         >
           <span v-if="launchingId === template.id">Loading...</span>
+          <span v-else-if="oracleOptIn[template.id] && capabilities.oracle_seed_enabled">Launch (live) →</span>
           <span v-else>Launch →</span>
         </button>
       </div>
@@ -64,9 +97,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { listTemplates, getTemplate } from '../api/templates'
+import { listTemplates, getTemplate, getTemplateCapabilities } from '../api/templates'
 import { setPendingTemplate } from '../store/pendingUpload'
 
 const router = useRouter()
@@ -75,6 +108,12 @@ const templates = ref([])
 const loading = ref(true)
 const selectedId = ref(null)
 const launchingId = ref(null)
+const capabilities = ref({ oracle_seed_enabled: false, mcp_agent_tools_enabled: false })
+const oracleOptIn = reactive({})  // templateId → bool (opt-in per card)
+
+const toggleOracleOpt = (templateId, checked) => {
+  oracleOptIn[templateId] = checked
+}
 
 const iconMap = {
   vote: '🗳',
@@ -87,10 +126,12 @@ const iconMap = {
 
 onMounted(async () => {
   try {
-    const res = await listTemplates()
-    if (res?.success) {
-      templates.value = res.data
-    }
+    const [listRes, capsRes] = await Promise.all([
+      listTemplates(),
+      getTemplateCapabilities().catch(() => null),  // caps is optional
+    ])
+    if (listRes?.success) templates.value = listRes.data
+    if (capsRes?.success) capabilities.value = capsRes.data
   } catch (e) {
     console.error('Failed to load templates:', e)
   } finally {
@@ -105,7 +146,8 @@ const selectTemplate = (template) => {
 const launchTemplate = async (template) => {
   launchingId.value = template.id
   try {
-    const res = await getTemplate(template.id)
+    const enrich = !!(oracleOptIn[template.id] && capabilities.value.oracle_seed_enabled)
+    const res = await getTemplate(template.id, { enrich })
     if (res?.success) {
       const full = res.data
       setPendingTemplate(
@@ -256,6 +298,42 @@ const launchTemplate = async (template) => {
   border: 1px solid #E5E5E5;
   color: #666;
   text-transform: lowercase;
+}
+
+.platform-badge--cf {
+  border-color: rgba(255, 107, 26, 0.3);
+  color: #FF6B1A;
+}
+
+.platform-badge--oracle {
+  border-color: rgba(67, 193, 101, 0.3);
+  color: #2d8a3f;
+}
+
+.oracle-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #2d8a3f;
+  margin-bottom: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.oracle-toggle input[type="checkbox"] {
+  accent-color: #2d8a3f;
+  cursor: pointer;
+}
+
+.oracle-toggle.disabled {
+  color: #aaa;
+  cursor: not-allowed;
+}
+
+.oracle-toggle.disabled input[type="checkbox"] {
+  cursor: not-allowed;
 }
 
 .launch-btn {

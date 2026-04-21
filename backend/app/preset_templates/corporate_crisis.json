@@ -15,5 +15,28 @@
     "enable_twitter": true,
     "enable_reddit": true,
     "enable_polymarket": false
-  }
+  },
+  "counterfactual_branches": [
+    {
+      "id": "ceo_resigns",
+      "label": "CEO resigns on Day 2",
+      "description": "The CEO steps down 24h after the story breaks, replaced by an interim.",
+      "trigger_round": 24,
+      "injection": "The CEO of DataVault Inc. has just announced her resignation. The board has appointed the CTO as interim CEO. The outgoing CEO said: 'I take full responsibility for the delay in disclosure.'"
+    },
+    {
+      "id": "class_action",
+      "label": "Class-action suit filed",
+      "description": "A major law firm files a $1B class-action lawsuit by round 36.",
+      "trigger_round": 36,
+      "injection": "Cohen Milstein has filed a $1B class-action on behalf of the 12M affected users, alleging willful concealment of the breach."
+    },
+    {
+      "id": "competitor_breach",
+      "label": "Competitor has a bigger breach",
+      "description": "A direct competitor discloses a 40M-user breach, redirecting attention.",
+      "trigger_round": 48,
+      "injection": "CloudLocker Inc. (a direct competitor) has just disclosed a 40M-user breach — 3x the size of DataVault's. The news cycle is pivoting."
+    }
+  ]
 }

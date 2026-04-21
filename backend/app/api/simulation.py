@@ -382,6 +382,207 @@ def suggest_scenarios():
         }), 500
 
 
+# ============== Ask Mode — question-only pipeline ==============
+#
+# Borrowed shape from MiroWhale's `mirowhale ask` CLI: the user arrives with a
+# question and no document, and we synthesize a seed doc from the LLM's own
+# research so the existing ontology → graph → simulation pipeline works
+# unchanged downstream.
+
+_ASK_RATE_WINDOW_SEC = 60
+_ASK_RATE_MAX_CALLS = 5
+_ASK_RATE_HITS: "dict[str, list[float]]" = {}
+_ASK_CACHE: "dict[str, dict]" = {}
+_ASK_CACHE_ORDER: "list[str]" = []
+_ASK_CACHE_MAX = 32
+_ASK_QUESTION_MAX_CHARS = 400
+
+_ASK_SYSTEM_PROMPT = (
+    "You are a research analyst. The user has a single question about public "
+    "reaction, market dynamics, or policy. They have no source document; your "
+    "job is to produce a *neutral, evidence-grounded briefing* that will seed "
+    "an agent-based social simulation.\n\n"
+    "Return JSON of this exact shape:\n"
+    '{ "title": str, "simulation_requirement": str, "seed_document": str, '
+    '"key_actors": [str], "suggested_platforms": ["twitter"|"reddit"|"polymarket"] }\n\n'
+    "Rules:\n"
+    "- title: short (<=60 chars), descriptive — this is the project name.\n"
+    "- simulation_requirement: one paragraph (~400-600 chars) framing the simulation "
+    "goal — who the agents should represent and what dynamics to watch.\n"
+    "- seed_document: a 1500-3000 character markdown briefing. Include sections "
+    "for Context, Key Actors/Stakeholders, Recent Events, and Open Questions. "
+    "Use only facts that would plausibly be public knowledge — do not invent "
+    "specific quotes, dates, or figures that could mislead. Prefer qualitative "
+    "framing (\"several major outlets have\") over fabricated specifics.\n"
+    "- key_actors: 4-10 stakeholders likely to post/trade in the simulation.\n"
+    "- suggested_platforms: 1-3 from the allowed set, chosen by relevance.\n"
+    "Do not include disclaimers. Do not include any other fields."
+)
+
+
+def _ask_rate_limited(client_ip: str) -> bool:
+    import time
+    now = time.monotonic()
+    cutoff = now - _ASK_RATE_WINDOW_SEC
+    hits = [t for t in _ASK_RATE_HITS.get(client_ip, []) if t > cutoff]
+    if len(hits) >= _ASK_RATE_MAX_CALLS:
+        _ASK_RATE_HITS[client_ip] = hits
+        return True
+    hits.append(now)
+    _ASK_RATE_HITS[client_ip] = hits
+    if len(_ASK_RATE_HITS) > 1024:
+        for ip in list(_ASK_RATE_HITS.keys()):
+            if not _ASK_RATE_HITS[ip] or _ASK_RATE_HITS[ip][-1] < cutoff:
+                _ASK_RATE_HITS.pop(ip, None)
+    return False
+
+
+def _ask_cache_get(key: str):
+    entry = _ASK_CACHE.get(key)
+    if entry is None:
+        return None
+    try:
+        _ASK_CACHE_ORDER.remove(key)
+    except ValueError:
+        pass
+    _ASK_CACHE_ORDER.append(key)
+    return entry
+
+
+def _ask_cache_put(key: str, value: dict) -> None:
+    if key in _ASK_CACHE:
+        try:
+            _ASK_CACHE_ORDER.remove(key)
+        except ValueError:
+            pass
+    _ASK_CACHE[key] = value
+    _ASK_CACHE_ORDER.append(key)
+    while len(_ASK_CACHE_ORDER) > _ASK_CACHE_MAX:
+        _ASK_CACHE.pop(_ASK_CACHE_ORDER.pop(0), None)
+
+
+_ASK_ALLOWED_PLATFORMS = {"twitter", "reddit", "polymarket"}
+
+
+def _ask_clean_result(payload, question: str) -> "dict | None":
+    if not isinstance(payload, dict):
+        return None
+    title = (payload.get("title") or "").strip()
+    req = (payload.get("simulation_requirement") or "").strip()
+    doc = (payload.get("seed_document") or "").strip()
+    actors_raw = payload.get("key_actors") or []
+    platforms_raw = payload.get("suggested_platforms") or []
+
+    if not title or len(title) > 120:
+        title = (question[:57] + "...") if len(question) > 60 else question
+    if len(req) < 40 or len(doc) < 400:
+        return None
+
+    actors = []
+    if isinstance(actors_raw, list):
+        for a in actors_raw:
+            if isinstance(a, str) and a.strip():
+                actors.append(a.strip())
+            if len(actors) == 10:
+                break
+
+    platforms = []
+    if isinstance(platforms_raw, list):
+        for p in platforms_raw:
+            if isinstance(p, str) and p.strip().lower() in _ASK_ALLOWED_PLATFORMS:
+                platforms.append(p.strip().lower())
+    # dedupe while preserving order
+    seen = set()
+    platforms = [p for p in platforms if not (p in seen or seen.add(p))]
+    if not platforms:
+        platforms = ["twitter", "reddit"]
+
+    return {
+        "title": title[:120],
+        "simulation_requirement": req,
+        "seed_document": doc,
+        "key_actors": actors,
+        "suggested_platforms": platforms,
+    }
+
+
+@simulation_bp.route('/ask', methods=['POST'])
+def ask_mode():
+    """Question-only pipeline: turn a bare question into a seed document.
+
+    Request (JSON): ``{"question": "..."}``. Returns a synthesized title,
+    simulation_requirement, and a markdown seed_document the frontend can feed
+    straight into ``/api/graph/ontology/generate`` as a ``url_docs`` entry —
+    the rest of the flow (ontology, graph build, profiles, simulation) runs
+    unchanged.
+
+    Response:
+    ``{"success": true, "data": {title, simulation_requirement, seed_document,
+    key_actors, suggested_platforms, model, cached}}``.
+    """
+    try:
+        client_ip = (
+            request.headers.get('X-Forwarded-For', '').split(',')[0].strip()
+            or request.remote_addr
+            or 'unknown'
+        )
+        if _ask_rate_limited(client_ip):
+            return jsonify({
+                "success": False,
+                "error": "rate_limited",
+            }), 429
+
+        data = request.get_json(silent=True) or {}
+        question = (data.get("question") or "").strip()
+        if not isinstance(question, str) or len(question) < 8:
+            return jsonify({
+                "success": False,
+                "error": "question must be at least 8 characters",
+            }), 400
+        if len(question) > _ASK_QUESTION_MAX_CHARS:
+            return jsonify({
+                "success": False,
+                "error": f"question too long (max {_ASK_QUESTION_MAX_CHARS} chars)",
+            }), 400
+
+        import hashlib
+        cache_key = hashlib.sha256(question.lower().encode('utf-8')).hexdigest()
+
+        if not data.get('no_cache'):
+            cached = _ask_cache_get(cache_key)
+            if cached is not None:
+                return jsonify({"success": True, "data": {**cached, "cached": True}})
+
+        try:
+            llm = create_smart_llm_client(timeout=60.0)
+        except Exception as exc:
+            logger.warning(f"ask: smart LLM unavailable: {exc}")
+            return jsonify({"success": False, "error": "llm_unavailable"}), 503
+
+        messages = [
+            {"role": "system", "content": _ASK_SYSTEM_PROMPT},
+            {"role": "user", "content": f"User question: {question}\n\nProduce the briefing now."},
+        ]
+
+        try:
+            parsed = llm.chat_json(messages, temperature=0.4, max_tokens=3500)
+        except Exception as exc:
+            logger.warning(f"ask: LLM call failed: {exc}")
+            return jsonify({"success": False, "error": "llm_error"}), 502
+
+        cleaned = _ask_clean_result(parsed, question)
+        if cleaned is None:
+            return jsonify({"success": False, "error": "llm_returned_invalid_briefing"}), 502
+
+        cleaned["model"] = getattr(llm, 'model', None) or Config.SMART_MODEL_NAME or Config.LLM_MODEL_NAME
+        _ask_cache_put(cache_key, cleaned)
+        return jsonify({"success": True, "data": {**cleaned, "cached": False}})
+
+    except Exception as e:
+        logger.error(f"ask mode failed: {e}\n{traceback.format_exc()}")
+        return jsonify({"success": False, "error": "ask_failed"}), 500
+
+
 # ============== Trending Topics ==============
 #
 # Closes the remaining onboarding gap left by Scenario Auto-Suggest (PR #39).
@@ -1050,6 +1251,68 @@ def create_simulation():
             "success": False,
             "error": str(e),
             "traceback": traceback.format_exc()
+        }), 500
+
+
+@simulation_bp.route('/branch-counterfactual', methods=['POST'])
+def branch_counterfactual_simulation():
+    """Branch a simulation with a narrative injection at a chosen round.
+
+    Request (JSON)::
+
+        {
+            "parent_simulation_id": "sim_xxxx",     // required
+            "injection_text":       "CEO resigns…", // required, <= 2000 chars
+            "trigger_round":        24,             // required, >= 0
+            "label":                "CEO resigns",  // optional
+            "branch_id":            "ceo_resigns"   // optional preset branch id
+        }
+
+    Returns the new simulation's state (``parent_simulation_id`` + the
+    ``config_diff.counterfactual`` block identifies the branch). The runner
+    reads ``counterfactual_injection.json`` in the new sim's directory and
+    prepends ``injection_text`` to every agent's observation prompt starting
+    at ``trigger_round``.
+    """
+    try:
+        data = request.get_json() or {}
+        parent_id = data.get("parent_simulation_id")
+        injection = (data.get("injection_text") or "").strip()
+        trigger = data.get("trigger_round")
+        label = data.get("label")
+        branch_id = data.get("branch_id")
+
+        if not parent_id:
+            return jsonify({"success": False, "error": "parent_simulation_id is required"}), 400
+        if not injection:
+            return jsonify({"success": False, "error": "injection_text is required"}), 400
+        if len(injection) > 2000:
+            return jsonify({"success": False, "error": "injection_text must be <= 2000 chars"}), 400
+        try:
+            trigger_int = int(trigger)
+        except (TypeError, ValueError):
+            return jsonify({"success": False, "error": "trigger_round must be an integer >= 0"}), 400
+        if trigger_int < 0:
+            return jsonify({"success": False, "error": "trigger_round must be >= 0"}), 400
+
+        manager = SimulationManager()
+        state = manager.branch_counterfactual(
+            parent_simulation_id=parent_id,
+            injection_text=injection,
+            trigger_round=trigger_int,
+            label=label,
+            branch_id=branch_id,
+        )
+        return jsonify({"success": True, "data": state.to_dict()})
+
+    except ValueError as e:
+        return jsonify({"success": False, "error": str(e)}), 404
+    except Exception as e:
+        logger.error(f"Failed to branch counterfactual: {e}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc(),
         }), 500
 
 
@@ -3742,7 +4005,163 @@ def _compute_quality_diagnostics(simulation_id: str, sim_dir: str):
     }
 
 
+# ============== Per-round snapshot (ReplayView / analytics) ==============
+
+@simulation_bp.route('/<simulation_id>/frame/<int:round_num>', methods=['GET'])
+def get_simulation_frame(simulation_id: str, round_num: int):
+    """Compact round snapshot: actions in the round + market prices + belief state.
+
+    Purpose: power scrubbing UIs (ReplayView) without loading all actions
+    upfront. A 500-agent × 72-round simulation may emit ~36k actions; this
+    endpoint returns only the round requested plus any rolling state the
+    client needs to render the frame.
+
+    Query params:
+        include_belief: "true" (default) — inlines belief positions at/before round
+        include_market: "true" (default) — inlines YES price per market at round
+        platforms: comma-list (twitter,reddit,polymarket) — filter returned actions
+
+    Response: ``{actions, market_prices, belief, active_agents, action_counts}``.
+    """
+    try:
+        validate_simulation_id(simulation_id)
+
+        platforms_raw = (request.args.get('platforms') or '').strip()
+        platforms = [p.strip().lower() for p in platforms_raw.split(',') if p.strip()] if platforms_raw else None
+        include_belief = (request.args.get('include_belief', 'true').lower() == 'true')
+        include_market = (request.args.get('include_market', 'true').lower() == 'true')
+
+        # Collect actions for this round
+        actions_for_round: list = []
+        if platforms:
+            for p in platforms:
+                if p not in ('twitter', 'reddit', 'polymarket'):
+                    continue
+                actions_for_round.extend(
+                    SimulationRunner.get_all_actions(simulation_id, platform=p, round_num=round_num)
+                )
+        else:
+            actions_for_round = SimulationRunner.get_all_actions(simulation_id, round_num=round_num)
+
+        actions_for_round.sort(key=lambda a: getattr(a, 'timestamp', '') or '')
+        action_counts = {"twitter": 0, "reddit": 0, "polymarket": 0}
+        active_agents = set()
+        for a in actions_for_round:
+            plat = getattr(a, 'platform', None)
+            if plat in action_counts:
+                action_counts[plat] += 1
+            aid = getattr(a, 'agent_id', None)
+            if aid is not None:
+                active_agents.add(aid)
+
+        # Market prices snapshot at this round
+        market_prices: list = []
+        if include_market:
+            sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+            db_path = os.path.join(sim_dir, 'polymarket', 'polymarket.db')
+            if os.path.exists(db_path):
+                try:
+                    import sqlite3
+                    con = sqlite3.connect(db_path)
+                    cur = con.cursor()
+                    tables = {r[0] for r in cur.execute("SELECT name FROM sqlite_master WHERE type='table'")}
+                    if 'price_history' in tables:
+                        # Most recent price at-or-before this round, per market
+                        rows = cur.execute(
+                            "SELECT market_id, price_yes, round_num FROM price_history "
+                            "WHERE round_num <= ? ORDER BY round_num DESC",
+                            (round_num,)
+                        ).fetchall()
+                        seen_markets = set()
+                        for mid, py, rn in rows:
+                            if mid in seen_markets:
+                                continue
+                            seen_markets.add(mid)
+                            market_prices.append({"market_id": mid, "price_yes": py, "as_of_round": rn})
+                    con.close()
+                except Exception as exc:
+                    logger.warning(f"frame: market price read failed for {simulation_id}: {exc}")
+
+        # Belief snapshot at this round (or closest prior snapshot)
+        belief_snapshot = None
+        if include_belief:
+            traj_path = os.path.join(
+                Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id, "trajectory.json"
+            )
+            if os.path.exists(traj_path):
+                try:
+                    with open(traj_path, 'r', encoding='utf-8') as f:
+                        traj = json.load(f)
+                    snapshots = traj.get("snapshots", []) or []
+                    chosen = None
+                    for snap in snapshots:
+                        if snap.get("round_num", -1) <= round_num:
+                            chosen = snap
+                        else:
+                            break
+                    if chosen:
+                        positions = chosen.get("belief_positions", {}) or {}
+                        stances = []
+                        for p in positions.values():
+                            if isinstance(p, dict) and p:
+                                stances.append(sum(p.values()) / len(p))
+                        total = len(stances) or 1
+                        nb = sum(1 for s in stances if s > 0.2)
+                        nbe = sum(1 for s in stances if s < -0.2)
+                        belief_snapshot = {
+                            "round_num": chosen.get("round_num"),
+                            "bullish_pct": round(nb / total * 100, 1),
+                            "bearish_pct": round(nbe / total * 100, 1),
+                            "neutral_pct": round((total - nb - nbe) / total * 100, 1),
+                            "agents_with_positions": len(positions),
+                        }
+                except Exception as exc:
+                    logger.warning(f"frame: belief read failed for {simulation_id}: {exc}")
+
+        return jsonify({
+            "success": True,
+            "data": {
+                "simulation_id": simulation_id,
+                "round_num": round_num,
+                "actions": [a.to_dict() for a in actions_for_round],
+                "action_counts": action_counts,
+                "active_agents_count": len(active_agents),
+                "market_prices": market_prices,
+                "belief": belief_snapshot,
+            },
+        })
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as e:
+        logger.error(f"frame: failed for {simulation_id} round {round_num}: {e}\n{traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ============== Embed Widget ==============
+
+@simulation_bp.route('/<simulation_id>/publish', methods=['POST'])
+def publish_simulation(simulation_id: str):
+    """Mark a simulation as publicly embeddable.
+
+    Body (optional): ``{"public": false}`` to unpublish instead of publish.
+    Returns the new public state.
+    """
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+
+        payload = request.get_json(silent=True) or {}
+        new_value = bool(payload.get("public", True))
+        state.is_public = new_value
+        manager._save_simulation_state(state)
+
+        return jsonify({"success": True, "data": {"simulation_id": simulation_id, "is_public": state.is_public}})
+    except Exception as e:
+        logger.error(f"Failed to publish simulation: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
 
 @simulation_bp.route('/<simulation_id>/embed-summary', methods=['GET'])
 def get_embed_summary(simulation_id: str):
@@ -3753,6 +4172,9 @@ def get_embed_summary(simulation_id: str):
     agent count, belief drift sparkline, optional consensus/resolution/health —
     so a single request powers the read-only widget without the full simulation
     payload.
+
+    Access: requires ``is_public=True`` on the simulation state. Use the
+    ``/publish`` endpoint to toggle.
     """
     try:
         manager = SimulationManager()
@@ -3762,6 +4184,12 @@ def get_embed_summary(simulation_id: str):
                 "success": False,
                 "error": f"Simulation not found: {simulation_id}"
             }), 404
+
+        if not getattr(state, "is_public", False):
+            return jsonify({
+                "success": False,
+                "error": "Simulation is not published for embedding. POST /api/simulation/<id>/publish to enable.",
+            }), 403
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
 
@@ -3892,6 +4320,7 @@ def get_embed_summary(simulation_id: str):
             "profiles_count": state.profiles_count,
             "created_date": created_date,
             "parent_simulation_id": state.parent_simulation_id,
+            "is_public": getattr(state, "is_public", False),
             "belief": belief,
             "quality": quality,
             "resolution": resolution,

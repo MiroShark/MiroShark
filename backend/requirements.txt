@@ -8,6 +8,7 @@
 # ============= Core Framework =============
 flask>=3.0.0
 flask-cors>=6.0.0
+flask-compress>=1.17
 
 # ============= LLM Related =============
 # OpenAI SDK (unified LLM calls using OpenAI format)
@@ -41,3 +42,7 @@ pydantic>=2.0.0
 # ============= Browser Push Notifications =============
 # Required for Web Push (VAPID key generation + push dispatch)
 pywebpush>=2.0.0
+
+# ============= Game Theory (optional — report_agent.analyze_equilibrium) =============
+# Enables the Nash equilibrium tool on the ReACT report agent. Silent no-op if absent.
+nashpy>=0.0.41

@@ -19,6 +19,17 @@
             The widget loads live from this MiroShark instance and updates automatically as the simulation changes.
           </p>
 
+          <!-- Public toggle -->
+          <div class="embed-public-row">
+            <label class="embed-public-toggle">
+              <input type="checkbox" :checked="isPublic" @change="togglePublic" :disabled="publishing" />
+              <span class="embed-public-label">
+                {{ isPublic ? 'Public — embeddable by anyone with the URL' : 'Private — embed URL returns 403' }}
+              </span>
+            </label>
+            <span v-if="publishError" class="embed-public-error">{{ publishError }}</span>
+          </div>
+
           <!-- Size presets -->
           <div class="embed-size-row">
             <span class="embed-size-label">Size</span>
@@ -104,13 +115,33 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
+import { publishSimulation, getEmbedSummary } from '@/api/simulation'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
-  simulationId: { type: String, required: true }
+  simulationId: { type: String, required: true },
+  initialPublic: { type: Boolean, default: false }
 })
 
 defineEmits(['close'])
+
+const isPublic = ref(props.initialPublic)
+const publishing = ref(false)
+const publishError = ref('')
+
+const togglePublic = async () => {
+  const next = !isPublic.value
+  publishing.value = true
+  publishError.value = ''
+  try {
+    const res = await publishSimulation(props.simulationId, next)
+    isPublic.value = res?.data?.is_public ?? next
+  } catch (err) {
+    publishError.value = err?.response?.data?.error || err?.message || 'Publish failed'
+  } finally {
+    publishing.value = false
+  }
+}
 
 const sizePresets = [
   { name: 'Compact', width: 480, height: 260 },
@@ -198,8 +229,16 @@ const copy = async (which) => {
   }
 }
 
-watch(() => props.open, (val) => {
-  if (val) copied.value = ''
+watch(() => props.open, async (val) => {
+  if (!val) return
+  copied.value = ''
+  // Refresh public state when reopened — reflects external flips.
+  try {
+    const res = await getEmbedSummary(props.simulationId)
+    if (typeof res?.data?.is_public === 'boolean') isPublic.value = res.data.is_public
+  } catch (err) {
+    if (err?.response?.status === 403) isPublic.value = false
+  }
 })
 </script>
 

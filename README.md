@@ -39,8 +39,8 @@
 1. **Graph Build** — Extracts entities and relationships from your document into a Neo4j knowledge graph. NER uses few-shot examples and rejection rules to filter garbage entities. Chunk processing is parallelized with batched Neo4j writes (UNWIND).
 2. **Agent Setup** — Generates personas grounded in the knowledge graph. Each entity gets 5 layers of context: graph attributes, relationships, semantic search, related nodes, and LLM-powered web research (auto-triggers for public figures or when graph context is thin). Individual vs. institutional personas are detected automatically via keyword matching.
 3. **Simulation** — All three platforms (Twitter, Reddit, Polymarket) run simultaneously via `asyncio.gather`. A single LLM-generated prediction market with non-50/50 starting price drives Polymarket trading. Agents see cross-platform context: traders read Twitter/Reddit posts, social media agents see market prices. A sliding-window round memory compacts old rounds via background LLM calls. Belief states track stance, confidence, and trust per agent with heuristic updates each round.
-4. **Report** — A ReACT agent writes analytical reports using `simulation_feed` (actual posts/comments/trades), `market_state` (prices/P&L), graph search, and belief trajectory tools. Reports cite what agents actually said and how markets moved.
-5. **Interaction** — Chat directly with any agent via persona chat, or send questions to groups. Click any agent to view their full profile and simulation history.
+4. **Report** — A ReACT agent writes analytical reports using `simulation_feed` (actual posts/comments/trades), `market_state` (prices/P&L), graph search, belief trajectory, and Nash equilibrium tools. Reports cite what agents actually said and how markets moved.
+5. **Interaction** — Chat directly with any agent via persona chat, send questions to groups, or **branch the simulation with a counterfactual event** at any round to explore "what if" scenarios side-by-side. Click any agent to view their full profile and simulation history.
 
 ### Smart Setup (Scenario Auto-Suggest)
 
@@ -53,6 +53,44 @@ Click **Use this →** on any card to fill the Simulation Prompt field, or dismi
 Smart Setup handles users who arrive with a document. **What's Trending** handles the other half — people who want to simulate *something* about AI, crypto, or geopolitics but don't have a specific article in mind. The panel sits below the URL Import box and shows the 5 most recent items across a configurable list of public RSS/Atom feeds (defaults: Reuters tech, The Verge, Hacker News, CoinDesk).
 
 Click any card and MiroShark pre-fills the URL field, fetches the article, and immediately fires Scenario Auto-Suggest on the resulting text — blank page to three scenario cards in one click. Operators can override the feed list with the `TRENDING_FEEDS` env var (comma-separated URLs). Server-side cache holds results for 15 minutes; if every feed errors the panel disappears silently. The endpoint is `GET /api/simulation/trending`.
+
+### Just Ask (Question-Only Mode)
+
+No document and no specific article in mind? Type a question on the Home screen ("Will the EU AI Act's biometrics clause survive the final trilogue?") and MiroShark asks the Smart model to research the topic and synthesize a 1500–3000-character briefing — neutral, structured with Context / Key Actors / Recent Events / Open Questions. The briefing becomes a `miroshark://ask/...` seed document in the URL list and pre-fills the simulation prompt, so the downstream pipeline (ontology → graph → profiles → sim) runs unchanged. Cached per-question for quick re-runs. The endpoint is `POST /api/simulation/ask`.
+
+### Counterfactual Branching
+
+Run a simulation, pause to inspect, then ask: "what if the CEO resigns in round 24?" — click **⤷ Branch** in the simulation workspace, enter a trigger round and a breaking-news injection, and MiroShark forks the simulation with the parent's full agent population. When the runner reaches the trigger round, the injection is promoted to a director event and prepended to every agent's observation prompt as a BREAKING block. Compare the branch against the original via the existing **Compare** view. Preset templates can declare `counterfactual_branches` (e.g. `ceo_resigns`, `class_action`, `rug_pull`, `sec_notice`) so the branch dialog offers one-click scenarios. The endpoint is `POST /api/simulation/branch-counterfactual`.
+
+### Live Oracle Data (FeedOracle MCP)
+
+Opt in to grounded seed data from the [FeedOracle MCP server](https://mcp.feedoracle.io/mcp) (484 tools across MiCA compliance, DORA assessments, macro/FRED data, DEX liquidity, sanctions, carbon markets, and more). Templates declare the tools they want:
+
+```json
+"oracle_tools": [
+  {"server": "feedoracle_core", "tool": "peg_deviation", "args": {"token_symbol": "USDT"}},
+  {"server": "feedoracle_core", "tool": "macro_risk",    "args": {}}
+]
+```
+
+Flip `ORACLE_SEED_ENABLED=true` in `.env`, check **Use live oracle data** on any template card, and MiroShark dispatches the calls and appends the results as a markdown "Oracle Evidence" block to the seed document before ingest. Silent no-op when disabled or any call fails — the static seed still works.
+
+### Per-Agent MCP Tools
+
+Opt-in, OpenMiro-style: selected personas (journalists, analysts, traders) can invoke real MCP tools during the simulation. Mark a persona with `"tools_enabled": true` in its profile JSON, configure the servers in `config/mcp_servers.yaml`, and set `MCP_AGENT_TOOLS_ENABLED=true`.
+
+Each round the runner:
+
+1. **Injects** the tool catalogue into the agent's system message (marker-delimited so it refreshes each round).
+2. **Parses** the agent's post for self-closing tags like `<mcp_call server="web_search" tool="search" args='{"q":"..."}' />` (up to 2 calls/turn).
+3. **Dispatches** them through a pooled stdio subprocess per server (one process per sim, reused).
+4. **Injects the results** back into the agent's system message for the next round.
+
+Failed calls become `{"_error": "..."}` payloads rather than exceptions — agent prompts stay well-formed. The bridge has a 30-second per-call timeout (`MCP_CALL_TIMEOUT_SEC`) and tears down subprocesses on simulation end (or `atexit` on abnormal exit).
+
+### Publishing for Embed
+
+`EmbedDialog` has a `Public / Private` toggle backed by `is_public` on the simulation state. Embed URLs return `403` on unpublished simulations — flip the toggle (or `POST /api/simulation/<id>/publish`) to make them publicly embeddable. Defaults to private so existing sims are unaffected.
 
 ## Screenshots
 
@@ -127,6 +165,10 @@ A single prediction market is generated by the LLM during config creation, tailo
 ### Web Enrichment
 
 When generating personas for public figures (politicians, CEOs, founders) or when graph context is thin (<150 chars), the system makes an LLM research call to enrich the profile with real-world data. Set `WEB_SEARCH_MODEL=perplexity/sonar-pro` in `.env` for grounded web search via OpenRouter.
+
+### Per-Round Frame API
+
+`GET /api/simulation/<id>/frame/<round>` returns a compact snapshot of a single round — actions, active-agent count, market prices at that round, and belief state — for scrubbing UIs on large simulations. Alternative to loading all N × M actions upfront via `/run-status/detail`. Query params: `platforms=twitter,reddit,polymarket`, `include_belief`, `include_market`. Used by **ReplayView** for timeline scrubbing and by the CLI (`miroshark-cli frame <id> <round>`).
 
 ### Memory & Retrieval Pipeline
 
@@ -511,6 +553,28 @@ REASONING_TRACE_ENABLED=true
 # Web Enrichment (auto-researches public figures during persona generation)
 WEB_ENRICHMENT_ENABLED=true
 # WEB_SEARCH_MODEL=google/gemini-2.0-flash-001:online
+
+# Embedding batching — how many texts per HTTP request. Higher is faster on
+# graph builds; drop to 32 if your provider 413s you.
+EMBEDDING_BATCH_SIZE=128
+
+# Anthropic prompt caching — attaches cache_control to the system message
+# when the active model is Claude-family. ~10% cost on cache reads; big win
+# on the ReACT report loop. Silent no-op for non-Anthropic models.
+LLM_PROMPT_CACHING_ENABLED=true
+
+# Live oracle seeds (FeedOracle MCP — opt-in grounded data for templates
+# that declare `oracle_tools`). See "Live Oracle Data" above.
+ORACLE_SEED_ENABLED=false
+# FEEDORACLE_MCP_URL=https://mcp.feedoracle.io/mcp
+# FEEDORACLE_API_KEY=
+
+# Per-agent MCP tools — lets personas with `tools_enabled: true` invoke
+# MCP servers during simulation. Configure servers in config/mcp_servers.yaml.
+MCP_AGENT_TOOLS_ENABLED=false
+# MCP_SERVERS_CONFIG=./config/mcp_servers.yaml
+# MCP_MAX_CALLS_PER_TURN=2
+# MCP_CALL_TIMEOUT_SEC=30
 ```
 
 
@@ -547,6 +611,53 @@ Restart Claude Desktop. The `miroshark` tools appear in the hammer menu:
 | `get_reasoning_trace` | Full ReACT decision chain for one section |
 
 Example prompt: *"List my MiroShark graphs, browse clusters on the biggest one for anything about oracle exploits, then show me the reasoning trace from the most recent report on that graph."*
+
+## Report Agent Tools
+
+The ReACT report agent exposes these tools (configured via `REPORT_AGENT_MAX_TOOL_CALLS`):
+
+| Tool | Purpose |
+|---|---|
+| `insight_forge` | Multi-round deep analysis on a specific question |
+| `panorama_search` | Hybrid vector + BM25 + graph retrieval |
+| `quick_search` | Lightweight keyword search |
+| `interview_agents` | Live conversation with sim agents |
+| `analyze_trajectory` | Belief drift — convergence, polarization, turning points |
+| `analyze_equilibrium` | Nash equilibria on a 2-player stance game fit to the final belief distribution — reveals whether observed outcomes are consistent with self-interested play (requires `nashpy`) |
+| `analyze_graph_structure` | Centrality / community / bridge analysis |
+| `find_causal_path` | Graph traversal between two entities |
+| `detect_contradictions` | Conflicting edges in the graph |
+| `simulation_feed` | Raw action log filter by platform / query / round |
+| `market_state` | Polymarket prices, trades, portfolios |
+| `browse_clusters` | Community zoom-out (orienting) |
+
+## CLI
+
+A dependency-light HTTP client for a running MiroShark backend:
+
+```bash
+# From a checkout with the backend installed:
+pip install -e backend/
+miroshark-cli ask "Will the EU AI Act survive trilogue?"
+
+# Or run directly — no install, no third-party deps:
+python backend/cli.py --help
+```
+
+Useful for scripting and headless workflows. Set `MIROSHARK_API_URL` to point at a remote deployment.
+
+| Command | What it does |
+|---|---|
+| `ask "<question>"` | Synthesize a seed briefing from a question |
+| `list` | List simulations / projects |
+| `status <sim_id>` | Runner status + round/total |
+| `frame <sim_id> <round>` | Compact per-round snapshot |
+| `publish <sim_id> [--unpublish]` | Toggle the embed public flag |
+| `report <sim_id>` | Render the analytical report |
+| `trending` | Pull RSS/Atom trending items |
+| `health` | Ping `/health` |
+
+All commands accept `--json` for scripting.
 
 ## Observability & Debugging
 
@@ -604,6 +715,25 @@ MIROSHARK_LOG_LEVEL=info      # debug|info|warn — controls event verbosity
 ```
 
 By default, only response previews (200 chars) are logged. Set `MIROSHARK_LOG_PROMPTS=true` to capture full prompts and responses for deep debugging.
+
+---
+
+## Testing
+
+A pytest suite lives at `backend/tests/`. Run the fast offline unit suite with:
+
+```bash
+cd backend && pytest -m "not integration"
+```
+
+Integration tests hit a live backend at `MIROSHARK_API_URL` (default `http://localhost:5001`); legacy E2E scripts wrap as `slow` tests:
+
+```bash
+pytest -m integration                # endpoint contracts (seconds)
+pytest -m "integration and slow"     # full pipeline smoke tests (minutes)
+```
+
+Some integration tests need a pre-existing simulation — set `MIROSHARK_TEST_SIM_ID=sim_xxx`. The hand-run scripts in `backend/scripts/test_*.py` still work as stand-alone programs; the pytest layer just registers them for discovery. The `.github/workflows/tests.yml` workflow runs the unit suite on every push and PR.
 
 ---
 

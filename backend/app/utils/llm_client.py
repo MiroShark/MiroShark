@@ -107,6 +107,53 @@ class LLMClient:
         """Check if we're talking to an Ollama server."""
         return '11434' in (self.base_url or '')
 
+    def _supports_anthropic_prompt_cache(self) -> bool:
+        """Return True when the configured model is Claude-family and cache flag is on.
+
+        OpenRouter passes ``cache_control`` blocks through to Anthropic; for any
+        other provider we leave messages alone to avoid provider-side 400s.
+        """
+        if not getattr(Config, "LLM_PROMPT_CACHING_ENABLED", False):
+            return False
+        m = (self.model or "").lower()
+        if not m:
+            return False
+        if self._is_ollama():
+            return False
+        return ("claude" in m) or ("anthropic" in m)
+
+    @staticmethod
+    def _maybe_cache_wrap_messages(
+        messages: List[Dict[str, Any]],
+    ) -> List[Dict[str, Any]]:
+        """Attach cache_control to the first system message (Anthropic-style).
+
+        Leaves the input list untouched; returns a shallow copy with the system
+        message content rewritten into a single text block carrying
+        ``cache_control: {"type": "ephemeral"}``. Only touches the first system
+        message — that's the stable prefix across ReACT iterations.
+        """
+        if not messages:
+            return messages
+        out = list(messages)
+        for i, msg in enumerate(out):
+            if msg.get("role") != "system":
+                continue
+            content = msg.get("content")
+            if isinstance(content, str) and content:
+                out[i] = {
+                    "role": "system",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": content,
+                            "cache_control": {"type": "ephemeral"},
+                        }
+                    ],
+                }
+            break
+        return out
+
     def _emit_llm_event(self, messages, content, t0, *, response=None, error=None, temperature=0.7):
         """Emit an llm_call observability event (best-effort, never raises)."""
         try:
@@ -166,9 +213,15 @@ class LLMClient:
         Returns:
             Model response text
         """
+        effective_messages = (
+            self._maybe_cache_wrap_messages(messages)
+            if self._supports_anthropic_prompt_cache()
+            else messages
+        )
+
         kwargs = {
             "model": self.model,
-            "messages": messages,
+            "messages": effective_messages,
             "temperature": temperature,
             "max_tokens": max_tokens,
         }
