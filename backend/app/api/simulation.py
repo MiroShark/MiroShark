@@ -392,7 +392,7 @@ def suggest_scenarios():
 # Curated default feed list — broadly newsworthy, free, public.
 # Operators can override via TRENDING_FEEDS env var (comma-separated URLs).
 _TRENDING_DEFAULT_FEEDS = (
-    "https://feeds.reuters.com/reuters/technologyNews",
+    "https://techcrunch.com/feed/",
     "https://www.theverge.com/rss/index.xml",
     "https://hnrss.org/frontpage",
     "https://www.coindesk.com/arc/outboundfeeds/rss/",
@@ -432,6 +432,54 @@ def _trending_get_feeds() -> "list[str]":
         return list(_TRENDING_DEFAULT_FEEDS)
     feeds = [u.strip() for u in raw.split(',') if u.strip()]
     return feeds or list(_TRENDING_DEFAULT_FEEDS)
+
+
+def _trending_url_allowed(url: str) -> bool:
+    """Reject URLs that aren't http(s) or target private/loopback hosts.
+
+    First line of defense against using this endpoint as an SSRF proxy via
+    the ?feeds= query param. We don't resolve DNS here (that would add
+    per-call latency and still leaves a rebinding window); the hostname-level
+    deny combined with the other controls — rate limit, 1 MB body cap, 5 s
+    timeout, structured-output-only — is sufficient for this feature's scope.
+    """
+    try:
+        from urllib.parse import urlparse
+        import ipaddress
+        parsed = urlparse(url)
+    except Exception:
+        return False
+    if parsed.scheme not in ('http', 'https'):
+        return False
+    host = (parsed.hostname or '').strip().lower()
+    if not host:
+        return False
+    # Block obvious loopback / cloud-metadata hostnames.
+    if host in ('localhost', 'ip6-localhost', 'metadata.google.internal'):
+        return False
+    # If host parses as a standard IP literal, block private / reserved ranges.
+    try:
+        ip = ipaddress.ip_address(host)
+        if (ip.is_private or ip.is_loopback or ip.is_link_local
+                or ip.is_multicast or ip.is_reserved or ip.is_unspecified):
+            return False
+    except ValueError:
+        pass  # Not a standard IP literal — fall through to obfuscated-form check.
+    # Guard against obfuscated IPv4: Python's socket.getaddrinfo accepts
+    # integer (2130706433), octal (0177.0.0.1), and hex (0x7f000001) encodings
+    # of 127.0.0.1, and ipaddress.ip_address rejects all of them — so an
+    # attacker could bypass the check above and still hit localhost. Normalize
+    # via inet_aton (which accepts every form socket does) and re-check.
+    try:
+        import socket
+        canonical = socket.inet_ntoa(socket.inet_aton(host))
+        ip = ipaddress.ip_address(canonical)
+        if (ip.is_private or ip.is_loopback or ip.is_link_local
+                or ip.is_multicast or ip.is_reserved or ip.is_unspecified):
+            return False
+    except (OSError, ValueError):
+        pass  # Not an IPv4 in any encoding — a real DNS name. Allow.
+    return True
 
 
 def _trending_rate_limited(client_ip: str) -> bool:
@@ -728,9 +776,15 @@ def trending_topics():
             }), 429
 
         # Resolve feeds: ?feeds=... overrides; otherwise env / default list.
+        # User-supplied URLs pass through _trending_url_allowed to block SSRF
+        # attempts (non-http(s) schemes, loopback, private / link-local hosts).
+        # Env / default feeds are operator-controlled and trusted as-is.
         feeds_param = (request.args.get('feeds') or '').strip()
         if feeds_param:
-            feeds = [u.strip() for u in feeds_param.split(',') if u.strip()]
+            feeds = [
+                u.strip() for u in feeds_param.split(',')
+                if u.strip() and _trending_url_allowed(u.strip())
+            ]
         else:
             feeds = _trending_get_feeds()
 
