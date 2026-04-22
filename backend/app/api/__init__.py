@@ -18,3 +18,7 @@ from . import templates  # noqa: E402, F401
 from . import settings  # noqa: E402, F401
 from . import observability  # noqa: E402, F401
 
+# share_bp is mounted at the root (no /api prefix) so the public landing
+# URL stays clean — see api/share.py.
+from .share import share_bp  # noqa: E402, F401
+

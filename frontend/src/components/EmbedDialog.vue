@@ -101,6 +101,67 @@
             </div>
           </div>
 
+          <!-- Social share card -->
+          <div class="share-card-section">
+            <div class="share-card-divider">
+              <span class="divider-line"></span>
+              <span class="divider-text">Social card</span>
+              <span class="divider-line"></span>
+            </div>
+
+            <p class="share-card-desc">
+              A 1200×630 PNG with the scenario headline, status, quality, and
+              belief split — the same image Twitter/X, Discord, Slack, and
+              LinkedIn unfurl automatically when someone pastes the share
+              link.
+            </p>
+
+            <div class="share-card-preview-wrap">
+              <img
+                v-if="isPublic && shareCardUrl"
+                :src="shareCardUrl"
+                :key="shareCardCacheBust"
+                class="share-card-preview"
+                alt="MiroShark share card preview"
+                @error="onShareCardError"
+              />
+              <div v-else class="share-card-empty">
+                {{ isPublic ? 'Loading preview…' : 'Publish the simulation to enable the share card.' }}
+              </div>
+            </div>
+
+            <div class="share-card-actions">
+              <div class="snippet-block share-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">Share link (auto-unfurls with card)</span>
+                  <button class="snippet-copy-btn" @click="copy('share')" :disabled="!isPublic">
+                    {{ copied === 'share' ? '✓ Copied' : 'Copy link' }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ shareLandingUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block share-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">Card image URL (for manual paste)</span>
+                  <button class="snippet-copy-btn" @click="copy('card')" :disabled="!isPublic">
+                    {{ copied === 'card' ? '✓ Copied' : 'Copy URL' }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ shareCardUrl || '—' }}</code></pre>
+              </div>
+
+              <a
+                v-if="isPublic && shareCardUrl"
+                class="share-download-btn"
+                :href="shareCardUrl"
+                :download="`miroshark-${simulationId.slice(0, 12)}.png`"
+              >
+                ↓ Download PNG
+              </a>
+            </div>
+          </div>
+
           <!-- Hint -->
           <div class="embed-dialog-hint">
             <span class="hint-icon">ⓘ</span>
@@ -115,7 +176,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { publishSimulation, getEmbedSummary } from '../api/simulation'
+import { publishSimulation, getEmbedSummary, getShareCardUrl, getShareLandingUrl } from '../api/simulation'
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -181,6 +242,28 @@ const markdownSnippet = computed(() => {
   return `[MiroShark simulation ↗](${embedUrl.value})`
 })
 
+const shareCardCacheBust = ref(0)
+
+const shareCardUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  // Append a cache-bust token so re-opening the dialog after a state change
+  // (e.g. resolution recorded) shows the freshly rendered card.
+  const base = getShareCardUrl(props.simulationId, origin.value)
+  return shareCardCacheBust.value
+    ? `${base}?v=${shareCardCacheBust.value}`
+    : base
+})
+
+const shareLandingUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getShareLandingUrl(props.simulationId, origin.value)
+})
+
+const onShareCardError = () => {
+  // The image fails until the simulation is published; once the operator
+  // toggles public on, watch(isPublic) below busts the cache.
+}
+
 const previewStyle = computed(() => {
   const { width, height } = currentSize.value
   return {
@@ -207,6 +290,8 @@ const copy = async (which) => {
   if (which === 'iframe') text = iframeSnippet.value
   else if (which === 'markdown') text = markdownSnippet.value
   else if (which === 'url') text = embedUrl.value
+  else if (which === 'share') text = shareLandingUrl.value
+  else if (which === 'card') text = shareCardUrl.value
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -239,6 +324,16 @@ watch(() => props.open, async (val) => {
   } catch (err) {
     if (err?.response?.status === 403) isPublic.value = false
   }
+  // Bust the share-card image cache so the preview reloads with whatever
+  // state the simulation is in right now (resolution may have landed
+  // since the dialog was last opened).
+  shareCardCacheBust.value = Date.now()
+})
+
+// When the operator toggles public on, the share-card endpoint flips from
+// 403 → 200. Bust the cache so the <img> retries instead of staying broken.
+watch(isPublic, () => {
+  shareCardCacheBust.value = Date.now()
 })
 </script>
 
@@ -511,6 +606,112 @@ watch(() => props.open, async (val) => {
   background: rgba(10, 10, 10, 0.06);
   border-radius: 4px;
   font-size: 11px;
+}
+
+.share-card-section {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.share-card-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #6b6b6b;
+}
+
+.share-card-divider .divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(10, 10, 10, 0.08);
+}
+
+.share-card-divider .divider-text {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.share-card-desc {
+  font-size: 12.5px;
+  color: #4b4b4b;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.share-card-preview-wrap {
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(10, 10, 10, 0.03),
+    rgba(10, 10, 10, 0.03) 10px,
+    rgba(10, 10, 10, 0.06) 10px,
+    rgba(10, 10, 10, 0.06) 20px
+  );
+  border: 1px solid rgba(10, 10, 10, 0.08);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 140px;
+}
+
+.share-card-preview {
+  width: 100%;
+  max-width: 560px;
+  aspect-ratio: 1200 / 630;
+  border-radius: 8px;
+  background: #fafafa;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  object-fit: contain;
+  display: block;
+}
+
+.share-card-empty {
+  color: #6b6b6b;
+  font-size: 13px;
+  text-align: center;
+  padding: 24px 18px;
+  line-height: 1.55;
+}
+
+.share-card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.share-snippet {
+  margin: 0;
+}
+
+.share-download-btn {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #0a0a0a;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.share-download-btn:hover {
+  background: #2a2a2a;
+}
+
+.snippet-copy-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* Transition */

@@ -85,6 +85,15 @@ Failed calls become `{"_error": "..."}` payloads rather than exceptions — agen
 
 `EmbedDialog` has a `Public / Private` toggle backed by `is_public` on the simulation state. Embed URLs return `403` on unpublished simulations — flip the toggle (or `POST /api/simulation/<id>/publish`) to make them publicly embeddable. Defaults to private so existing sims are unaffected.
 
+## Social Share Card
+
+When a simulation is published, the Embed dialog also exposes a **social card** that can be auto-unfurled by Twitter/X, Discord, Slack, LinkedIn, and any other Open-Graph-aware client. Two endpoints back it:
+
+- `GET /api/simulation/<id>/share-card.png` — a 1200×630 PNG rendered server-side (Pillow). Shows the scenario headline, status pill, optional quality badge + resolution, agent / round metrics, and the final bullish/neutral/bearish split as a stacked bar. Same `is_public` gate as the embed widget. Cached on disk by content hash so repeat unfurler hits don't re-render.
+- `GET /share/<id>` — a public landing page carrying the right `og:image` / `twitter:image` meta tags. Bots scrape the tags and render the card; real browsers redirect to the SPA simulation view (JS-first, with `<meta http-equiv="refresh">` fallback).
+
+Paste the `/share/<id>` URL anywhere — the post unfurls with a polished card instead of a generic preview.
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

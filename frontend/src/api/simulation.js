@@ -398,6 +398,43 @@ export const publishSimulation = (simulationId, publicFlag = true) => {
 }
 
 /**
+ * Build the absolute URL of the 1200x630 PNG share card for a simulation.
+ *
+ * The card is server-rendered from the same data that powers the embed
+ * widget — scenario, status, agent count, belief drift split, quality
+ * health, resolution. Requires the simulation to be published (same gate
+ * as the embed widget).
+ *
+ * Returns an absolute URL (rather than fetching) so it can be dropped
+ * straight into an `<img src>` for previews or copied to the clipboard
+ * for manual pasting into Twitter/X / Discord / Slack.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin] - override base URL (defaults to window.location.origin)
+ * @returns {string}
+ */
+export const getShareCardUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/share-card.png`
+}
+
+/**
+ * Build the absolute URL of the public share landing page for a
+ * simulation. The page exposes Open Graph + Twitter Card meta tags so
+ * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls
+ * with the share card image, scenario as title, etc. Real browsers are
+ * redirected to the SPA simulation view instantly.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getShareLandingUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/share/${simulationId}`
+}
+
+/**
  * Branch a simulation with a narrative injection at a specific round.
  * The new simulation is READY and shares the parent's agent population;
  * when the runner hits trigger_round it auto-promotes the injection into

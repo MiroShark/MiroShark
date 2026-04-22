@@ -4374,6 +4374,147 @@ def publish_simulation(simulation_id: str):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+def _build_embed_summary_payload(simulation_id: str) -> dict:
+    """Assemble the same dict the embed-summary endpoint returns.
+
+    Extracted so the share-card renderer can reuse the data pipeline without
+    going back through HTTP. Caller is responsible for the ``is_public``
+    gate — this only does the disk reads and aggregation. Raises
+    ``LookupError`` if the simulation doesn't exist.
+    """
+    manager = SimulationManager()
+    state = manager.get_simulation(simulation_id)
+    if not state:
+        raise LookupError(f"Simulation not found: {simulation_id}")
+
+    sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+
+    config = manager.get_simulation_config(simulation_id)
+    scenario = ""
+    if config:
+        scenario = (config.get("simulation_requirement") or "").strip()
+
+    run_state = SimulationRunner.get_run_state(simulation_id)
+    if run_state:
+        current_round = run_state.current_round
+        total_rounds = run_state.total_rounds if getattr(run_state, 'total_rounds', 0) else 0
+        runner_status = run_state.runner_status.value if hasattr(run_state.runner_status, 'value') else str(run_state.runner_status)
+    else:
+        current_round = 0
+        total_rounds = 0
+        runner_status = "idle"
+
+    if total_rounds == 0 and config:
+        time_config = config.get("time_config", {})
+        minutes_per_round = max(int(time_config.get("minutes_per_round", 60) or 60), 1)
+        hours = int(time_config.get("total_simulation_hours", 0) or 0)
+        total_rounds = int(hours * 60 / minutes_per_round)
+
+    belief = None
+    trajectory_path = os.path.join(sim_dir, "trajectory.json") if os.path.exists(sim_dir) else None
+    if trajectory_path and os.path.exists(trajectory_path):
+        try:
+            with open(trajectory_path, 'r', encoding='utf-8') as f:
+                traj = json.load(f)
+
+            rounds = []
+            bullish = []
+            neutral = []
+            bearish = []
+            for snap in traj.get("snapshots", []):
+                positions = snap.get("belief_positions", {}) or {}
+                if not positions:
+                    continue
+                stances = []
+                for p in positions.values():
+                    if p:
+                        stances.append(sum(p.values()) / len(p))
+                if not stances:
+                    continue
+                total = len(stances)
+                nb = sum(1 for s in stances if s > 0.2)
+                nbe = sum(1 for s in stances if s < -0.2)
+                nn = total - nb - nbe
+                rounds.append(snap.get("round_num", len(rounds)))
+                bullish.append(round(nb / total * 100, 1))
+                neutral.append(round(nn / total * 100, 1))
+                bearish.append(round(nbe / total * 100, 1))
+
+            consensus_round = None
+            consensus_stance = None
+            for i, _ in enumerate(rounds):
+                if bullish[i] > 50:
+                    consensus_round = rounds[i]
+                    consensus_stance = "bullish"
+                    break
+                if bearish[i] > 50:
+                    consensus_round = rounds[i]
+                    consensus_stance = "bearish"
+                    break
+
+            if rounds:
+                belief = {
+                    "rounds": rounds,
+                    "bullish": bullish,
+                    "neutral": neutral,
+                    "bearish": bearish,
+                    "final": {
+                        "bullish": bullish[-1],
+                        "neutral": neutral[-1],
+                        "bearish": bearish[-1],
+                    },
+                    "consensus_round": consensus_round,
+                    "consensus_stance": consensus_stance,
+                }
+        except Exception as exc:
+            logger.warning(f"Embed summary: failed to parse trajectory for {simulation_id}: {exc}")
+
+    quality = None
+    quality_path = os.path.join(sim_dir, "quality.json") if os.path.exists(sim_dir) else None
+    if quality_path and os.path.exists(quality_path):
+        try:
+            with open(quality_path, 'r', encoding='utf-8') as f:
+                q = json.load(f)
+            quality = {
+                "health": q.get("health"),
+                "participation_rate": q.get("participation_rate"),
+            }
+        except Exception:
+            quality = None
+
+    resolution = None
+    resolution_path = os.path.join(sim_dir, "resolution.json") if os.path.exists(sim_dir) else None
+    if resolution_path and os.path.exists(resolution_path):
+        try:
+            with open(resolution_path, 'r', encoding='utf-8') as f:
+                r = json.load(f)
+            resolution = {
+                "actual_outcome": r.get("actual_outcome"),
+                "predicted_consensus": r.get("predicted_consensus"),
+                "accuracy_score": r.get("accuracy_score"),
+            }
+        except Exception:
+            resolution = None
+
+    created_date = (state.created_at or "")[:10]
+
+    return {
+        "simulation_id": simulation_id,
+        "scenario": scenario,
+        "status": state.status.value if hasattr(state.status, 'value') else str(state.status),
+        "runner_status": runner_status,
+        "current_round": current_round,
+        "total_rounds": total_rounds,
+        "profiles_count": state.profiles_count,
+        "created_date": created_date,
+        "parent_simulation_id": state.parent_simulation_id,
+        "is_public": getattr(state, "is_public", False),
+        "belief": belief,
+        "quality": quality,
+        "resolution": resolution,
+    }
+
+
 @simulation_bp.route('/<simulation_id>/embed-summary', methods=['GET'])
 def get_embed_summary(simulation_id: str):
     """
@@ -4388,150 +4529,16 @@ def get_embed_summary(simulation_id: str):
     ``/publish`` endpoint to toggle.
     """
     try:
-        manager = SimulationManager()
-        state = manager.get_simulation(simulation_id)
-        if not state:
-            return jsonify({
-                "success": False,
-                "error": f"Simulation not found: {simulation_id}"
-            }), 404
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
 
-        if not getattr(state, "is_public", False):
+        if not summary.get("is_public"):
             return jsonify({
                 "success": False,
                 "error": "Simulation is not published for embedding. POST /api/simulation/<id>/publish to enable.",
             }), 403
-
-        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
-
-        # Scenario & timing
-        config = manager.get_simulation_config(simulation_id)
-        scenario = ""
-        if config:
-            scenario = (config.get("simulation_requirement") or "").strip()
-
-        run_state = SimulationRunner.get_run_state(simulation_id)
-        if run_state:
-            current_round = run_state.current_round
-            total_rounds = run_state.total_rounds if getattr(run_state, 'total_rounds', 0) else 0
-            runner_status = run_state.runner_status.value if hasattr(run_state.runner_status, 'value') else str(run_state.runner_status)
-        else:
-            current_round = 0
-            total_rounds = 0
-            runner_status = "idle"
-
-        if total_rounds == 0 and config:
-            time_config = config.get("time_config", {})
-            minutes_per_round = max(int(time_config.get("minutes_per_round", 60) or 60), 1)
-            hours = int(time_config.get("total_simulation_hours", 0) or 0)
-            total_rounds = int(hours * 60 / minutes_per_round)
-
-        # Belief drift sparkline
-        belief = None
-        trajectory_path = os.path.join(sim_dir, "trajectory.json") if os.path.exists(sim_dir) else None
-        if trajectory_path and os.path.exists(trajectory_path):
-            try:
-                with open(trajectory_path, 'r', encoding='utf-8') as f:
-                    traj = json.load(f)
-
-                rounds = []
-                bullish = []
-                neutral = []
-                bearish = []
-                for snap in traj.get("snapshots", []):
-                    positions = snap.get("belief_positions", {}) or {}
-                    if not positions:
-                        continue
-                    stances = []
-                    for p in positions.values():
-                        if p:
-                            stances.append(sum(p.values()) / len(p))
-                    if not stances:
-                        continue
-                    total = len(stances)
-                    nb = sum(1 for s in stances if s > 0.2)
-                    nbe = sum(1 for s in stances if s < -0.2)
-                    nn = total - nb - nbe
-                    rounds.append(snap.get("round_num", len(rounds)))
-                    bullish.append(round(nb / total * 100, 1))
-                    neutral.append(round(nn / total * 100, 1))
-                    bearish.append(round(nbe / total * 100, 1))
-
-                consensus_round = None
-                consensus_stance = None
-                for i, _ in enumerate(rounds):
-                    if bullish[i] > 50:
-                        consensus_round = rounds[i]
-                        consensus_stance = "bullish"
-                        break
-                    if bearish[i] > 50:
-                        consensus_round = rounds[i]
-                        consensus_stance = "bearish"
-                        break
-
-                if rounds:
-                    belief = {
-                        "rounds": rounds,
-                        "bullish": bullish,
-                        "neutral": neutral,
-                        "bearish": bearish,
-                        "final": {
-                            "bullish": bullish[-1],
-                            "neutral": neutral[-1],
-                            "bearish": bearish[-1],
-                        },
-                        "consensus_round": consensus_round,
-                        "consensus_stance": consensus_stance,
-                    }
-            except Exception as exc:
-                logger.warning(f"Embed summary: failed to parse trajectory for {simulation_id}: {exc}")
-
-        # Quality (cached)
-        quality = None
-        quality_path = os.path.join(sim_dir, "quality.json") if os.path.exists(sim_dir) else None
-        if quality_path and os.path.exists(quality_path):
-            try:
-                with open(quality_path, 'r', encoding='utf-8') as f:
-                    q = json.load(f)
-                quality = {
-                    "health": q.get("health"),
-                    "participation_rate": q.get("participation_rate"),
-                }
-            except Exception:
-                quality = None
-
-        # Resolution (cached)
-        resolution = None
-        resolution_path = os.path.join(sim_dir, "resolution.json") if os.path.exists(sim_dir) else None
-        if resolution_path and os.path.exists(resolution_path):
-            try:
-                with open(resolution_path, 'r', encoding='utf-8') as f:
-                    r = json.load(f)
-                resolution = {
-                    "actual_outcome": r.get("actual_outcome"),
-                    "predicted_consensus": r.get("predicted_consensus"),
-                    "accuracy_score": r.get("accuracy_score"),
-                }
-            except Exception:
-                resolution = None
-
-        created_date = (state.created_at or "")[:10]
-
-        summary = {
-            "simulation_id": simulation_id,
-            "scenario": scenario,
-            "status": state.status.value if hasattr(state.status, 'value') else str(state.status),
-            "runner_status": runner_status,
-            "current_round": current_round,
-            "total_rounds": total_rounds,
-            "profiles_count": state.profiles_count,
-            "created_date": created_date,
-            "parent_simulation_id": state.parent_simulation_id,
-            "is_public": getattr(state, "is_public", False),
-            "belief": belief,
-            "quality": quality,
-            "resolution": resolution,
-        }
 
         response = jsonify({"success": True, "data": summary})
         # Widget is read-only and explicitly designed to be embedded anywhere.
@@ -4544,6 +4551,62 @@ def get_embed_summary(simulation_id: str):
             "success": False,
             "error": str(e),
             "traceback": traceback.format_exc()
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/share-card.png', methods=['GET'])
+def get_share_card(simulation_id: str):
+    """Render a 1200x630 PNG suitable for Open Graph / Twitter image
+    unfurling.
+
+    Same publish gate as ``/embed-summary``: requires ``is_public=True`` on
+    the simulation state. Cached on disk by content hash so repeat
+    unfurler hits don't re-render.
+    """
+    from ..services import share_card as share_card_renderer
+    from flask import Response
+
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+            }), 403
+
+        cache_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id, "share-cards")
+        os.makedirs(cache_dir, exist_ok=True)
+        key = share_card_renderer.summary_cache_key(summary)
+        cache_path = os.path.join(cache_dir, f"{key}.png")
+
+        if os.path.exists(cache_path):
+            with open(cache_path, "rb") as fh:
+                png_bytes = fh.read()
+        else:
+            png_bytes = share_card_renderer.render_share_card(summary)
+            try:
+                with open(cache_path, "wb") as fh:
+                    fh.write(png_bytes)
+            except OSError as exc:
+                logger.warning(f"share-card: failed to cache to {cache_path}: {exc}")
+
+        response = Response(png_bytes, mimetype="image/png")
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        # Suggest a friendly filename when downloaded directly.
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}.png"'
+        )
+        return response
+
+    except Exception as e:
+        logger.error(f"share-card: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
         }), 500
 
 

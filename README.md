@@ -72,6 +72,7 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
 | **Live Oracle Data** | Opt-in grounded seeds from the [FeedOracle](https://mcp.feedoracle.io/mcp) MCP (484 tools) |
 | **Per-Agent MCP Tools** | Personas can invoke real MCP tools (web search, APIs) during simulation |
 | **Embed & Publish** | Public/private toggle + embed URLs for sharing finished runs |
+| **Social Share Card** | 1200×630 PNG that auto-unfurls scenario, status, quality, and belief split on Twitter/X, Discord, Slack, LinkedIn |
 | **Article Generation** | Substack-style write-up of what happened, grounded in actual posts and trades |
 | **Interaction Network** | Force-directed agent-to-agent graph with echo-chamber metrics |
 | **Demographics** | Archetype clustering (analyst / influencer / retail / observer…) |
