@@ -160,6 +160,42 @@
                 ↓ Download PNG
               </a>
             </div>
+
+            <!-- Gallery callout — appears once the simulation is public so the
+                 operator knows their run is visible on /explore, and offers a
+                 one-click jump to see it in situ alongside other public runs. -->
+            <div class="gallery-callout" :class="{ 'gallery-callout-live': isPublic }">
+              <div class="gallery-callout-icon">◎</div>
+              <div class="gallery-callout-body">
+                <div class="gallery-callout-title">
+                  {{ isPublic ? 'Live on the public gallery' : 'Submit to the public gallery' }}
+                </div>
+                <div class="gallery-callout-desc">
+                  <template v-if="isPublic">
+                    This simulation is now visible on
+                    <a href="/explore" target="_blank" rel="noopener">/explore</a> —
+                    the public gallery where anyone can browse published runs
+                    and fork them into their own simulations.
+                  </template>
+                  <template v-else>
+                    Toggle "Public" above and this run joins the community
+                    gallery at
+                    <a href="/explore" target="_blank" rel="noopener">/explore</a>.
+                    Others can browse it, view the full belief drift, and
+                    fork your agents into their own scenarios.
+                  </template>
+                </div>
+              </div>
+              <a
+                v-if="isPublic"
+                href="/explore"
+                target="_blank"
+                rel="noopener"
+                class="gallery-callout-link"
+              >
+                Open gallery ↗
+              </a>
+            </div>
           </div>
 
           <!-- Hint -->
@@ -707,6 +743,79 @@ watch(isPublic, () => {
 
 .share-download-btn:hover {
   background: #2a2a2a;
+}
+
+.gallery-callout {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border: 1px dashed rgba(10, 10, 10, 0.18);
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.gallery-callout-live {
+  background: rgba(255, 107, 26, 0.06);
+  border-color: rgba(255, 107, 26, 0.45);
+  border-style: solid;
+}
+
+.gallery-callout-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-orange, #ff6b1a);
+  padding-top: 2px;
+}
+
+.gallery-callout-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.gallery-callout-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  margin-bottom: 4px;
+}
+
+.gallery-callout-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #4a4a4a;
+}
+
+.gallery-callout-desc a {
+  color: var(--color-orange, #ff6b1a);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.gallery-callout-desc a:hover { text-decoration: underline; }
+
+.gallery-callout-link {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 6px 12px;
+  background: var(--color-orange, #ff6b1a);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.gallery-callout-link:hover {
+  background: #0a0a0a;
 }
 
 .snippet-copy-btn:disabled {

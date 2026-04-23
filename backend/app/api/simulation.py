@@ -4610,6 +4610,221 @@ def get_share_card(simulation_id: str):
         }), 500
 
 
+# ============== Public Gallery ==============
+
+
+def _build_gallery_card_payload(state, sim_dir: str) -> dict:
+    """Assemble the minimal card-friendly payload for the public gallery.
+
+    Cheap reads only — no DB joins, no LLM calls. Walks the on-disk
+    artifacts (``state.json``, ``simulation_config.json``, ``quality.json``,
+    ``trajectory.json``, ``resolution.json``) that are already produced by
+    the normal run pipeline. Any missing artifact degrades gracefully into
+    ``None`` rather than raising.
+    """
+    scenario = ""
+    total_rounds = 0
+    config_path = os.path.join(sim_dir, "simulation_config.json")
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, 'r', encoding='utf-8') as f:
+                cfg = json.load(f)
+            scenario = (cfg.get("simulation_requirement") or "").strip()
+            time_config = cfg.get("time_config", {}) or {}
+            minutes_per_round = max(int(time_config.get("minutes_per_round", 60) or 60), 1)
+            hours = int(time_config.get("total_simulation_hours", 0) or 0)
+            total_rounds = int(hours * 60 / minutes_per_round)
+        except Exception:
+            pass
+
+    # Cap the scenario to a tweet-sized headline so the gallery stays
+    # visually even regardless of how verbose the operator was.
+    if scenario and len(scenario) > 180:
+        scenario = scenario[:177].rstrip() + "…"
+
+    current_round = 0
+    runner_status = "idle"
+    try:
+        run_state = SimulationRunner.get_run_state(state.simulation_id)
+        if run_state:
+            current_round = run_state.current_round
+            runner_status = (
+                run_state.runner_status.value
+                if hasattr(run_state.runner_status, 'value')
+                else str(run_state.runner_status)
+            )
+            if getattr(run_state, 'total_rounds', 0):
+                total_rounds = run_state.total_rounds
+    except Exception:
+        pass
+
+    quality_health = None
+    quality_path = os.path.join(sim_dir, "quality.json")
+    if os.path.exists(quality_path):
+        try:
+            with open(quality_path, 'r', encoding='utf-8') as f:
+                q = json.load(f)
+            quality_health = q.get("health")
+        except Exception:
+            pass
+
+    final_consensus = None
+    trajectory_path = os.path.join(sim_dir, "trajectory.json")
+    if os.path.exists(trajectory_path):
+        try:
+            with open(trajectory_path, 'r', encoding='utf-8') as f:
+                traj = json.load(f)
+            snapshots = traj.get("snapshots", []) or []
+            # Walk snapshots in reverse to pick the last one with
+            # computable belief positions.
+            for snap in reversed(snapshots):
+                positions = snap.get("belief_positions", {}) or {}
+                if not positions:
+                    continue
+                stances = []
+                for p in positions.values():
+                    if p:
+                        stances.append(sum(p.values()) / len(p))
+                if not stances:
+                    continue
+                total = len(stances)
+                nb = sum(1 for s in stances if s > 0.2)
+                nbe = sum(1 for s in stances if s < -0.2)
+                nn = total - nb - nbe
+                final_consensus = {
+                    "bullish": round(nb / total * 100, 1),
+                    "neutral": round(nn / total * 100, 1),
+                    "bearish": round(nbe / total * 100, 1),
+                }
+                break
+        except Exception:
+            pass
+
+    resolution_outcome = None
+    resolution_path = os.path.join(sim_dir, "resolution.json")
+    if os.path.exists(resolution_path):
+        try:
+            with open(resolution_path, 'r', encoding='utf-8') as f:
+                r = json.load(f)
+            resolution_outcome = r.get("actual_outcome")
+        except Exception:
+            pass
+
+    return {
+        "simulation_id": state.simulation_id,
+        "scenario": scenario,
+        "status": state.status.value if hasattr(state.status, 'value') else str(state.status),
+        "runner_status": runner_status,
+        "current_round": current_round,
+        "total_rounds": total_rounds,
+        "agent_count": state.profiles_count,
+        "quality_health": quality_health,
+        "final_consensus": final_consensus,
+        "resolution_outcome": resolution_outcome,
+        "created_at": state.created_at,
+        "parent_simulation_id": state.parent_simulation_id,
+        "share_card_url": f"/api/simulation/{state.simulation_id}/share-card.png",
+        "share_landing_url": f"/share/{state.simulation_id}",
+    }
+
+
+@simulation_bp.route('/public', methods=['GET'])
+def list_public_simulations():
+    """Gallery feed of simulations the operator has toggled public.
+
+    Every published simulation already has a share card, embed summary,
+    and public landing page — this endpoint is the discovery layer that
+    lists them all in one place so the ``/explore`` view can render a
+    gallery grid.
+
+    Query parameters:
+        limit: max items to return (default 50, clamped to [1, 100])
+        offset: pagination offset (default 0)
+
+    Response shape::
+
+        {
+          "success": true,
+          "data": [
+            {
+              "simulation_id": "sim_xxx",
+              "scenario": "Will the ECB cut rates in June?",
+              "status": "completed",
+              "runner_status": "completed",
+              "current_round": 20,
+              "total_rounds": 20,
+              "agent_count": 248,
+              "quality_health": "Excellent",
+              "final_consensus": {"bullish": 62.0, "neutral": 13.0, "bearish": 25.0},
+              "resolution_outcome": "YES",
+              "created_at": "2026-04-22T10:12:34",
+              "parent_simulation_id": null,
+              "share_card_url": "/api/simulation/sim_xxx/share-card.png",
+              "share_landing_url": "/share/sim_xxx"
+            },
+            ...
+          ],
+          "count": 17,
+          "total": 17,
+          "limit": 50,
+          "offset": 0,
+          "has_more": false
+        }
+
+    ``count`` is the size of the current page; ``total`` is the count of
+    all public simulations. An empty ``data`` array is normal — the
+    caller should render the "No public simulations yet" empty state.
+    """
+    try:
+        limit = request.args.get('limit', 50, type=int)
+        offset = request.args.get('offset', 0, type=int)
+        limit = max(1, min(100, int(limit or 50)))
+        offset = max(0, int(offset or 0))
+
+        manager = SimulationManager()
+        all_sims = manager.list_simulations()
+
+        public_sims = [s for s in all_sims if bool(getattr(s, "is_public", False))]
+        public_sims.sort(key=lambda s: s.created_at or "", reverse=True)
+
+        total = len(public_sims)
+        page = public_sims[offset:offset + limit]
+
+        items = []
+        for state in page:
+            sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, state.simulation_id)
+            try:
+                items.append(_build_gallery_card_payload(state, sim_dir))
+            except Exception as exc:
+                # One bad artifact shouldn't tank the whole gallery.
+                logger.warning(
+                    f"public-gallery: failed to build card for {state.simulation_id}: {exc}"
+                )
+                continue
+
+        response = jsonify({
+            "success": True,
+            "data": items,
+            "count": len(items),
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "has_more": offset + len(items) < total,
+        })
+        # Short cache so newly-published simulations show up quickly while
+        # still absorbing repeat hits from bots/social unfurlers.
+        response.headers["Cache-Control"] = "public, max-age=30"
+        return response
+
+    except Exception as e:
+        logger.error(f"Failed to list public simulations: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+            "traceback": traceback.format_exc()
+        }), 500
+
+
 # ============== Database Query Endpoints ==============
 
 @simulation_bp.route('/<simulation_id>/posts', methods=['GET'])

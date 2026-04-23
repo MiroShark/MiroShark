@@ -4,6 +4,9 @@
     <nav class="navbar">
       <div class="nav-brand">MIROSHARK</div>
       <div class="nav-links">
+        <router-link to="/explore" class="explore-link" title="Browse public simulations">
+          <span class="compass">◎</span> Explore
+        </router-link>
         <a href="https://github.com/aaronjmars/MiroShark" target="_blank" class="github-link">
           GitHub <span class="arrow">↗</span>
         </a>
@@ -635,7 +638,25 @@ const startSimulation = () => {
 .nav-links {
   display: flex;
   align-items: center;
+  gap: var(--space-md);
 }
+
+.explore-link {
+  color: var(--color-white);
+  text-decoration: none;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 1px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  transition: var(--transition-fast);
+  opacity: 0.6;
+}
+
+.explore-link:hover { opacity: 1; color: var(--color-orange); }
+
+.compass { font-size: 15px; line-height: 1; }
 
 .github-link {
   color: var(--color-white);

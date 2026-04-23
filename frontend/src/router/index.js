@@ -54,6 +54,11 @@ const routes = [
     name: 'Embed',
     component: () => import('../views/EmbedView.vue'),
     props: true
+  },
+  {
+    path: '/explore',
+    name: 'Explore',
+    component: () => import('../views/ExploreView.vue')
   }
 ]
 

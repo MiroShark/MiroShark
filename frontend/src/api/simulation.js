@@ -555,6 +555,37 @@ export const suggestScenarios = (data) => {
 }
 
 /**
+ * List simulations that have been toggled public via the /publish endpoint.
+ * Powers the /explore gallery — every entry already has a rendered share
+ * card, embed summary, and public landing page, so the frontend just
+ * needs to lay them out.
+ *
+ * Response shape:
+ *   {
+ *     data: [
+ *       { simulation_id, scenario, status, runner_status, current_round,
+ *         total_rounds, agent_count, quality_health, final_consensus,
+ *         resolution_outcome, created_at, parent_simulation_id,
+ *         share_card_url, share_landing_url }
+ *     ],
+ *     count: number,        // items on this page
+ *     total: number,        // total public simulations
+ *     limit: number,
+ *     offset: number,
+ *     has_more: boolean
+ *   }
+ *
+ * An empty `data` array is normal (render the empty state).
+ * @param {Object} options - { limit?: number, offset?: number }
+ */
+export const getPublicSimulations = (options = {}) => {
+  const params = {}
+  if (Number.isFinite(options.limit)) params.limit = options.limit
+  if (Number.isFinite(options.offset)) params.offset = options.offset
+  return service.get('/api/simulation/public', { params, timeout: 15000 })
+}
+
+/**
  * List all Polymarket prediction markets for a simulation.
  * @param {string} simulationId
  */
