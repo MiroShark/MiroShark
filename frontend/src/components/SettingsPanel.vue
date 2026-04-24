@@ -348,6 +348,115 @@
           </div>
         </section>
 
+        <!-- AI Integration (MCP) -->
+        <section class="settings-section ai-section">
+          <div class="section-header">
+            <span class="section-label">AI Integration · MCP</span>
+            <div class="status-badge" :class="mcpHealthClass">
+              <span class="badge-dot"></span>
+              {{ mcpHealthText }}
+            </div>
+          </div>
+
+          <div class="ai-intro">
+            Wire MiroShark's knowledge graph into Claude Desktop, Cursor, Windsurf,
+            or Continue. Pick your client, paste the snippet, restart the editor.
+          </div>
+
+          <div v-if="mcpLoading" class="ai-loading">Loading MCP catalog…</div>
+          <div v-else-if="mcpLoadError" class="ai-error">
+            {{ mcpLoadError }}
+            <button class="ai-retry" @click="loadMcpStatus">Retry</button>
+          </div>
+
+          <div v-else-if="mcpStatus" class="ai-body">
+            <!-- Health summary grid -->
+            <div class="ai-summary">
+              <div class="ai-summary-row">
+                <span class="ai-summary-key">Server file</span>
+                <span class="ai-summary-val" :class="mcpStatus.paths.mcp_script_exists ? '' : 'setup-missing'">
+                  {{ mcpStatus.paths.mcp_script_exists ? 'present' : 'missing' }}
+                </span>
+              </div>
+              <div class="ai-summary-row">
+                <span class="ai-summary-key">Tools exposed</span>
+                <span class="ai-summary-val">{{ mcpStatus.tool_count }}</span>
+              </div>
+              <div class="ai-summary-row">
+                <span class="ai-summary-key">Neo4j</span>
+                <span class="ai-summary-val" :class="mcpStatus.neo4j.connected ? '' : 'setup-missing'">
+                  {{ mcpStatus.neo4j.connected ? 'connected' : 'unreachable' }}
+                </span>
+              </div>
+              <div class="ai-summary-row" v-if="mcpStatus.neo4j.connected">
+                <span class="ai-summary-key">Graphs available</span>
+                <span class="ai-summary-val">
+                  {{ mcpStatus.neo4j.graph_count ?? 0 }}
+                  <span class="setup-aux" v-if="mcpStatus.neo4j.entity_count != null">
+                    ({{ mcpStatus.neo4j.entity_count }} entities)
+                  </span>
+                </span>
+              </div>
+              <div class="ai-summary-row" v-if="mcpStatus.neo4j.error">
+                <span class="ai-summary-key">Error</span>
+                <span class="ai-summary-val ai-error-text">{{ mcpStatus.neo4j.error }}</span>
+              </div>
+            </div>
+
+            <!-- Client tabs -->
+            <div class="ai-tabs" role="tablist">
+              <button
+                v-for="key in clientOrder"
+                :key="key"
+                class="ai-tab"
+                :class="{ active: activeClient === key }"
+                role="tab"
+                :aria-selected="activeClient === key"
+                @click="activeClient = key"
+              >
+                {{ mcpStatus.clients[key]?.label || key }}
+              </button>
+            </div>
+
+            <!-- Active client snippet -->
+            <div v-if="currentClient" class="ai-client">
+              <div class="ai-client-file">
+                <span class="ai-client-file-label">Config file:</span>
+                <code class="ai-client-file-path">{{ currentClient.file }}</code>
+              </div>
+              <div class="ai-snippet-wrap">
+                <pre class="ai-snippet"><code>{{ formatJson(currentClient.config) }}</code></pre>
+                <button
+                  class="ai-copy-btn"
+                  :class="{ ok: copyState === 'ok', fail: copyState === 'fail' }"
+                  @click="copySnippet"
+                >
+                  {{ copyButtonLabel }}
+                </button>
+              </div>
+              <div v-if="currentClient.notes" class="ai-client-notes">
+                {{ currentClient.notes }}
+              </div>
+            </div>
+
+            <!-- Tool catalog (collapsed by default) -->
+            <button class="ai-tools-toggle" @click="toolsOpen = !toolsOpen">
+              <span>{{ toolsOpen ? '▾' : '▸' }} {{ mcpStatus.tool_count }} tools available</span>
+            </button>
+            <ul v-if="toolsOpen" class="ai-tools-list">
+              <li v-for="t in mcpStatus.tools" :key="t.name" class="ai-tool">
+                <code class="ai-tool-name">{{ t.name }}</code>
+                <span class="ai-tool-desc">{{ t.description }}</span>
+              </li>
+            </ul>
+
+            <div class="ai-docs-link">
+              Need a deeper walkthrough?
+              <a :href="mcpStatus.docs_url" target="_blank" rel="noopener">Read the full MCP guide →</a>
+            </div>
+          </div>
+        </section>
+
         <!-- Footer -->
         <div class="modal-footer">
           <div v-if="saveError" class="save-error">{{ saveError }}</div>
@@ -368,6 +477,7 @@
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
 import { getSettings, updateSettings, testLlmConnection } from '../api/settings'
+import { getMcpStatus } from '../api/mcp'
 
 const props = defineProps({
   open: { type: Boolean, required: true }
@@ -413,6 +523,15 @@ const modelLoadError = ref('')
 const advancedOpen = ref(false)
 const inheritMarker = '— inherits default —'
 
+// MCP / AI Integration state
+const mcpStatus = ref(null)
+const mcpLoading = ref(false)
+const mcpLoadError = ref('')
+const clientOrder = ['claude_desktop', 'cursor', 'windsurf', 'continue', 'fallback_direct']
+const activeClient = ref('claude_desktop')
+const toolsOpen = ref(false)
+const copyState = ref('') // '' | 'ok' | 'fail'
+
 // Load current settings when panel opens
 watch(() => props.open, async (isOpen) => {
   if (isOpen) {
@@ -421,7 +540,8 @@ watch(() => props.open, async (isOpen) => {
     testResult.value = null
     form.preset = ''
     form.presetApiKey = ''
-    await loadCurrentSettings()
+    copyState.value = ''
+    await Promise.all([loadCurrentSettings(), loadMcpStatus()])
   }
 })
 
@@ -515,6 +635,75 @@ const testConnection = async () => {
     testResult.value = { success: false, error: e.message }
   } finally {
     testing.value = false
+  }
+}
+
+const loadMcpStatus = async () => {
+  mcpLoading.value = true
+  mcpLoadError.value = ''
+  try {
+    // Axios interceptor unwraps to { success, data }.
+    const res = await getMcpStatus()
+    if (res?.success && res.data) {
+      mcpStatus.value = res.data
+    } else {
+      mcpLoadError.value = res?.error || 'MCP status unavailable'
+    }
+  } catch (e) {
+    mcpLoadError.value = e?.message || 'MCP status request failed'
+  } finally {
+    mcpLoading.value = false
+  }
+}
+
+const currentClient = computed(() => {
+  if (!mcpStatus.value) return null
+  return mcpStatus.value.clients?.[activeClient.value] || null
+})
+
+const mcpHealthClass = computed(() => {
+  if (!mcpStatus.value) return 'idle'
+  if (!mcpStatus.value.paths.mcp_script_exists) return 'fail'
+  return mcpStatus.value.neo4j.connected ? 'ok' : 'fail'
+})
+
+const mcpHealthText = computed(() => {
+  if (!mcpStatus.value) return 'Loading'
+  if (!mcpStatus.value.paths.mcp_script_exists) return 'Server file missing'
+  return mcpStatus.value.neo4j.connected ? 'Ready' : 'Neo4j down'
+})
+
+const formatJson = (obj) => JSON.stringify(obj, null, 2)
+
+const copyButtonLabel = computed(() => {
+  if (copyState.value === 'ok') return '✓ Copied'
+  if (copyState.value === 'fail') return '✗ Copy failed'
+  return 'Copy snippet'
+})
+
+const copySnippet = async () => {
+  if (!currentClient.value) return
+  const text = formatJson(currentClient.value.config)
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      // Fallback for older / non-secure-context browsers.
+      const ta = document.createElement('textarea')
+      ta.value = text
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      const ok = document.execCommand('copy')
+      document.body.removeChild(ta)
+      if (!ok) throw new Error('execCommand copy returned false')
+    }
+    copyState.value = 'ok'
+  } catch (_) {
+    copyState.value = 'fail'
+  } finally {
+    setTimeout(() => { copyState.value = '' }, 2200)
   }
 }
 
@@ -962,4 +1151,259 @@ const saveSettings = async () => {
 }
 .save-btn:hover:not(:disabled) { background: #FF6B1A; border-color: #FF6B1A; }
 .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── AI Integration (MCP) ── */
+.ai-section {
+  background: #F5F5F5;
+}
+
+.ai-intro {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(10,10,10,0.65);
+  margin-bottom: 14px;
+}
+
+.ai-loading,
+.ai-error {
+  font-size: 12px;
+  padding: 12px 14px;
+  border: 2px dashed rgba(10,10,10,0.1);
+  background: #FAFAFA;
+}
+
+.ai-error {
+  color: #FF4444;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.ai-retry {
+  background: #0A0A0A;
+  color: #FAFAFA;
+  border: none;
+  padding: 6px 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.ai-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 2px dashed rgba(10,10,10,0.1);
+  padding: 12px 14px;
+  background: #FAFAFA;
+  margin-bottom: 14px;
+}
+
+.ai-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 12px;
+}
+
+.ai-summary-key {
+  color: rgba(10,10,10,0.5);
+  flex-shrink: 0;
+}
+
+.ai-summary-val {
+  color: #0A0A0A;
+  font-weight: 700;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.ai-error-text {
+  color: #FF4444;
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.ai-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 0;
+  border-bottom: 2px solid rgba(10,10,10,0.08);
+}
+
+.ai-tab {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: 8px 12px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.45);
+  cursor: pointer;
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.ai-tab:hover { color: #0A0A0A; }
+
+.ai-tab.active {
+  color: #0A0A0A;
+  border-bottom-color: #FF6B1A;
+}
+
+.ai-client {
+  padding-top: 14px;
+}
+
+.ai-client-file {
+  font-size: 11px;
+  color: rgba(10,10,10,0.55);
+  margin-bottom: 8px;
+  overflow-wrap: anywhere;
+}
+
+.ai-client-file-label {
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-right: 4px;
+}
+
+.ai-client-file-path {
+  font-family: 'Space Mono', monospace;
+  color: #0A0A0A;
+  background: #FAFAFA;
+  padding: 1px 5px;
+  border: 1px solid rgba(10,10,10,0.08);
+}
+
+.ai-snippet-wrap {
+  position: relative;
+}
+
+.ai-snippet {
+  background: #0A0A0A;
+  color: #FAFAFA;
+  padding: 14px 16px;
+  margin: 0;
+  font-family: 'Space Mono', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-x: auto;
+  white-space: pre;
+  border: 2px solid #0A0A0A;
+}
+
+.ai-snippet code {
+  font: inherit;
+  color: inherit;
+}
+
+.ai-copy-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #FAFAFA;
+  color: #0A0A0A;
+  border: 1px solid rgba(250,250,250,0.2);
+  padding: 4px 10px;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+
+.ai-copy-btn:hover { background: #FF6B1A; color: #FAFAFA; }
+.ai-copy-btn.ok { background: #43C165; color: #FAFAFA; }
+.ai-copy-btn.fail { background: #FF4444; color: #FAFAFA; }
+
+.ai-client-notes {
+  font-size: 11px;
+  color: rgba(10,10,10,0.55);
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+.ai-tools-toggle {
+  display: block;
+  width: 100%;
+  background: none;
+  border: 2px dashed rgba(10,10,10,0.1);
+  padding: 8px 12px;
+  margin-top: 14px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(10,10,10,0.55);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.1s, color 0.1s;
+}
+
+.ai-tools-toggle:hover {
+  border-color: rgba(10,10,10,0.3);
+  color: #0A0A0A;
+}
+
+.ai-tools-list {
+  list-style: none;
+  padding: 12px 14px;
+  margin: 6px 0 0 0;
+  background: #FAFAFA;
+  border: 2px dashed rgba(10,10,10,0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ai-tool {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 12px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.ai-tool-name {
+  color: #FF6B1A;
+  font-weight: 700;
+  font-family: 'Space Mono', monospace;
+}
+
+.ai-tool-desc {
+  color: rgba(10,10,10,0.7);
+  overflow-wrap: anywhere;
+}
+
+.ai-docs-link {
+  font-size: 11px;
+  color: rgba(10,10,10,0.55);
+  margin-top: 14px;
+  text-align: right;
+}
+
+.ai-docs-link a {
+  color: #0A0A0A;
+  font-weight: 700;
+  text-decoration: none;
+  border-bottom: 1px solid #FF6B1A;
+}
+
+.ai-docs-link a:hover { color: #FF6B1A; }
+
+@media (max-width: 480px) {
+  .ai-tool {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
 </style>

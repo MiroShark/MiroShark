@@ -124,7 +124,7 @@ Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 | [Features](docs/FEATURES.md) | Deep dive on every feature in the table above |
 | [HTTP API](docs/API.md) | Every endpoint, grouped by concern |
 | [CLI](docs/CLI.md) | `miroshark-cli` reference |
-| [MCP](docs/MCP.md) | Claude Desktop integration + report agent tools |
+| [MCP](docs/MCP.md) | Claude Desktop / Cursor / Windsurf / Continue integration + report agent tools (auto-generated snippets in Settings → AI Integration) |
 | [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
 | [Contributing](CONTRIBUTING.md) | Tests and development |
 
