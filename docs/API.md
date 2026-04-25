@@ -2,6 +2,8 @@
 
 Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless otherwise noted.
 
+> **Interactive docs:** the running backend serves Swagger UI at `/api/docs` and the OpenAPI 3.1 spec at `/api/openapi.yaml` (or `/api/openapi.json`). Point [`openapi-generator`](https://openapi-generator.tech/) at the spec to produce a Python / TypeScript / Go SDK in one command.
+
 ## Setup & Discovery
 
 | Method | Path | Purpose |
@@ -118,3 +120,15 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/push/vapid-public-key` | VAPID key for web push |
 | `POST` | `/api/simulation/push/subscribe` | Register a browser subscription |
 | `POST` | `/api/simulation/push/test` | Fire a test notification |
+
+## Interactive Documentation
+
+| Method | Path | Purpose |
+|---|---|---|
+| `GET` | `/api/docs` | Swagger UI rendered against this spec — try-it-out enabled |
+| `GET` | `/api/openapi.yaml` | OpenAPI 3.1 spec, YAML form (canonical) |
+| `GET` | `/api/openapi.json` | Same spec, JSON form (handy for `openapi-generator`) |
+
+The spec is committed to the repo at `backend/openapi.yaml`. A unit test
+(`backend/tests/test_unit_openapi.py`) walks every Flask route on every
+push and fails CI if the spec drifts away from the implementation.

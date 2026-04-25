@@ -123,7 +123,7 @@ Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 | [Models](docs/MODELS.md) | Cheap vs Best presets, local Ollama models, benchmark findings |
 | [Architecture](docs/ARCHITECTURE.md) | Simulation engine, memory pipeline, graph retrieval |
 | [Features](docs/FEATURES.md) | Deep dive on every feature in the table above |
-| [HTTP API](docs/API.md) | Every endpoint, grouped by concern |
+| [HTTP API](docs/API.md) | Every endpoint, grouped by concern — plus interactive Swagger UI at `/api/docs` and a spec at `/api/openapi.yaml` |
 | [CLI](docs/CLI.md) | `miroshark-cli` reference |
 | [MCP](docs/MCP.md) | Claude Desktop / Cursor / Windsurf / Continue integration + report agent tools (auto-generated snippets in Settings → AI Integration) |
 | [Webhooks](docs/WEBHOOKS.md) | Completion webhook payload, headers, delivery semantics, Slack/Discord/Zapier/n8n recipes |

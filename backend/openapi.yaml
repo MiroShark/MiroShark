@@ -1,0 +1,1966 @@
+openapi: 3.1.0
+info:
+  title: MiroShark HTTP API
+  version: "1.0.0"
+  summary: Universal Swarm Intelligence Engine — REST surface for simulations, graphs, reports, sharing, and observability.
+  description: |
+    The MiroShark backend is a Flask service that orchestrates large agent
+    populations through Wonderwall, builds bi-temporal knowledge graphs in
+    Neo4j, and generates reports, share cards, and embeds for every run.
+
+    This document is the canonical reference for the **HTTP** surface. The
+    bundled MCP server (`backend/mcp_server.py`) exposes a parallel set of
+    tools over stdio for Claude Desktop, Cursor, Windsurf and Continue —
+    see `GET /api/mcp/status` and `docs/MCP.md` for that path.
+
+    All responses are JSON unless explicitly marked otherwise (PNG share
+    cards, file downloads, SSE streams). Successful responses follow the
+    `{"success": true, "data": ...}` envelope used throughout the codebase;
+    errors return `{"success": false, "error": "..."}` with an appropriate
+    HTTP status.
+
+    Endpoints are public on a default install — there is no auth layer in
+    the bundled distribution. Operators are expected to bind the backend
+    to a private interface or front it with a reverse proxy when deploying
+    to production.
+
+    Discovery endpoints with light cost protection (suggest-scenarios,
+    trending, ask) enforce sliding-window rate limits on the calling IP.
+
+  contact:
+    name: MiroShark on GitHub
+    url: https://github.com/aaronjmars/MiroShark
+  license:
+    name: AGPL-3.0
+    url: https://github.com/aaronjmars/MiroShark/blob/main/LICENSE
+
+servers:
+  - url: http://localhost:5001
+    description: Local dev — `./miroshark` launcher default
+  - url: "{scheme}://{host}"
+    description: Custom deployment
+    variables:
+      scheme:
+        default: https
+        enum: [http, https]
+      host:
+        default: miroshark.example.com
+
+tags:
+  - name: Setup & Discovery
+    description: Pre-simulation onboarding — scenario suggestions, trending feeds, "Just Ask" briefings, preset templates.
+  - name: Graph Build
+    description: Step 1 of a run — ontology extraction and Neo4j graph construction from a seed document.
+  - name: Simulation Lifecycle
+    description: Create, prepare, start, stop, fork, branch and director-mode injection.
+  - name: Live State
+    description: Real-time polling endpoints used by the simulation view (rounds, actions, posts, profiles).
+  - name: Analytics
+    description: Belief drift, counterfactuals, influence, interaction networks, demographics, quality.
+  - name: Interaction
+    description: One-on-one or batched chat with simulated agents, including full reasoning traces.
+  - name: Publish & Embed
+    description: Toggle public visibility, embed payload, share card PNG, public landing page, gallery.
+  - name: Export
+    description: JSON/CSV download of an entire simulation.
+  - name: Report Agent
+    description: ReACT-style report generation with chat, console log, and PDF download.
+  - name: Observability
+    description: Event stream, paginated event log, LLM call history, aggregate stats.
+  - name: Settings & Push
+    description: Runtime LLM/Neo4j configuration plus Web Push subscription.
+  - name: Integrations
+    description: MCP server status surface for AI IDE clients.
+  - name: Documentation
+    description: This OpenAPI spec and Swagger UI.
+
+paths:
+
+  # ────────────────────────────────────────────────────────────────────
+  # Setup & Discovery
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/simulation/suggest-scenarios:
+    post:
+      tags: [Setup & Discovery]
+      summary: Generate Bull/Bear/Neutral scenarios from a document preview.
+      description: |
+        Takes the first ~2000 chars of a document and returns up to three
+        prediction-market-style simulation scenarios so users don't face
+        a blank-page setup. Results are SHA-256 keyed and LRU-cached.
+        On LLM failure returns `200` with `suggestions: []` and a `reason`
+        code so the panel hides silently.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text_preview:
+                  type: string
+                  description: Document text preview — first ~2000 characters is enough.
+                simulation_prompt:
+                  type: string
+                  description: Optional user-provided framing/prompt — biases the suggestions.
+                no_cache:
+                  type: boolean
+                  default: false
+                  description: Bypass the in-memory LRU cache and force a fresh LLM call.
+              required: [text_preview]
+            example:
+              text_preview: "The European Central Bank meets next month to consider a 25bp rate cut..."
+              simulation_prompt: "What will happen to EUR/USD?"
+      responses:
+        "200":
+          description: Suggestion list (possibly empty).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestionsEnvelope"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "429":
+          description: Rate limited — try again shortly.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestionsEnvelope"
+
+  /api/simulation/trending:
+    get:
+      tags: [Setup & Discovery]
+      summary: Recent items from configured RSS/Atom feeds.
+      description: |
+        Stdlib RSS/Atom parser running over up to 12 feeds in parallel.
+        Defaults to `Reuters tech / The Verge / Hacker News / CoinDesk`;
+        override with the `TRENDING_FEEDS` environment variable or the
+        `feeds` query param. Never 5xx's — empty `items` plus a `reason`
+        string surfaces failures non-fatally.
+      parameters:
+        - in: query
+          name: feeds
+          schema: { type: string }
+          description: Comma-separated URL list overriding `TRENDING_FEEDS`.
+        - in: query
+          name: refresh
+          schema: { type: string, enum: ["1", "true", "yes"] }
+          description: Bypass the in-memory cache.
+      responses:
+        "200":
+          description: Trending items.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrendingEnvelope"
+        "429":
+          description: Rate limited.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrendingEnvelope"
+
+  /api/simulation/ask:
+    post:
+      tags: [Setup & Discovery]
+      summary: Just-Ask — synthesize a seed briefing from a question.
+      description: Type a question with no document and the LLM researches/writes the seed briefing for the simulation engine.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question:
+                  type: string
+      responses:
+        "200":
+          description: Briefing payload.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "429": { $ref: "#/components/responses/RateLimited" }
+
+  /api/graph/fetch-url:
+    post:
+      tags: [Setup & Discovery]
+      summary: Fetch and extract readable text from a URL.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url]
+              properties:
+                url: { type: string, format: uri }
+      responses:
+        "200":
+          description: Extracted text.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/templates/list:
+    get:
+      tags: [Setup & Discovery]
+      summary: List preset simulation templates.
+      responses:
+        "200":
+          description: Available templates.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/templates/capabilities:
+    get:
+      tags: [Setup & Discovery]
+      summary: Backend feature flags governing template behaviour.
+      description: |
+        Lets the frontend gray out toggles like "Live oracle data" or
+        "Per-agent MCP tools" when the corresponding server-side env
+        flag is off — cleaner than surprising the user with a silent
+        no-op on a feature they enabled in the UI.
+      responses:
+        "200":
+          description: Capability flags.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          oracle_seed_enabled: { type: boolean }
+                          mcp_agent_tools_enabled: { type: boolean }
+
+  /api/templates/{template_id}:
+    get:
+      tags: [Setup & Discovery]
+      summary: Single template optionally enriched with live FeedOracle context.
+      parameters:
+        - in: path
+          name: template_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: enrich
+          schema: { type: boolean }
+          description: When true, attach live FeedOracle MCP enrichment.
+      responses:
+        "200":
+          description: Template document.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Graph Build
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/graph/ontology/generate:
+    post:
+      tags: [Graph Build]
+      summary: NER + ontology extraction from raw text.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+                project_id: { type: string }
+      responses:
+        "200":
+          description: Async task accepted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaskEnvelope" }
+
+  /api/graph/build:
+    post:
+      tags: [Graph Build]
+      summary: Build a Neo4j graph from a generated ontology.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ontology, project_id]
+              properties:
+                ontology: { type: object }
+                project_id: { type: string }
+      responses:
+        "200":
+          description: Async task accepted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaskEnvelope" }
+
+  /api/graph/task/{task_id}:
+    get:
+      tags: [Graph Build]
+      summary: Poll an async graph-build task.
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Task status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TaskEnvelope" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/graph/data/{graph_id}:
+    get:
+      tags: [Graph Build]
+      summary: Paginated graph nodes + edges for visualization.
+      parameters:
+        - in: path
+          name: graph_id
+          required: true
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Page of graph data.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/entities/{graph_id}:
+    get:
+      tags: [Graph Build]
+      summary: Browse entities discovered in a graph.
+      parameters:
+        - in: path
+          name: graph_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Entity list.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/entities/{graph_id}/{entity_uuid}:
+    get:
+      tags: [Graph Build]
+      summary: Single entity plus its 1-hop neighborhood.
+      parameters:
+        - in: path
+          name: graph_id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: entity_uuid
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Entity detail.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/entities/{graph_id}/by-type/{entity_type}:
+    get:
+      tags: [Graph Build]
+      summary: Filter graph entities by type (Person, Organization, Concept …).
+      parameters:
+        - in: path
+          name: graph_id
+          required: true
+          schema: { type: string }
+        - in: path
+          name: entity_type
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Entities of the requested type.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/graph/project/{project_id}:
+    get:
+      tags: [Graph Build]
+      summary: Look up a project by id (graph + simulation linkage).
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Project record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Simulation Lifecycle
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/simulation/create:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Create a simulation from a seed graph + scenario prompt.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [project_id, simulation_requirement]
+              properties:
+                project_id: { type: string }
+                simulation_requirement:
+                  type: string
+                  description: The scenario question — Bull/Bear/Neutral framing recommended.
+      responses:
+        "200":
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimulationEnvelope" }
+
+  /api/simulation/prepare:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Kick off profile generation (Step 2).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SimulationIdBody" }
+      responses:
+        "200":
+          description: Preparation started.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/prepare/status:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Poll the profile-generation step.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SimulationIdBody" }
+      responses:
+        "200":
+          description: Current preparation status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/start:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Launch the Wonderwall simulation subprocess (Step 3).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: "#/components/schemas/SimulationIdBody"
+                - type: object
+                  properties:
+                    platform:
+                      type: string
+                      enum: [twitter, reddit, parallel]
+                      default: parallel
+                    max_rounds:
+                      type: integer
+                      description: Optional cap to truncate overly long simulations.
+                    enable_graph_memory_update:
+                      type: boolean
+                      default: false
+                    force:
+                      type: boolean
+                      default: false
+                      description: Stop a running run and clean logs before relaunching.
+                    resume:
+                      type: boolean
+                      default: false
+                      description: Resume from the last completed round if a run_state exists.
+      responses:
+        "200":
+          description: Subprocess started.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          simulation_id: { type: string }
+                          runner_status: { type: string, enum: [idle, preparing, running, paused, completed, failed] }
+                          process_pid: { type: integer }
+                          twitter_running: { type: boolean }
+                          reddit_running: { type: boolean }
+                          started_at: { type: string, format: date-time }
+                          graph_memory_update_enabled: { type: boolean }
+                          force_restarted: { type: boolean }
+
+  /api/simulation/stop:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Terminate a running simulation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SimulationIdBody" }
+      responses:
+        "200":
+          description: Stopped (or already idle).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/branch-counterfactual:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Fork a simulation with a counterfactual director-event injection.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [simulation_id, branch_round, event]
+              properties:
+                simulation_id: { type: string }
+                branch_round: { type: integer, minimum: 0 }
+                event:
+                  type: object
+                  description: Director event payload — see /director/inject.
+      responses:
+        "200":
+          description: New branched simulation.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimulationEnvelope" }
+
+  /api/simulation/fork:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Duplicate an existing simulation's config so a new run can be launched.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SimulationIdBody" }
+      responses:
+        "200":
+          description: New simulation row.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimulationEnvelope" }
+
+  /api/simulation/{simulation_id}/director/inject:
+    post:
+      tags: [Simulation Lifecycle]
+      summary: Director Mode — inject a breaking-news event into the live timeline.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DirectorEvent" }
+      responses:
+        "200":
+          description: Event accepted.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/director/events:
+    get:
+      tags: [Simulation Lifecycle]
+      summary: List director events injected into a simulation.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Event list.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Live State
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/simulation/{simulation_id}:
+    get:
+      tags: [Live State]
+      summary: Static simulation record (config, status, profile count).
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Simulation record.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimulationEnvelope" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/list:
+    get:
+      tags: [Live State]
+      summary: List every simulation on this instance.
+      responses:
+        "200":
+          description: Simulation list.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/history:
+    get:
+      tags: [Live State]
+      summary: Per-simulation history with diff between rounds.
+      parameters:
+        - in: query
+          name: simulation_id
+          schema: { type: string }
+      responses:
+        "200":
+          description: History records.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/run-status:
+    get:
+      tags: [Live State]
+      summary: Current round, totals, runner status.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Run status.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/RunStatus" }
+
+  /api/simulation/{simulation_id}/run-status/detail:
+    get:
+      tags: [Live State]
+      summary: Run status with the full per-platform action log.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: query
+          name: platform
+          schema: { type: string, enum: [twitter, reddit] }
+      responses:
+        "200":
+          description: Detailed run status.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/frame/{round_num}:
+    get:
+      tags: [Live State]
+      summary: Compact per-round snapshot for replay scrubbing.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: path
+          name: round_num
+          required: true
+          schema: { type: integer, minimum: 0 }
+      responses:
+        "200":
+          description: Frame.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/timeline:
+    get:
+      tags: [Live State]
+      summary: Round-by-round summary across the whole run.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Timeline.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/actions:
+    get:
+      tags: [Live State]
+      summary: Raw agent action log.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Action records.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/posts:
+    get:
+      tags: [Live State]
+      summary: Paginated posts (Twitter + Reddit) generated during the run.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: platform
+          schema: { type: string, enum: [twitter, reddit] }
+      responses:
+        "200":
+          description: Posts page.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/profiles:
+    get:
+      tags: [Live State]
+      summary: Generated agent personas.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Profiles.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/profiles/realtime:
+    get:
+      tags: [Live State]
+      summary: Live agent belief snapshots, updated each round.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Realtime profiles.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/polymarket/markets:
+    get:
+      tags: [Live State]
+      summary: Polymarket-style markets and current prices for this simulation.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Markets.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/polymarket/market/{market_id}/prices:
+    get:
+      tags: [Live State]
+      summary: Price history for a single market within this simulation.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: path
+          name: market_id
+          required: true
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Price history.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Analytics
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/simulation/{simulation_id}/belief-drift:
+    get:
+      tags: [Analytics]
+      summary: Per-round belief distribution + first consensus round.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Belief drift series.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/BeliefDrift" }
+
+  /api/simulation/{simulation_id}/counterfactual:
+    get:
+      tags: [Analytics]
+      summary: Recompute belief drift with selected agents removed (no re-sim).
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: query
+          name: exclude_agents
+          schema: { type: string }
+          description: Comma-separated list of agent IDs to remove.
+      responses:
+        "200":
+          description: Counterfactual drift.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/agent-stats:
+    get:
+      tags: [Analytics]
+      summary: Per-agent engagement and posting counts.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Agent stats.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/influence:
+    get:
+      tags: [Analytics]
+      summary: Top-20 influence leaderboard.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Leaderboard.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/interaction-network:
+    get:
+      tags: [Analytics]
+      summary: Force-directed agent-to-agent interaction graph + echo-chamber metrics.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Network graph.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/demographics:
+    get:
+      tags: [Analytics]
+      summary: Archetype clustering — analyst / influencer / retail / observer …
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Demographics breakdown.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/quality:
+    get:
+      tags: [Analytics]
+      summary: Run health score — engagement, coherence, diversity, variance.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Quality diagnostics.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/compare:
+    get:
+      tags: [Analytics]
+      summary: Side-by-side belief comparison across simulations.
+      parameters:
+        - in: query
+          name: simulation_ids
+          required: true
+          schema: { type: string }
+          description: Comma-separated simulation IDs.
+      responses:
+        "200":
+          description: Comparison payload.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Interaction
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/simulation/interview:
+    post:
+      tags: [Interaction]
+      summary: Chat with a single agent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [simulation_id, agent_name, prompt]
+              properties:
+                simulation_id: { type: string }
+                agent_name: { type: string }
+                prompt: { type: string }
+      responses:
+        "200":
+          description: Agent reply.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/interview/batch:
+    post:
+      tags: [Interaction]
+      summary: Ask a group of agents the same question in parallel.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [simulation_id, agent_names, prompt]
+              properties:
+                simulation_id: { type: string }
+                agent_names:
+                  type: array
+                  items: { type: string }
+                prompt: { type: string }
+      responses:
+        "200":
+          description: Per-agent replies.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/interview/history:
+    post:
+      tags: [Interaction]
+      summary: Read prior interview transcripts for a simulation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [simulation_id]
+              properties:
+                simulation_id: { type: string }
+                platform: { type: string, enum: [twitter, reddit] }
+                agent_id:
+                  type: integer
+                  description: Restrict to a single agent.
+                limit: { type: integer, default: 100 }
+      responses:
+        "200":
+          description: History records.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/agents/{agent_name}/trace-interview:
+    post:
+      tags: [Interaction]
+      summary: Chat with full reasoning trace surfaced.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: path
+          name: agent_name
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt: { type: string }
+      responses:
+        "200":
+          description: Reply + trace.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/interviews/{agent_name}:
+    get:
+      tags: [Interaction]
+      summary: Past interview transcripts with one agent.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: path
+          name: agent_name
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Transcripts.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Publish & Embed
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/simulation/{simulation_id}/publish:
+    post:
+      tags: [Publish & Embed]
+      summary: Toggle a simulation's `is_public` flag.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                public:
+                  type: boolean
+                  default: true
+      responses:
+        "200":
+          description: New public state.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/{simulation_id}/embed-summary:
+    get:
+      tags: [Publish & Embed]
+      summary: Compact summary for the embed widget — public sims only.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Summary payload.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/EmbedSummary" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/{simulation_id}/share-card.png:
+    get:
+      tags: [Publish & Embed]
+      summary: 1200×630 social share card (Open Graph image).
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: PNG image with `Cache-Control: public, max-age=3600`.
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /share/{simulation_id}:
+    get:
+      tags: [Publish & Embed]
+      summary: Public landing page with Open Graph + Twitter card meta tags.
+      description: |
+        Mounted at the **root** (no `/api` prefix) so the URL stays clean.
+        Returns a tiny HTML page that bots scrape for OG tags and that
+        browsers immediately bounce off via `<meta refresh>` + JS to the
+        SPA. Honors `X-Forwarded-Proto` / `X-Forwarded-Host`.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: HTML page.
+          content:
+            text/html:
+              schema: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/simulation/public:
+    get:
+      tags: [Publish & Embed]
+      summary: Paginated gallery feed of public simulations.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+        - in: query
+          name: offset
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        "200":
+          description: Gallery cards.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items: { $ref: "#/components/schemas/GalleryCard" }
+                      count: { type: integer }
+                      total: { type: integer }
+                      limit: { type: integer }
+                      offset: { type: integer }
+                      has_more: { type: boolean }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Export
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/simulation/{simulation_id}/export:
+    get:
+      tags: [Export]
+      summary: Download a full simulation as JSON or CSV.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: query
+          name: format
+          schema: { type: string, enum: [json, csv], default: json }
+        - in: query
+          name: include
+          schema: { type: string, default: "actions,posts,timeline,agent_stats,metadata" }
+          description: Comma-separated section list.
+      responses:
+        "200":
+          description: File download.
+          content:
+            application/json:
+              schema: { type: object }
+            text/csv:
+              schema: { type: string }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/{simulation_id}/article:
+    post:
+      tags: [Publish & Embed]
+      summary: Generate a Substack-style write-up for a finished run.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Article markdown.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/{simulation_id}/resolve:
+    post:
+      tags: [Publish & Embed]
+      summary: Mark a simulation as resolved against an actual outcome.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [actual_outcome]
+              properties:
+                actual_outcome:
+                  type: string
+                  enum: [YES, NO, PARTIAL, INDETERMINATE]
+      responses:
+        "200":
+          description: Resolution recorded.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Report Agent
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/report/generate:
+    post:
+      tags: [Report Agent]
+      summary: Launch the ReACT report agent for a simulation.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SimulationIdBody" }
+      responses:
+        "200":
+          description: Report generation started.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/report/generate/status:
+    post:
+      tags: [Report Agent]
+      summary: Poll a running report-generation job.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [report_id]
+              properties:
+                report_id: { type: string }
+      responses:
+        "200":
+          description: Status payload.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/report/{report_id}:
+    get:
+      tags: [Report Agent]
+      summary: Full report by id.
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Report.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/report/by-simulation/{simulation_id}:
+    get:
+      tags: [Report Agent]
+      summary: Latest report for a given simulation.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Report.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/report/{report_id}/download:
+    get:
+      tags: [Report Agent]
+      summary: Download report as PDF.
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: PDF binary.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /api/report/chat:
+    post:
+      tags: [Report Agent]
+      summary: Chat with the report agent — re-queries the underlying graph.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [report_id, question]
+              properties:
+                report_id: { type: string }
+                question: { type: string }
+      responses:
+        "200":
+          description: Reply.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/report/{report_id}/agent-log:
+    get:
+      tags: [Report Agent]
+      summary: Full ReACT agent trace for a report.
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Trace records.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/report/{report_id}/agent-log/stream:
+    get:
+      tags: [Report Agent]
+      summary: SSE stream of ReACT agent steps as they happen.
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Server-Sent Events stream.
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  /api/report/{report_id}/console-log:
+    get:
+      tags: [Report Agent]
+      summary: Raw LLM call logs for a report.
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Console log lines.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/report/{report_id}/console-log/stream:
+    get:
+      tags: [Report Agent]
+      summary: SSE stream of raw LLM console-log lines.
+      parameters:
+        - in: path
+          name: report_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Server-Sent Events stream.
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Observability
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/observability/events/stream:
+    get:
+      tags: [Observability]
+      summary: Live SSE feed of system events.
+      responses:
+        "200":
+          description: Server-Sent Events stream.
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+  /api/observability/events:
+    get:
+      tags: [Observability]
+      summary: Paginated event log.
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, default: 100 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+      responses:
+        "200":
+          description: Events.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/observability/stats:
+    get:
+      tags: [Observability]
+      summary: Aggregate observability counters.
+      responses:
+        "200":
+          description: Counters.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/observability/llm-calls:
+    get:
+      tags: [Observability]
+      summary: LLM call history (latency, model, prompt cost when available).
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+      responses:
+        "200":
+          description: Call records.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Settings & Push
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/settings:
+    get:
+      tags: [Settings & Push]
+      summary: Read the active runtime config (API keys masked).
+      responses:
+        "200":
+          description: Config snapshot.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+    post:
+      tags: [Settings & Push]
+      summary: Update runtime config — no restart required.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SettingsUpdate" }
+      responses:
+        "200":
+          description: Updated snapshot.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  /api/settings/test-llm:
+    post:
+      tags: [Settings & Push]
+      summary: Make a minimal test call against the configured LLM.
+      responses:
+        "200":
+          description: Latency + sample response (or error).
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/push/vapid-public-key:
+    get:
+      tags: [Settings & Push]
+      summary: Return the VAPID public key for browser Web Push.
+      responses:
+        "200":
+          description: Public key.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/push/subscribe:
+    post:
+      tags: [Settings & Push]
+      summary: Register a Web Push subscription.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushSubscription" }
+      responses:
+        "200":
+          description: Subscription stored.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  /api/simulation/push/test:
+    post:
+      tags: [Settings & Push]
+      summary: Fire a test push notification at the registered subscription.
+      responses:
+        "200":
+          description: Test dispatched.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Integrations
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/mcp/status:
+    get:
+      tags: [Integrations]
+      summary: MCP server status, tool catalog, per-client config snippets.
+      description: |
+        Used by the Settings → AI Integration panel to render copy-paste
+        config blocks for Claude Desktop, Cursor, Windsurf and Continue —
+        plus a Neo4j liveness probe so the operator can see at a glance
+        whether the graph store is reachable. The MCP server itself runs
+        over stdio and is launched by the user's IDE; this endpoint never
+        spawns or talks to it directly.
+      responses:
+        "200":
+          description: Status payload.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/McpStatus" }
+
+  # ────────────────────────────────────────────────────────────────────
+  # Documentation
+  # ────────────────────────────────────────────────────────────────────
+
+  /api/docs:
+    get:
+      tags: [Documentation]
+      summary: Swagger UI rendering of this OpenAPI spec.
+      responses:
+        "200":
+          description: Swagger UI HTML.
+          content:
+            text/html:
+              schema: { type: string }
+
+  /api/openapi.yaml:
+    get:
+      tags: [Documentation]
+      summary: This OpenAPI 3.1 spec, in YAML.
+      responses:
+        "200":
+          description: YAML document.
+          content:
+            application/yaml:
+              schema: { type: string }
+
+  /api/openapi.json:
+    get:
+      tags: [Documentation]
+      summary: This OpenAPI 3.1 spec, in JSON.
+      responses:
+        "200":
+          description: JSON document.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /health:
+    get:
+      tags: [Documentation]
+      summary: Liveness probe.
+      responses:
+        "200":
+          description: OK.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  service: { type: string, example: MiroShark Backend }
+
+components:
+
+  parameters:
+    SimulationIdPath:
+      in: path
+      name: simulation_id
+      required: true
+      schema: { type: string, pattern: "^sim_[A-Za-z0-9]+$" }
+      description: Opaque simulation identifier — `sim_xxxx`.
+      example: sim_8a3c2f1e
+
+  responses:
+    BadRequest:
+      description: Malformed request body or query.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    NotFound:
+      description: Resource does not exist.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Forbidden:
+      description: Resource is not public — toggle via `/publish`.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    RateLimited:
+      description: Sliding-window rate limit exceeded.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+
+  schemas:
+
+    SuccessEnvelope:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean, enum: [true] }
+        data: {}
+
+    ErrorEnvelope:
+      type: object
+      required: [success, error]
+      properties:
+        success: { type: boolean, enum: [false] }
+        error: { type: string }
+
+    SimulationIdBody:
+      type: object
+      required: [simulation_id]
+      properties:
+        simulation_id: { type: string }
+
+    SimulationEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                simulation_id: { type: string }
+                project_id: { type: string }
+                status:
+                  type: string
+                  enum: [created, prepared, running, completed, failed, paused]
+                profiles_count: { type: integer }
+                is_public: { type: boolean }
+                parent_simulation_id:
+                  oneOf: [{ type: string }, { type: "null" }]
+                created_at: { type: string, format: date-time }
+
+    SuggestionsEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                suggestions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      question: { type: string }
+                      label: { type: string, enum: [Bull, Bear, Neutral] }
+                      expected_yes_range:
+                        type: array
+                        items: { type: number }
+                        minItems: 2
+                        maxItems: 2
+                      rationale: { type: string }
+                cached: { type: boolean }
+                model: { type: string }
+                reason:
+                  type: string
+                  description: Set when `suggestions` is empty (e.g. `rate_limited`, `llm_unavailable`, `preview_too_short`).
+
+    TrendingEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      title: { type: string }
+                      url: { type: string, format: uri }
+                      source_name: { type: string }
+                      published_at: { type: string, format: date-time }
+                feeds_used:
+                  type: array
+                  items: { type: string, format: uri }
+                cached: { type: boolean }
+                fetched_at: { type: string, format: date-time }
+                reason:
+                  type: string
+                  description: Failure reason when items is empty.
+
+    TaskEnvelope:
+      allOf:
+        - $ref: "#/components/schemas/SuccessEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                task_id: { type: string }
+                status:
+                  type: string
+                  enum: [pending, running, completed, failed]
+                progress: { type: number }
+                result: {}
+
+    DirectorEvent:
+      type: object
+      required: [headline]
+      properties:
+        headline: { type: string }
+        body: { type: string }
+        round: { type: integer, minimum: 0 }
+        platform: { type: string, enum: [twitter, reddit, both] }
+
+    RunStatus:
+      type: object
+      properties:
+        simulation_id: { type: string }
+        runner_status:
+          type: string
+          enum: [idle, preparing, running, paused, completed, failed]
+        current_round: { type: integer }
+        total_rounds: { type: integer }
+        progress_percent: { type: number }
+        simulated_hours: { type: integer }
+        total_simulation_hours: { type: integer }
+        twitter_running: { type: boolean }
+        reddit_running: { type: boolean }
+        twitter_actions_count: { type: integer }
+        reddit_actions_count: { type: integer }
+        total_actions_count: { type: integer }
+        started_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    BeliefDrift:
+      type: object
+      properties:
+        rounds:
+          type: array
+          items: { type: integer }
+        bullish:
+          type: array
+          items: { type: number }
+        neutral:
+          type: array
+          items: { type: number }
+        bearish:
+          type: array
+          items: { type: number }
+        final:
+          type: object
+          properties:
+            bullish: { type: number }
+            neutral: { type: number }
+            bearish: { type: number }
+        consensus_round:
+          oneOf: [{ type: integer }, { type: "null" }]
+        consensus_stance:
+          oneOf: [{ type: string, enum: [bullish, bearish] }, { type: "null" }]
+
+    EmbedSummary:
+      type: object
+      properties:
+        simulation_id: { type: string }
+        scenario: { type: string }
+        status: { type: string }
+        runner_status: { type: string }
+        current_round: { type: integer }
+        total_rounds: { type: integer }
+        profiles_count: { type: integer }
+        created_date: { type: string, format: date }
+        parent_simulation_id:
+          oneOf: [{ type: string }, { type: "null" }]
+        is_public: { type: boolean }
+        belief: { $ref: "#/components/schemas/BeliefDrift" }
+        quality:
+          type: object
+          properties:
+            health: { type: string }
+            participation_rate: { type: number }
+        resolution:
+          type: object
+          properties:
+            actual_outcome: { type: string }
+            predicted_consensus: { type: string }
+            accuracy_score: { type: number }
+
+    GalleryCard:
+      type: object
+      properties:
+        simulation_id: { type: string }
+        scenario: { type: string }
+        status: { type: string }
+        runner_status: { type: string }
+        current_round: { type: integer }
+        total_rounds: { type: integer }
+        agent_count: { type: integer }
+        quality_health: { type: string, enum: [Excellent, Good, Fair, Poor, Unknown] }
+        final_consensus:
+          type: object
+          properties:
+            bullish: { type: number }
+            neutral: { type: number }
+            bearish: { type: number }
+        resolution_outcome:
+          oneOf: [{ type: string }, { type: "null" }]
+        created_at: { type: string, format: date-time }
+        parent_simulation_id:
+          oneOf: [{ type: string }, { type: "null" }]
+        share_card_url: { type: string }
+        share_landing_url: { type: string }
+
+    SettingsUpdate:
+      type: object
+      properties:
+        preset:
+          type: string
+          enum: [cheap, best, local]
+        preset_api_key: { type: string }
+        llm:
+          type: object
+          properties:
+            provider: { type: string }
+            base_url: { type: string }
+            model_name: { type: string }
+            api_key: { type: string }
+        smart:
+          type: object
+          properties:
+            provider: { type: string }
+            base_url: { type: string }
+            model_name: { type: string }
+            api_key: { type: string }
+        ner:
+          type: object
+          properties:
+            base_url: { type: string }
+            model_name: { type: string }
+            api_key: { type: string }
+        wonderwall:
+          type: object
+          properties:
+            model_name: { type: string }
+        embedding:
+          type: object
+          properties:
+            provider: { type: string }
+            base_url: { type: string }
+            model_name: { type: string }
+            api_key: { type: string }
+            dimensions: { type: integer }
+        web_search_model: { type: string }
+        neo4j:
+          type: object
+          properties:
+            uri: { type: string }
+            user: { type: string }
+            password: { type: string }
+
+    PushSubscription:
+      type: object
+      required: [endpoint, keys]
+      properties:
+        endpoint: { type: string, format: uri }
+        keys:
+          type: object
+          properties:
+            p256dh: { type: string }
+            auth: { type: string }
+
+    McpStatus:
+      type: object
+      properties:
+        enabled: { type: boolean }
+        transport: { type: string, enum: [stdio] }
+        paths:
+          type: object
+          properties:
+            backend_dir: { type: string }
+            mcp_script: { type: string }
+            python_executable: { type: string }
+        tools:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              description: { type: string }
+        tool_count: { type: integer }
+        clients:
+          type: object
+          additionalProperties:
+            type: object
+        neo4j:
+          type: object
+          properties:
+            reachable: { type: boolean }
+            graph_count: { type: integer }
+            entity_count: { type: integer }
+            error:
+              oneOf: [{ type: string }, { type: "null" }]
+        docs_url: { type: string, format: uri }
