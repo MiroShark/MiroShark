@@ -348,6 +348,79 @@
           </div>
         </section>
 
+        <!-- Outbound webhook · Slack / Discord / Zapier / n8n / custom -->
+        <section class="settings-section ai-section">
+          <div class="section-header">
+            <span class="section-label">Integrations · Webhook</span>
+            <div class="status-badge" :class="webhookSavedClass">
+              <span class="badge-dot"></span>
+              {{ webhookSavedText }}
+            </div>
+          </div>
+
+          <div class="ai-intro">
+            POST a JSON summary to your URL the moment a simulation finishes —
+            wires Slack, Discord, Zapier, Make, n8n, IFTTT, or any custom listener.
+            Empty to disable. Payload includes scenario, final consensus, quality,
+            and the share-card URL so links auto-unfurl.
+          </div>
+
+          <div class="field-row">
+            <label class="field-label">Webhook URL</label>
+            <input
+              v-model="form.integrations.webhook.url"
+              class="field-input"
+              type="text"
+              :placeholder="webhookPlaceholder"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <div class="field-hint">
+              e.g.
+              <code>https://hooks.slack.com/services/T0…/B0…/abc</code>
+              or any URL that accepts a POST.
+              See <a href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md"
+                     target="_blank" rel="noopener">the webhook docs</a>
+              for the payload schema.
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label class="field-label">Public base URL <span class="field-label-optional">(optional)</span></label>
+            <input
+              v-model="form.integrations.webhook.public_base_url"
+              class="field-input"
+              type="text"
+              placeholder="https://miroshark.app"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <div class="field-hint">
+              When set, the payload includes absolute <code>share_url</code> +
+              <code>share_card_url</code> so Slack &amp; Discord auto-unfurl
+              with the simulation card. Leave blank for relative paths only.
+            </div>
+          </div>
+
+          <div class="field-row webhook-actions">
+            <button
+              class="ai-retry"
+              :disabled="webhookTesting || !webhookCanTest"
+              @click="testWebhookFire"
+            >
+              {{ webhookTesting ? 'Sending…' : 'Send test event' }}
+            </button>
+            <span v-if="webhookTestResult" class="webhook-test-result" :class="webhookTestResult.success ? 'ok' : 'fail'">
+              <template v-if="webhookTestResult.success">
+                ✓ Delivered ({{ webhookTestResult.latency_ms }}ms)
+              </template>
+              <template v-else>
+                ✗ {{ webhookTestResult.error || webhookTestResult.message || 'Failed' }}
+              </template>
+            </span>
+          </div>
+        </section>
+
         <!-- AI Integration (MCP) -->
         <section class="settings-section ai-section">
           <div class="section-header">
@@ -476,7 +549,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { getSettings, updateSettings, testLlmConnection } from '../api/settings'
+import { getSettings, updateSettings, testLlmConnection, testWebhook } from '../api/settings'
 import { getMcpStatus } from '../api/mcp'
 
 const props = defineProps({
@@ -508,6 +581,12 @@ const form = reactive({
     user: '',
     password: '',
   },
+  integrations: {
+    webhook: {
+      url: '',
+      public_base_url: '',
+    },
+  },
 })
 
 // UI state
@@ -522,6 +601,10 @@ const loadingModels = ref(false)
 const modelLoadError = ref('')
 const advancedOpen = ref(false)
 const inheritMarker = '— inherits default —'
+
+// Webhook integration state
+const webhookTesting = ref(false)
+const webhookTestResult = ref(null)
 
 // MCP / AI Integration state
 const mcpStatus = ref(null)
@@ -538,6 +621,7 @@ watch(() => props.open, async (isOpen) => {
     saveError.value = ''
     saveSuccess.value = false
     testResult.value = null
+    webhookTestResult.value = null
     form.preset = ''
     form.presetApiKey = ''
     copyState.value = ''
@@ -566,6 +650,11 @@ const loadCurrentSettings = async () => {
       form.neo4j.uri = d.neo4j?.uri || ''
       form.neo4j.user = d.neo4j?.user || ''
       form.neo4j.password = ''
+      // Webhook URL is masked server-side — never round-trip the masked
+      // form back as a value the user could accidentally save. Leave the
+      // input blank when configured so editing is explicit.
+      form.integrations.webhook.url = ''
+      form.integrations.webhook.public_base_url = d.integrations?.webhook?.public_base_url || ''
     }
   } catch (_) {
     // Non-fatal
@@ -717,6 +806,45 @@ const testStatusText = computed(() => {
   return testResult.value.success ? 'Connected' : 'Failed'
 })
 
+const webhookConfigured = computed(() =>
+  Boolean(currentSettings.value.integrations?.webhook?.configured)
+)
+
+const webhookSavedClass = computed(() => (webhookConfigured.value ? 'ok' : 'idle'))
+const webhookSavedText = computed(() =>
+  webhookConfigured.value ? 'Configured' : 'Not configured'
+)
+
+const webhookPlaceholder = computed(() => {
+  if (webhookConfigured.value) {
+    const masked = currentSettings.value.integrations?.webhook?.url_masked
+    return masked
+      ? `${masked} — leave blank to keep, type to replace`
+      : 'Leave blank to keep saved URL, type to replace'
+  }
+  return 'https://hooks.slack.com/services/T0…/B0…/abc'
+})
+
+// The button can fire when there's a typed URL OR a saved one to retry.
+const webhookCanTest = computed(() =>
+  Boolean(form.integrations.webhook.url?.trim()) || webhookConfigured.value
+)
+
+const testWebhookFire = async () => {
+  webhookTesting.value = true
+  webhookTestResult.value = null
+  try {
+    const url = form.integrations.webhook.url?.trim() || ''
+    const baseUrl = form.integrations.webhook.public_base_url?.trim() || ''
+    const res = await testWebhook(url, baseUrl)
+    webhookTestResult.value = res
+  } catch (e) {
+    webhookTestResult.value = { success: false, error: e?.message || 'Network error' }
+  } finally {
+    webhookTesting.value = false
+  }
+}
+
 const saveSettings = async () => {
   saving.value = true
   saveError.value = ''
@@ -752,6 +880,17 @@ const saveSettings = async () => {
     }
     if (form.neo4j.password) payload.neo4j.password = form.neo4j.password
 
+    // Webhook integration — only send `url` when the user actually typed
+    // something (blank input means "keep what's saved"). The base URL is
+    // always sent because clearing it should be a deliberate action.
+    const wh = {}
+    const typedUrl = form.integrations.webhook.url?.trim()
+    if (typedUrl !== undefined && typedUrl !== '') {
+      wh.url = typedUrl
+    }
+    wh.public_base_url = form.integrations.webhook.public_base_url?.trim() || ''
+    payload.integrations = { webhook: wh }
+
     const res = await updateSettings(payload)
     if (res?.success && res.data) {
       saveSuccess.value = true
@@ -759,6 +898,9 @@ const saveSettings = async () => {
       form.llm.api_key = ''
       form.presetApiKey = ''
       form.neo4j.password = ''
+      // Reset the webhook URL input so the placeholder shows the new
+      // masked value and we don't accidentally re-save the same string.
+      form.integrations.webhook.url = ''
       setTimeout(() => { saveSuccess.value = false }, 4000)
     } else {
       saveError.value = res?.error || 'Save failed'
@@ -1151,6 +1293,31 @@ const saveSettings = async () => {
 }
 .save-btn:hover:not(:disabled) { background: #FF6B1A; border-color: #FF6B1A; }
 .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── Webhook integration row ── */
+.webhook-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.webhook-test-result {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.webhook-test-result.ok { color: #15803D; }
+.webhook-test-result.fail { color: #FF4444; }
+
+.field-label-optional {
+  color: rgba(10,10,10,0.4);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 11px;
+}
 
 /* ── AI Integration (MCP) ── */
 .ai-section {

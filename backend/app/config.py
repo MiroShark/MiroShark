@@ -180,6 +180,23 @@ class Config:
     REPORT_AGENT_MAX_TOOL_CALLS = int(os.environ.get('REPORT_AGENT_MAX_TOOL_CALLS', '5'))
     REPORT_AGENT_MAX_REFLECTION_ROUNDS = int(os.environ.get('REPORT_AGENT_MAX_REFLECTION_ROUNDS', '2'))
     REPORT_AGENT_TEMPERATURE = float(os.environ.get('REPORT_AGENT_TEMPERATURE', '0.5'))
+
+    # Outbound webhook fired when a simulation reaches a terminal state.
+    # When set, MiroShark POSTs a JSON summary (scenario, final consensus,
+    # quality, share URL, …) to this URL the moment the run completes or
+    # fails. Slot for Zapier / Make / n8n / IFTTT / Slack Incoming Webhooks
+    # / Discord channel webhooks / custom listeners — no bot, no OAuth.
+    # Empty string disables it entirely. Editable at runtime via the
+    # Settings modal — see app/services/webhook_service.py.
+    WEBHOOK_URL = os.environ.get('WEBHOOK_URL', '')
+
+    # Public base URL of this deployment (e.g. ``https://miroshark.app``).
+    # When set, the outbound webhook payload includes absolute
+    # ``share_url`` + ``share_card_url`` fields so Slack / Discord
+    # consumers get rich unfurling out of the box. Without it, only the
+    # relative ``share_path`` is included and the consumer must build the
+    # absolute URL themselves.
+    PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', '')
     
     @classmethod
     def validate(cls):

@@ -81,6 +81,7 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
 | **History Database** | Search, clone, export, or delete any past simulation |
 | **Trace Interview** | See the full reasoning chain behind an agent's reply, not just the reply |
 | **Push Notifications** | Web-push alerts when long-running graph / sim / report jobs finish |
+| **Completion Webhook** | POST a JSON summary the moment a sim finishes — wires Slack, Discord, Zapier, Make, n8n, or any custom endpoint with one URL field |
 
 Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 
@@ -125,6 +126,7 @@ Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 | [HTTP API](docs/API.md) | Every endpoint, grouped by concern |
 | [CLI](docs/CLI.md) | `miroshark-cli` reference |
 | [MCP](docs/MCP.md) | Claude Desktop / Cursor / Windsurf / Continue integration + report agent tools (auto-generated snippets in Settings → AI Integration) |
+| [Webhooks](docs/WEBHOOKS.md) | Completion webhook payload, headers, delivery semantics, Slack/Discord/Zapier/n8n recipes |
 | [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
 | [Contributing](CONTRIBUTING.md) | Tests and development |
 

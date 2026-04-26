@@ -619,6 +619,19 @@ class SimulationRunner:
                     )
                 except Exception as _push_err:
                     logger.warning(f"Push notification dispatch failed: {_push_err}")
+
+                # Fire outbound webhook (Zapier / n8n / Slack / Discord / …)
+                try:
+                    from .webhook_service import fire_webhook_for_simulation
+                    fire_webhook_for_simulation(
+                        simulation_id,
+                        "completed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=state.completed_at,
+                    )
+                except Exception as _wh_err:
+                    logger.warning(f"Webhook dispatch failed: {_wh_err}")
             else:
                 state.runner_status = RunnerStatus.FAILED
                 # Read error info from main log file
@@ -632,6 +645,21 @@ class SimulationRunner:
                     pass
                 state.error = f"Process exit code: {exit_code}, error: {error_info}"
                 logger.error(f"Simulation failed: {simulation_id}, error={state.error}")
+
+                # Fire outbound webhook for the failure path too — operators
+                # who hooked Slack/Discord want to know either way.
+                try:
+                    from .webhook_service import fire_webhook_for_simulation
+                    fire_webhook_for_simulation(
+                        simulation_id,
+                        "failed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=datetime.now().isoformat(),
+                        error=state.error,
+                    )
+                except Exception as _wh_err:
+                    logger.warning(f"Webhook dispatch failed: {_wh_err}")
             
             state.twitter_running = False
             state.reddit_running = False
@@ -754,6 +782,20 @@ class SimulationRunner:
                                             )
                                         except Exception as e:
                                             logger.warning(f"Failed to generate run summary: {e}")
+
+                                        # Outbound webhook notification — deduped against
+                                        # the exit-code path in the monitor loop, so it's
+                                        # safe to fire from both.
+                                        try:
+                                            from .webhook_service import fire_webhook_for_simulation
+                                            fire_webhook_for_simulation(
+                                                state.simulation_id,
+                                                "completed",
+                                                state=state,
+                                                completed_at=state.completed_at,
+                                            )
+                                        except Exception as _wh_err:
+                                            logger.warning(f"Webhook dispatch failed: {_wh_err}")
                                 
                                 # Update round info (from round_end event)
                                 elif event_type == "round_end":

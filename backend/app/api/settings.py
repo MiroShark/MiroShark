@@ -11,6 +11,12 @@ from flask import request, jsonify
 
 from . import settings_bp
 from ..config import Config
+from ..services import webhook_service  # noqa: F401 — kept for namespace-style access
+from ..services.webhook_service import (
+    mask_url as mask_webhook_url,
+    send_test_webhook,
+    validate_url as validate_webhook_url,
+)
 from ..utils.logger import get_logger
 
 logger = get_logger('miroshark.api.settings')
@@ -133,6 +139,13 @@ def _current_snapshot() -> dict:
             'uri': Config.NEO4J_URI,
             'user': Config.NEO4J_USER,
         },
+        'integrations': {
+            'webhook': {
+                'configured': bool((Config.WEBHOOK_URL or '').strip()),
+                'url_masked': mask_webhook_url(Config.WEBHOOK_URL or ''),
+                'public_base_url': Config.PUBLIC_BASE_URL or '',
+            },
+        },
         'available_presets': [
             {'id': k, 'label': v['label']} for k, v in _PRESETS.items()
         ],
@@ -222,6 +235,25 @@ def update_settings():
     if neo4j.get('user'): Config.NEO4J_USER = neo4j['user']
     if neo4j.get('password'): Config.NEO4J_PASSWORD = neo4j['password']
 
+    integrations = body.get('integrations') or {}
+    webhook = integrations.get('webhook') or {}
+    if 'url' in webhook and webhook['url'] is not None:
+        new_url = (webhook['url'] or '').strip()
+        err = validate_webhook_url(new_url)
+        if err:
+            return jsonify({'success': False, 'error': err}), 400
+        Config.WEBHOOK_URL = new_url
+    if 'public_base_url' in webhook and webhook['public_base_url'] is not None:
+        new_base = (webhook['public_base_url'] or '').strip().rstrip('/')
+        if new_base:
+            lowered = new_base.lower()
+            if not (lowered.startswith('http://') or lowered.startswith('https://')):
+                return jsonify({
+                    'success': False,
+                    'error': 'public_base_url must start with http:// or https://',
+                }), 400
+        Config.PUBLIC_BASE_URL = new_base
+
     logger.info(
         "Settings updated: preset=%s provider=%s model=%s base_url=%s",
         preset_id or '—', Config.LLM_PROVIDER, Config.LLM_MODEL_NAME, Config.LLM_BASE_URL,
@@ -269,3 +301,47 @@ def test_llm():
             'success': False,
             'error': str(e),
         }), 200  # Return 200 so the frontend can read the error body
+
+
+@settings_bp.route('/test-webhook', methods=['POST'])
+def test_webhook():
+    """Fire a sample ``simulation.test`` event at the user-supplied
+    webhook URL and return delivery details.
+
+    Body:
+        {"url": "https://hooks.slack.com/...", "public_base_url": "..."}
+
+    When ``url`` is omitted the currently saved ``Config.WEBHOOK_URL`` is
+    tested instead — convenient for verifying that a previously saved
+    endpoint is still reachable. Always returns HTTP 200 so the frontend
+    can render the success / failure body uniformly.
+    """
+    body = request.get_json(silent=True) or {}
+    url = (body.get('url') or '').strip() or (Config.WEBHOOK_URL or '').strip()
+    base_url = (body.get('public_base_url') or '').strip() or (Config.PUBLIC_BASE_URL or '').strip() or None
+
+    if not url:
+        return jsonify({
+            'success': False,
+            'error': 'No webhook URL configured — provide one in the request or save it in Settings first.',
+        }), 200
+
+    err = validate_webhook_url(url)
+    if err:
+        return jsonify({'success': False, 'error': err}), 200
+
+    try:
+        result = send_test_webhook(url, base_url=base_url)
+    except Exception as exc:
+        logger.warning("Webhook test failed: %s", exc)
+        return jsonify({
+            'success': False,
+            'error': str(exc),
+        }), 200
+
+    return jsonify({
+        'success': bool(result.get('ok')),
+        'message': result.get('message', ''),
+        'latency_ms': result.get('latency_ms'),
+        'url_masked': mask_webhook_url(url),
+    }), 200

@@ -34,3 +34,19 @@ export const updateSettings = (data) => {
 export const testLlmConnection = () => {
   return service.post('/api/settings/test-llm')
 }
+
+/**
+ * Fire a sample event at a webhook URL — used by the Settings
+ * "Send test event" button. Pass a URL to test an unsaved value;
+ * omit it to test the currently saved Config.WEBHOOK_URL.
+ *
+ * @param {string} [url]
+ * @param {string} [publicBaseUrl]
+ * @returns {Promise<{ success, message, latency_ms, url_masked }>}
+ */
+export const testWebhook = (url, publicBaseUrl) => {
+  const body = {}
+  if (url) body.url = url
+  if (publicBaseUrl) body.public_base_url = publicBaseUrl
+  return service.post('/api/settings/test-webhook', body)
+}
