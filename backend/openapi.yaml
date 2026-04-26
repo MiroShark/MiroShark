@@ -1508,6 +1508,42 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/SuccessEnvelope" }
 
+  /api/settings/test-webhook:
+    post:
+      tags: [Integrations]
+      summary: Fire a sample completion event at the configured webhook URL.
+      description: |
+        Synchronous test POST used by the Settings *Send test event* button.
+        Always returns HTTP 200 so the frontend can render success / failure
+        body uniformly. Pass `url` and optional `public_base_url` to test an
+        unsaved value; omit to test the currently saved webhook URL.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+                public_base_url: { type: string, format: uri }
+      responses:
+        "200":
+          description: Delivery outcome with latency and masked URL.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          success: { type: boolean }
+                          message: { type: string }
+                          latency_ms: { type: integer }
+                          url_masked: { type: string }
+
   /api/simulation/push/vapid-public-key:
     get:
       tags: [Settings & Push]
