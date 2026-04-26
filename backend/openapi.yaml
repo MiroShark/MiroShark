@@ -1114,7 +1114,7 @@ paths:
         - $ref: "#/components/parameters/SimulationIdPath"
       responses:
         "200":
-          description: PNG image with `Cache-Control: public, max-age=3600`.
+          description: "PNG image with `Cache-Control: public, max-age=3600`."
           content:
             image/png:
               schema:
