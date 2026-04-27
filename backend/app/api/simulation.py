@@ -6,9 +6,11 @@ Step 2: Entity reading and filtering, Wonderwall simulation preparation and exec
 import os
 import io
 import csv
+import hmac
 import json
 import traceback
 from datetime import datetime, timezone
+from functools import wraps
 from flask import request, jsonify, send_file, current_app
 
 from . import simulation_bp
@@ -36,6 +38,111 @@ def _validate_url_simulation_id():
             validate_simulation_id(sim_id)
         except ValueError as exc:
             return jsonify({"success": False, "error": str(exc)}), 400
+
+
+# ============== Admin Auth (mutation endpoints) ==============
+#
+# Mutation endpoints that write to a simulation's on-disk state
+# (/publish, /resolve, /outcome) require a shared admin secret —
+# ``MIROSHARK_ADMIN_TOKEN`` — supplied via the ``Authorization: Bearer
+# <token>`` header. This is the lightest-weight option from issue #48
+# (per-sim ownership tokens / full account auth were also discussed,
+# but a shared operator secret matches the deployment model: a single
+# operator runs MiroShark behind a reverse proxy or on localhost, and
+# any mutation is theirs).
+#
+# Fail-closed semantics: if ``MIROSHARK_ADMIN_TOKEN`` is unset or empty
+# in the process environment, the dependency returns **503**, NOT 200.
+# We deliberately do not silently fall back to "no auth required" — an
+# operator who forgot to configure the secret would otherwise ship an
+# open mutation surface and never know. The 503 message is generic on
+# purpose so the failure is visible without leaking config detail to a
+# probe.
+#
+# We use ``hmac.compare_digest`` for the actual comparison so a network
+# attacker can't time-trial the token byte by byte.
+
+
+_ADMIN_TOKEN_ENV_VAR = "MIROSHARK_ADMIN_TOKEN"
+
+
+def _load_admin_token() -> str:
+    """Read ``MIROSHARK_ADMIN_TOKEN`` from the environment at *call* time.
+
+    Resolved per-request rather than module-import time so tests can
+    monkeypatch ``os.environ`` without re-importing the module, and so
+    operators rotating the token via a process restart don't need a
+    code reload.
+    """
+    return (os.environ.get(_ADMIN_TOKEN_ENV_VAR) or "").strip()
+
+
+def _extract_bearer_token() -> str:
+    """Pull the token from the ``Authorization: Bearer <token>`` header.
+
+    Returns the empty string when the header is missing or malformed —
+    the caller treats both as "no token", which then resolves to a 401.
+    """
+    auth_header = request.headers.get("Authorization", "") or ""
+    parts = auth_header.split(None, 1)
+    if len(parts) != 2:
+        return ""
+    scheme, token = parts
+    if scheme.lower() != "bearer":
+        return ""
+    return token.strip()
+
+
+def require_admin_token(view_func):
+    """Decorator: gate a Flask view on a valid admin bearer token.
+
+    Behaviour matrix:
+
+    * ``MIROSHARK_ADMIN_TOKEN`` unset/empty in env → **503**
+      (fail-closed; the deploy is misconfigured and we refuse to serve
+      the mutation rather than silently allowing it).
+    * ``Authorization`` header missing or wrong / token mismatch →
+      **401** with a generic "Unauthorized" message. We deliberately do
+      not distinguish "missing" from "wrong" so a probe can't tell
+      whether it found a valid endpoint.
+    * Match → forward to the wrapped view.
+
+    The constant-time comparison via :func:`hmac.compare_digest` keeps
+    a network attacker from byte-trialing the token.
+
+    Reusable across blueprints — apply to any future mutation endpoint
+    that should share the same operator-secret gate.
+    """
+
+    @wraps(view_func)
+    def _wrapper(*args, **kwargs):
+        expected = _load_admin_token()
+        if not expected:
+            logger.error(
+                "Mutation endpoint %s reached but %s is unset — refusing "
+                "to serve (fail-closed). Set the env var to enable.",
+                request.path, _ADMIN_TOKEN_ENV_VAR,
+            )
+            return jsonify({
+                "success": False,
+                "error": "Admin authentication is not configured on this deployment.",
+            }), 503
+
+        provided = _extract_bearer_token()
+        # ``hmac.compare_digest`` requires equal-length operands of the
+        # same type to do its constant-time work; encode both sides to
+        # bytes and let the function handle short-circuiting safely.
+        if not provided or not hmac.compare_digest(
+            provided.encode("utf-8"), expected.encode("utf-8")
+        ):
+            return jsonify({
+                "success": False,
+                "error": "Unauthorized",
+            }), 401
+
+        return view_func(*args, **kwargs)
+
+    return _wrapper
 
 
 def _get_simulation_id_or_400(data: dict) -> tuple:
@@ -4351,11 +4458,14 @@ def polymarket_market_prices(simulation_id: str, market_id: int):
 # ============== Embed Widget ==============
 
 @simulation_bp.route('/<simulation_id>/publish', methods=['POST'])
+@require_admin_token
 def publish_simulation(simulation_id: str):
     """Mark a simulation as publicly embeddable.
 
     Body (optional): ``{"public": false}`` to unpublish instead of publish.
     Returns the new public state.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
     """
     try:
         manager = SimulationManager()
@@ -5782,9 +5892,12 @@ def compare_simulations():
 # ============== Prediction Resolution Endpoint ==============
 
 @simulation_bp.route('/<simulation_id>/resolve', methods=['POST'])
+@require_admin_token
 def resolve_simulation(simulation_id: str):
     """
     Record the real-world outcome of a simulation prediction.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
 
     Body:
         {
@@ -5943,7 +6056,30 @@ def simulation_outcome(simulation_id: str):
     GET returns the current outcome (or ``data: null``) — no publish
     gate so the embed dialog can show the existing annotation when the
     operator re-opens it.
+
+    Auth: POST requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
+    GET is unauthenticated — the gallery and embed widgets read this.
     """
+    # Gate POST writes on the admin token (GET stays public — the
+    # gallery reads this and the embed dialog re-renders the existing
+    # annotation when an operator re-opens it).
+    if request.method == 'POST':
+        expected = _load_admin_token()
+        if not expected:
+            logger.error(
+                "outcome POST reached but %s is unset — refusing to "
+                "serve (fail-closed).", _ADMIN_TOKEN_ENV_VAR,
+            )
+            return jsonify({
+                "success": False,
+                "error": "Admin authentication is not configured on this deployment.",
+            }), 503
+        provided = _extract_bearer_token()
+        if not provided or not hmac.compare_digest(
+            provided.encode("utf-8"), expected.encode("utf-8")
+        ):
+            return jsonify({"success": False, "error": "Unauthorized"}), 401
+
     try:
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)

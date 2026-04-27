@@ -24,6 +24,15 @@ info:
     to a private interface or front it with a reverse proxy when deploying
     to production.
 
+    **Mutation endpoints** that write to a simulation's on-disk state
+    (`POST /publish`, `POST /resolve`, `POST /outcome`) are gated on a
+    shared operator secret supplied via `Authorization: Bearer
+    $MIROSHARK_ADMIN_TOKEN`. The token is read from the process
+    environment at request time. If `MIROSHARK_ADMIN_TOKEN` is unset or
+    empty the endpoints **fail closed** with `503 — admin auth not
+    configured` rather than silently allowing the mutation. See
+    `AdminToken` under `components.securitySchemes`.
+
     Discovery endpoints with light cost protection (suggest-scenarios,
     trending, ask) enforce sliding-window rate limits on the calling IP.
 
@@ -1066,6 +1075,11 @@ paths:
     post:
       tags: [Publish & Embed]
       summary: Toggle a simulation's `is_public` flag.
+      description: |
+        Mutation endpoint — gated on `Authorization: Bearer
+        $MIROSHARK_ADMIN_TOKEN`. See the `AdminToken` security scheme.
+      security:
+        - AdminToken: []
       parameters:
         - $ref: "#/components/parameters/SimulationIdPath"
       requestBody:
@@ -1084,7 +1098,9 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
 
   /api/simulation/{simulation_id}/embed-summary:
     get:
@@ -1224,6 +1240,11 @@ paths:
     post:
       tags: [Publish & Embed]
       summary: Mark a simulation as resolved against an actual outcome.
+      description: |
+        Mutation endpoint — gated on `Authorization: Bearer
+        $MIROSHARK_ADMIN_TOKEN`. See the `AdminToken` security scheme.
+      security:
+        - AdminToken: []
       parameters:
         - $ref: "#/components/parameters/SimulationIdPath"
       requestBody:
@@ -1243,6 +1264,8 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/SuccessEnvelope" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
 
   /api/simulation/{simulation_id}/outcome:
     get:
@@ -1278,6 +1301,13 @@ paths:
         Requires `is_public=true` on the simulation (POST `/publish` to
         enable). Submitting again overwrites the previous annotation —
         operators can correct a wrong call without leaving stale records.
+
+        Mutation endpoint — gated on `Authorization: Bearer
+        $MIROSHARK_ADMIN_TOKEN`. See the `AdminToken` security scheme.
+        `GET /outcome` (above) is **not** gated — the gallery and embed
+        widgets read this without a token.
+      security:
+        - AdminToken: []
       parameters:
         - $ref: "#/components/parameters/SimulationIdPath"
       requestBody:
@@ -1317,9 +1347,11 @@ paths:
                     properties:
                       data: { $ref: "#/components/schemas/SimulationOutcome" }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
         "403":
           description: Simulation is not public.
         "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
 
   # ────────────────────────────────────────────────────────────────────
   # Report Agent
@@ -1748,6 +1780,29 @@ paths:
 
 components:
 
+  securitySchemes:
+    AdminToken:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+      description: |
+        Shared operator secret read from `MIROSHARK_ADMIN_TOKEN` in the
+        backend process environment. Sent as `Authorization: Bearer
+        <token>`. Compared in constant time on the server.
+
+        Required on every mutation endpoint that writes to a
+        simulation's on-disk state — `POST /publish`, `POST /resolve`,
+        `POST /outcome`. Read endpoints (including `GET /outcome`)
+        remain public.
+
+        Fail-closed: when `MIROSHARK_ADMIN_TOKEN` is unset or empty in
+        the deployment's environment, the gated endpoints return
+        `503 — admin auth not configured` rather than allowing the
+        request through. This is intentional — an operator who forgot
+        to set the secret would otherwise ship an open mutation
+        surface. Configure the token before exposing the backend
+        publicly.
+
   parameters:
     SimulationIdPath:
       in: path
@@ -1775,6 +1830,24 @@ components:
           schema: { $ref: "#/components/schemas/ErrorEnvelope" }
     RateLimited:
       description: Sliding-window rate limit exceeded.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    Unauthorized:
+      description: |
+        Admin token missing or invalid. The response body is generic
+        (`{"success": false, "error": "Unauthorized"}`) — the server
+        deliberately does not distinguish "missing" from "wrong" so a
+        probe can't tell the difference.
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+    AdminAuthNotConfigured:
+      description: |
+        `MIROSHARK_ADMIN_TOKEN` is unset or empty on the backend —
+        mutation endpoints fail closed rather than allowing
+        unauthenticated writes. Operator must set the env var and
+        restart the process.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorEnvelope" }

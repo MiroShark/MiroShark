@@ -146,7 +146,40 @@ OPENAI_API_BASE_URL=http://localhost:11434/v1
 # (large JSONL files — disable in production)
 # MIROSHARK_LOG_PROMPTS=true
 # MIROSHARK_LOG_LEVEL=info          # debug|info|warn
+
+# ─── Admin auth (mutation endpoints) ───
+# Shared operator secret guarding POST /publish, /resolve, /outcome.
+# Send as `Authorization: Bearer <token>`. Compared in constant time.
+# UNSET ⇒ those endpoints return 503 (fail-closed). See "Admin auth"
+# below for the full story.
+# MIROSHARK_ADMIN_TOKEN=
 ```
+
+## Admin auth (mutation endpoints)
+
+Three endpoints write to a simulation's on-disk state and are gated on
+a shared operator secret:
+
+- `POST /api/simulation/<id>/publish` — toggles `is_public`
+- `POST /api/simulation/<id>/resolve` — records the actual outcome
+- `POST /api/simulation/<id>/outcome` — verified-prediction annotation
+
+Send the secret as `Authorization: Bearer $MIROSHARK_ADMIN_TOKEN`. The
+server compares it with `hmac.compare_digest` so the comparison is
+constant-time. Read endpoints (including `GET /outcome`, the public
+gallery, and the embed widget) stay unauthenticated.
+
+**Fail-closed.** If `MIROSHARK_ADMIN_TOKEN` is unset or empty in the
+backend's process environment, the gated endpoints return
+`503 — admin auth not configured` rather than silently allowing the
+mutation. There is no implicit "no auth required" fallback. An operator
+who forgot to set the secret would otherwise ship an open mutation
+surface with no warning — the 503 makes the misconfig loud.
+
+Generate a token with `openssl rand -hex 32` (or any sufficiently long
+random string), set it in `.env`, and restart the backend. The token is
+read at request time so a process restart after rotation is enough — no
+code reload required.
 
 ## Feature flags summary
 
