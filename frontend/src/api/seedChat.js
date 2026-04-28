@@ -37,3 +37,11 @@ export const getSession = (id) => {
 export const createSession = () => {
   return requestWithRetry(() => service.post('/api/seed-chat/sessions'), 3, 1000)
 }
+
+/**
+ * Run intent-guided research for an active session.
+ * Long-running (30-90s); use a wider timeout and skip retry.
+ */
+export const postResearch = (data) => {
+  return service.post('/api/seed-chat/research', data, { timeout: 240000 })
+}

@@ -64,6 +64,45 @@
           <button type="button" class="close" @click="briefOpen = false">×</button>
         </header>
         <div class="brief-body" v-html="renderedBrief"></div>
+
+        <section class="sources">
+          <header class="sources-header">
+            <h3>Sources</h3>
+            <button
+              type="button"
+              class="research-btn"
+              @click="runResearch"
+              :disabled="researching"
+            >{{ researchReport ? 'Refresh sources' : 'Find sources' }}</button>
+          </header>
+
+          <div v-if="researching" class="research-progress">{{ researchProgressMsg }}</div>
+
+          <div v-else-if="researchReport && researchReport.results && researchReport.results.length === 0" class="research-empty">
+            No sources found. The web search returned nothing — this can happen with rate limiting or very specific queries.
+            Try again in a minute, or refine the topic in the chat.
+          </div>
+
+          <ol v-else-if="researchReport && researchReport.results && researchReport.results.length" class="source-list">
+            <li v-for="(r, i) in researchReport.results" :key="i" class="source-item">
+              <a class="source-title" :href="r.url" target="_blank" rel="noopener noreferrer">
+                {{ r.title || r.url }}
+              </a>
+              <div class="source-meta">
+                <span :class="['status', r.fetch_error ? 'err' : 'ok']">
+                  {{ r.fetch_error ? '⚠ fetch failed' : `✓ ${r.text_length} chars` }}
+                </span>
+                <span class="domain">{{ extractDomain(r.url) }}</span>
+              </div>
+              <div v-if="r.snippet" class="source-snippet">{{ r.snippet }}</div>
+            </li>
+          </ol>
+
+          <div v-else class="research-empty muted">
+            No research run yet for this session.
+          </div>
+        </section>
+
         <footer class="brief-footer">
           <button type="button" class="secondary" @click="copyBrief">Copy markdown</button>
           <button type="button" class="primary" @click="briefOpen = false">Close</button>
@@ -85,6 +124,7 @@ import {
   listSessions,
   getSession,
   createSession,
+  postResearch,
 } from '../api/seedChat.js'
 
 const router = useRouter()
@@ -121,6 +161,9 @@ const activeSessionId = ref(null)
 
 const brief = ref('')
 const briefOpen = ref(false)
+const researchReport = ref(null)
+const researching = ref(false)
+const researchProgressMsg = ref('')
 
 const renderedBrief = computed(() => brief.value ? marked.parse(brief.value) : '')
 
@@ -142,6 +185,7 @@ function applySession(session) {
   Object.assign(seedState, emptySeed(), session.seed_state || {})
   readyToLaunch.value = !!session.ready_to_launch
   brief.value = session.brief || ''
+  researchReport.value = session.research_report || null
   briefOpen.value = false
 }
 
@@ -153,6 +197,7 @@ function clearLocalState() {
   error.value = ''
   draft.value = ''
   brief.value = ''
+  researchReport.value = null
   briefOpen.value = false
 }
 
@@ -263,6 +308,38 @@ async function copyBrief() {
     await navigator.clipboard.writeText(brief.value)
   } catch {
     error.value = 'Copy failed — your browser blocked clipboard access.'
+  }
+}
+
+async function runResearch() {
+  if (!activeSessionId.value) {
+    error.value = 'No active session — send a message first.'
+    return
+  }
+  researching.value = true
+  researchProgressMsg.value = 'Searching the web for sources… this takes 30-90 seconds.'
+  error.value = ''
+  try {
+    const data = await postResearch({ session_id: activeSessionId.value })
+    researchReport.value = data?.report || null
+  } catch (err) {
+    const status = err?.response?.status
+    if (status === 503) {
+      error.value = 'Research backend unreachable.'
+    } else {
+      error.value = err?.response?.data?.error || err.message
+    }
+  } finally {
+    researching.value = false
+    researchProgressMsg.value = ''
+  }
+}
+
+function extractDomain(url) {
+  try {
+    return new URL(url).hostname.replace(/^www\./, '')
+  } catch {
+    return ''
   }
 }
 
@@ -427,6 +504,76 @@ onMounted(async () => {
 .brief-body :deep(li) { margin: 0.25em 0; }
 .brief-body :deep(strong) { color: #fff; }
 .brief-body :deep(code) { background: #222; padding: 0 0.25em; border-radius: 3px; }
+.sources {
+  border-top: 1px solid #222;
+  padding: 0.75rem 1.5rem 1rem;
+  max-height: 30vh;
+  overflow-y: auto;
+}
+.sources-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+.sources-header h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  color: #aaa;
+}
+.research-btn {
+  padding: 0.35rem 0.75rem;
+  background: #2a2a4a;
+  color: #ddd;
+  border: 1px solid #444;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.8rem;
+}
+.research-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.research-progress {
+  color: #aaa;
+  font-style: italic;
+  padding: 0.5rem 0;
+}
+.research-empty {
+  color: #888;
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+}
+.research-empty.muted { color: #555; }
+.source-list {
+  margin: 0;
+  padding-left: 1.25rem;
+  color: #ccc;
+}
+.source-item {
+  margin: 0.6rem 0;
+  font-size: 0.85rem;
+}
+.source-title {
+  color: #80b4ff;
+  text-decoration: none;
+  font-weight: 500;
+}
+.source-title:hover { text-decoration: underline; }
+.source-meta {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.15rem;
+  font-size: 0.75rem;
+  color: #666;
+}
+.source-meta .status.ok { color: #4ade80; }
+.source-meta .status.err { color: #f87171; }
+.source-snippet {
+  margin-top: 0.25rem;
+  color: #888;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
 .brief-footer {
   display: flex;
   justify-content: flex-end;
