@@ -71,7 +71,12 @@ class SocialAgent(ChatAgent):
                  agent_graph: "AgentGraph" = None,
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
-                 max_iteration: int = 1,
+                 # CAMEL ReAct iteration cap. Previously this attribute
+                 # was stored but never plumbed to CAMEL, so runtime was
+                 # unbounded (and idempotent tool errors looped 4+ times).
+                 # 3 covers observe → tool → synthesize while bounding the
+                 # blast radius of any future loop bug.
+                 max_iteration: int = 3,
                  interview_record: bool = False,
                  # --- New: generic simulation support ---
                  simulation=None):
@@ -139,11 +144,19 @@ class SocialAgent(ChatAgent):
                 ]
             ]
         all_tools = (tools or []) + (self.action_tools or [])
+        # Cap CAMEL's per-step ReAct loop and prune tool messages from
+        # memory after each step. Without this the agent could fire the
+        # same tool 4+ times per round on idempotent failures, ballooning
+        # the conversation history past 40k input tokens (see Langfuse
+        # retry-loop investigation; the no-op success returns from
+        # platform.py also stop the loop at the source).
         super().__init__(
             system_message=system_message,
             model=model,
             scheduling_strategy='random_model',
             tools=all_tools,
+            max_iteration=max_iteration,
+            prune_tool_calls_from_memory=True,
         )
         self.max_iteration = max_iteration
         self.interview_record = interview_record

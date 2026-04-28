@@ -444,10 +444,12 @@ class Platform:
                                               (post_id, user_id))
             if self.db_cursor.fetchone():
                 # for common and quote post, check if the post has been
-                # reposted
+                # reposted — return no-op success so the agent moves on
+                # instead of retrying (see Langfuse retry-loop bug).
                 return {
-                    "success": False,
-                    "error": "Repost record already exists."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Repost record already exists."
                 }
 
             post_type_result = self.pl_utils._get_post_type(post_id)
@@ -477,10 +479,12 @@ class Platform:
                     (post_type_result['root_post_id'], user_id))
 
                 if self.db_cursor.fetchone():
-                    # for repost post, check if the post has been reposted
+                    # for repost post, check if the post has been reposted —
+                    # treat as no-op success so the agent doesn't loop.
                     return {
-                        "success": False,
-                        "error": "Repost record already exists."
+                        "success": True,
+                        "noop": True,
+                        "reason": "Repost record already exists."
                     }
 
                 self.pl_utils._execute_db_command(
@@ -577,10 +581,13 @@ class Platform:
             self.pl_utils._execute_db_command(like_check_query,
                                               (post_id, user_id))
             if self.db_cursor.fetchone():
-                # Like record already exists
+                # Like record already exists — return no-op success so the
+                # agent moves on instead of retrying (which previously
+                # ballooned conversation history to 40k+ tokens per round).
                 return {
-                    "success": False,
-                    "error": "Like record already exists."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Like record already exists."
                 }
 
             # Check if the post to be liked is self-posted
@@ -630,10 +637,12 @@ class Platform:
             result = self.db_cursor.fetchone()
 
             if not result:
-                # No like record exists
+                # No like record exists — desired state already true,
+                # report no-op success so the agent doesn't retry.
                 return {
-                    "success": False,
-                    "error": "Like record does not exist."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Like record does not exist."
                 }
 
             # Get the `like_id`
@@ -681,10 +690,11 @@ class Platform:
             self.pl_utils._execute_db_command(like_check_query,
                                               (post_id, user_id))
             if self.db_cursor.fetchone():
-                # Dislike record already exists
+                # Dislike record already exists — no-op success.
                 return {
-                    "success": False,
-                    "error": "Dislike record already exists."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Dislike record already exists."
                 }
 
             # Check if the post to be disliked is self-posted
@@ -734,10 +744,11 @@ class Platform:
             result = self.db_cursor.fetchone()
 
             if not result:
-                # No dislike record exists
+                # No dislike record exists — desired state already true.
                 return {
-                    "success": False,
-                    "error": "Dislike record does not exist."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Dislike record does not exist."
                 }
 
             # Get the `dislike_id`
@@ -870,10 +881,11 @@ class Platform:
             self.pl_utils._execute_db_command(follow_check_query,
                                               (user_id, followee_id))
             if self.db_cursor.fetchone():
-                # Follow record already exists
+                # Follow record already exists — no-op success.
                 return {
-                    "success": False,
-                    "error": "Follow record already exists."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Follow record already exists."
                 }
 
             # Add a record in the follow table
@@ -924,9 +936,11 @@ class Platform:
                                               (user_id, followee_id))
             follow_record = self.db_cursor.fetchone()
             if not follow_record:
+                # Already not following — no-op success.
                 return {
-                    "success": False,
-                    "error": "Follow record does not exist."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Follow record does not exist."
                 }
             # Assuming ID is in the first column of the result
             follow_id = follow_record[0]
@@ -977,10 +991,11 @@ class Platform:
             self.pl_utils._execute_db_command(mute_check_query,
                                               (user_id, mutee_id))
             if self.db_cursor.fetchone():
-                # Mute record already exists
+                # Mute record already exists — no-op success.
                 return {
-                    "success": False,
-                    "error": "Mute record already exists."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Mute record already exists."
                 }
             # Add a record in the mute table
             mute_insert_query = (
@@ -1126,10 +1141,11 @@ class Platform:
             self.pl_utils._execute_db_command(like_check_query,
                                               (comment_id, user_id))
             if self.db_cursor.fetchone():
-                # Like record already exists
+                # Like record already exists — no-op success.
                 return {
-                    "success": False,
-                    "error": "Comment like record already exists.",
+                    "success": True,
+                    "noop": True,
+                    "reason": "Comment like record already exists.",
                 }
 
             # Check if the comment to be liked was posted by oneself
@@ -1181,10 +1197,11 @@ class Platform:
             result = self.db_cursor.fetchone()
 
             if not result:
-                # No like record exists
+                # No like record exists — desired state already true.
                 return {
-                    "success": False,
-                    "error": "Comment like record does not exist.",
+                    "success": True,
+                    "noop": True,
+                    "reason": "Comment like record does not exist.",
                 }
             # Get the `comment_like_id`
             comment_like_id = result[0]
@@ -1234,10 +1251,11 @@ class Platform:
             self.pl_utils._execute_db_command(dislike_check_query,
                                               (comment_id, user_id))
             if self.db_cursor.fetchone():
-                # Dislike record already exists
+                # Dislike record already exists — no-op success.
                 return {
-                    "success": False,
-                    "error": "Comment dislike record already exists.",
+                    "success": True,
+                    "noop": True,
+                    "reason": "Comment dislike record already exists.",
                 }
 
             # Check if the comment to be disliked was posted by oneself
@@ -1294,10 +1312,11 @@ class Platform:
                                               (comment_id, user_id))
             dislike_record = self.db_cursor.fetchone()
             if not dislike_record:
-                # No dislike record exists
+                # No dislike record exists — desired state already true.
                 return {
-                    "success": False,
-                    "error": "Comment dislike record does not exist.",
+                    "success": True,
+                    "noop": True,
+                    "reason": "Comment dislike record does not exist.",
                 }
             comment_dislike_id = dislike_record[0]
 
@@ -1408,9 +1427,11 @@ class Platform:
             self.pl_utils._execute_db_command(check_report_query,
                                               (user_id, post_id))
             if self.db_cursor.fetchone():
+                # Report already filed — no-op success.
                 return {
-                    "success": False,
-                    "error": "Report record already exists."
+                    "success": True,
+                    "noop": True,
+                    "reason": "Report record already exists."
                 }
 
             if not post_type_result:

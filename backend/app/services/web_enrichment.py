@@ -161,6 +161,14 @@ class WebEnricher:
         self._cache[cache_key] = result
         return result
 
+    # Cap the simulation_requirement copy in entity-research prompts so a
+    # multi-KB user briefing doesn't get pasted into every research call.
+    # The model only needs a couple hundred tokens of "what's this sim
+    # about" to ground per-entity research; anything more is wasted input.
+    # Previous Langfuse traces showed 60-80k input tokens per entity from
+    # this leak alone.
+    _SIM_REQUIREMENT_CHAR_CAP = 1500
+
     def _research(
         self,
         entity_name: str,
@@ -180,7 +188,10 @@ class WebEnricher:
         parts.append(f"**Type:** {entity_type}")
 
         if simulation_requirement:
-            parts.append(f"**Simulation context:** {simulation_requirement}")
+            sr = simulation_requirement.strip()
+            if len(sr) > self._SIM_REQUIREMENT_CHAR_CAP:
+                sr = sr[: self._SIM_REQUIREMENT_CHAR_CAP].rstrip() + " […]"
+            parts.append(f"**Simulation context:** {sr}")
 
         if existing_context and len(existing_context.strip()) > 20:
             # Give the LLM what we already know so it doesn't repeat it
