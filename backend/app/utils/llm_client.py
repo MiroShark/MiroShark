@@ -349,6 +349,15 @@ class LLMClient:
             if Config.LLM_DISABLE_REASONING:
                 extra["reasoning"] = {"enabled": False}
             kwargs["extra_body"] = extra
+            if not getattr(LLMClient, "_extra_body_logged", False):
+                print(
+                    "[langfuse-debug] llm_client.extra_body sample (first call only): "
+                    f"user={extra.get('user')!r} "
+                    f"metadata_keys={sorted((extra.get('metadata') or {}).keys())!r} "
+                    f"tags={extra.get('tags')!r} name={extra.get('name')!r}",
+                    flush=True,
+                )
+                LLMClient._extra_body_logged = True
 
         t0 = time.perf_counter()
         try:

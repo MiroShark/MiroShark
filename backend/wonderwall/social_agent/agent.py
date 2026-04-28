@@ -223,6 +223,16 @@ class SocialAgent(ChatAgent):
                 extra['tags'] = tags
                 extra['name'] = prompt_type
                 config['extra_body'] = extra
+                if not getattr(SocialAgent, '_extra_body_logged', False):
+                    logging.getLogger(__name__).warning(
+                        "[langfuse-debug] extra_body sample (first call only): "
+                        "user=%r metadata_keys=%r tags=%r name=%r",
+                        extra.get('user'),
+                        sorted((extra.get('metadata') or {}).keys()),
+                        extra.get('tags'),
+                        extra.get('name'),
+                    )
+                    SocialAgent._extra_body_logged = True
             except Exception:
                 pass
 

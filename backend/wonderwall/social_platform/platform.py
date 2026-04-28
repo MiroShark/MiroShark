@@ -572,6 +572,8 @@ class Platform:
             current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
             if post_type_result['type'] == 'repost':
                 post_id = post_type_result['root_post_id']
             user_id = agent_id
@@ -625,6 +627,8 @@ class Platform:
     async def unlike_post(self, agent_id: int, post_id: int):
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
             if post_type_result['type'] == 'repost':
                 post_id = post_type_result['root_post_id']
             user_id = agent_id
@@ -681,6 +685,8 @@ class Platform:
             current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
             if post_type_result['type'] == 'repost':
                 post_id = post_type_result['root_post_id']
             user_id = agent_id
@@ -732,6 +738,8 @@ class Platform:
     async def undo_dislike_post(self, agent_id: int, post_id: int):
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
             if post_type_result['type'] == 'repost':
                 post_id = post_type_result['root_post_id']
             user_id = agent_id
@@ -1100,6 +1108,8 @@ class Platform:
             current_time = self.sandbox_clock.get_time_step()
         try:
             post_type_result = self.pl_utils._get_post_type(post_id)
+            if not post_type_result:
+                return {"success": False, "error": "Post not found."}
             if post_type_result['type'] == 'repost':
                 post_id = post_type_result['root_post_id']
             user_id = agent_id
