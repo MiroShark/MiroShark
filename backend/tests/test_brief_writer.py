@@ -124,3 +124,33 @@ def test_write_brief_skips_sources_with_fetch_errors_or_empty_text():
     system_content = next(m["content"] for m in sent if m["role"] == "system")
     assert "T2" in system_content
     assert "T1" not in system_content
+
+
+def test_write_brief_uses_media_landscape_guidance():
+    from app.services.brief_writer import write_brief
+
+    seed = {
+        "topic": "X",
+        "intent": "Decode messaging on X",
+        "stakeholders": [
+            {"name": "Industry lobby", "role": "lobby", "stance": "opposing"},
+            {"name": "Reform group", "role": "advocate", "stance": "supporting"},
+        ],
+        "decision_branches": [],
+        "contested_claims": ["Claim 1: 50k jobs lost", "Claim 2: foreign capital flight"],
+        "output_format": "media_landscape",
+    }
+
+    with patch("app.services.brief_writer.create_llm_client") as mock_factory:
+        mock_client = MagicMock()
+        mock_client.chat.return_value = "## Background\n..."
+        mock_factory.return_value = mock_client
+
+        write_brief(seed, [])
+
+    sent = mock_client.chat.call_args.kwargs.get("messages") or mock_client.chat.call_args.args[0]
+    system = next((m for m in sent if m["role"] == "system"), None)
+    assert system is not None
+    assert "claims-first" in system["content"].lower() or "claims map" in system["content"].lower()
+    assert "counter-framing" in system["content"].lower()
+    assert "Claim 1: 50k jobs lost" in system["content"]

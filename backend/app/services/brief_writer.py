@@ -35,6 +35,37 @@ OUTPUT_FORMAT_GUIDANCE = {
         "Stakeholder analysis (one subsection per stakeholder), Decision branches "
         "(one subsection each), Contested claims, and Conclusions."
     ),
+    "media_landscape": (
+        "Produce a Media Landscape report in Markdown. The structure is "
+        "claims-first — the document is organised around contested claims, "
+        "not around stakeholders or pros/cons.\n\n"
+        "Required sections:\n\n"
+        "## Background\n"
+        "Two to four sentences setting up the topic and why the messaging matters.\n\n"
+        "## Claims map\n"
+        "One subsection per contested claim, in this exact format:\n\n"
+        "### Claim: \"<verbatim claim text>\"\n"
+        "**Pushed by:** <comma-separated stakeholders or media outlets that "
+        "advance this claim>.\n\n"
+        "**Evidence assessment:** Mark with one of these prefixes:\n"
+        "- ✓ Supported — backed by reliable evidence in the sources\n"
+        "- ⚠ Partial — has a kernel of truth but is misleading or selective\n"
+        "- ✗ Misleading — contradicted by the sources, or unsupported\n"
+        "- ? Disputed — sources disagree; mention the disagreement\n\n"
+        "Then 2-4 sentences citing the evidence (use markdown links to "
+        "sources when available).\n\n"
+        "**Counter-framing:** A short, plain-language reframing that a "
+        "campaigner could use to push back if challenged. One or two "
+        "sentences. Concrete, not abstract.\n\n"
+        "## Stakeholder cheat-sheet\n"
+        "A compact list — one line per stakeholder — naming the talking "
+        "points they push and the framing they prefer. This is a quick "
+        "reference, not a re-analysis.\n\n"
+        "## Where to dig deeper\n"
+        "Three to five questions whose answers would sharpen the brief — "
+        "things the user could research next or specific claims that need "
+        "more evidence."
+    ),
 }
 
 DEFAULT_GUIDANCE = (
