@@ -2,7 +2,7 @@ import service, { requestWithRetry } from './index'
 
 /**
  * Post a turn in the seed chat conversation
- * @param {Object} data - { messages, seed_state }
+ * @param {Object} data - { messages, seed_state, session_id? }
  */
 export const postTurn = (data) => {
   return requestWithRetry(() => service.post('/api/seed-chat/turn', data), 3, 1000)
@@ -14,4 +14,26 @@ export const postTurn = (data) => {
  */
 export const postLaunch = (data) => {
   return requestWithRetry(() => service.post('/api/seed-chat/launch', data), 3, 1000)
+}
+
+/**
+ * List recent seed-chat sessions (summaries only).
+ * Returns { sessions: [{id, title, created_at, updated_at}, ...] }.
+ */
+export const listSessions = () => {
+  return requestWithRetry(() => service.get('/api/seed-chat/sessions'), 3, 1000)
+}
+
+/**
+ * Load a single session in full (id, title, messages, seed_state, ready_to_launch, ...)
+ */
+export const getSession = (id) => {
+  return requestWithRetry(() => service.get(`/api/seed-chat/sessions/${id}`), 3, 1000)
+}
+
+/**
+ * Create a new empty session and return it.
+ */
+export const createSession = () => {
+  return requestWithRetry(() => service.post('/api/seed-chat/sessions'), 3, 1000)
 }
