@@ -489,7 +489,18 @@ class SimulationRunner:
             env['PYTHONIOENCODING'] = 'utf-8'  # Ensure stdout/stderr use UTF-8
             env['MIROSHARK_SIM_DIR'] = sim_dir  # Observability: tell agents where to write events.jsonl
             env['MIROSHARK_SIMULATION_ID'] = simulation_id  # Observability: tag Wonderwall events with sim ID
-            
+            # Forward run_id (when the orchestrator has set one) so the
+            # subprocess's Langfuse `metadata.run_id` / `tags` line up with
+            # the orchestrator-side calls — both ends end up under the same
+            # sim's session, sliceable by run.
+            try:
+                from ..utils.trace_context import TraceContext as _TC
+                run_id_env = _TC.get('run_id', '') or ''
+                if run_id_env:
+                    env['MIROSHARK_RUN_ID'] = str(run_id_env)
+            except Exception:
+                pass
+
             # Set working directory to simulation directory (database files etc. will be generated here)
             # Use start_new_session=True to create new process group, ensuring all child processes can be terminated via os.killpg
             process = subprocess.Popen(

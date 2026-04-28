@@ -637,6 +637,9 @@ class TwitterSimulationRunner:
         start_time = datetime.now()
         
         for round_num in range(total_rounds):
+            # Surface round number to subprocess LLM calls for Langfuse metadata
+            os.environ['MIROSHARK_ROUND_NUM'] = str(round_num + 1)
+
             # Calculate current simulated time
             simulated_minutes = round_num * minutes_per_round
             simulated_hour = (simulated_minutes // 60) % 24

@@ -17,6 +17,7 @@ from datetime import datetime
 from ..config import Config
 from ..utils.llm_client import create_llm_client
 from ..utils.logger import get_logger
+from ..utils.trace_context import TraceContext
 from .entity_reader import EntityNode
 from .web_enrichment import WebEnricher
 from ..storage import GraphStorage
@@ -1109,11 +1110,16 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
         print(f"Starting Agent persona generation - {total} entities, parallelism: {parallel_count}")
         print(f"{'='*60}\n")
 
+        # Snapshot caller's TraceContext into worker threads — sim_phase/
+        # prompt_type are thread-local and would otherwise be lost across
+        # the ThreadPoolExecutor boundary, dropping the Langfuse tags.
+        generate_single_profile_traced = TraceContext.wrap_fn(generate_single_profile)
+
         # Use thread pool for parallel execution
         with concurrent.futures.ThreadPoolExecutor(max_workers=parallel_count) as executor:
             # Submit all tasks
             future_to_entity = {
-                executor.submit(generate_single_profile, idx, entity): (idx, entity)
+                executor.submit(generate_single_profile_traced, idx, entity): (idx, entity)
                 for idx, entity in enumerate(entities)
             }
             

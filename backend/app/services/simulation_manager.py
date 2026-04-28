@@ -13,6 +13,7 @@ from datetime import datetime
 from enum import Enum
 
 from ..utils.logger import get_logger
+from ..utils.trace_context import TraceContext
 from ..utils.validation import validate_simulation_id
 from .entity_reader import EntityReader
 from .wonderwall_profile_generator import WonderwallProfileGenerator
@@ -299,6 +300,10 @@ class SimulationManager:
             state.status = SimulationStatus.PREPARING
             self._save_simulation_state(state)
 
+            # Pin simulation_id for the whole prep pipeline so every
+            # downstream LLM call lands under the same Langfuse session.
+            TraceContext.set(simulation_id=simulation_id)
+
             sim_dir = self._get_simulation_dir(simulation_id)
 
             # ========== Phase 1: Read and filter entities ==========
@@ -345,6 +350,8 @@ class SimulationManager:
                     current=0,
                     total=total_entities
                 )
+
+            TraceContext.set(sim_phase="setup", prompt_type="persona_generation")
 
             # Pass graph_id to enable graph retrieval for richer context
             generator = WonderwallProfileGenerator(
@@ -435,8 +442,10 @@ class SimulationManager:
                     total=3
                 )
             
+            TraceContext.set(sim_phase="setup", prompt_type="sim_config")
+
             config_generator = SimulationConfigGenerator()
-            
+
             if progress_callback:
                 progress_callback(
                     "generating_config", 30,
@@ -483,6 +492,10 @@ class SimulationManager:
 
             # Note: run scripts remain in backend/scripts/ directory, no longer copied to simulation directory
             # When starting simulation, simulation_runner will run scripts from the scripts/ directory
+
+            # Clear per-phase tags so a follow-up call (e.g., re-prepare,
+            # report generation) doesn't inherit "setup" context.
+            TraceContext.set(sim_phase="", prompt_type="")
 
             # Update status
             state.status = SimulationStatus.READY

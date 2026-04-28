@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from ..models.task import TaskManager, TaskStatus
 from ..storage import GraphStorage
 from ..utils.event_logger import EventLogger
+from ..utils.trace_context import TraceContext
 from .text_processor import TextProcessor
 
 logger = logging.getLogger('miroshark.graph_builder')
@@ -152,9 +153,16 @@ class GraphBuilderService:
                     'message': msg,
                 })
 
+            # Tag every NER/graph-extract LLM call inside the worker pool
+            # so Langfuse can isolate this phase. add_text_batches uses a
+            # ThreadPoolExecutor and TraceContext is thread-local, so the
+            # parent thread's set is sufficient (workers inherit via the
+            # wrapper inside add_text_batches when present).
+            TraceContext.set(sim_phase="setup", prompt_type="graph_extract")
             episode_uuids = self.add_text_batches(
                 graph_id, chunks, max_workers, _progress_with_events
             )
+            TraceContext.set(sim_phase="", prompt_type="")
 
             # 5. Wait for processing (no-op for Neo4j — already synchronous)
             self.storage.wait_for_processing(episode_uuids)
@@ -240,13 +248,18 @@ class GraphBuilderService:
             )
             return episode_id
 
+        # Snapshot the caller's TraceContext so workers see the same
+        # sim_phase / prompt_type / simulation_id (threading.local does
+        # not propagate across pool workers).
+        _process_chunk_traced = TraceContext.wrap_fn(_process_chunk)
+
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             futures = {}
             for i, chunk in enumerate(chunks):
                 if not chunk or not chunk.strip():
                     continue
                 chunk_idx = i + 1
-                future = pool.submit(_process_chunk, chunk_idx, chunk)
+                future = pool.submit(_process_chunk_traced, chunk_idx, chunk)
                 futures[future] = chunk_idx
 
             for future in as_completed(futures):

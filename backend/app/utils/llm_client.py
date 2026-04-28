@@ -16,6 +16,58 @@ from ..config import Config
 from .event_logger import EventLogger, LOG_PROMPTS
 
 
+# Map auto-detected `module.function` callers → friendly prompt_type labels
+# that Langfuse can group by. Keep this list explicit instead of guessing —
+# every entry maps to a concrete observability question we want to ask.
+_CALLER_PROMPT_TYPES: Dict[str, str] = {
+    "report_agent.plan_outline":                     "report_outline",
+    "report_agent._generate_outline":                "report_outline",
+    "report_agent._generate_section_react":          "report_section",
+    "report_agent._generate_section_content":        "report_section",
+    "report_agent._generate_synthesis":              "report_synthesis",
+    "report_agent.chat":                             "report_chat",
+    "ontology_generator.generate":                   "ontology_design",
+    "ontology_generator._generate_with_llm":         "ontology_design",
+    "text_processor.extract_entities":               "ner_extraction",
+    "text_processor._extract_with_llm":              "ner_extraction",
+    "wonderwall_profile_generator._generate_profile_with_llm": "persona_generation",
+    "simulation_config_generator._call_llm_with_retry": "sim_config",
+    "simulation_config_generator.generate_config":   "sim_config",
+    "graph_builder.add_text_batches":                "graph_extract",
+    "web_enrichment._research":                      "web_research",
+    "SocialAgent.perform_action_by_llm":             "agent_action",
+}
+
+# Map prompt_type → broad simulation phase ("setup"/"round"/"report"/"ingest")
+# so Langfuse filters can roll up at either granularity. Used as a fallback
+# when TraceContext.sim_phase isn't explicitly set by the caller.
+_PROMPT_TYPE_PHASES: Dict[str, str] = {
+    "ontology_design":     "setup",
+    "ner_extraction":      "setup",
+    "graph_extract":       "setup",
+    "persona_generation":  "setup",
+    "sim_config":          "setup",
+    "web_research":        "setup",
+    "agent_action":        "round",
+    "report_outline":      "report",
+    "report_section":      "report",
+    "report_synthesis":    "report",
+    "report_chat":         "report",
+}
+
+
+def _prompt_type_from_caller(caller: str) -> str:
+    """Best-effort caller → prompt_type. Falls back to the function name."""
+    if caller in _CALLER_PROMPT_TYPES:
+        return _CALLER_PROMPT_TYPES[caller]
+    fn = caller.split(".")[-1].lstrip("_")
+    return fn or "unknown"
+
+
+def _phase_from_prompt_type(prompt_type: str) -> str:
+    return _PROMPT_TYPE_PHASES.get(prompt_type, "")
+
+
 def create_llm_client(
     api_key: Optional[str] = None,
     base_url: Optional[str] = None,
@@ -234,7 +286,10 @@ class LLMClient:
                 "options": {"num_ctx": self._num_ctx}
             }
 
-        # OpenRouter metadata: tag each generation with caller/simulation context
+        # OpenRouter metadata: tag each generation with caller/simulation
+        # context. Specifically structured so OpenRouter forwards it cleanly
+        # to Langfuse — `user` becomes Langfuse `sessionId`, `metadata`
+        # becomes the trace metadata block, `tags` powers the filter UI.
         if not self._is_ollama() and 'openrouter' in (self.base_url or ''):
             # Detect caller for metadata
             caller = 'unknown'
@@ -246,19 +301,47 @@ class LLMClient:
                     break
 
             from .trace_context import TraceContext
-            sim_id = TraceContext.get('simulation_id', '')
-            agent_name = TraceContext.get('agent_name', '')
-            round_num = TraceContext.get('round_num', '')
+            sim_id = TraceContext.get('simulation_id', '') or ''
+            run_id = TraceContext.get('run_id', '') or ''
+            agent_name = TraceContext.get('agent_name', '') or ''
+            agent_id = TraceContext.get('agent_id', '') or ''
+            round_num = TraceContext.get('round_num', None)
+            sim_phase = TraceContext.get('sim_phase', '') or ''
+            prompt_type = TraceContext.get('prompt_type', '') or _prompt_type_from_caller(caller)
+            effective_phase = sim_phase or _phase_from_prompt_type(prompt_type)
 
             extra = kwargs.get("extra_body", {})
-            extra["metadata"] = {
+            metadata = {
                 "caller": caller,
+                "prompt_type": prompt_type,
+                "sim_phase": effective_phase,
+                "run_id": run_id,
                 "simulation_id": sim_id,
                 "agent_name": str(agent_name)[:64],
-                "round": str(round_num),
+                "agent_id": str(agent_id) if agent_id else "",
+                "round": (int(round_num) if isinstance(round_num, int)
+                          else (int(round_num) if (isinstance(round_num, str)
+                                and round_num.isdigit()) else None)),
             }
+            extra["metadata"] = {k: v for k, v in metadata.items()
+                                 if v not in ("", None)}
+            # OpenRouter forwards `user` as the Langfuse sessionId, which
+            # is how we group every call from one sim into one session.
             if sim_id:
-                extra["session_id"] = sim_id
+                extra["user"] = sim_id
+            # Tags surface in Langfuse's filter sidebar. Keep it short —
+            # just the things we actually want to slice by.
+            tags = ["miroshark"]
+            if prompt_type:
+                tags.append(prompt_type)
+            if effective_phase:
+                tags.append(f"phase:{effective_phase}")
+            if run_id:
+                tags.append(f"run:{run_id}")
+            extra["tags"] = tags
+            # Trace name: gives Langfuse's list view a useful label per
+            # call instead of every row reading "OpenRouter Request".
+            extra["name"] = prompt_type or caller
             # Disable chain-of-thought on reasoning-capable models by default —
             # we want short, deterministic outputs, not a 100-token <think>
             # trace padding every call. Saves 50-80% latency on Qwen3/Grok-4.1

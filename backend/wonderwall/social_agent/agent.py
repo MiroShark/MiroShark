@@ -171,22 +171,44 @@ class SocialAgent(ChatAgent):
         if not filtered:
             filtered = [{"role": "user", "content": "(empty context)"}]
 
-        # Inject OpenRouter metadata per-call so each generation is tagged
+        # Inject OpenRouter metadata per-call so each generation is tagged.
+        # Structured for Langfuse: `user` becomes the Langfuse sessionId,
+        # `metadata` lands on the trace, `tags` powers the filter sidebar.
         base_url = _os.environ.get('OPENAI_API_BASE_URL', '')
         if 'openrouter' in base_url:
             try:
-                sim_id = _os.environ.get('MIROSHARK_SIMULATION_ID', '')
+                sim_id = _os.environ.get('MIROSHARK_SIMULATION_ID', '') or ''
+                run_id = _os.environ.get('MIROSHARK_RUN_ID', '') or ''
+                round_env = _os.environ.get('MIROSHARK_ROUND_NUM', '')
+                round_num: Optional[int]
+                try:
+                    round_num = int(round_env) if round_env else None
+                except (TypeError, ValueError):
+                    round_num = None
                 agent_name = str(getattr(self.user_info, 'name', ''))[:64]
+                prompt_type = 'agent_action'
+                sim_phase = 'round'
                 config = self.model_backend.model_config_dict
                 extra = config.get('extra_body', {})
-                extra['metadata'] = {
+                metadata = {
                     'caller': 'SocialAgent.perform_action_by_llm',
+                    'prompt_type': prompt_type,
+                    'sim_phase': sim_phase,
+                    'run_id': run_id,
                     'simulation_id': sim_id,
                     'agent_name': agent_name,
                     'agent_id': str(self.social_agent_id or ''),
+                    'round': round_num,
                 }
+                extra['metadata'] = {k: v for k, v in metadata.items()
+                                     if v not in ('', None)}
                 if sim_id:
-                    extra['session_id'] = sim_id
+                    extra['user'] = sim_id  # OpenRouter → Langfuse sessionId
+                tags = ['miroshark', prompt_type, f'phase:{sim_phase}']
+                if run_id:
+                    tags.append(f'run:{run_id}')
+                extra['tags'] = tags
+                extra['name'] = prompt_type
                 config['extra_body'] = extra
             except Exception:
                 pass

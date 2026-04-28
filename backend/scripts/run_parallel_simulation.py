@@ -1423,6 +1423,13 @@ async def run_twitter_simulation(
                 main_logger.info(f"Received shutdown signal, stopping simulation at round {round_num + 1}")
             break
 
+        # Surface the current round to every LLM call inside the subprocess
+        # via an env var — the only context channel that reaches CAMEL's
+        # OpenRouter call site cleanly without reworking its signature.
+        # `SocialAgent._aget_model_response` reads this and forwards it to
+        # Langfuse as `metadata.round`.
+        os.environ['MIROSHARK_ROUND_NUM'] = str(round_num + 1)
+
         simulated_minutes = round_num * minutes_per_round
         simulated_hour = (simulated_minutes // 60) % 24
         simulated_day = simulated_minutes // (60 * 24) + 1
@@ -1738,6 +1745,13 @@ async def run_reddit_simulation(
             if main_logger:
                 main_logger.info(f"Received shutdown signal, stopping simulation at round {round_num + 1}")
             break
+
+        # Surface the current round to every LLM call inside the subprocess
+        # via an env var — the only context channel that reaches CAMEL's
+        # OpenRouter call site cleanly without reworking its signature.
+        # `SocialAgent._aget_model_response` reads this and forwards it to
+        # Langfuse as `metadata.round`.
+        os.environ['MIROSHARK_ROUND_NUM'] = str(round_num + 1)
 
         simulated_minutes = round_num * minutes_per_round
         simulated_hour = (simulated_minutes // 60) % 24
@@ -2145,6 +2159,9 @@ async def run_polymarket_simulation(
                 )
             break
 
+        # Surface round number to subprocess LLM calls for Langfuse metadata
+        os.environ['MIROSHARK_ROUND_NUM'] = str(round_num + 1)
+
         simulated_minutes = round_num * minutes_per_round
         simulated_hour = (simulated_minutes // 60) % 24
         simulated_day = simulated_minutes // (60 * 24) + 1
@@ -2520,6 +2537,9 @@ async def run_synchronized_simulation(
         if _shutdown_event and _shutdown_event.is_set():
             log_info(f"Shutdown signal at round {round_num + 1}")
             break
+
+        # Surface round number to subprocess LLM calls for Langfuse metadata
+        os.environ['MIROSHARK_ROUND_NUM'] = str(round_num + 1)
 
         simulated_minutes = round_num * minutes_per_round
         simulated_hour = (simulated_minutes // 60) % 24
