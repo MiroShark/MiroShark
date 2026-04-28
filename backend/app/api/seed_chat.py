@@ -7,6 +7,7 @@ from flask import jsonify, request
 from . import seed_chat_bp
 from ..services.seed_extractor import process_turn, EMPTY_STATE
 from ..services.brief_writer import write_brief
+from ..services.research_agent import research_with_intent
 from ..storage.session_store import SessionStore
 from ..utils.logger import get_logger
 
@@ -119,4 +120,53 @@ def launch():
     return jsonify({
         "session_id": session_id,
         "brief_markdown": brief,
+    })
+
+
+def _compose_research_intent(seed_state: dict) -> str:
+    """Build the intent string passed to research_with_intent from the seed."""
+    parts = [seed_state.get("intent", "").strip()]
+    claims = seed_state.get("contested_claims") or []
+    if claims:
+        parts.append("Contested claims to investigate:")
+        parts.extend(f"- {c}" for c in claims)
+    fmt = seed_state.get("output_format")
+    if fmt:
+        parts.append(f"Output format: {fmt}")
+    return "\n".join(p for p in parts if p)
+
+
+@seed_chat_bp.route("/research", methods=["POST"])
+def research():
+    payload = request.get_json(silent=True) or {}
+    session_id = payload.get("session_id")
+    if not session_id:
+        return jsonify({"error": "session_id required"}), 400
+
+    session = _store.load(session_id)
+    if session is None:
+        return jsonify({"error": "session_not_found"}), 404
+
+    seed_state = session.get("seed_state") or {}
+    if not _seed_ready_for_launch(seed_state):
+        return jsonify({"error": "seed missing required slots"}), 400
+
+    composed_intent = _compose_research_intent(seed_state)
+    try:
+        report = research_with_intent(
+            topic=seed_state["topic"],
+            intent=composed_intent,
+            max_sources=10,
+        )
+    except RuntimeError as exc:
+        logger.error("research failed: %s", exc)
+        return jsonify({"error": f"research_failed: {exc}"}), 503
+
+    report_dict = report.to_dict()
+    session["research_report"] = report_dict
+    _store.save(session)
+
+    return jsonify({
+        "session_id": session_id,
+        "report": report_dict,
     })

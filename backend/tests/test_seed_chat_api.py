@@ -1,6 +1,6 @@
 """Tests for /api/seed-chat endpoints."""
 
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -246,4 +246,104 @@ def test_launch_400_when_required_slots_missing(client):
 
 def test_launch_400_when_session_id_missing(client):
     response = client.post("/api/seed-chat/launch", json={})
+    assert response.status_code == 400
+
+
+# ---- /research endpoint ----
+
+
+def test_research_returns_report_and_saves(client):
+    fake_session = {
+        "id": "abc",
+        "title": "Test",
+        "created_at": "t1",
+        "updated_at": "t2",
+        "messages": [],
+        "seed_state": {
+            "topic": "X",
+            "intent": "Y",
+            "stakeholders": [
+                {"name": "A", "role": "r", "stance": "neutral"},
+                {"name": "B", "role": "r", "stance": "neutral"},
+            ],
+            "decision_branches": [],
+            "contested_claims": ["claim 1"],
+            "output_format": "pros_cons",
+        },
+        "ready_to_launch": True,
+    }
+    fake_report = {
+        "topic": "X",
+        "intent": "Y",
+        "gaps": [],
+        "content_assessment": "",
+        "queries": ["q1"],
+        "results": [
+            {"url": "https://example.com/a", "title": "A", "snippet": "...",
+             "text_length": 1000, "score": 0.9, "fetch_error": None},
+        ],
+        "total_chars": 1000,
+        "fetched_count": 1,
+    }
+
+    fake_report_obj = MagicMock()
+    fake_report_obj.to_dict.return_value = fake_report
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.research_with_intent", return_value=fake_report_obj) as mock_research:
+        mock_store.load.return_value = fake_session
+        response = client.post(
+            "/api/seed-chat/research",
+            json={"session_id": "abc"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["session_id"] == "abc"
+    assert body["report"] == fake_report
+
+    mock_research.assert_called_once()
+    call_kwargs = mock_research.call_args.kwargs
+    if call_kwargs:
+        assert call_kwargs.get("topic") == "X"
+    else:
+        # positional args
+        assert mock_research.call_args.args[0] == "X"
+
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["research_report"] == fake_report
+
+
+def test_research_404_when_session_missing(client):
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = None
+        response = client.post(
+            "/api/seed-chat/research",
+            json={"session_id": "missing"},
+        )
+    assert response.status_code == 404
+
+
+def test_research_400_when_required_slots_missing(client):
+    incomplete = {
+        "id": "x", "title": "", "created_at": "t", "updated_at": "t",
+        "messages": [],
+        "seed_state": {
+            "topic": "", "intent": "", "stakeholders": [],
+            "decision_branches": [], "contested_claims": [], "output_format": "",
+        },
+        "ready_to_launch": False,
+    }
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = incomplete
+        response = client.post(
+            "/api/seed-chat/research",
+            json={"session_id": "x"},
+        )
+    assert response.status_code == 400
+
+
+def test_research_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/research", json={})
     assert response.status_code == 400
