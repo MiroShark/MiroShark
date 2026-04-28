@@ -2244,7 +2244,11 @@ def get_simulation_history():
             project = ProjectManager.get_project(sim.project_id)
             if project and hasattr(project, 'files') and project.files:
                 sim_dict["files"] = [
-                    {"filename": f.get("filename", "Unknown file")} 
+                    {
+                        "filename": f.get("filename", "Unknown file"),
+                        "url": f.get("url", ""),
+                        "saved_filename": f.get("saved_filename", ""),
+                    }
                     for f in project.files[:3]
                 ]
             else:
@@ -2741,6 +2745,47 @@ def get_simulation_config(simulation_id: str):
             "error": str(e),
             "traceback": traceback.format_exc()
         }), 500
+
+
+@simulation_bp.route('/project/<project_id>/files/<saved_filename>/download', methods=['GET'])
+def download_project_file(project_id: str, saved_filename: str):
+    """Stream a project's uploaded file back to the browser by its
+    UUID-based saved_filename. Used by the History modal's file list
+    so users can re-download originals they ingested earlier."""
+    try:
+        # Reject path-traversal attempts — saved_filename is supposed
+        # to be a single segment, not a path.
+        if '/' in saved_filename or '\\' in saved_filename or '..' in saved_filename:
+            return jsonify({"success": False, "error": "Invalid filename"}), 400
+
+        files_dir = os.path.abspath(
+            ProjectManager._get_project_files_dir(project_id)
+        )
+        file_path = os.path.abspath(os.path.join(files_dir, saved_filename))
+        # Defense-in-depth: ensure resolved path is still inside files_dir
+        if not file_path.startswith(files_dir + os.sep):
+            return jsonify({"success": False, "error": "Invalid filename"}), 400
+        if not os.path.exists(file_path):
+            return jsonify({"success": False, "error": "File not found"}), 404
+
+        # Look up the original filename from the project record so the
+        # browser saves it with a meaningful name, not the UUID.
+        download_name = saved_filename
+        try:
+            project = ProjectManager.get_project(project_id)
+            if project and getattr(project, 'files', None):
+                for f in project.files:
+                    if f.get('saved_filename') == saved_filename:
+                        download_name = f.get('filename') or saved_filename
+                        break
+        except Exception:
+            pass
+
+        return send_file(file_path, as_attachment=True, download_name=download_name)
+
+    except Exception as e:
+        logger.error(f"Failed to download project file: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @simulation_bp.route('/<simulation_id>/config/download', methods=['GET'])

@@ -228,10 +228,20 @@
               <div class="modal-section">
                 <div class="modal-label">Associated Files</div>
                 <div class="modal-files" v-if="selectedProject.files && selectedProject.files.length > 0">
-                  <div v-for="(file, index) in selectedProject.files" :key="index" class="modal-file-item">
+                  <component
+                    :is="fileLinkFor(file, selectedProject) ? 'a' : 'div'"
+                    v-for="(file, index) in selectedProject.files"
+                    :key="index"
+                    class="modal-file-item"
+                    :class="{ 'is-link': !!fileLinkFor(file, selectedProject) }"
+                    :href="fileLinkFor(file, selectedProject) || undefined"
+                    :target="fileLinkFor(file, selectedProject) ? '_blank' : undefined"
+                    :rel="fileLinkFor(file, selectedProject) ? 'noopener noreferrer' : undefined"
+                    :title="file.filename"
+                  >
                     <span class="file-tag" :class="getFileType(file.filename)">{{ getFileTypeLabel(file.filename) }}</span>
                     <span class="modal-file-name">{{ file.filename }}</span>
-                  </div>
+                  </component>
                 </div>
                 <div class="modal-empty" v-else>No associated files</div>
               </div>
@@ -341,7 +351,7 @@
               <!-- Not yet resolved or re-resolving -->
               <div v-else-if="!showResolvePanel" class="resolve-intro">
                 <p class="resolve-desc">Did the simulation correctly predict what happened? Record the real-world outcome to build your accuracy track record.</p>
-                <button class="resolve-trigger-btn" @click="openResolvePanel">Record Outcome</button>
+                <button class="resolve-trigger-btn" @click="openResolvePanel">⌘ Record Outcome</button>
               </div>
 
               <div v-if="showResolvePanel" class="resolve-form">
@@ -518,6 +528,10 @@ const embedSimulationId = ref('')
 const openEmbedDialog = () => {
   if (!selectedProject.value) return
   embedSimulationId.value = selectedProject.value.simulation_id
+  // Close the project modal so only the embed dialog is visible —
+  // otherwise the two stack and the embed page sits on top of a
+  // dimmed sim modal that nobody asked for.
+  closeModal()
   embedDialogOpen.value = true
 }
 
@@ -788,6 +802,19 @@ const getFileTypeLabel = (filename) => {
   if (!filename) return 'FILE'
   const ext = filename.split('.').pop()?.toUpperCase()
   return ext || 'FILE'
+}
+
+// Build a clickable URL for an associated file:
+//  - URL-imported docs use their original `url`
+//  - Uploaded files resolve via the project download endpoint
+//  - Otherwise the row stays non-clickable
+const fileLinkFor = (file, project) => {
+  if (!file) return null
+  if (file.url) return file.url
+  if (file.saved_filename && project?.project_id) {
+    return `/api/simulation/project/${project.project_id}/files/${encodeURIComponent(file.saved_filename)}/download`
+  }
+  return null
 }
 
 // Truncate filename (preserve extension)
@@ -1644,6 +1671,10 @@ onUnmounted(() => {
   max-width: 90vw;
   max-height: 85vh;
   overflow-y: auto;
+  /* Without overflow-x: hidden, setting overflow-y: auto causes browsers
+     to default overflow-x to auto too — long filenames in the file list
+     then make the whole modal scroll sideways. */
+  overflow-x: hidden;
   border: 2px solid rgba(10, 10, 10, 0.12);
   font-family: var(--font-mono);
 }
@@ -1811,10 +1842,25 @@ onUnmounted(() => {
   background: #FAFAFA;
   border: 1px solid rgba(10, 10, 10, 0.08);
   transition: all 0.2s ease;
+  /* min-width: 0 lets the inner .modal-file-name's text-overflow:ellipsis
+     actually kick in inside the parent flex column — without it, flex
+     items default to min-width:auto and overflow horizontally. */
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
 }
 
 .modal-file-item:hover {
   border-color: rgba(10, 10, 10, 0.12);
+}
+
+.modal-file-item.is-link {
+  cursor: pointer;
+}
+
+.modal-file-item.is-link:hover {
+  border-color: rgba(255, 69, 0, 0.4);
+  background: #FFF;
 }
 
 .modal-file-name {
@@ -1822,6 +1868,7 @@ onUnmounted(() => {
   color: rgba(10, 10, 10, 0.5);
   font-family: var(--font-mono);
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2242,29 +2289,38 @@ onUnmounted(() => {
   padding-top: 0;
 }
 
+/* Match the Embed section's intro+button exactly so the two
+   "primary action" sections of the modal read as a pair. */
 .resolve-intro {
-  padding: 0 20px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 34px 0;
 }
 .resolve-desc {
-  font-size: 12px;
-  color: rgba(10,10,10,0.55);
-  margin: 8px 0 12px;
-  line-height: 1.5;
-}
-.resolve-trigger-btn {
-  padding: 7px 16px;
-  border: 1px solid rgba(10,10,10,0.2);
-  background: transparent;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10,10,10,0.7);
-  cursor: pointer;
+  color: rgba(10, 10, 10, 0.4);
+  letter-spacing: 1px;
+  text-align: center;
+  margin: 0;
+}
+.resolve-trigger-btn {
+  padding: 8px 22px;
+  border: 1px solid rgba(234, 88, 12, 0.45);
+  background: rgba(234, 88, 12, 0.06);
+  color: #EA580C;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
   letter-spacing: 2px;
-  transition: all 0.2s;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 .resolve-trigger-btn:hover {
-  border-color: rgba(10,10,10,0.5);
-  color: #0A0A0A;
+  border-color: #EA580C;
+  background: rgba(234, 88, 12, 0.12);
 }
 
 .resolve-form {
@@ -2556,20 +2612,24 @@ onUnmounted(() => {
 
 .quality-overview {
   display: flex;
-  gap: 16px;
-  align-items: flex-start;
+  gap: 18px;
+  align-items: center;
   margin-top: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid rgba(10,10,10,0.06);
 }
 
 .quality-health-badge {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 1.5px;
   text-transform: uppercase;
-  padding: 6px 14px;
+  padding: 5px 11px;
   border: 1px solid;
   flex-shrink: 0;
+  align-self: center;
 }
 .quality-health-badge.excellent { color: #22c55e; border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.06); }
 .quality-health-badge.good      { color: #eab308; border-color: rgba(234,179,8,0.3); background: rgba(234,179,8,0.06); }
@@ -2577,37 +2637,43 @@ onUnmounted(() => {
 
 .quality-metrics {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 9px;
 }
 
 .quality-metric {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
 .metric-label {
   font-family: var(--font-mono);
-  font-size: 9px;
-  letter-spacing: 2px;
+  font-size: 10px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.4);
-  width: 100px;
+  color: rgba(10,10,10,0.45);
+  width: 130px;
   flex-shrink: 0;
+  white-space: nowrap;
 }
 
 .metric-bar-wrap {
   flex: 1;
-  height: 4px;
+  min-width: 0;
+  height: 5px;
   background: rgba(10,10,10,0.06);
   position: relative;
+  border-radius: 2px;
+  overflow: hidden;
 }
 
 .metric-bar {
   height: 100%;
   transition: width 0.4s ease;
+  border-radius: 2px;
 }
 .metric-bar.bar-good { background: #22c55e; }
 .metric-bar.bar-ok   { background: #eab308; }
@@ -2617,16 +2683,18 @@ onUnmounted(() => {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  color: rgba(10,10,10,0.6);
-  width: 44px;
+  color: rgba(10,10,10,0.7);
+  width: 42px;
   text-align: right;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .convergence-tag {
   width: auto;
   font-size: 10px;
   color: rgba(10,10,10,0.5);
+  font-weight: 500;
 }
 
 .quality-suggestions {

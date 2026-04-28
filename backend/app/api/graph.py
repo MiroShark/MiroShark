@@ -184,6 +184,7 @@ def generate_ontology():
                 )
                 project.files.append({
                     "filename": file_info["original_filename"],
+                    "saved_filename": file_info["saved_filename"],
                     "size": file_info["size"]
                 })
 
