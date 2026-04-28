@@ -124,16 +124,33 @@ const iconMap = {
   school: '🎓'
 }
 
+// Retry the initial fetch a few times. The frontend (Vite) is up before
+// the backend has finished warming up — a single attempt often returns
+// nothing on first page load, leaving the gallery empty until the user
+// refreshes. Backoff: 0ms, 750ms, 1500ms, 3000ms.
+const fetchWithRetry = async () => {
+  const delays = [0, 750, 1500, 3000]
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i]) await new Promise(r => setTimeout(r, delays[i]))
+    try {
+      const [listRes, capsRes] = await Promise.all([
+        listTemplates(),
+        getTemplateCapabilities().catch(() => null),
+      ])
+      if (capsRes?.success) capabilities.value = capsRes.data
+      if (listRes?.success && Array.isArray(listRes.data) && listRes.data.length > 0) {
+        templates.value = listRes.data
+        return
+      }
+    } catch (e) {
+      if (i === delays.length - 1) console.error('Failed to load templates:', e)
+    }
+  }
+}
+
 onMounted(async () => {
   try {
-    const [listRes, capsRes] = await Promise.all([
-      listTemplates(),
-      getTemplateCapabilities().catch(() => null),  // caps is optional
-    ])
-    if (listRes?.success) templates.value = listRes.data
-    if (capsRes?.success) capabilities.value = capsRes.data
-  } catch (e) {
-    console.error('Failed to load templates:', e)
+    await fetchWithRetry()
   } finally {
     loading.value = false
   }
@@ -298,6 +315,12 @@ const launchTemplate = async (template) => {
   border: 1px solid #E5E5E5;
   color: #666;
   text-transform: lowercase;
+  white-space: nowrap;
+}
+
+.card-platforms {
+  flex-wrap: wrap;
+  row-gap: 6px;
 }
 
 .platform-badge--cf {

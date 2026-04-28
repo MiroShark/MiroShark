@@ -107,21 +107,32 @@ const relativeTime = (iso) => {
 const load = async ({ force = false } = {}) => {
   loading.value = true
   errored.value = false
+  // Vite serves the page before Flask is fully warm — a single fetch
+  // on mount often returns nothing, leaving the panel empty until the
+  // user manually refreshes. Retry a few times on cold boot.
+  const delays = force ? [0] : [0, 750, 1500, 3000]
   try {
-    const res = await getTrendingTopics({ refresh: force })
-    if (!res || res.success === false) {
-      items.value = []
-      errored.value = true
-      return
+    for (let i = 0; i < delays.length; i++) {
+      if (delays[i]) await new Promise(r => setTimeout(r, delays[i]))
+      try {
+        const res = await getTrendingTopics({ refresh: force })
+        if (res && res.success !== false) {
+          const data = res.data || {}
+          const list = Array.isArray(data.items) ? data.items : []
+          if (list.length > 0 || i === delays.length - 1) {
+            items.value = list
+            fetchedAt.value = data.fetched_at || new Date().toISOString()
+            cached.value = !!data.cached
+            return
+          }
+        }
+      } catch (_) {
+        if (i === delays.length - 1) {
+          items.value = []
+          errored.value = true
+        }
+      }
     }
-    const data = res.data || {}
-    items.value = Array.isArray(data.items) ? data.items : []
-    fetchedAt.value = data.fetched_at || new Date().toISOString()
-    cached.value = !!data.cached
-  } catch (_) {
-    // Swallow — trending is non-essential. Hide the panel on hard errors.
-    items.value = []
-    errored.value = true
   } finally {
     loading.value = false
   }

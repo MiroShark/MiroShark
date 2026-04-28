@@ -7,13 +7,22 @@
   "difficulty": "hard",
   "estimated_agents": 22,
   "estimated_rounds": 48,
-  "platforms": ["twitter", "reddit"],
-  "tags": ["history", "counterfactual", "what-if", "space race"],
+  "platforms": [
+    "twitter",
+    "reddit",
+    "polymarket"
+  ],
+  "tags": [
+    "history",
+    "counterfactual",
+    "what-if",
+    "space race"
+  ],
   "simulation_requirement": "Simulate a social media discussion around the counterfactual scenario: 'What if the Soviet Union had landed on the Moon first in 1968?' Track how historians, space enthusiasts, political scientists, Cold War scholars, science communicators, and general public discuss the implications. Focus on how different communities construct alternative timelines, what geopolitical consequences they predict, how national pride and ideology shape the narratives, and whether consensus forms around likely outcomes.",
   "seed_document": "# Counterfactual Scenario: Soviet Moon Landing, 1968\n\n## The Alternative Timeline\nIn this scenario, the Soviet N1 rocket program succeeded in its early tests. Cosmonaut Alexei Leonov landed on the Moon on September 23, 1968 — 10 months before the actual Apollo 11 landing.\n\n## What Actually Happened (Our Timeline)\n- The Soviet N1 rocket failed all four of its test launches (1969-1972)\n- Apollo 11 landed on the Moon on July 20, 1969\n- The Soviet Union never sent cosmonauts to the Moon\n- The \"Space Race\" is generally considered to have been won by the United States\n\n## The Counterfactual Scenario Details\n- September 23, 1968: Leonov performs a solo landing on the lunar surface\n- He spends 2 hours on the surface, plants a Soviet flag, and collects 5kg of lunar samples\n- The mission is broadcast on Soviet television, with grainy but unmistakable footage\n- Leonov returns safely to Earth on September 26\n- The United States had not yet orbited the Moon (Apollo 8 orbited in December 1968 in our timeline)\n\n## Key Questions for Discussion\n1. **Geopolitical Impact**: How would a Soviet Moon landing have affected the Cold War balance? Would it have emboldened Soviet foreign policy?\n2. **US Response**: Would NASA have accelerated Apollo? Would there have been a \"second Space Race\" to establish a lunar base?\n3. **Cultural Impact**: How would this have changed perceptions of communism vs capitalism globally, especially in non-aligned nations?\n4. **Scientific Trajectory**: Would the focus have shifted to Mars earlier? Would space cooperation (like the later Apollo-Soyuz) have happened sooner or later?\n5. **Domestic Politics**: How would this have affected the 1968 US presidential election? Would LBJ have stayed in the race?\n\n## Historical Context\n- 1968 was already a turbulent year: Vietnam War escalation, MLK and RFK assassinations, Prague Spring\n- Soviet space program had many early firsts: first satellite, first human in space, first spacewalk\n- The N1 rocket was a genuine competitor — its failures were largely due to funding and management issues, not fundamental design flaws\n- Korolev, the chief Soviet rocket designer, died in 1966 — in our scenario, his successor Mishin receives better institutional support\n- Public opinion in both superpowers strongly supported space exploration in 1968",
   "recommended_settings": {
     "enable_twitter": true,
     "enable_reddit": true,
-    "enable_polymarket": false
+    "enable_polymarket": true
   }
 }

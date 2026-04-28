@@ -7,14 +7,23 @@
   "difficulty": "medium",
   "estimated_agents": 30,
   "estimated_rounds": 72,
-  "tags": ["corporate", "PR crisis", "brand reputation", "boycott"],
-  "platforms": ["twitter", "reddit"],
+  "tags": [
+    "corporate",
+    "PR crisis",
+    "brand reputation",
+    "boycott"
+  ],
+  "platforms": [
+    "twitter",
+    "reddit",
+    "polymarket"
+  ],
   "simulation_requirement": "Simulate the public backlash on social media after a major tech company's data breach is revealed by investigative journalists. Track how affected users, privacy advocates, company employees, industry analysts, journalists, competitors, and government officials react over 72 hours. Focus on how the crisis narrative evolves, whether calls for boycotts gain traction, how the company's PR responses are received, and what factors determine whether the story fades or escalates.",
   "seed_document": "# DataVault Inc. Data Breach: Crisis Timeline\n\n## The Revelation\nA major investigative news outlet has published an article revealing that DataVault Inc., a cloud storage company with 45 million users, suffered a data breach 3 months ago that exposed personal data including names, emails, phone numbers, and partial payment information for approximately 12 million users. The company did not disclose the breach publicly.\n\n## Key Facts\n- Breach occurred 3 months ago, affecting 12 million of 45 million users\n- Exposed data: full names, email addresses, phone numbers, last 4 digits of credit cards, and usage history\n- Company was aware within 48 hours of the breach but chose not to disclose\n- Internal emails (leaked to the journalist) show executives debating whether disclosure was legally required\n- The breach was caused by an unpatched vulnerability that had a fix available for 6 weeks\n- DataVault's stock dropped 8% in pre-market trading after the article\n\n## Company Response (Initial)\n- CEO released a statement 2 hours after the article: \"We take security seriously and have already patched the vulnerability. We are conducting a thorough investigation.\"\n- No mention of why the 3-month delay in disclosure\n- Company offered affected users 1 year of free credit monitoring\n- CTO posted a technical blog post about their security improvements\n\n## Stakeholder Landscape\n- **Affected Users**: 12 million people whose data was exposed, many discovering it from news rather than the company\n- **Privacy Advocates**: Organizations like EFF and Privacy International have been tracking corporate breach disclosure practices\n- **Company Employees**: Some are defending the company on social media, others are expressing frustration anonymously\n- **Industry Analysts**: Divided on whether this is a company-ending crisis or a temporary setback\n- **Competitors**: Some are running targeted ads highlighting their own security features\n- **Government Officials**: Two senators have already called for hearings\n- **Journalists**: Multiple outlets are now pursuing follow-up stories\n\n## Context\n- DataVault went public 18 months ago at a $3.2B valuation\n- The company recently won a major government contract for cloud services\n- CEO was named \"Tech Executive of the Year\" by a business magazine last quarter\n- A similar (smaller) breach at a competitor last year resulted in a $50M fine\n- Public trust in tech companies is at a 10-year low according to recent surveys",
   "recommended_settings": {
     "enable_twitter": true,
     "enable_reddit": true,
-    "enable_polymarket": false
+    "enable_polymarket": true
   },
   "counterfactual_branches": [
     {

@@ -7,13 +7,22 @@
   "difficulty": "easy",
   "estimated_agents": 20,
   "estimated_rounds": 24,
-  "platforms": ["twitter", "reddit"],
-  "tags": ["technology", "product launch", "consumer", "hype"],
+  "platforms": [
+    "twitter",
+    "reddit",
+    "polymarket"
+  ],
+  "tags": [
+    "technology",
+    "product launch",
+    "consumer",
+    "hype"
+  ],
   "simulation_requirement": "Simulate the social media reaction to a major tech company announcing a new AI-powered personal device over 24 hours. Track how tech journalists, developers, early adopters, skeptics, competitor employees, and general consumers react. Focus on the initial hype cycle, how technical details are dissected and debated, pricing reaction, comparisons to competitors, and whether enthusiasm sustains or deflates after the initial announcement.",
   "seed_document": "# OmniTech Announces \"Aria\" — AI-Powered Smart Glasses\n\n## Product Overview\nOmniTech, the third-largest tech company by market cap, has just announced Aria, their first consumer AI wearable device. The smart glasses feature an always-on AI assistant, real-time translation in 40 languages, AR navigation, and contextual information overlay.\n\n## Key Specifications\n- Weight: 42g (lighter than most prescription glasses)\n- Battery: 8 hours continuous use, 18 hours standby\n- Display: MicroLED projection, visible in direct sunlight\n- Camera: 12MP with on-device processing\n- Audio: Bone conduction speakers + directional microphone array\n- AI: Runs a compressed version of OmniTech's flagship AI model on-device\n- Privacy: Physical camera shutter, LED indicator when recording\n- Price: $499 (Standard), $699 (Pro with prescription lens support)\n- Availability: Ships in 6 weeks, pre-orders open now\n\n## Announcement Highlights\n- CEO demo'd the product live, showing real-time translation during a conversation with a Japanese engineer\n- The AI assistant correctly identified a restaurant across the street and displayed its menu and reviews\n- Developer SDK announced with access to AR overlay APIs\n- Partnership with three major eyewear brands for fashion frames\n- A demo glitch occurred when the AI misidentified a person in the audience, quickly recovered\n\n## Market Context\n- This is OmniTech's first wearable device (they're primarily known for cloud services and smartphones)\n- Two competitors launched similar products in the past year: one at $1,299 (mixed reviews), one at $349 (limited features)\n- AI wearables are projected to be a $15B market by 2028\n- Privacy concerns around smart glasses have been debated since the first attempts a decade ago\n- Developer community has been requesting a lightweight AR platform for years\n\n## Initial Reactions (first 30 minutes)\n- Pre-order page crashed due to traffic (back up within 10 minutes)\n- OmniTech stock rose 4% in after-hours trading\n- #Aria is trending #1 on social media\n- First hands-on preview articles are being published by tech journalists who attended the event\n- A privacy advocacy group released a statement expressing concerns about always-on cameras",
   "recommended_settings": {
     "enable_twitter": true,
     "enable_reddit": true,
-    "enable_polymarket": false
+    "enable_polymarket": true
   }
 }

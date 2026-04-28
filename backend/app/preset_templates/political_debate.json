@@ -7,13 +7,22 @@
   "difficulty": "medium",
   "estimated_agents": 25,
   "estimated_rounds": 48,
-  "platforms": ["twitter", "reddit"],
-  "tags": ["politics", "public opinion", "debate", "polarization"],
+  "platforms": [
+    "twitter",
+    "reddit",
+    "polymarket"
+  ],
+  "tags": [
+    "politics",
+    "public opinion",
+    "debate",
+    "polarization"
+  ],
   "simulation_requirement": "Simulate the public reaction on social media after a major US presidential debate. Track how different demographics (young voters, suburban parents, political commentators, journalists, undecided voters) react to key moments, form narratives, and shift sentiment over 48 hours. Focus on how viral moments spread, how media framing influences public perception, and whether echo chambers amplify or moderate initial reactions.",
   "seed_document": "# US Presidential Debate: Key Moments and Context\n\n## Event Overview\nA televised presidential debate between the two leading candidates has just concluded. The debate covered five major topics: the economy, immigration, healthcare, foreign policy, and climate change.\n\n## Key Moments\n\n### Economy (Opening 20 minutes)\nCandidate A emphasized job creation numbers and stock market performance, claiming credit for economic recovery. Candidate B countered with data on rising inequality, housing costs, and stagnant real wages for middle-class families. A heated exchange occurred when Candidate B accused Candidate A of favoring corporate tax breaks over working families.\n\n### Immigration (Minutes 20-35)\nCandidate A proposed stricter border enforcement and merit-based immigration. Candidate B advocated for comprehensive reform including a pathway to citizenship. The most viral moment came when Candidate B shared a personal story about an immigrant family affected by current policies, drawing visible emotion from the audience.\n\n### Healthcare (Minutes 35-50)\nBoth candidates clashed on prescription drug pricing. Candidate A defended market-based solutions while Candidate B pushed for expanded government negotiation powers. Candidate A stumbled when asked about specific policy details, pausing for several seconds before redirecting.\n\n### Foreign Policy (Minutes 50-65)\nA sharp exchange on international alliances, with Candidate A questioning the cost of overseas commitments and Candidate B arguing for maintaining traditional partnerships. Candidate B drew applause when quoting a recent statement by a foreign leader praising American leadership.\n\n### Climate Change (Final 15 minutes)\nThe most contentious segment. Candidate A called for an \"all of the above\" energy strategy including fossil fuels. Candidate B committed to aggressive emissions targets and green infrastructure investment. When pressed on job losses in fossil fuel communities, Candidate B outlined a transition plan but was interrupted multiple times.\n\n## Post-Debate Context\n- Snap polls show a split: 48% say Candidate B won, 44% say Candidate A, 8% undecided\n- Social media is already trending with clips from the immigration segment\n- Major news networks are divided in their initial framing\n- Both campaigns have released post-debate ads within 30 minutes\n\n## Demographic Landscape\n- Young voters (18-29): Heavily engaged on social media, generally favoring Candidate B\n- Suburban voters: Key swing demographic, focused on economy and healthcare\n- Rural communities: Strongly aligned with Candidate A on immigration and energy\n- Political commentators: Split along partisan lines with some notable crossover reactions\n- Undecided voters: Represent 8-12% of the electorate, watching closely for authenticity and specifics",
   "recommended_settings": {
     "enable_twitter": true,
     "enable_reddit": true,
-    "enable_polymarket": false
+    "enable_polymarket": true
   }
 }
