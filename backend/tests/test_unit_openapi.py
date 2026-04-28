@@ -117,6 +117,7 @@ _UNDOCUMENTED_ALLOWLIST: set[str] = {
     "/api/simulation/<simulation_id>/config/retry",
     "/api/simulation/<simulation_id>/config/download",
     "/api/simulation/script/<script_name>/download",
+    "/api/simulation/project/<project_id>/files/<saved_filename>/download",
     "/api/simulation/generate-profiles",
     # Environment management — operator-facing only, not shipped to
     # third-party consumers.
