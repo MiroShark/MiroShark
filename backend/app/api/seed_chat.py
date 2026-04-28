@@ -22,6 +22,7 @@ def turn():
     payload = request.get_json(silent=True) or {}
     messages = payload.get("messages")
     seed_state = payload.get("seed_state") or dict(EMPTY_STATE)
+    session_id = payload.get("session_id")
 
     if not isinstance(messages, list) or not messages:
         return jsonify({"error": "messages must be a non-empty list"}), 400
@@ -32,11 +33,30 @@ def turn():
         logger.error("seed-chat turn failed: %s", exc)
         return jsonify({"error": f"claude_cli_unavailable: {exc}"}), 503
 
-    return jsonify({
+    response_body = {
         "assistant_message": reply,
         "updated_seed_state": updated,
         "ready_to_launch": ready,
-    })
+    }
+
+    if session_id:
+        session = _store.load(session_id)
+        if session is not None:
+            session["messages"] = list(messages) + [
+                {"role": "assistant", "content": reply}
+            ]
+            session["seed_state"] = updated
+            session["ready_to_launch"] = ready
+            if not session.get("title"):
+                first_user = next(
+                    (m["content"] for m in messages if m.get("role") == "user"),
+                    "",
+                )
+                session["title"] = first_user[:80]
+            _store.save(session)
+            response_body["session_id"] = session_id
+
+    return jsonify(response_body)
 
 
 @seed_chat_bp.route("/sessions", methods=["POST"])

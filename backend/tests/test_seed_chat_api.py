@@ -117,3 +117,56 @@ def test_get_session_missing_returns_404(client):
         response = client.get("/api/seed-chat/sessions/missing")
 
     assert response.status_code == 404
+
+
+def test_turn_with_session_id_autosaves(client):
+    """When /turn includes session_id, the post-turn state is saved to the store."""
+    fake_existing = {
+        "id": "abc123",
+        "title": "",
+        "created_at": "t0",
+        "updated_at": "t0",
+        "messages": [],
+        "seed_state": {},
+        "ready_to_launch": False,
+    }
+    post_turn_state = {
+        "topic": "X",
+        "intent": "Y",
+        "stakeholders": [],
+        "decision_branches": [],
+        "contested_claims": [],
+        "output_format": "",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.process_turn") as mock_pt:
+        mock_store.load.return_value = fake_existing
+        mock_pt.return_value = ("Reply", post_turn_state, False)
+
+        response = client.post(
+            "/api/seed-chat/turn",
+            json={
+                "messages": [{"role": "user", "content": "I want a brief on X"}],
+                "seed_state": {},
+                "session_id": "abc123",
+            },
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["session_id"] == "abc123"
+    assert body["assistant_message"] == "Reply"
+
+    # save() called once with the updated session
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["id"] == "abc123"
+    assert saved["seed_state"] == post_turn_state
+    assert saved["ready_to_launch"] is False
+    # messages should now include both turns
+    assert len(saved["messages"]) == 2
+    assert saved["messages"][0] == {"role": "user", "content": "I want a brief on X"}
+    assert saved["messages"][1] == {"role": "assistant", "content": "Reply"}
+    # title auto-populated from first user message (truncated)
+    assert saved["title"] != ""
