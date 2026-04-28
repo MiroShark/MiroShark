@@ -419,6 +419,27 @@ export const getShareCardUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the animated belief-replay GIF for a simulation.
+ *
+ * 1200×630 (matches the share card aspect ratio). One frame per round
+ * with belief bars sliding to that round's bullish/neutral/bearish
+ * split. Discord and Slack auto-play GIFs from direct file URLs, so
+ * pasting this link drops a motion preview into the channel.
+ *
+ * Same publish gate as the share card. Returns the absolute URL only —
+ * the caller is expected to drop it into an `<img src>` or a download
+ * `<a href>` rather than fetching the bytes itself.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin] - override base URL (defaults to window.location.origin)
+ * @returns {string}
+ */
+export const getReplayGifUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/replay.gif`
+}
+
+/**
  * Build the absolute URL of the public share landing page for a
  * simulation. The page exposes Open Graph + Twitter Card meta tags so
  * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls

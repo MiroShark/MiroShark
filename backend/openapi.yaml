@@ -1139,6 +1139,30 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/replay.gif:
+    get:
+      tags: [Publish & Embed]
+      summary: Animated belief-replay GIF (one frame per round).
+      description: |
+        1200×630 animated GIF showing per-round belief drift — bullish
+        / neutral / bearish bars sliding to each round's distribution
+        with a round counter and progress bar. Same publish gate as the
+        share card. Discord and Slack auto-play GIFs from a direct file
+        URL, so dropping this link in a channel renders the animation
+        inline.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "GIF image with `Cache-Control: public, max-age=3600`."
+          content:
+            image/gif:
+              schema:
+                type: string
+                format: binary
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /share/{simulation_id}:
     get:
       tags: [Publish & Embed]

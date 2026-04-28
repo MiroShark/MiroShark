@@ -161,6 +161,72 @@
               </a>
             </div>
 
+            <!-- Animated belief replay — same 1200×630 frame as the share
+                 card but one frame per round, so X / Discord / Slack
+                 auto-play the belief drift inline. -->
+            <div class="replay-section">
+              <div class="replay-head">
+                <span class="replay-icon">▶</span>
+                <div class="replay-head-body">
+                  <div class="replay-title">Belief replay (animated)</div>
+                  <div class="replay-sub">
+                    Same canvas as the share card, one frame per round.
+                    Discord and Slack auto-play GIFs from the direct URL —
+                    drop the link in a channel and it plays inline.
+                  </div>
+                </div>
+              </div>
+
+              <div
+                v-if="isPublic && replayGifUrl"
+                class="replay-preview-wrap"
+                :class="{ 'replay-preview-paused': !replayPlay }"
+                @click="startReplay"
+              >
+                <img
+                  v-if="replayPlay"
+                  :src="replayGifUrl"
+                  class="replay-preview"
+                  :class="{ 'replay-preview-loaded': replayLoaded }"
+                  alt="MiroShark belief replay GIF"
+                  @load="onReplayLoad"
+                  @error="onReplayError"
+                />
+                <div v-if="!replayPlay" class="replay-overlay">
+                  <span class="replay-overlay-icon">▶</span>
+                  <span class="replay-overlay-text">Tap to play</span>
+                </div>
+              </div>
+              <div v-else class="replay-empty">
+                Publish the simulation to enable the belief replay GIF.
+              </div>
+
+              <div class="replay-actions">
+                <div class="snippet-block share-snippet">
+                  <div class="snippet-head">
+                    <span class="snippet-label">Replay GIF URL (auto-plays in Discord / Slack)</span>
+                    <button
+                      class="snippet-copy-btn"
+                      @click="copy('replay')"
+                      :disabled="!isPublic"
+                    >
+                      {{ copied === 'replay' ? '✓ Copied' : 'Copy URL' }}
+                    </button>
+                  </div>
+                  <pre class="snippet-code"><code>{{ replayGifUrl || '—' }}</code></pre>
+                </div>
+
+                <a
+                  v-if="isPublic && replayGifUrl"
+                  class="share-download-btn"
+                  :href="replayGifUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-replay.gif`"
+                >
+                  ↓ Download GIF
+                </a>
+              </div>
+            </div>
+
             <!-- Verified-prediction annotation — lets operators turn a
                  published simulation into a "called it" record on the
                  /verified gallery page. Only meaningful once the run is
@@ -304,6 +370,7 @@ import {
   publishSimulation,
   getEmbedSummary,
   getShareCardUrl,
+  getReplayGifUrl,
   getShareLandingUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
@@ -390,6 +457,30 @@ const shareLandingUrl = computed(() => {
   return getShareLandingUrl(props.simulationId, origin.value)
 })
 
+const replayGifUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  // Same cache-bust token as the share card so re-opens after a state
+  // change pull the freshly rendered GIF instead of the stale cache.
+  const base = getReplayGifUrl(props.simulationId, origin.value)
+  return shareCardCacheBust.value
+    ? `${base}?v=${shareCardCacheBust.value}`
+    : base
+})
+
+const replayLoaded = ref(false)
+const replayPlay = ref(false)
+const onReplayLoad = () => {
+  replayLoaded.value = true
+}
+const onReplayError = () => {
+  // Image fails until the simulation publishes — the watch on isPublic
+  // busts the cache once the operator toggles public on.
+  replayLoaded.value = false
+}
+const startReplay = () => {
+  replayPlay.value = true
+}
+
 const onShareCardError = () => {
   // The image fails until the simulation is published; once the operator
   // toggles public on, watch(isPublic) below busts the cache.
@@ -423,6 +514,7 @@ const copy = async (which) => {
   else if (which === 'url') text = embedUrl.value
   else if (which === 'share') text = shareLandingUrl.value
   else if (which === 'card') text = shareCardUrl.value
+  else if (which === 'replay') text = replayGifUrl.value
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -527,6 +619,11 @@ const submitOutcome = async () => {
 watch(() => props.open, async (val) => {
   if (!val) return
   copied.value = ''
+  // Reset the replay back to its paused poster state so each open
+  // starts with a click-to-play affordance instead of immediately
+  // pulling the GIF (which can be a few hundred KB).
+  replayPlay.value = false
+  replayLoaded.value = false
   _resetOutcomeForm()
   // Refresh public state when reopened — reflects external flips.
   try {
@@ -921,6 +1018,150 @@ watch(isPublic, () => {
 
 .share-download-btn:hover {
   background: #2a2a2a;
+}
+
+.replay-section {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: #0a0a0a;
+  color: #fafafa;
+  border-radius: 10px;
+  border: 1px solid rgba(250, 250, 250, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.replay-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.replay-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(234, 88, 12, 0.18);
+  color: #ea580c;
+  font-size: 11px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.replay-head-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.replay-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #fafafa;
+  margin-bottom: 4px;
+}
+
+.replay-sub {
+  font-size: 12px;
+  line-height: 1.5;
+  color: rgba(250, 250, 250, 0.65);
+}
+
+.replay-preview-wrap {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  align-self: center;
+  aspect-ratio: 1200 / 630;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #18181a;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  cursor: pointer;
+}
+
+.replay-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.replay-preview-loaded { opacity: 1; }
+
+.replay-preview-paused .replay-preview {
+  filter: brightness(0.55);
+}
+
+.replay-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fafafa;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, rgba(10, 10, 10, 0.15), rgba(10, 10, 10, 0.4));
+  pointer-events: none;
+}
+
+.replay-overlay-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: rgba(234, 88, 12, 0.92);
+  color: #fff;
+  font-size: 22px;
+  box-shadow: 0 6px 18px rgba(234, 88, 12, 0.4);
+}
+
+.replay-empty {
+  color: rgba(250, 250, 250, 0.55);
+  font-size: 13px;
+  text-align: center;
+  padding: 28px 18px;
+  line-height: 1.55;
+  border: 1px dashed rgba(250, 250, 250, 0.18);
+  border-radius: 8px;
+}
+
+.replay-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.replay-section .snippet-block {
+  background: rgba(250, 250, 250, 0.04);
+  border-color: rgba(250, 250, 250, 0.08);
+}
+
+.replay-section .snippet-head {
+  background: rgba(250, 250, 250, 0.06);
+  color: rgba(250, 250, 250, 0.7);
+}
+
+.replay-section .snippet-code {
+  color: rgba(250, 250, 250, 0.85);
+}
+
+.replay-section .snippet-copy-btn {
+  background: #ea580c;
 }
 
 .outcome-section {

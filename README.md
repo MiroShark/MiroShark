@@ -73,6 +73,7 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
 | **Per-Agent MCP Tools** | Personas can invoke real MCP tools (web search, APIs) during simulation |
 | **Embed & Publish** | Public/private toggle + embed URLs for sharing finished runs |
 | **Social Share Card** | 1200×630 PNG that auto-unfurls scenario, status, quality, and belief split on Twitter/X, Discord, Slack, LinkedIn |
+| **Animated Belief Replay** | 1200×630 GIF — one frame per round, belief bars sliding to each round's distribution. Discord and Slack auto-play GIFs from the direct URL |
 | **Public Gallery** | `/explore` browses every published simulation as a card grid — preview the share card, consensus split, and quality health; click to open or one-click fork |
 | **Verified Predictions** | Annotate any public sim with the real-world outcome (called it / partial / called wrong + URL). `/verified` is the dedicated hall of calls that landed |
 | **Article Generation** | Substack-style write-up of what happened, grounded in actual posts and trades |

@@ -4720,6 +4720,67 @@ def get_share_card(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/replay.gif', methods=['GET'])
+def get_replay_gif(simulation_id: str):
+    """Render an animated GIF of the per-round belief drift.
+
+    1200×630 (same OG aspect as the share card) — one frame per round
+    with belief bars sliding to that round's bullish/neutral/bearish
+    split, a round counter, and a progress bar. X / Discord / Slack
+    auto-play GIF URLs inline so a public simulation gets a motion
+    asset on every share without any extra effort from the operator.
+
+    Same publish gate as ``/share-card.png``: requires ``is_public=True``.
+    Cached on disk by content hash so repeat hits don't re-render.
+    """
+    from ..services import replay_gif as replay_renderer
+    from flask import Response
+
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+            }), 403
+
+        cache_dir = os.path.join(
+            Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id, "replay-gifs"
+        )
+        os.makedirs(cache_dir, exist_ok=True)
+        key = replay_renderer.summary_cache_key(summary)
+        cache_path = os.path.join(cache_dir, f"{key}.gif")
+
+        if os.path.exists(cache_path):
+            with open(cache_path, "rb") as fh:
+                gif_bytes = fh.read()
+        else:
+            gif_bytes = replay_renderer.render_replay_gif(summary)
+            try:
+                with open(cache_path, "wb") as fh:
+                    fh.write(gif_bytes)
+            except OSError as exc:
+                logger.warning(f"replay-gif: failed to cache to {cache_path}: {exc}")
+
+        response = Response(gif_bytes, mimetype="image/gif")
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-replay.gif"'
+        )
+        return response
+
+    except Exception as e:
+        logger.error(f"replay-gif: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 # ============== Public Gallery ==============
 
 

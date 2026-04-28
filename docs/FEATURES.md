@@ -108,6 +108,14 @@ When a simulation is published, the Embed dialog also exposes a **social card** 
 
 Paste the `/share/<id>` URL anywhere — the post unfurls with a polished card instead of a generic preview.
 
+## Animated Belief Replay (GIF)
+
+Same canvas as the share card (1200×630), but one frame per round — bullish / neutral / bearish bars sliding to each round's distribution with a round counter and a progress bar. Discord and Slack auto-play GIFs from a direct file URL, so dropping the link in a channel renders the animation inline.
+
+- `GET /api/simulation/<id>/replay.gif` — server-rendered animated GIF (Pillow, no FFmpeg). Each frame holds for 600 ms with the final round held 3× longer so the resting consensus reads as the punch-line. Trajectories longer than 60 rounds are subsampled evenly across the run with the final round always preserved. Same `is_public` gate as the share card. Cached on disk by content hash.
+
+The Embed dialog renders a paused thumbnail with a tap-to-play affordance (so opening the dialog doesn't pull the GIF for every viewer) and exposes a copyable URL plus a Download GIF button beneath the share-card row.
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.
