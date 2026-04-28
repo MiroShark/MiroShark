@@ -132,6 +132,9 @@ def _search_ddg(queries: List[str], max_results_per_query: int = 5) -> List[Dict
     For each query, try the news endpoint first (better source provenance for
     recent topics). If news returns nothing, fall back to the general text
     endpoint so policy/historical topics aren't lost.
+
+    Region defaults to us-en for English-language bias — research is currently
+    English-only. Override at call site if a future caller needs other locales.
     """
     seen_urls = set()
     all_results = []
@@ -140,14 +143,14 @@ def _search_ddg(queries: List[str], max_results_per_query: int = 5) -> List[Dict
         results = []
         try:
             with DDGS() as ddgs:
-                results = list(ddgs.news(query, region="wt-wt", max_results=max_results_per_query))
+                results = list(ddgs.news(query, region="us-en", max_results=max_results_per_query))
         except Exception as search_err:
             logger.warning(f"News search failed for '{query}': {search_err}")
 
         if not results:
             try:
                 with DDGS() as ddgs:
-                    results = list(ddgs.text(query, region="wt-wt", max_results=max_results_per_query))
+                    results = list(ddgs.text(query, region="us-en", max_results=max_results_per_query))
                 if results:
                     logger.info(f"Text-search fallback yielded {len(results)} results for '{query}'")
             except Exception as text_err:
@@ -201,6 +204,22 @@ def _rank_results(topic: str, results: List[Dict], max_keep: int = 10) -> List[D
     return results[:max_keep]
 
 
+def _is_mostly_non_latin(text: str, threshold: float = 0.5) -> bool:
+    """True when more than `threshold` of non-whitespace chars are non-Latin.
+
+    Catches CJK/Arabic/Cyrillic content that slipped past region filters.
+    Cheap heuristic — counts code points outside Basic Latin / Latin-1
+    Supplement / Latin Extended ranges.
+    """
+    if not text:
+        return False
+    non_whitespace = [c for c in text if not c.isspace()]
+    if len(non_whitespace) < 50:
+        return False
+    non_latin = sum(1 for c in non_whitespace if ord(c) > 0x024F)
+    return (non_latin / len(non_whitespace)) > threshold
+
+
 def _fetch_content(results: List[Dict]) -> List[ResearchResult]:
     """Fetch and extract text from each URL."""
     research_results = []
@@ -214,7 +233,12 @@ def _fetch_content(results: List[Dict]) -> List[ResearchResult]:
         try:
             raw_text = fetch_url_text(result["url"], timeout=15)
             rr.text = TextProcessor.preprocess_text(raw_text)
-            logger.info(f"Fetched {len(rr.text)} chars from {result['url']}")
+            if _is_mostly_non_latin(rr.text):
+                logger.info(f"Dropping non-English content from {result['url']}")
+                rr.text = ""
+                rr.fetch_error = "non_english_content"
+            else:
+                logger.info(f"Fetched {len(rr.text)} chars from {result['url']}")
         except Exception as fetch_err:
             rr.fetch_error = str(fetch_err)
             logger.warning(f"Failed to fetch {result['url']}: {fetch_err}")
