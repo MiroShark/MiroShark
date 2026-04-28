@@ -75,11 +75,12 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, decision_lab_bp
+    from .api import graph_bp, simulation_bp, report_bp, decision_lab_bp, seed_chat_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
     app.register_blueprint(decision_lab_bp, url_prefix='/api/decision-lab')
+    app.register_blueprint(seed_chat_bp, url_prefix='/api/seed-chat')
     
     # Health check — verifies Neo4j and Ollama connectivity
     @app.route('/health')
