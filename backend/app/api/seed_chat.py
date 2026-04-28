@@ -6,6 +6,7 @@ from flask import jsonify, request
 
 from . import seed_chat_bp
 from ..services.seed_extractor import process_turn, EMPTY_STATE
+from ..services.brief_writer import write_brief
 from ..storage.session_store import SessionStore
 from ..utils.logger import get_logger
 
@@ -76,3 +77,46 @@ def get_session(session_id):
     if session is None:
         return jsonify({"error": "session_not_found"}), 404
     return jsonify(session)
+
+
+REQUIRED_LAUNCH_SLOTS = ("topic", "intent", "output_format")
+MIN_LAUNCH_STAKEHOLDERS = 2
+
+
+def _seed_ready_for_launch(seed_state: dict) -> bool:
+    for key in REQUIRED_LAUNCH_SLOTS:
+        if not seed_state.get(key):
+            return False
+    if len(seed_state.get("stakeholders") or []) < MIN_LAUNCH_STAKEHOLDERS:
+        return False
+    return True
+
+
+@seed_chat_bp.route("/launch", methods=["POST"])
+def launch():
+    payload = request.get_json(silent=True) or {}
+    session_id = payload.get("session_id")
+    if not session_id:
+        return jsonify({"error": "session_id required"}), 400
+
+    session = _store.load(session_id)
+    if session is None:
+        return jsonify({"error": "session_not_found"}), 404
+
+    seed_state = session.get("seed_state") or {}
+    if not _seed_ready_for_launch(seed_state):
+        return jsonify({"error": "seed missing required slots"}), 400
+
+    try:
+        brief = write_brief(seed_state, session.get("messages") or [])
+    except RuntimeError as exc:
+        logger.error("brief generation failed: %s", exc)
+        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
+
+    session["brief"] = brief
+    _store.save(session)
+
+    return jsonify({
+        "session_id": session_id,
+        "brief_markdown": brief,
+    })

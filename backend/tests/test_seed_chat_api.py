@@ -170,3 +170,80 @@ def test_turn_with_session_id_autosaves(client):
     assert saved["messages"][1] == {"role": "assistant", "content": "Reply"}
     # title auto-populated from first user message (truncated)
     assert saved["title"] != ""
+
+
+# ---- Phase B (v2): /launch endpoint ----
+
+
+def test_launch_returns_brief_and_saves_to_session(client):
+    fake_session = {
+        "id": "abc",
+        "title": "Test",
+        "created_at": "t1",
+        "updated_at": "t2",
+        "messages": [{"role": "user", "content": "X"}],
+        "seed_state": {
+            "topic": "X",
+            "intent": "Y",
+            "stakeholders": [
+                {"name": "A", "role": "r", "stance": "neutral"},
+                {"name": "B", "role": "r", "stance": "neutral"},
+            ],
+            "decision_branches": [],
+            "contested_claims": [],
+            "output_format": "pros_cons",
+        },
+        "ready_to_launch": True,
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.write_brief", return_value="# Brief\n\n...") as mock_writer:
+        mock_store.load.return_value = fake_session
+        response = client.post(
+            "/api/seed-chat/launch",
+            json={"session_id": "abc"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["session_id"] == "abc"
+    assert body["brief_markdown"].startswith("# Brief")
+
+    mock_writer.assert_called_once()
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["brief"] == "# Brief\n\n..."
+
+
+def test_launch_404_when_session_missing(client):
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = None
+        response = client.post(
+            "/api/seed-chat/launch",
+            json={"session_id": "missing"},
+        )
+    assert response.status_code == 404
+
+
+def test_launch_400_when_required_slots_missing(client):
+    incomplete_session = {
+        "id": "abc", "title": "x", "created_at": "t", "updated_at": "t",
+        "messages": [],
+        "seed_state": {
+            "topic": "X", "intent": "", "stakeholders": [],
+            "decision_branches": [], "contested_claims": [], "output_format": "",
+        },
+        "ready_to_launch": False,
+    }
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = incomplete_session
+        response = client.post(
+            "/api/seed-chat/launch",
+            json={"session_id": "abc"},
+        )
+    assert response.status_code == 400
+
+
+def test_launch_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/launch", json={})
+    assert response.status_code == 400

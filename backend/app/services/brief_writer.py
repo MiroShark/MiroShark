@@ -1,0 +1,104 @@
+"""
+Brief writer: turn a complete seed + chat history into a structured deliverable.
+
+Called by /api/seed-chat/launch. Uses the same LLM provider configured for the
+project (typically claude-code via the Max-plan CLI).
+"""
+
+import re
+from typing import Dict, List
+
+from ..utils.llm_client import create_llm_client
+from ..utils.logger import get_logger
+
+logger = get_logger("miroshark.brief_writer")
+
+OUTPUT_FORMAT_GUIDANCE = {
+    "pros_cons": (
+        "Produce a structured Pros/Cons brief in Markdown. Include sections: "
+        "Background (2-4 sentences), Pros (each as a heading + 1-3 sentence rationale, "
+        "labelled with the supporting stakeholder), Cons (same shape, labelled with the "
+        "opposing stakeholder), Contested claims (one bullet per claim with a brief "
+        "evidence-or-doubt note), and a final 'Bottom line' paragraph that names trade-offs "
+        "without taking a side."
+    ),
+    "decision_memo": (
+        "Produce a decision memo in Markdown. Include: Question, Options (one per "
+        "decision branch with rationale and risks), Recommendation, and Open questions."
+    ),
+    "executive_summary": (
+        "Produce a 1-page executive summary in Markdown. Lead with a 3-sentence TL;DR, "
+        "then 4-6 key findings as bullets, then a 'What to watch' section."
+    ),
+    "full_report": (
+        "Produce a full research report in Markdown with: Executive summary, Background, "
+        "Stakeholder analysis (one subsection per stakeholder), Decision branches "
+        "(one subsection each), Contested claims, and Conclusions."
+    ),
+}
+
+DEFAULT_GUIDANCE = (
+    "Produce a clear, well-organised Markdown brief that makes the trade-offs visible."
+)
+
+
+def _build_writer_prompt(seed: Dict) -> str:
+    fmt = seed.get("output_format") or "full_report"
+    guidance = OUTPUT_FORMAT_GUIDANCE.get(fmt, DEFAULT_GUIDANCE)
+    stakeholder_lines = "\n".join(
+        f"- {s.get('name', '?')} ({s.get('role', '?')}) — stance: {s.get('stance', 'unknown')}"
+        for s in seed.get("stakeholders", [])
+    )
+    branch_lines = "\n".join(
+        f"- {b.get('label', '?')}: {b.get('description', '')}"
+        for b in seed.get("decision_branches", [])
+    )
+    claim_lines = "\n".join(f"- {c}" for c in seed.get("contested_claims", []))
+
+    sections = [
+        "You are MiroShark's research-brief writer.",
+        "",
+        f"Topic: {seed.get('topic', '')}",
+        f"User intent: {seed.get('intent', '')}",
+        f"Output format: {fmt}",
+        "",
+        "Stakeholders:",
+        stakeholder_lines or "- (none specified)",
+    ]
+    if branch_lines:
+        sections += ["", "Decision branches:", branch_lines]
+    if claim_lines:
+        sections += ["", "Contested claims to investigate:", claim_lines]
+    sections += [
+        "",
+        "Instructions:",
+        guidance,
+        "",
+        "Respect the conversation history that follows — incorporate the user's framing "
+        "and any specifics they've already discussed. Output the brief as Markdown only, "
+        "no preamble, no code fences.",
+    ]
+    return "\n".join(sections)
+
+
+def _strip_code_fences(text: str) -> str:
+    text = re.sub(r"^```(?:[a-zA-Z0-9_-]+)?\s*\n?", "", text.strip())
+    text = re.sub(r"\n?```\s*$", "", text)
+    return text.strip()
+
+
+def write_brief(seed: Dict, history: List[Dict]) -> str:
+    """
+    Generate a brief from the seed + chat history.
+
+    Returns the brief as Markdown text (no code fences).
+    """
+    llm = create_llm_client()
+    system_prompt = _build_writer_prompt(seed)
+    full_messages = [
+        {"role": "system", "content": system_prompt},
+        *history,
+        {"role": "user", "content": "Now produce the brief as instructed."},
+    ]
+    response = llm.chat(messages=full_messages)
+    return _strip_code_fences(response)
