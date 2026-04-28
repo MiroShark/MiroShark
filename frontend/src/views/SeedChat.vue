@@ -2,6 +2,14 @@
   <div class="seedchat-layout">
     <header class="topbar">
       <div class="brand">MIROSHARK</div>
+      <div class="topbar-center">
+        <SessionMenu
+          :sessions="sessions"
+          :active-id="activeSessionId"
+          @select="onSelectSession"
+          @new="onNewSession"
+        />
+      </div>
       <div class="links">
         <router-link to="/legacy" class="link">Upload mode <span class="arrow">↗</span></router-link>
         <router-link to="/decision-lab/new" class="link">Decision Lab <span class="arrow">↗</span></router-link>
@@ -46,34 +54,109 @@
 </template>
 
 <script setup>
-import { ref, reactive, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, reactive, onMounted, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import SeedSlotsPanel from '../components/SeedSlotsPanel.vue'
-import { postTurn, postLaunch } from '../api/seedChat.js'
+import SessionMenu from '../components/SessionMenu.vue'
+import {
+  postTurn,
+  postLaunch,
+  listSessions,
+  getSession,
+  createSession,
+} from '../api/seedChat.js'
 
 const router = useRouter()
+const route = useRoute()
 
-const messages = ref([
-  {
-    role: 'assistant',
-    content: "What would you like to investigate? Describe the question, decision, or debate you're trying to understand.",
-  },
-])
+const DEFAULT_GREETING = {
+  role: 'assistant',
+  content: "What would you like to investigate? Describe the question, decision, or debate you're trying to understand.",
+}
 
-const seedState = reactive({
-  topic: '',
-  intent: '',
-  stakeholders: [],
-  decision_branches: [],
-  contested_claims: [],
-  output_format: '',
-})
+function emptySeed() {
+  return {
+    topic: '',
+    intent: '',
+    stakeholders: [],
+    decision_branches: [],
+    contested_claims: [],
+    output_format: '',
+  }
+}
 
+const messages = ref([{ ...DEFAULT_GREETING }])
+const seedState = reactive(emptySeed())
 const readyToLaunch = ref(false)
 const draft = ref('')
 const loading = ref(false)
 const error = ref('')
 const messagesEl = ref(null)
+
+const sessions = ref([])
+const activeSessionId = ref(null)
+
+async function refreshSessions() {
+  try {
+    const data = await listSessions()
+    sessions.value = data?.sessions || []
+  } catch (err) {
+    console.warn('Failed to load sessions:', err)
+  }
+}
+
+function applySession(session) {
+  if (!session) return
+  activeSessionId.value = session.id
+  messages.value = session.messages?.length
+    ? session.messages.map(m => ({ ...m }))
+    : [{ ...DEFAULT_GREETING }]
+  Object.assign(seedState, emptySeed(), session.seed_state || {})
+  readyToLaunch.value = !!session.ready_to_launch
+}
+
+function clearLocalState() {
+  activeSessionId.value = null
+  messages.value = [{ ...DEFAULT_GREETING }]
+  Object.assign(seedState, emptySeed())
+  readyToLaunch.value = false
+  error.value = ''
+  draft.value = ''
+}
+
+function setUrlSession(id) {
+  const query = id ? { session: id } : {}
+  router.replace({ name: route.name, query }).catch(() => {})
+}
+
+async function onSelectSession(id) {
+  if (id === activeSessionId.value) return
+  loading.value = true
+  error.value = ''
+  try {
+    const session = await getSession(id)
+    applySession(session)
+    setUrlSession(id)
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    loading.value = false
+    await scrollMessagesToEnd()
+  }
+}
+
+function onNewSession() {
+  clearLocalState()
+  setUrlSession(null)
+}
+
+async function ensureSession() {
+  if (activeSessionId.value) return activeSessionId.value
+  const session = await createSession()
+  activeSessionId.value = session.id
+  setUrlSession(session.id)
+  return session.id
+}
 
 async function sendMessage() {
   const text = draft.value.trim()
@@ -85,15 +168,16 @@ async function sendMessage() {
   error.value = ''
 
   try {
-    // The axios interceptor in api/index.js unwraps response.data already,
-    // so postTurn resolves to the parsed JSON body directly.
+    const sessionId = await ensureSession()
     const data = await postTurn({
       messages: messages.value,
       seed_state: seedState,
+      session_id: sessionId,
     })
     messages.value.push({ role: 'assistant', content: data.assistant_message })
     Object.assign(seedState, data.updated_seed_state)
     readyToLaunch.value = data.ready_to_launch
+    await refreshSessions()
   } catch (err) {
     const status = err?.response?.status
     if (status === 503) {
@@ -103,16 +187,19 @@ async function sendMessage() {
     }
   } finally {
     loading.value = false
-    await nextTick()
-    if (messagesEl.value) messagesEl.value.scrollTop = messagesEl.value.scrollHeight
+    await scrollMessagesToEnd()
   }
+}
+
+async function scrollMessagesToEnd() {
+  await nextTick()
+  if (messagesEl.value) messagesEl.value.scrollTop = messagesEl.value.scrollHeight
 }
 
 async function launch() {
   loading.value = true
   error.value = ''
   try {
-    // The axios interceptor unwraps response.data already.
     const data = await postLaunch({ seed: seedState })
     if (data?.redirect_url) {
       window.location.href = data.redirect_url
@@ -127,6 +214,19 @@ async function launch() {
     loading.value = false
   }
 }
+
+onMounted(async () => {
+  await refreshSessions()
+  const querySessionId = route.query?.session
+  if (querySessionId) {
+    try {
+      const session = await getSession(querySessionId)
+      if (session) applySession(session)
+    } catch (err) {
+      console.warn('Failed to load session from URL:', err)
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -144,8 +244,14 @@ async function launch() {
   align-items: center;
   padding: 0.75rem 1.25rem;
   border-bottom: 1px solid #222;
+  gap: 1rem;
 }
 .brand { font-weight: bold; letter-spacing: 0.15em; }
+.topbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
 .links .link {
   color: #ddd;
   text-decoration: none;
