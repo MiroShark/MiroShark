@@ -72,11 +72,16 @@
               type="button"
               class="research-btn"
               @click="runResearch"
-              :disabled="researching"
-            >{{ researchReport ? 'Refresh sources' : 'Find sources' }}</button>
+              :disabled="researching || regenerating"
+            >{{ researching ? 'Searching…' : (researchReport ? 'Refresh sources' : 'Find sources') }}</button>
           </header>
 
-          <div v-if="researching" class="research-progress">{{ researchProgressMsg }}</div>
+          <div v-if="researching" class="research-progress" role="status" aria-live="polite">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <div class="progress-text">{{ researchProgressMsg }}</div>
+          </div>
 
           <div v-else-if="researchReport && researchReport.results && researchReport.results.length === 0" class="research-empty">
             No sources found. The web search returned nothing — this can happen with rate limiting or very specific queries.
@@ -105,7 +110,14 @@
 
         <footer class="brief-footer">
           <button type="button" class="secondary" @click="copyBrief">Copy markdown</button>
-          <button type="button" class="primary" @click="briefOpen = false">Close</button>
+          <button
+            v-if="hasFetchedSources"
+            type="button"
+            class="primary"
+            :disabled="regenerating"
+            @click="regenerateWithSources"
+          >{{ regenerating ? 'Regenerating…' : 'Regenerate brief with sources' }}</button>
+          <button type="button" class="secondary" @click="briefOpen = false">Close</button>
         </footer>
       </div>
     </div>
@@ -164,8 +176,15 @@ const briefOpen = ref(false)
 const researchReport = ref(null)
 const researching = ref(false)
 const researchProgressMsg = ref('')
+const regenerating = ref(false)
 
 const renderedBrief = computed(() => brief.value ? marked.parse(brief.value) : '')
+
+const hasFetchedSources = computed(() => {
+  const results = researchReport.value?.results
+  if (!Array.isArray(results)) return false
+  return results.some(r => (r?.text_length ?? 0) > 0 && !r?.fetch_error)
+})
 
 async function refreshSessions() {
   try {
@@ -332,6 +351,26 @@ async function runResearch() {
   } finally {
     researching.value = false
     researchProgressMsg.value = ''
+  }
+}
+
+async function regenerateWithSources() {
+  if (!activeSessionId.value || regenerating.value) return
+  regenerating.value = true
+  error.value = ''
+  try {
+    const data = await postLaunch({
+      session_id: activeSessionId.value,
+      use_sources: true,
+    })
+    if (data?.brief_markdown) {
+      brief.value = data.brief_markdown
+    }
+    await refreshSessions()
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    regenerating.value = false
   }
 }
 
@@ -534,10 +573,33 @@ onMounted(async () => {
 }
 .research-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .research-progress {
-  color: #aaa;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  margin: 0.5rem 0;
+  background: #1a2a3a;
+  border: 1px solid #2a4a6a;
+  border-radius: 4px;
+  color: #b8d6f5;
+  font-size: 0.85rem;
   font-style: italic;
-  padding: 0.5rem 0;
 }
+.research-progress .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #80b4ff;
+  animation: pulse 1.4s infinite ease-in-out both;
+}
+.research-progress .dot:nth-child(1) { animation-delay: -0.32s; }
+.research-progress .dot:nth-child(2) { animation-delay: -0.16s; }
+.research-progress .dot:nth-child(3) { animation-delay: 0; }
+@keyframes pulse {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+}
+.research-progress .progress-text { margin-left: 0.5rem; }
 .research-empty {
   color: #888;
   padding: 0.5rem 0;

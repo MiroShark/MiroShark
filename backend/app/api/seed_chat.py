@@ -97,6 +97,7 @@ def _seed_ready_for_launch(seed_state: dict) -> bool:
 def launch():
     payload = request.get_json(silent=True) or {}
     session_id = payload.get("session_id")
+    use_sources = bool(payload.get("use_sources", False))
     if not session_id:
         return jsonify({"error": "session_id required"}), 400
 
@@ -108,8 +109,17 @@ def launch():
     if not _seed_ready_for_launch(seed_state):
         return jsonify({"error": "seed missing required slots"}), 400
 
+    research_sources = None
+    if use_sources:
+        report = session.get("research_report") or {}
+        research_sources = report.get("results") or None
+
     try:
-        brief = write_brief(seed_state, session.get("messages") or [])
+        brief = write_brief(
+            seed_state,
+            session.get("messages") or [],
+            research_sources=research_sources,
+        )
     except RuntimeError as exc:
         logger.error("brief generation failed: %s", exc)
         return jsonify({"error": f"claude_unavailable: {exc}"}), 503
@@ -162,11 +172,28 @@ def research():
         logger.error("research failed: %s", exc)
         return jsonify({"error": f"research_failed: {exc}"}), 503
 
-    report_dict = report.to_dict()
-    session["research_report"] = report_dict
+    trimmed_for_response = report.to_dict()
+    # Store full text bodies so /launch?use_sources=true can cite them.
+    # The response to the frontend still uses the trimmed form (text_length, not text).
+    report_dict_for_storage = {
+        **trimmed_for_response,
+        "results": [
+            {
+                "url": r.url,
+                "title": r.title,
+                "snippet": r.snippet,
+                "text": r.text,
+                "text_length": len(r.text),
+                "score": r.score,
+                "fetch_error": r.fetch_error,
+            }
+            for r in report.results
+        ],
+    }
+    session["research_report"] = report_dict_for_storage
     _store.save(session)
 
     return jsonify({
         "session_id": session_id,
-        "report": report_dict,
+        "report": trimmed_for_response,
     })

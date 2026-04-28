@@ -6,7 +6,7 @@ project (typically claude-code via the Max-plan CLI).
 """
 
 import re
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from ..utils.llm_client import create_llm_client
 from ..utils.logger import get_logger
@@ -42,7 +42,7 @@ DEFAULT_GUIDANCE = (
 )
 
 
-def _build_writer_prompt(seed: Dict) -> str:
+def _build_writer_prompt(seed: Dict, research_sources: Optional[List[Dict]] = None) -> str:
     fmt = seed.get("output_format") or "full_report"
     guidance = OUTPUT_FORMAT_GUIDANCE.get(fmt, DEFAULT_GUIDANCE)
     stakeholder_lines = "\n".join(
@@ -56,7 +56,7 @@ def _build_writer_prompt(seed: Dict) -> str:
     claim_lines = "\n".join(f"- {c}" for c in seed.get("contested_claims", []))
 
     sections = [
-        "You are MiroShark's research-brief writer.",
+        f"You are MiroShark's research-brief writer.",
         "",
         f"Topic: {seed.get('topic', '')}",
         f"User intent: {seed.get('intent', '')}",
@@ -69,6 +69,32 @@ def _build_writer_prompt(seed: Dict) -> str:
         sections += ["", "Decision branches:", branch_lines]
     if claim_lines:
         sections += ["", "Contested claims to investigate:", claim_lines]
+
+    usable_sources = [
+        s for s in (research_sources or [])
+        if s.get("text") and not s.get("fetch_error")
+    ]
+    if usable_sources:
+        sections += ["", "Web research sources (cite these inline using markdown links):"]
+        for i, source in enumerate(usable_sources, 1):
+            title = source.get("title") or "(untitled)"
+            url = source.get("url", "")
+            body = (source.get("text") or "").strip()
+            # Trim each source body to keep total prompt size reasonable
+            body_excerpt = body[:1500] + ("..." if len(body) > 1500 else "")
+            sections += [
+                f"[{i}] {title}",
+                f"    URL: {url}",
+                f"    Excerpt: {body_excerpt}",
+            ]
+        sections += [
+            "",
+            "Citation guidance: when stating a claim, cite the supporting source as a "
+            "markdown link, e.g., 'estimates $5 bn ([Treasury 2026](https://...))'. "
+            "Use only the sources listed above; do not invent URLs. If a claim has no "
+            "supporting source, state it without a citation rather than fabricating one.",
+        ]
+
     sections += [
         "",
         "Instructions:",
@@ -87,14 +113,21 @@ def _strip_code_fences(text: str) -> str:
     return text.strip()
 
 
-def write_brief(seed: Dict, history: List[Dict]) -> str:
+def write_brief(
+    seed: Dict,
+    history: List[Dict],
+    research_sources: Optional[List[Dict]] = None,
+) -> str:
     """
     Generate a brief from the seed + chat history.
+
+    If research_sources is provided, fetched sources with non-empty text are
+    embedded in the system prompt with citation guidance.
 
     Returns the brief as Markdown text (no code fences).
     """
     llm = create_llm_client()
-    system_prompt = _build_writer_prompt(seed)
+    system_prompt = _build_writer_prompt(seed, research_sources=research_sources)
     full_messages = [
         {"role": "system", "content": system_prompt},
         *history,

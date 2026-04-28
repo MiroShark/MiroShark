@@ -286,8 +286,17 @@ def test_research_returns_report_and_saves(client):
         "fetched_count": 1,
     }
 
+    fake_result = MagicMock()
+    fake_result.url = "https://example.com/a"
+    fake_result.title = "A"
+    fake_result.snippet = "..."
+    fake_result.text = "full body text"
+    fake_result.score = 0.9
+    fake_result.fetch_error = None
+
     fake_report_obj = MagicMock()
     fake_report_obj.to_dict.return_value = fake_report
+    fake_report_obj.results = [fake_result]
 
     with patch("app.api.seed_chat._store") as mock_store, \
          patch("app.api.seed_chat.research_with_intent", return_value=fake_report_obj) as mock_research:
@@ -312,7 +321,12 @@ def test_research_returns_report_and_saves(client):
 
     mock_store.save.assert_called_once()
     saved = mock_store.save.call_args.args[0]
-    assert saved["research_report"] == fake_report
+    # Session now stores full result bodies; check key fields are present
+    assert saved["research_report"]["topic"] == "X"
+    saved_results = saved["research_report"]["results"]
+    assert len(saved_results) == 1
+    assert saved_results[0]["url"] == "https://example.com/a"
+    assert saved_results[0]["text"] == "full body text"
 
 
 def test_research_404_when_session_missing(client):
@@ -347,3 +361,51 @@ def test_research_400_when_required_slots_missing(client):
 def test_research_400_when_session_id_missing(client):
     response = client.post("/api/seed-chat/research", json={})
     assert response.status_code == 400
+
+
+def test_launch_with_use_sources_passes_research_to_writer(client):
+    fake_session = {
+        "id": "abc",
+        "title": "Test",
+        "created_at": "t1",
+        "updated_at": "t2",
+        "messages": [{"role": "user", "content": "X"}],
+        "seed_state": {
+            "topic": "X",
+            "intent": "Y",
+            "stakeholders": [
+                {"name": "A", "role": "r", "stance": "neutral"},
+                {"name": "B", "role": "r", "stance": "neutral"},
+            ],
+            "decision_branches": [],
+            "contested_claims": [],
+            "output_format": "pros_cons",
+        },
+        "research_report": {
+            "results": [
+                {"url": "u1", "title": "T1", "snippet": "s",
+                 "text": "body1", "fetch_error": None},
+            ],
+        },
+        "ready_to_launch": True,
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.write_brief", return_value="# Sourced") as mock_writer:
+        mock_store.load.return_value = fake_session
+        response = client.post(
+            "/api/seed-chat/launch",
+            json={"session_id": "abc", "use_sources": True},
+        )
+
+    assert response.status_code == 200
+    mock_writer.assert_called_once()
+    call_kwargs = mock_writer.call_args.kwargs
+    sources = call_kwargs.get("research_sources")
+    if sources is None:
+        # might have been passed positionally; check args
+        if len(mock_writer.call_args.args) >= 3:
+            sources = mock_writer.call_args.args[2]
+    assert sources is not None
+    assert len(sources) == 1
+    assert sources[0]["title"] == "T1"
