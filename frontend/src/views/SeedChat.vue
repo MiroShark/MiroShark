@@ -526,10 +526,11 @@ onMounted(async () => {
   line-height: 1;
 }
 .brief-body {
-  flex: 1;
+  flex: 1 1 auto;
   overflow-y: auto;
   padding: 1.25rem 1.5rem;
   line-height: 1.55;
+  min-height: 200px;
 }
 .brief-body :deep(h1),
 .brief-body :deep(h2),
@@ -544,9 +545,13 @@ onMounted(async () => {
 .brief-body :deep(strong) { color: #fff; }
 .brief-body :deep(code) { background: #222; padding: 0 0.25em; border-radius: 3px; }
 .sources {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
   border-top: 1px solid #222;
   padding: 0.75rem 1.5rem 1rem;
-  max-height: 30vh;
+  min-height: 200px;
+  max-height: 45vh;
   overflow-y: auto;
 }
 .sources-header {
@@ -554,6 +559,11 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.5rem;
+  position: sticky;
+  top: 0;
+  background: #111;
+  padding: 0.25rem 0;
+  z-index: 1;
 }
 .sources-header h3 {
   margin: 0;

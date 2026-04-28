@@ -127,27 +127,42 @@ def _generate_search_queries(topic: str) -> List[str]:
 
 
 def _search_ddg(queries: List[str], max_results_per_query: int = 5) -> List[Dict]:
-    """Execute DuckDuckGo searches and deduplicate results."""
+    """Execute DuckDuckGo searches and deduplicate results.
+
+    For each query, try the news endpoint first (better source provenance for
+    recent topics). If news returns nothing, fall back to the general text
+    endpoint so policy/historical topics aren't lost.
+    """
     seen_urls = set()
     all_results = []
 
     for query in queries:
+        results = []
         try:
             with DDGS() as ddgs:
-                # Use news endpoint for better English results globally
                 results = list(ddgs.news(query, region="wt-wt", max_results=max_results_per_query))
-            for result in results:
-                url = result.get("url", "") or result.get("href", "")
-                if url and url not in seen_urls:
-                    seen_urls.add(url)
-                    all_results.append({
-                        "url": url,
-                        "title": result.get("title", ""),
-                        "snippet": result.get("body", "") or result.get("excerpt", ""),
-                        "query": query,
-                    })
         except Exception as search_err:
-            logger.warning(f"Search failed for '{query}': {search_err}")
+            logger.warning(f"News search failed for '{query}': {search_err}")
+
+        if not results:
+            try:
+                with DDGS() as ddgs:
+                    results = list(ddgs.text(query, region="wt-wt", max_results=max_results_per_query))
+                if results:
+                    logger.info(f"Text-search fallback yielded {len(results)} results for '{query}'")
+            except Exception as text_err:
+                logger.warning(f"Text-search fallback failed for '{query}': {text_err}")
+
+        for result in results:
+            url = result.get("url", "") or result.get("href", "")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                all_results.append({
+                    "url": url,
+                    "title": result.get("title", ""),
+                    "snippet": result.get("body", "") or result.get("excerpt", ""),
+                    "query": query,
+                })
 
     logger.info(f"Found {len(all_results)} unique results from {len(queries)} queries")
     return all_results
