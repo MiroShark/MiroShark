@@ -5,6 +5,8 @@ and fetches content from the most relevant results.
 """
 
 import json
+import os
+import requests
 from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 
@@ -124,6 +126,65 @@ def _generate_search_queries(topic: str) -> List[str]:
     except Exception as err:
         logger.warning(f"LLM query generation failed: {err}")
     return [topic]
+
+
+def _search_searxng(
+    queries: List[str],
+    max_results_per_query: int = 5,
+    base_url: Optional[str] = None,
+) -> List[Dict]:
+    """Execute searches via a SearXNG instance.
+
+    Uses /search?format=json. Returns the same {url, title, snippet, query}
+    shape as _search_ddg. Empty list on network error or non-200 response.
+    """
+    if base_url is None:
+        base_url = os.environ.get("SEARXNG_BASE_URL", "")
+    if not base_url:
+        return []
+
+    seen_urls: set = set()
+    all_results: List[Dict] = []
+
+    for query in queries:
+        try:
+            response = requests.get(
+                f"{base_url.rstrip('/')}/search",
+                params={"q": query, "format": "json", "language": "en"},
+                timeout=15,
+            )
+        except requests.exceptions.RequestException as exc:
+            logger.warning(f"SearXNG request failed for '{query}': {exc}")
+            continue
+
+        if response.status_code != 200:
+            logger.warning(
+                f"SearXNG non-200 for '{query}': HTTP {response.status_code}"
+            )
+            continue
+
+        try:
+            payload = response.json()
+        except ValueError as exc:
+            logger.warning(f"SearXNG bad JSON for '{query}': {exc}")
+            continue
+
+        items = payload.get("results", []) or []
+        for item in items[:max_results_per_query]:
+            url = item.get("url", "")
+            if url and url not in seen_urls:
+                seen_urls.add(url)
+                all_results.append({
+                    "url": url,
+                    "title": item.get("title", "") or "",
+                    "snippet": item.get("content", "") or item.get("body", "") or "",
+                    "query": query,
+                })
+
+    logger.info(
+        f"SearXNG: {len(all_results)} unique results from {len(queries)} queries"
+    )
+    return all_results
 
 
 def _search_ddg(queries: List[str], max_results_per_query: int = 5) -> List[Dict]:
@@ -267,7 +328,10 @@ def research_topic(topic: str, max_sources: int = 10) -> ResearchReport:
 
     # Step 2: Execute searches
     logger.info("Step 2: Searching...")
-    raw_results = _search_ddg(report.queries)
+    raw_results = _search_searxng(report.queries)
+    if not raw_results:
+        logger.info("SearXNG returned no results; falling back to DDG")
+        raw_results = _search_ddg(report.queries)
 
     # Step 3: Rank and filter
     logger.info("Step 3: Ranking results...")
@@ -342,7 +406,10 @@ def research_with_intent(
 
     # Step 3: Search
     logger.info(f"Step 2: Searching with {len(gap_queries)} targeted queries...")
-    raw_results = _search_ddg(gap_queries)
+    raw_results = _search_searxng(gap_queries)
+    if not raw_results:
+        logger.info("SearXNG returned no results; falling back to DDG")
+        raw_results = _search_ddg(gap_queries)
 
     # Step 4: Rank with intent awareness
     logger.info("Step 3: Ranking results against intent...")
