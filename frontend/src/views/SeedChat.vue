@@ -39,23 +39,44 @@
           <div class="actions">
             <button type="submit" :disabled="!draft.trim() || loading">Send</button>
             <button
+              v-if="brief && !briefOpen"
+              type="button"
+              class="view-brief"
+              @click="briefOpen = true"
+            >View brief</button>
+            <button
               type="button"
               class="launch"
               :disabled="!readyToLaunch || loading"
               @click="launch"
-            >Launch ▶</button>
+            >{{ brief ? 'Regenerate ▶' : 'Launch ▶' }}</button>
           </div>
         </form>
       </section>
 
       <SeedSlotsPanel :seed-state="seedState" />
     </main>
+
+    <div v-if="briefOpen" class="brief-overlay" @click.self="briefOpen = false">
+      <div class="brief-modal">
+        <header class="brief-header">
+          <h2>Research brief</h2>
+          <button type="button" class="close" @click="briefOpen = false">×</button>
+        </header>
+        <div class="brief-body" v-html="renderedBrief"></div>
+        <footer class="brief-footer">
+          <button type="button" class="secondary" @click="copyBrief">Copy markdown</button>
+          <button type="button" class="primary" @click="briefOpen = false">Close</button>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { marked } from 'marked'
 import SeedSlotsPanel from '../components/SeedSlotsPanel.vue'
 import SessionMenu from '../components/SessionMenu.vue'
 import {
@@ -68,6 +89,8 @@ import {
 
 const router = useRouter()
 const route = useRoute()
+
+marked.setOptions({ gfm: true, breaks: false })
 
 const DEFAULT_GREETING = {
   role: 'assistant',
@@ -96,6 +119,11 @@ const messagesEl = ref(null)
 const sessions = ref([])
 const activeSessionId = ref(null)
 
+const brief = ref('')
+const briefOpen = ref(false)
+
+const renderedBrief = computed(() => brief.value ? marked.parse(brief.value) : '')
+
 async function refreshSessions() {
   try {
     const data = await listSessions()
@@ -113,6 +141,8 @@ function applySession(session) {
     : [{ ...DEFAULT_GREETING }]
   Object.assign(seedState, emptySeed(), session.seed_state || {})
   readyToLaunch.value = !!session.ready_to_launch
+  brief.value = session.brief || ''
+  briefOpen.value = false
 }
 
 function clearLocalState() {
@@ -122,6 +152,8 @@ function clearLocalState() {
   readyToLaunch.value = false
   error.value = ''
   draft.value = ''
+  brief.value = ''
+  briefOpen.value = false
 }
 
 function setUrlSession(id) {
@@ -197,21 +229,40 @@ async function scrollMessagesToEnd() {
 }
 
 async function launch() {
+  if (!activeSessionId.value) {
+    error.value = 'No active session — send a message first.'
+    return
+  }
   loading.value = true
   error.value = ''
   try {
-    const data = await postLaunch({ seed: seedState })
-    if (data?.redirect_url) {
-      window.location.href = data.redirect_url
-    } else if (data?.project_id) {
-      router.push({ name: 'Process', params: { projectId: data.project_id } })
-    } else {
-      error.value = 'Launch returned no project id.'
+    const data = await postLaunch({ session_id: activeSessionId.value })
+    if (!data?.brief_markdown) {
+      error.value = 'Launch returned no brief.'
+      return
     }
+    brief.value = data.brief_markdown
+    briefOpen.value = true
+    await refreshSessions()
   } catch (err) {
-    error.value = err?.response?.data?.error || err.message
+    const status = err?.response?.status
+    if (status === 400) {
+      error.value = err?.response?.data?.error || 'Seed missing required slots.'
+    } else if (status === 503) {
+      error.value = 'Claude CLI not reachable on the server.'
+    } else {
+      error.value = err?.response?.data?.error || err.message
+    }
   } finally {
     loading.value = false
+  }
+}
+
+async function copyBrief() {
+  try {
+    await navigator.clipboard.writeText(brief.value)
+  } catch {
+    error.value = 'Copy failed — your browser blocked clipboard access.'
   }
 }
 
@@ -305,7 +356,8 @@ onMounted(async () => {
 }
 .actions {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
+  gap: 0.5rem;
   margin-top: 0.5rem;
 }
 .actions button {
@@ -317,6 +369,78 @@ onMounted(async () => {
   border-radius: 4px;
 }
 .actions button:disabled { opacity: 0.4; cursor: not-allowed; }
+.actions button[type="submit"] { margin-right: auto; }
+.actions .view-brief { background: #2a2a4a; color: #ddd; }
 .actions .launch { background: #4ade80; color: #052e16; font-weight: bold; }
 .actions .launch:disabled { background: #1a3a1a; color: #555; }
+
+.brief-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.brief-modal {
+  width: min(900px, 90vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.brief-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #222;
+}
+.brief-header h2 { margin: 0; font-size: 1rem; letter-spacing: 0.05em; }
+.brief-header .close {
+  background: transparent;
+  color: #888;
+  border: 0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.brief-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  line-height: 1.55;
+}
+.brief-body :deep(h1),
+.brief-body :deep(h2),
+.brief-body :deep(h3) { margin-top: 1.25em; }
+.brief-body :deep(h1) { font-size: 1.4rem; }
+.brief-body :deep(h2) { font-size: 1.15rem; color: #e5e5e5; border-bottom: 1px solid #222; padding-bottom: 0.25rem; }
+.brief-body :deep(h3) { font-size: 1rem; color: #ddd; }
+.brief-body :deep(p) { margin: 0.6em 0; }
+.brief-body :deep(ul),
+.brief-body :deep(ol) { padding-left: 1.5rem; }
+.brief-body :deep(li) { margin: 0.25em 0; }
+.brief-body :deep(strong) { color: #fff; }
+.brief-body :deep(code) { background: #222; padding: 0 0.25em; border-radius: 3px; }
+.brief-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid #222;
+}
+.brief-footer button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #444;
+  font-family: inherit;
+}
+.brief-footer .primary { background: #4ade80; color: #052e16; font-weight: bold; }
+.brief-footer .secondary { background: #333; color: #ddd; }
 </style>
