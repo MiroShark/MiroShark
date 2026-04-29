@@ -116,6 +116,17 @@ Same canvas as the share card (1200×630), but one frame per round — bullish /
 
 The Embed dialog renders a paused thumbnail with a tap-to-play affordance (so opening the dialog doesn't pull the GIF for every viewer) and exposes a copyable URL plus a Download GIF button beneath the share-card row.
 
+## Simulation Transcript Export
+
+The text companion to the share card (preview) and replay GIF (motion) — the same simulation as a citable per-round agent transcript so research papers, Substack posts, and Discord threads can quote what agents actually said without screenshotting.
+
+Two endpoints, same payload, different encoding:
+
+- `GET /api/simulation/<id>/transcript.md` — Markdown with a YAML front-matter block (`sim_id`, `scenario`, `agent_count`, `total_rounds`, `consensus_label`, `quality_health`, `outcome_label`). Notion, Obsidian, Bear, and Substack pick it up as page metadata; the body is one `## Round N` section per recorded round with each agent post as a block quote tagged with the agent's stance. Trajectories longer than ~80 rounds elide the middle rounds in the rendered Markdown view (with a note pointing to the JSON form for the full series) so the document stays readable.
+- `GET /api/simulation/<id>/transcript.json` — same payload as a structured JSON document, pretty-printed (`indent=2`) so a `curl` to a file is immediately readable. Intended for SDK consumers and downstream pipelines (LLM-as-judge eval frameworks, Python client SDK, etc.).
+
+Both endpoints share the share-card publish gate (`is_public=true`). Per-agent stance labels use the same ±0.2 threshold as every other surface — a "bullish" agent on the gallery is the same agent's tag in the transcript. The Embed dialog exposes a "Download .md" + "Download .json" pair beneath the replay-GIF row.
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

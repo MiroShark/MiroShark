@@ -1163,6 +1163,60 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/transcript.md:
+    get:
+      tags: [Publish & Embed]
+      summary: Citable Markdown transcript of the simulation.
+      description: |
+        Per-round agent posts + stance labels + final consensus rendered
+        as Markdown with a YAML front-matter block (`sim_id`, `scenario`,
+        `agent_count`, `total_rounds`, `consensus_label`, …). Notion,
+        Obsidian, Bear, and Substack import the front matter as page
+        metadata.
+
+        Pairs with `share-card.png` (preview) and `replay.gif` (motion)
+        as the third quote-friendly share format. Same publish gate as
+        the share card — requires `is_public=true` on the simulation
+        state.
+
+        Trajectories longer than ~80 rounds get the middle rounds
+        elided in the rendered Markdown body (the JSON form preserves
+        every round) so the document stays readable.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "Markdown document with `Cache-Control: public, max-age=60`."
+          content:
+            text/markdown:
+              schema:
+                type: string
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/{simulation_id}/transcript.json:
+    get:
+      tags: [Publish & Embed]
+      summary: Structured JSON transcript of the simulation.
+      description: |
+        Same payload the Markdown transcript renders from, but as JSON
+        so SDK consumers and downstream pipelines (LLM-as-judge evals,
+        Python client SDK, …) can consume the per-round agent posts +
+        stance labels without parsing Markdown.
+
+        Same publish gate as the Markdown transcript. Pretty-printed
+        (`indent=2`) so a `curl` to a file is immediately readable.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "JSON transcript with `Cache-Control: public, max-age=60`."
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SimulationTranscript" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /share/{simulation_id}:
     get:
       tags: [Publish & Embed]
@@ -2095,6 +2149,95 @@ components:
           oneOf: [{ type: string }, { type: "null" }]
         share_card_url: { type: string }
         share_landing_url: { type: string }
+
+    SimulationTranscript:
+      type: object
+      description: |
+        Citable per-round agent transcript. Same payload backs both the
+        Markdown (`transcript.md`) and JSON (`transcript.json`) export
+        endpoints — assembled from `trajectory.json`, `quality.json`,
+        `resolution.json`, `outcome.json`, and the simulation profiles
+        with the same ±0.2 stance threshold the gallery and webhook use,
+        so a "bullish" agent here matches the same agent's tag on every
+        other surface.
+      properties:
+        sim_id: { type: string }
+        scenario: { type: string }
+        created_date:
+          type: string
+          description: Run creation date (YYYY-MM-DD), per the simulation state.
+        agent_count: { type: integer }
+        total_rounds:
+          type: integer
+          description: Planned round count (from `time_config`).
+        rounds_recorded:
+          type: integer
+          description: Actual snapshots committed to disk so far.
+        consensus:
+          type: object
+          description: Final-round belief split + threshold-cross round.
+          properties:
+            bullish: { type: number }
+            neutral: { type: number }
+            bearish: { type: number }
+            label:
+              type: string
+              enum: [bullish, neutral, bearish]
+            round:
+              type: integer
+              nullable: true
+        quality:
+          type: object
+          properties:
+            health: { type: string, nullable: true }
+            participation_rate: { type: number, nullable: true }
+        resolution:
+          type: object
+          nullable: true
+          description: Polymarket resolution snapshot when present.
+          properties:
+            actual_outcome: { type: string }
+            predicted_consensus: { type: string }
+            accuracy_score: { type: number }
+        outcome:
+          $ref: "#/components/schemas/SimulationOutcome"
+          nullable: true
+        rounds:
+          type: array
+          description: One entry per recorded round, in chronological order.
+          items:
+            type: object
+            properties:
+              round: { type: integer }
+              timestamp: { type: string }
+              total_posts: { type: integer }
+              total_engagements: { type: integer }
+              active_agent_count: { type: integer }
+              stance_split:
+                type: object
+                properties:
+                  bullish: { type: number }
+                  neutral: { type: number }
+                  bearish: { type: number }
+              posts:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    post_id: { type: integer, nullable: true }
+                    agent_id: { type: integer }
+                    agent_name: { type: string }
+                    stance:
+                      type: string
+                      enum: [bullish, neutral, bearish]
+                    stance_value:
+                      type: number
+                      description: Agent's mean per-topic position for this round (-1..+1).
+                    content:
+                      type: string
+                      description: Post body, excerpted to ~400 chars with an ellipsis.
+                    likes: { type: integer }
+                    dislikes: { type: integer }
 
     SimulationOutcome:
       type: object

@@ -227,6 +227,61 @@
               </div>
             </div>
 
+            <!-- Text transcript — pairs with the share card (preview)
+                 and replay GIF (motion) as the third quote-friendly
+                 share format. The Markdown form has YAML front matter
+                 so Notion / Obsidian / Bear / Substack pick it up as
+                 page metadata; the JSON form is for SDK consumers. -->
+            <div class="transcript-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">📄</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">Export transcript</div>
+                  <div class="transcript-sub">
+                    Per-round agent posts + stance labels + final
+                    consensus. Cite the simulation in a research paper
+                    or a Substack post without screenshotting.
+                  </div>
+                </div>
+              </div>
+
+              <div class="transcript-actions">
+                <a
+                  v-if="isPublic && transcriptMarkdownUrl"
+                  class="transcript-download-btn"
+                  :href="transcriptMarkdownUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-transcript.md`"
+                >
+                  ↓ Download .md
+                </a>
+                <a
+                  v-if="isPublic && transcriptJsonUrl"
+                  class="transcript-download-btn transcript-download-btn-secondary"
+                  :href="transcriptJsonUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-transcript.json`"
+                >
+                  ↓ Download .json
+                </a>
+                <span v-if="!isPublic" class="transcript-empty">
+                  Publish the simulation to enable the transcript export.
+                </span>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">Markdown URL (Notion / Obsidian "Import from URL")</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('transcriptMd')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'transcriptMd' ? '✓ Copied' : 'Copy URL' }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ transcriptMarkdownUrl || '—' }}</code></pre>
+              </div>
+            </div>
+
             <!-- Verified-prediction annotation — lets operators turn a
                  published simulation into a "called it" record on the
                  /verified gallery page. Only meaningful once the run is
@@ -372,6 +427,8 @@ import {
   getShareCardUrl,
   getReplayGifUrl,
   getShareLandingUrl,
+  getTranscriptMarkdownUrl,
+  getTranscriptJsonUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
 } from '../api/simulation'
@@ -467,6 +524,16 @@ const replayGifUrl = computed(() => {
     : base
 })
 
+const transcriptMarkdownUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getTranscriptMarkdownUrl(props.simulationId, origin.value)
+})
+
+const transcriptJsonUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getTranscriptJsonUrl(props.simulationId, origin.value)
+})
+
 const replayLoaded = ref(false)
 const replayPlay = ref(false)
 const onReplayLoad = () => {
@@ -515,6 +582,7 @@ const copy = async (which) => {
   else if (which === 'share') text = shareLandingUrl.value
   else if (which === 'card') text = shareCardUrl.value
   else if (which === 'replay') text = replayGifUrl.value
+  else if (which === 'transcriptMd') text = transcriptMarkdownUrl.value
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -1162,6 +1230,94 @@ watch(isPublic, () => {
 
 .replay-section .snippet-copy-btn {
   background: #ea580c;
+}
+
+.transcript-section {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border: 1px solid rgba(10, 10, 10, 0.08);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.transcript-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.transcript-icon {
+  font-size: 18px;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.transcript-head-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.transcript-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  margin-bottom: 4px;
+}
+
+.transcript-sub {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4a4a4a;
+}
+
+.transcript-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.transcript-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #0a0a0a;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.transcript-download-btn:hover { background: #2a2a2a; }
+
+.transcript-download-btn-secondary {
+  background: #fff;
+  color: #0a0a0a;
+  border: 1px solid rgba(10, 10, 10, 0.18);
+}
+
+.transcript-download-btn-secondary:hover {
+  background: rgba(10, 10, 10, 0.04);
+}
+
+.transcript-empty {
+  font-size: 12px;
+  color: #6b6b6b;
+  font-style: italic;
+}
+
+.transcript-snippet {
+  margin: 0;
 }
 
 .outcome-section {

@@ -440,6 +440,39 @@ export const getReplayGifUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the Markdown transcript export for a
+ * simulation. The transcript is the text companion to the share card
+ * (preview) and replay GIF (motion) — per-round agent posts + stances
+ * + final consensus, with YAML front matter so Notion / Obsidian /
+ * Bear pick it up as page metadata.
+ *
+ * Same publish gate as the share card. Returns the absolute URL only —
+ * callers drop it into a download `<a href>` or copy it for manual use.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getTranscriptMarkdownUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/transcript.md`
+}
+
+/**
+ * Build the absolute URL of the JSON transcript export — same payload
+ * as the Markdown form but in a structured shape for SDKs / downstream
+ * pipelines (LLM-as-judge evals, Python client SDK consumers, etc.).
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getTranscriptJsonUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/transcript.json`
+}
+
+/**
  * Build the absolute URL of the public share landing page for a
  * simulation. The page exposes Open Graph + Twitter Card meta tags so
  * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls

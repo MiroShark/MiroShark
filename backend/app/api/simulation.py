@@ -4826,6 +4826,92 @@ def get_replay_gif(simulation_id: str):
         }), 500
 
 
+def _serve_transcript(simulation_id: str, fmt: str):
+    """Shared body for the transcript.md / transcript.json routes.
+
+    Both endpoints share the same publish gate, the same data assembly
+    (``transcript.build_transcript_data``), and only diverge in the
+    encoding step. Extracted so the two route handlers stay one-line
+    wrappers — the decorator presence is what the OpenAPI drift test
+    scans for, but the actual logic lives here.
+    """
+    from ..services import transcript as transcript_renderer
+    from flask import Response
+
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        data = transcript_renderer.build_transcript_data(summary, sim_dir)
+
+        if fmt == "json":
+            payload = transcript_renderer.render_json_bytes(data)
+            mimetype = "application/json; charset=utf-8"
+            filename = f"miroshark-{simulation_id[:12]}-transcript.json"
+        else:
+            payload = transcript_renderer.render_markdown_bytes(data)
+            mimetype = "text/markdown; charset=utf-8"
+            filename = f"miroshark-{simulation_id[:12]}-transcript.md"
+
+        response = Response(payload, mimetype=mimetype)
+        # Short cache — the transcript can change every round on a
+        # live run, but unfurlers / curl loops shouldn't hammer the
+        # disk reads either. 60s matches the embed-summary cadence.
+        response.headers["Cache-Control"] = "public, max-age=60"
+        # Inline so a click from the frontend renders in-tab; the UI
+        # uses an explicit ``download`` attribute on its anchor when it
+        # wants a save-as.
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="{filename}"'
+        )
+        return response
+
+    except Exception as e:
+        logger.error(f"transcript: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/transcript.md', methods=['GET'])
+def get_transcript_md(simulation_id: str):
+    """Citable Markdown transcript of the simulation.
+
+    Per-round agent posts + stance labels + final consensus, served as
+    ``text/markdown`` so Notion / Obsidian / Bear / Substack import the
+    YAML front matter as page metadata. Same publish gate as the share
+    card and replay GIF — the underlying ``is_public`` flag controls
+    who can read the agent posts.
+
+    Pairs with ``share-card.png`` (preview), ``replay.gif`` (motion),
+    and this endpoint (text) as the three quote-friendly share formats.
+    """
+    return _serve_transcript(simulation_id, "md")
+
+
+@simulation_bp.route('/<simulation_id>/transcript.json', methods=['GET'])
+def get_transcript_json(simulation_id: str):
+    """Same transcript payload as ``transcript.md`` but as JSON.
+
+    Same publish gate. Pretty-printed (indent=2) so a ``curl`` to a
+    file is immediately readable. Intended for SDK / pipeline consumers
+    (Python client SDK, downstream LLM-as-judge eval pipelines, etc.)
+    that need a structured form rather than the human-readable
+    Markdown.
+    """
+    return _serve_transcript(simulation_id, "json")
+
+
 # ============== Public Gallery ==============
 
 
