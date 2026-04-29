@@ -54,7 +54,11 @@
         </form>
       </section>
 
-      <SeedSlotsPanel :seed-state="seedState" />
+      <SeedSlotsPanel
+        :seed-state="seedState"
+        :researching-claim="researchingClaim"
+        @research-claim="onResearchClaim"
+      />
     </main>
 
     <div v-if="briefOpen" class="brief-overlay" @click.self="briefOpen = false">
@@ -100,6 +104,7 @@
                 <span class="domain">{{ extractDomain(r.url) }}</span>
               </div>
               <div v-if="r.snippet" class="source-snippet">{{ r.snippet }}</div>
+              <div v-if="r.claim_focus" class="claim-focus-tag">↳ for claim: {{ r.claim_focus }}</div>
             </li>
           </ol>
 
@@ -137,6 +142,7 @@ import {
   getSession,
   createSession,
   postResearch,
+  postResearchClaim,
 } from '../api/seedChat.js'
 
 const router = useRouter()
@@ -175,6 +181,7 @@ const brief = ref('')
 const briefOpen = ref(false)
 const researchReport = ref(null)
 const researching = ref(false)
+const researchingClaim = ref('')
 const researchProgressMsg = ref('')
 const regenerating = ref(false)
 
@@ -351,6 +358,25 @@ async function runResearch() {
   } finally {
     researching.value = false
     researchProgressMsg.value = ''
+  }
+}
+
+async function onResearchClaim(claimText) {
+  if (!activeSessionId.value || researchingClaim.value) return
+  researchingClaim.value = claimText
+  error.value = ''
+  try {
+    const data = await postResearchClaim({
+      session_id: activeSessionId.value,
+      claim_text: claimText,
+    })
+    if (data?.report) {
+      researchReport.value = data.report
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    researchingClaim.value = ''
   }
 }
 
@@ -645,6 +671,12 @@ onMounted(async () => {
   color: #888;
   font-size: 0.8rem;
   line-height: 1.4;
+}
+.claim-focus-tag {
+  font-size: 0.72rem;
+  color: #80b4ff;
+  margin-top: 0.15rem;
+  font-style: italic;
 }
 .brief-footer {
   display: flex;

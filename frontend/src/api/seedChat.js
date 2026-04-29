@@ -45,3 +45,10 @@ export const createSession = () => {
 export const postResearch = (data) => {
   return service.post('/api/seed-chat/research', data, { timeout: 240000 })
 }
+
+/**
+ * Research a single claim within a session. Same long-running profile as /research.
+ */
+export const postResearchClaim = (data) => {
+  return service.post('/api/seed-chat/research-claim', data, { timeout: 240000 })
+}

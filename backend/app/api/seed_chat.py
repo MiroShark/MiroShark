@@ -197,3 +197,93 @@ def research():
         "session_id": session_id,
         "report": trimmed_for_response,
     })
+
+
+@seed_chat_bp.route("/research-claim", methods=["POST"])
+def research_claim():
+    payload = request.get_json(silent=True) or {}
+    session_id = payload.get("session_id")
+    claim_text = (payload.get("claim_text") or "").strip()
+    if not session_id:
+        return jsonify({"error": "session_id required"}), 400
+    if not claim_text:
+        return jsonify({"error": "claim_text required"}), 400
+
+    session = _store.load(session_id)
+    if session is None:
+        return jsonify({"error": "session_not_found"}), 404
+
+    seed_state = session.get("seed_state") or {}
+    topic = (seed_state.get("topic") or "").strip()
+    if not topic:
+        return jsonify({"error": "session has no topic"}), 400
+
+    claim_intent = (
+        f"Investigate this specific claim, looking for evidence both "
+        f"supporting and refuting it: {claim_text}"
+    )
+
+    try:
+        new_report = research_with_intent(
+            topic=topic,
+            intent=claim_intent,
+            max_sources=5,
+        )
+    except RuntimeError as exc:
+        logger.error("claim research failed: %s", exc)
+        return jsonify({"error": f"research_failed: {exc}"}), 503
+
+    # Build per-source dicts WITH the claim_focus tag and full text
+    new_results = [
+        {
+            "url": r.url,
+            "title": r.title,
+            "snippet": r.snippet,
+            "text": r.text,
+            "text_length": len(r.text),
+            "score": r.score,
+            "fetch_error": r.fetch_error,
+            "claim_focus": claim_text,
+        }
+        for r in new_report.results
+    ]
+
+    # Merge into session.research_report
+    existing_report = session.get("research_report") or {
+        "topic": topic,
+        "intent": "",
+        "queries": [],
+        "gaps": [],
+        "content_assessment": "",
+        "results": [],
+        "total_chars": 0,
+        "fetched_count": 0,
+    }
+    existing_results = list(existing_report.get("results") or [])
+    existing_urls = {r.get("url") for r in existing_results}
+    appended = [r for r in new_results if r["url"] not in existing_urls]
+    existing_report["results"] = existing_results + appended
+    existing_report["fetched_count"] = sum(
+        1 for r in existing_report["results"]
+        if r.get("text_length", 0) > 0 and not r.get("fetch_error")
+    )
+    existing_report["total_chars"] = sum(
+        r.get("text_length", 0) for r in existing_report["results"]
+    )
+    session["research_report"] = existing_report
+    _store.save(session)
+
+    # Build response with the same shape /research returns (trimmed for FE)
+    response_report = {
+        **existing_report,
+        "results": [
+            {k: v for k, v in r.items() if k != "text"}
+            for r in existing_report["results"]
+        ],
+    }
+
+    return jsonify({
+        "session_id": session_id,
+        "report": response_report,
+        "appended_count": len(appended),
+    })

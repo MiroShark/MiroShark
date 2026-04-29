@@ -57,7 +57,16 @@
       <div class="slot-body">
         <div class="slot-label">Contested claims ({{ seedState.contested_claims.length }})</div>
         <ul v-if="seedState.contested_claims.length" class="slot-list">
-          <li v-for="(c, i) in seedState.contested_claims" :key="i">{{ c }}</li>
+          <li v-for="(c, i) in seedState.contested_claims" :key="i" class="claim-row">
+            <span class="claim-text">{{ c }}</span>
+            <button
+              type="button"
+              class="claim-research-btn"
+              :disabled="researchingClaim === c"
+              @click="$emit('research-claim', c)"
+              :title="researchingClaim === c ? 'Searching…' : 'Research this claim'"
+            >{{ researchingClaim === c ? '…' : '🔍' }}</button>
+          </li>
         </ul>
         <div v-else class="slot-value muted">optional</div>
       </div>
@@ -70,7 +79,10 @@ import { computed } from 'vue'
 
 const props = defineProps({
   seedState: { type: Object, required: true },
+  researchingClaim: { type: String, default: '' },
 })
+
+const emit = defineEmits(['research-claim'])
 
 const stakeholdersFilled = computed(() => props.seedState.stakeholders.length >= 2)
 </script>
@@ -115,4 +127,24 @@ const stakeholdersFilled = computed(() => props.seedState.stakeholders.length >=
   padding-left: 1rem;
   font-size: 0.85rem;
 }
+.claim-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.claim-text { flex: 1; word-break: break-word; }
+.claim-research-btn {
+  background: transparent;
+  border: 1px solid #333;
+  color: #888;
+  cursor: pointer;
+  border-radius: 3px;
+  padding: 0 0.4rem;
+  font-size: 0.75rem;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.claim-research-btn:hover { background: #1a1a1a; color: #ccc; }
+.claim-research-btn:disabled { opacity: 0.6; cursor: wait; }
 </style>

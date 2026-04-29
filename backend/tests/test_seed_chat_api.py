@@ -409,3 +409,102 @@ def test_launch_with_use_sources_passes_research_to_writer(client):
     assert sources is not None
     assert len(sources) == 1
     assert sources[0]["title"] == "T1"
+
+
+# ---- /research-claim endpoint ----
+
+
+def test_research_claim_appends_sources_with_focus_tag(client):
+    fake_session = {
+        "id": "abc",
+        "title": "Test",
+        "created_at": "t1",
+        "updated_at": "t2",
+        "messages": [],
+        "seed_state": {
+            "topic": "Resources tax",
+            "intent": "Y",
+            "stakeholders": [
+                {"name": "A", "role": "r", "stance": "neutral"},
+                {"name": "B", "role": "r", "stance": "neutral"},
+            ],
+            "decision_branches": [],
+            "contested_claims": ["Will trigger 50k job losses"],
+            "output_format": "media_landscape",
+        },
+        "research_report": {
+            "topic": "Resources tax",
+            "intent": "Y",
+            "queries": [],
+            "gaps": [],
+            "content_assessment": "",
+            "results": [
+                {"url": "u-existing", "title": "existing", "snippet": "s",
+                 "text": "old body", "text_length": 100, "score": 0.5,
+                 "fetch_error": None},
+            ],
+            "total_chars": 100,
+            "fetched_count": 1,
+        },
+        "ready_to_launch": True,
+    }
+
+    fake_report_obj = MagicMock()
+    fake_report_obj.results = [
+        MagicMock(
+            url="u-new", title="New source", snippet="snippet",
+            text="new source body", score=0.8, fetch_error=None,
+        ),
+    ]
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.research_with_intent", return_value=fake_report_obj) as mock_research:
+        mock_store.load.return_value = fake_session
+        response = client.post(
+            "/api/seed-chat/research-claim",
+            json={"session_id": "abc", "claim_text": "Will trigger 50k job losses"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert "report" in body
+    results = body["report"]["results"]
+    # Existing result + new claim-focused result
+    assert len(results) == 2
+    new = [r for r in results if r["url"] == "u-new"][0]
+    assert new["claim_focus"] == "Will trigger 50k job losses"
+
+    # research_with_intent called with claim-targeted intent
+    mock_research.assert_called_once()
+    call_kwargs = mock_research.call_args.kwargs
+    intent_arg = call_kwargs.get("intent") if call_kwargs.get("intent") is not None else (
+        mock_research.call_args.args[1] if len(mock_research.call_args.args) >= 2 else ""
+    )
+    assert "50k job losses" in intent_arg
+
+    # session saved
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    saved_results = saved["research_report"]["results"]
+    assert any(r["url"] == "u-new" and r.get("claim_focus") == "Will trigger 50k job losses"
+               for r in saved_results)
+
+
+def test_research_claim_404_when_session_missing(client):
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = None
+        response = client.post(
+            "/api/seed-chat/research-claim",
+            json={"session_id": "missing", "claim_text": "x"},
+        )
+    assert response.status_code == 404
+
+
+def test_research_claim_400_when_claim_text_missing(client):
+    response = client.post("/api/seed-chat/research-claim", json={"session_id": "abc"})
+    assert response.status_code == 400
+
+
+def test_research_claim_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/research-claim", json={"claim_text": "x"})
+    assert response.status_code == 400
