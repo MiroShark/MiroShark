@@ -76,3 +76,7 @@ export const postTreeResearch = (data) => {
 export const postTreeUpdateNode = (data) => {
   return service.post('/api/seed-chat/tree/update-node', data, { timeout: 30000 })
 }
+
+export const postTreeSynthesize = (data) => {
+  return service.post('/api/seed-chat/tree/synthesize', data, { timeout: 120000 })
+}

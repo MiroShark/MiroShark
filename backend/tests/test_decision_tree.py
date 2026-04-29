@@ -121,3 +121,19 @@ def test_propose_subquestions_returns_empty_on_malformed_response():
         children = propose_subquestions(parent, {})
 
     assert children == []
+
+
+def test_set_summary_writes_to_node():
+    from app.services.decision_tree import initialise_tree, set_summary, find_node
+
+    tree = initialise_tree(_seed_for_tests())
+    target = tree["children"][0]
+    ok = set_summary(tree, target["id"], "## Summary\nBody")
+    assert ok is True
+    assert find_node(tree, target["id"])["summary"] == "## Summary\nBody"
+
+
+def test_set_summary_returns_false_for_unknown_id():
+    from app.services.decision_tree import initialise_tree, set_summary
+    tree = initialise_tree(_seed_for_tests())
+    assert set_summary(tree, "no-id", "x") is False

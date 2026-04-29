@@ -33,6 +33,8 @@
         </ul>
       </div>
 
+      <div v-if="node.summary" class="summary" v-html="renderedSummary"></div>
+
       <div class="actions">
         <button
           type="button"
@@ -46,6 +48,13 @@
           :disabled="busy.research"
           @click="$emit('research', node.id)"
         >{{ busy.research ? 'Researching…' : 'Research 🔍' }}</button>
+        <button
+          v-if="node.evidence?.length"
+          type="button"
+          class="action synthesize"
+          :disabled="busy.synthesize"
+          @click="$emit('synthesize', node.id)"
+        >{{ busy.synthesize ? 'Synthesizing…' : (node.summary ? 'Re-synthesize ✨' : 'Synthesize ✨') }}</button>
       </div>
     </div>
 
@@ -58,6 +67,7 @@
         @expand="$emit('expand', $event)"
         @research="$emit('research', $event)"
         @update-node="$emit('update-node', $event)"
+        @synthesize="$emit('synthesize', $event)"
       />
     </div>
   </div>
@@ -65,13 +75,14 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { marked } from 'marked'
 
 const props = defineProps({
   node: { type: Object, required: true },
   busyMap: { type: Object, default: () => ({}) },
 })
 
-const emit = defineEmits(['expand', 'research', 'update-node'])
+const emit = defineEmits(['expand', 'research', 'update-node', 'synthesize'])
 
 const editing = ref(false)
 const draftQuestion = ref('')
@@ -88,6 +99,8 @@ const typeIcon = computed(() => {
 })
 
 const busy = computed(() => props.busyMap?.[props.node.id] || {})
+
+const renderedSummary = computed(() => props.node.summary ? marked.parse(props.node.summary) : '')
 
 function startEdit() {
   draftQuestion.value = props.node.question
@@ -212,4 +225,28 @@ function onNotesBlur(event) {
   padding-left: 0.75rem;
   border-left: 1px solid #222;
 }
+.summary {
+  background: #0c1a2c;
+  border-left: 3px solid #80b4ff;
+  padding: 0.6rem 0.75rem;
+  margin: 0.5rem 0;
+  border-radius: 0 4px 4px 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #e0e8f0;
+}
+.summary :deep(p) { margin: 0.4em 0; }
+.summary :deep(strong) { color: #fff; }
+.summary :deep(a) { color: #80b4ff; }
+.summary :deep(code) {
+  background: #1a2a3a;
+  padding: 0 0.25em;
+  border-radius: 3px;
+}
+.action.synthesize {
+  background: #2a2a4a;
+  color: #d6d6f5;
+  border-color: #3a3a6a;
+}
+.action.synthesize:hover { background: #353559; }
 </style>

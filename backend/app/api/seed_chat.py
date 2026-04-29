@@ -16,7 +16,9 @@ from ..services.decision_tree import (
     attach_evidence,
     attach_children,
     propose_subquestions,
+    set_summary,
 )
+from ..services.tree_synthesizer import synthesise_node
 from ..storage.session_store import SessionStore
 from ..utils.logger import get_logger
 
@@ -479,3 +481,40 @@ def tree_update():
     session["tree"] = tree
     _store.save(session)
     return jsonify({"session_id": session_id, "tree": tree})
+
+
+@seed_chat_bp.route("/tree/synthesize", methods=["POST"])
+def tree_synthesize():
+    payload = request.get_json(silent=True) or {}
+    session_id = payload.get("session_id")
+    node_id = payload.get("node_id")
+    if not session_id or not node_id:
+        return jsonify({"error": "session_id and node_id required"}), 400
+
+    session = _store.load(session_id)
+    if session is None:
+        return jsonify({"error": "session_not_found"}), 404
+
+    tree = session.get("tree")
+    if not tree:
+        return jsonify({"error": "tree not initialised"}), 400
+
+    node = find_node(tree, node_id)
+    if node is None:
+        return jsonify({"error": "node_not_found"}), 404
+
+    try:
+        summary = synthesise_node(node)
+    except RuntimeError as exc:
+        logger.error("tree synthesis failed: %s", exc)
+        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
+
+    set_summary(tree, node_id, summary)
+    session["tree"] = tree
+    _store.save(session)
+
+    return jsonify({
+        "session_id": session_id,
+        "node_id": node_id,
+        "summary": summary,
+    })

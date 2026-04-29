@@ -150,6 +150,15 @@ def attach_evidence(tree: Dict, node_id: str, sources: List[Dict]) -> bool:
     return True
 
 
+def set_summary(tree: Dict, node_id: str, summary: str) -> bool:
+    """Set node.summary on the matching node. Returns True if found."""
+    node = find_node(tree, node_id)
+    if node is None:
+        return False
+    node["summary"] = summary
+    return True
+
+
 def attach_children(tree: Dict, parent_id: str, children: List[Dict]) -> bool:
     """Append child nodes to a parent. Returns True if parent found."""
     node = find_node(tree, parent_id)

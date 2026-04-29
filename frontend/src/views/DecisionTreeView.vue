@@ -8,7 +8,7 @@
         v-if="!researchingAll"
         type="button"
         class="research-all-btn"
-        :disabled="!tree"
+        :disabled="!tree || synthesizingAll"
         @click="researchAll"
       >Research all 🔁</button>
       <button
@@ -16,7 +16,20 @@
         type="button"
         class="stop-btn"
         @click="stopResearchAll"
-      >Stop</button>
+      >Stop research</button>
+      <button
+        v-if="!synthesizingAll"
+        type="button"
+        class="synthesize-all-btn"
+        :disabled="!tree || researchingAll"
+        @click="synthesizeAll"
+      >Synthesize all ✨</button>
+      <button
+        v-else
+        type="button"
+        class="stop-btn"
+        @click="stopSynthesizeAll"
+      >Stop synth</button>
     </header>
 
     <div v-if="researchingAll" class="research-progress-banner" role="status" aria-live="polite">
@@ -26,6 +39,16 @@
       <span class="progress-text">
         Researching node {{ researchProgress.current }} of {{ researchProgress.total }}:
         <span class="progress-question">"{{ researchProgress.label }}"</span>
+      </span>
+    </div>
+
+    <div v-if="synthesizingAll" class="research-progress-banner" role="status" aria-live="polite">
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="progress-text">
+        Synthesizing node {{ synthProgress.current }} of {{ synthProgress.total }}:
+        <span class="progress-question">"{{ synthProgress.label }}"</span>
       </span>
     </div>
 
@@ -40,6 +63,7 @@
         @expand="onExpand"
         @research="onResearch"
         @update-node="onUpdateNode"
+        @synthesize="onSynthesize"
       />
     </main>
   </div>
@@ -55,6 +79,7 @@ import {
   postTreeExpand,
   postTreeResearch,
   postTreeUpdateNode,
+  postTreeSynthesize,
 } from '../api/seedChat.js'
 
 const route = useRoute()
@@ -71,6 +96,10 @@ const busyMap = reactive({})
 const researchingAll = ref(false)
 const stopRequested = ref(false)
 const researchProgress = ref({ current: 0, total: 0, label: '' })
+
+const synthesizingAll = ref(false)
+const synthStopRequested = ref(false)
+const synthProgress = ref({ current: 0, total: 0, label: '' })
 
 function setBusy(nodeId, action, value) {
   if (!busyMap[nodeId]) busyMap[nodeId] = {}
@@ -187,6 +216,61 @@ function stopResearchAll() {
   stopRequested.value = true
 }
 
+async function onSynthesize(nodeId) {
+  setBusy(nodeId, 'synthesize', true)
+  error.value = ''
+  try {
+    await postTreeSynthesize({ session_id: sessionId, node_id: nodeId })
+    const session = await getSession(sessionId)
+    if (session?.tree) tree.value = session.tree
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    setBusy(nodeId, 'synthesize', false)
+  }
+}
+
+async function synthesizeAll() {
+  if (!tree.value || synthesizingAll.value) return
+  const nodes = flattenBfs(tree.value).filter(
+    n => (n.evidence?.length > 0) && !n.summary
+  )
+  if (nodes.length === 0) {
+    error.value = 'Nothing to synthesize. Run Research first or all nodes already summarized.'
+    return
+  }
+  synthesizingAll.value = true
+  synthStopRequested.value = false
+  error.value = ''
+  synthProgress.value = { current: 0, total: nodes.length, label: '' }
+  for (let i = 0; i < nodes.length; i++) {
+    if (synthStopRequested.value) break
+    const node = nodes[i]
+    synthProgress.value = {
+      current: i + 1,
+      total: nodes.length,
+      label: node.question,
+    }
+    setBusy(node.id, 'synthesize', true)
+    try {
+      await postTreeSynthesize({ session_id: sessionId, node_id: node.id })
+      const session = await getSession(sessionId)
+      if (session?.tree) tree.value = session.tree
+    } catch (err) {
+      const msg = err?.response?.data?.error || err.message
+      error.value = `Node ${i + 1} failed: ${msg}. Continuing.`
+    } finally {
+      setBusy(node.id, 'synthesize', false)
+    }
+  }
+  synthesizingAll.value = false
+  synthProgress.value = { current: 0, total: 0, label: '' }
+}
+
+function stopSynthesizeAll() {
+  synthStopRequested.value = true
+}
+
 async function onUpdateNode({ node_id, fields }) {
   try {
     const data = await postTreeUpdateNode({
@@ -293,4 +377,18 @@ onMounted(loadTree)
   color: #aaa;
   margin-left: 0.25rem;
 }
+.synthesize-all-btn {
+  background: #2a2a4a;
+  color: #d6d6f5;
+  border: 1px solid #3a3a6a;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+.synthesize-all-btn:hover { background: #353559; }
+.synthesize-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

@@ -728,3 +728,43 @@ def test_tree_research_attaches_evidence(client):
     assert response.status_code == 200
     body = response.get_json()
     assert any(e["url"] == "u1" for e in body["evidence"])
+
+
+def test_tree_synthesize_attaches_summary(client):
+    session = _tree_session_fixture()
+    from app.services.decision_tree import initialise_tree
+    session["tree"] = initialise_tree(session["seed_state"])
+    target_id = session["tree"]["children"][0]["id"]
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.synthesise_node",
+               return_value="## Summary\n\nBody."):
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/synthesize",
+            json={"session_id": "tree-1", "node_id": target_id},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["summary"].startswith("## Summary")
+    mock_store.save.assert_called_once()
+
+
+def test_tree_synthesize_404_when_node_missing(client):
+    session = _tree_session_fixture()
+    from app.services.decision_tree import initialise_tree
+    session["tree"] = initialise_tree(session["seed_state"])
+
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/synthesize",
+            json={"session_id": "tree-1", "node_id": "no-such"},
+        )
+    assert response.status_code == 404
+
+
+def test_tree_synthesize_400_when_required_missing(client):
+    response = client.post("/api/seed-chat/tree/synthesize", json={})
+    assert response.status_code == 400
