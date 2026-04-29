@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 
-from wonderwall.social_agent.agent_environment import (
+from lib.env_compact import (
     _MAX_COMMENTS_PER_POST,
     _compact_post_for_agent,
     _compact_posts_for_agent,

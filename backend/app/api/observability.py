@@ -131,10 +131,12 @@ def get_events():
     sim_id = request.args.get('simulation_id')
     raw_types = request.args.get('event_types', '')
     event_types = set(t.strip() for t in raw_types.split(',') if t.strip()) or None
-    from_line = int(request.args.get('from_line', 0))
-    limit = int(request.args.get('limit', 200))
-    filter_agent = request.args.get('agent_id')
-    filter_round = request.args.get('round_num')
+    # Use Flask's type-coerced get so a malformed query string (e.g. ?limit=abc)
+    # falls back to the default rather than 500-ing the endpoint.
+    from_line = request.args.get('from_line', default=0, type=int)
+    limit = request.args.get('limit', default=200, type=int)
+    filter_agent = request.args.get('agent_id', type=int)
+    filter_round = request.args.get('round_num', type=int)
     filter_platform = request.args.get('platform')
 
     # Decide which file to read
@@ -147,8 +149,8 @@ def get_events():
     events, total_lines = _read_jsonl_paginated(
         path, from_line, limit,
         event_types=event_types,
-        agent_id=int(filter_agent) if filter_agent else None,
-        round_num=int(filter_round) if filter_round else None,
+        agent_id=filter_agent,
+        round_num=filter_round,
         platform=filter_platform,
     )
 
@@ -243,8 +245,8 @@ def get_llm_calls():
     caller_filter = request.args.get('caller')
     model_filter = request.args.get('model')
     min_latency = request.args.get('min_latency_ms', type=float)
-    from_line = int(request.args.get('from_line', 0))
-    limit = int(request.args.get('limit', 100))
+    from_line = request.args.get('from_line', default=0, type=int)
+    limit = request.args.get('limit', default=100, type=int)
 
     if sim_id:
         path = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, sim_id, 'events.jsonl')
