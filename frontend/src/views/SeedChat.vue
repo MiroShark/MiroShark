@@ -78,6 +78,7 @@
         <div class="brief-body" v-html="renderedAdScripts"></div>
         <footer class="brief-footer">
           <button type="button" class="secondary" @click="copyAdScripts">Copy markdown</button>
+          <button type="button" class="secondary" @click="downloadAdScripts">Download .md</button>
           <button
             type="button"
             class="primary"
@@ -143,6 +144,7 @@
 
         <footer class="brief-footer">
           <button type="button" class="secondary" @click="copyBrief">Copy markdown</button>
+          <button type="button" class="secondary" @click="downloadBrief">Download .md</button>
           <button
             v-if="hasFetchedSources"
             type="button"
@@ -491,6 +493,38 @@ async function copyAdScripts() {
   } catch {
     error.value = 'Copy failed — your browser blocked clipboard access.'
   }
+}
+
+function slugify(text) {
+  return (text || 'session')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'session'
+}
+
+function downloadMarkdown(content, kind) {
+  if (!content) return
+  const slug = slugify(seedState.topic)
+  const date = new Date().toISOString().slice(0, 10)
+  const filename = `${kind}-${slug}-${date}.md`
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+}
+
+function downloadBrief() {
+  downloadMarkdown(brief.value, 'brief')
+}
+
+function downloadAdScripts() {
+  downloadMarkdown(adScripts.value, 'scripts')
 }
 
 function extractDomain(url) {
