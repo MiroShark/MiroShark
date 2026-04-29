@@ -146,6 +146,11 @@
           <button type="button" class="secondary" @click="copyBrief">Copy markdown</button>
           <button type="button" class="secondary" @click="downloadBrief">Download .md</button>
           <button
+            type="button"
+            class="secondary"
+            @click="openDecisionTree"
+          >Open Decision Tree ▶</button>
+          <button
             v-if="hasFetchedSources"
             type="button"
             class="secondary"
@@ -485,6 +490,14 @@ async function generateAdScripts() {
   } finally {
     generatingAdScripts.value = false
   }
+}
+
+function openDecisionTree() {
+  if (!activeSessionId.value) {
+    error.value = 'No active session.'
+    return
+  }
+  router.push({ name: 'DecisionTree', params: { sessionId: activeSessionId.value } })
 }
 
 async function copyAdScripts() {

@@ -60,3 +60,19 @@ export const postResearchClaim = (data) => {
 export const postAdScripts = (data) => {
   return service.post('/api/seed-chat/ad-scripts', data, { timeout: 240000 })
 }
+
+export const postTreeInit = (data) => {
+  return service.post('/api/seed-chat/tree/init', data, { timeout: 60000 })
+}
+
+export const postTreeExpand = (data) => {
+  return service.post('/api/seed-chat/tree/expand', data, { timeout: 90000 })
+}
+
+export const postTreeResearch = (data) => {
+  return service.post('/api/seed-chat/tree/research', data, { timeout: 240000 })
+}
+
+export const postTreeUpdateNode = (data) => {
+  return service.post('/api/seed-chat/tree/update-node', data, { timeout: 30000 })
+}

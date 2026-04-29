@@ -7,6 +7,7 @@ import SimulationRunView from '../views/SimulationRunView.vue'
 import ReportView from '../views/ReportView.vue'
 import InteractionView from '../views/InteractionView.vue'
 import DecisionLabView from '../views/DecisionLabView.vue'
+import DecisionTreeView from '../views/DecisionTreeView.vue'
 
 const routes = [
   { path: '/', name: 'SeedChat', component: SeedChat },
@@ -45,6 +46,12 @@ const routes = [
     path: '/interaction/:reportId',
     name: 'Interaction',
     component: InteractionView,
+    props: true,
+  },
+  {
+    path: '/decision-tree/:sessionId',
+    name: 'DecisionTree',
+    component: DecisionTreeView,
     props: true,
   },
 ]
