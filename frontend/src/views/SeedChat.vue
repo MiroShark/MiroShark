@@ -45,6 +45,12 @@
               @click="briefOpen = true"
             >View brief</button>
             <button
+              v-if="adScripts && !adScriptsOpen"
+              type="button"
+              class="view-brief"
+              @click="adScriptsOpen = true"
+            >View ad scripts</button>
+            <button
               type="button"
               class="launch"
               :disabled="!readyToLaunch || loading"
@@ -62,6 +68,26 @@
         @add-claim="onAddClaim"
       />
     </main>
+
+    <div v-if="adScriptsOpen" class="brief-overlay" @click.self="adScriptsOpen = false">
+      <div class="brief-modal">
+        <header class="brief-header">
+          <h2>Ad scripts</h2>
+          <button type="button" class="close" @click="adScriptsOpen = false">×</button>
+        </header>
+        <div class="brief-body" v-html="renderedAdScripts"></div>
+        <footer class="brief-footer">
+          <button type="button" class="secondary" @click="copyAdScripts">Copy markdown</button>
+          <button
+            type="button"
+            class="primary"
+            :disabled="generatingAdScripts"
+            @click="generateAdScripts"
+          >{{ generatingAdScripts ? 'Regenerating…' : 'Regenerate scripts' }}</button>
+          <button type="button" class="secondary" @click="adScriptsOpen = false">Close</button>
+        </footer>
+      </div>
+    </div>
 
     <div v-if="briefOpen" class="brief-overlay" @click.self="briefOpen = false">
       <div class="brief-modal">
@@ -120,10 +146,16 @@
           <button
             v-if="hasFetchedSources"
             type="button"
-            class="primary"
-            :disabled="regenerating"
+            class="secondary"
+            :disabled="regenerating || generatingAdScripts"
             @click="regenerateWithSources"
-          >{{ regenerating ? 'Regenerating…' : 'Regenerate brief with sources' }}</button>
+          >{{ regenerating ? 'Regenerating…' : 'Regenerate w/ sources' }}</button>
+          <button
+            type="button"
+            class="primary"
+            :disabled="generatingAdScripts || regenerating"
+            @click="generateAdScripts"
+          >{{ generatingAdScripts ? 'Generating scripts…' : 'Generate ad scripts ▶' }}</button>
           <button type="button" class="secondary" @click="briefOpen = false">Close</button>
         </footer>
       </div>
@@ -145,6 +177,7 @@ import {
   createSession,
   postResearch,
   postResearchClaim,
+  postAdScripts,
 } from '../api/seedChat.js'
 
 const router = useRouter()
@@ -181,6 +214,9 @@ const activeSessionId = ref(null)
 
 const brief = ref('')
 const briefOpen = ref(false)
+const adScripts = ref('')
+const adScriptsOpen = ref(false)
+const generatingAdScripts = ref(false)
 const researchReport = ref(null)
 const researching = ref(false)
 const researchingClaim = ref('')
@@ -189,6 +225,7 @@ const researchProgressMsg = ref('')
 const regenerating = ref(false)
 
 const renderedBrief = computed(() => brief.value ? marked.parse(brief.value) : '')
+const renderedAdScripts = computed(() => adScripts.value ? marked.parse(adScripts.value) : '')
 
 const hasFetchedSources = computed(() => {
   const results = researchReport.value?.results
@@ -214,6 +251,8 @@ function applySession(session) {
   Object.assign(seedState, emptySeed(), session.seed_state || {})
   readyToLaunch.value = !!session.ready_to_launch
   brief.value = session.brief || ''
+  adScripts.value = session.ad_scripts || ''
+  adScriptsOpen.value = false
   researchReport.value = session.research_report || null
   briefOpen.value = false
 }
@@ -226,6 +265,8 @@ function clearLocalState() {
   error.value = ''
   draft.value = ''
   brief.value = ''
+  adScripts.value = ''
+  adScriptsOpen.value = false
   researchReport.value = null
   briefOpen.value = false
 }
@@ -418,6 +459,37 @@ async function regenerateWithSources() {
     error.value = err?.response?.data?.error || err.message
   } finally {
     regenerating.value = false
+  }
+}
+
+async function generateAdScripts() {
+  if (!activeSessionId.value || generatingAdScripts.value) return
+  if (!brief.value) {
+    error.value = 'Generate the brief first.'
+    return
+  }
+  generatingAdScripts.value = true
+  error.value = ''
+  try {
+    const data = await postAdScripts({ session_id: activeSessionId.value })
+    if (data?.ad_scripts) {
+      adScripts.value = data.ad_scripts
+      adScriptsOpen.value = true
+      briefOpen.value = false
+    }
+    await refreshSessions()
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    generatingAdScripts.value = false
+  }
+}
+
+async function copyAdScripts() {
+  try {
+    await navigator.clipboard.writeText(adScripts.value)
+  } catch {
+    error.value = 'Copy failed — your browser blocked clipboard access.'
   }
 }
 

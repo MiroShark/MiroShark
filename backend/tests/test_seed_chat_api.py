@@ -508,3 +508,79 @@ def test_research_claim_400_when_claim_text_missing(client):
 def test_research_claim_400_when_session_id_missing(client):
     response = client.post("/api/seed-chat/research-claim", json={"claim_text": "x"})
     assert response.status_code == 400
+
+
+# ---- /ad-scripts endpoint ----
+
+
+def test_ad_scripts_returns_and_persists(client):
+    fake_session = {
+        "id": "abc",
+        "title": "Test",
+        "created_at": "t1",
+        "updated_at": "t2",
+        "messages": [],
+        "seed_state": {
+            "topic": "X",
+            "intent": "Y",
+            "stakeholders": [
+                {"name": "A", "role": "r", "stance": "neutral"},
+                {"name": "B", "role": "r", "stance": "neutral"},
+            ],
+            "decision_branches": [],
+            "contested_claims": [],
+            "output_format": "media_landscape",
+        },
+        "brief": "# Existing brief\n\n...",
+        "research_report": {
+            "results": [
+                {"url": "u1", "title": "T1", "snippet": "s",
+                 "text": "body1", "fetch_error": None},
+            ],
+        },
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.write_ad_scripts", return_value="## Script 1\n[0:00] ..."):
+        mock_store.load.return_value = fake_session
+        response = client.post(
+            "/api/seed-chat/ad-scripts",
+            json={"session_id": "abc"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["session_id"] == "abc"
+    assert body["ad_scripts"].startswith("## Script 1")
+
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["ad_scripts"] == "## Script 1\n[0:00] ..."
+
+
+def test_ad_scripts_400_when_no_brief(client):
+    fake_session = {
+        "id": "abc", "title": "", "created_at": "t", "updated_at": "t",
+        "messages": [],
+        "seed_state": {"topic": "X", "intent": "Y", "stakeholders": [],
+                       "decision_branches": [], "contested_claims": [],
+                       "output_format": "pros_cons"},
+        "brief": "",
+    }
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = fake_session
+        response = client.post("/api/seed-chat/ad-scripts", json={"session_id": "abc"})
+    assert response.status_code == 400
+    assert "brief" in response.get_json().get("error", "").lower()
+
+
+def test_ad_scripts_404_when_session_missing(client):
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = None
+        response = client.post("/api/seed-chat/ad-scripts", json={"session_id": "missing"})
+    assert response.status_code == 404
+
+
+def test_ad_scripts_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/ad-scripts", json={})
+    assert response.status_code == 400

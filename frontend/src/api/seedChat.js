@@ -52,3 +52,11 @@ export const postResearch = (data) => {
 export const postResearchClaim = (data) => {
   return service.post('/api/seed-chat/research-claim', data, { timeout: 240000 })
 }
+
+/**
+ * Generate balanced video ad scripts from session's seed + brief + sources.
+ * Long-running like /launch — uses 240s timeout.
+ */
+export const postAdScripts = (data) => {
+  return service.post('/api/seed-chat/ad-scripts', data, { timeout: 240000 })
+}

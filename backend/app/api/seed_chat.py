@@ -8,6 +8,7 @@ from . import seed_chat_bp
 from ..services.seed_extractor import process_turn, EMPTY_STATE
 from ..services.brief_writer import write_brief
 from ..services.research_agent import research_with_intent
+from ..services.ad_script_writer import write_ad_scripts
 from ..storage.session_store import SessionStore
 from ..utils.logger import get_logger
 
@@ -286,4 +287,42 @@ def research_claim():
         "session_id": session_id,
         "report": response_report,
         "appended_count": len(appended),
+    })
+
+
+@seed_chat_bp.route("/ad-scripts", methods=["POST"])
+def ad_scripts():
+    payload = request.get_json(silent=True) or {}
+    session_id = payload.get("session_id")
+    if not session_id:
+        return jsonify({"error": "session_id required"}), 400
+
+    session = _store.load(session_id)
+    if session is None:
+        return jsonify({"error": "session_not_found"}), 404
+
+    brief = (session.get("brief") or "").strip()
+    if not brief:
+        return jsonify({
+            "error": "no brief — generate a brief first via /launch",
+        }), 400
+
+    sources = (session.get("research_report") or {}).get("results") or []
+
+    try:
+        scripts = write_ad_scripts(
+            seed=session.get("seed_state") or {},
+            brief=brief,
+            sources=sources,
+        )
+    except RuntimeError as exc:
+        logger.error("ad-script generation failed: %s", exc)
+        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
+
+    session["ad_scripts"] = scripts
+    _store.save(session)
+
+    return jsonify({
+        "session_id": session_id,
+        "ad_scripts": scripts,
     })
