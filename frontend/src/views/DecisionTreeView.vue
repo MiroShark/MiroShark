@@ -4,7 +4,30 @@
       <button class="back-btn" type="button" @click="goBack">← Back to chat</button>
       <div class="brand">DECISION TREE</div>
       <div class="topic">{{ tree?.question || 'Loading…' }}</div>
+      <button
+        v-if="!researchingAll"
+        type="button"
+        class="research-all-btn"
+        :disabled="!tree"
+        @click="researchAll"
+      >Research all 🔁</button>
+      <button
+        v-else
+        type="button"
+        class="stop-btn"
+        @click="stopResearchAll"
+      >Stop</button>
     </header>
+
+    <div v-if="researchingAll" class="research-progress-banner" role="status" aria-live="polite">
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="progress-text">
+        Researching node {{ researchProgress.current }} of {{ researchProgress.total }}:
+        <span class="progress-question">"{{ researchProgress.label }}"</span>
+      </span>
+    </div>
 
     <main class="tree-body">
       <div v-if="error" class="error">{{ error }}</div>
@@ -45,9 +68,26 @@ const error = ref('')
 // Per-node loading flags: { [nodeId]: { expand?: bool, research?: bool } }
 const busyMap = reactive({})
 
+const researchingAll = ref(false)
+const stopRequested = ref(false)
+const researchProgress = ref({ current: 0, total: 0, label: '' })
+
 function setBusy(nodeId, action, value) {
   if (!busyMap[nodeId]) busyMap[nodeId] = {}
   busyMap[nodeId][action] = value
+}
+
+function flattenBfs(root) {
+  const out = []
+  const queue = [root]
+  while (queue.length > 0) {
+    const node = queue.shift()
+    out.push(node)
+    for (const child of node.children || []) {
+      queue.push(child)
+    }
+  }
+  return out
 }
 
 function goBack() {
@@ -99,6 +139,52 @@ async function onResearch(nodeId) {
   } finally {
     setBusy(nodeId, 'research', false)
   }
+}
+
+async function researchAll() {
+  if (!tree.value || researchingAll.value) return
+
+  const nodes = flattenBfs(tree.value).filter(n => !(n.evidence?.length > 0))
+
+  if (nodes.length === 0) {
+    error.value = 'All nodes already have evidence. Click Research on a single node to refresh.'
+    return
+  }
+
+  researchingAll.value = true
+  stopRequested.value = false
+  error.value = ''
+  researchProgress.value = { current: 0, total: nodes.length, label: '' }
+
+  for (let i = 0; i < nodes.length; i++) {
+    if (stopRequested.value) break
+
+    const node = nodes[i]
+    researchProgress.value = {
+      current: i + 1,
+      total: nodes.length,
+      label: node.question,
+    }
+
+    setBusy(node.id, 'research', true)
+    try {
+      await postTreeResearch({ session_id: sessionId, node_id: node.id })
+      const session = await getSession(sessionId)
+      if (session?.tree) tree.value = session.tree
+    } catch (err) {
+      const msg = err?.response?.data?.error || err.message
+      error.value = `Node ${i + 1} failed: ${msg}. Continuing.`
+    } finally {
+      setBusy(node.id, 'research', false)
+    }
+  }
+
+  researchingAll.value = false
+  researchProgress.value = { current: 0, total: 0, label: '' }
+}
+
+function stopResearchAll() {
+  stopRequested.value = true
 }
 
 async function onUpdateNode({ node_id, fields }) {
@@ -155,4 +241,56 @@ onMounted(loadTree)
 }
 .error { color: #f87171; padding: 0.5rem; margin-bottom: 0.5rem; }
 .loading { color: #aaa; font-style: italic; }
+
+.research-all-btn,
+.stop-btn {
+  background: #2a4a2a;
+  color: #d6f5d6;
+  border: 1px solid #3a6a3a;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.research-all-btn:hover { background: #335933; }
+.research-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.stop-btn {
+  background: #4a2a2a;
+  color: #f5d6d6;
+  border-color: #6a3a3a;
+}
+.stop-btn:hover { background: #593333; }
+
+.research-progress-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.25rem;
+  background: #1a2a3a;
+  border-bottom: 1px solid #2a4a6a;
+  color: #b8d6f5;
+  font-size: 0.85rem;
+}
+.research-progress-banner .spinner-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #80b4ff;
+  animation: progressPulse 1.4s infinite ease-in-out both;
+}
+.research-progress-banner .spinner-dot:nth-child(1) { animation-delay: -0.32s; }
+.research-progress-banner .spinner-dot:nth-child(2) { animation-delay: -0.16s; }
+@keyframes progressPulse {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+}
+.progress-text { margin-left: 0.5rem; }
+.progress-question {
+  font-style: italic;
+  color: #aaa;
+  margin-left: 0.25rem;
+}
 </style>
