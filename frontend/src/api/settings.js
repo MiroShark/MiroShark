@@ -13,12 +13,12 @@ export const getSettings = () => {
  * Update settings at runtime. Every field is optional.
  *
  * @param {Object} data
- *   - preset:             "cheap" | "best" | "local"   (apply full preset)
+ *   - preset:             "cheap" | "local"             (apply full preset)
  *   - preset_api_key:     string                        (filled into every preset key slot)
  *   - llm:                { provider, base_url, model_name, api_key }
  *   - smart:              { provider, base_url, model_name, api_key }
  *   - ner:                { base_url, model_name, api_key }
- *   - wonderwall:         { model_name }
+ *   - wonderwall:         { base_url, model_name, api_key }
  *   - embedding:          { provider, base_url, model_name, api_key, dimensions }
  *   - web_search_model:   string
  *   - neo4j:              { uri, user, password }

@@ -8,7 +8,7 @@ All settings live in `.env` (copy from `.env.example`). The full reference below
 # LLM
 LLM_API_KEY=your-api-key
 LLM_BASE_URL=https://openrouter.ai/api/v1     # or http://localhost:11434/v1 for Ollama
-LLM_MODEL_NAME=qwen/qwen3.5-flash-02-23
+LLM_MODEL_NAME=xiaomi/mimo-v2-flash
 
 # Neo4j
 NEO4J_URI=bolt://localhost:7687
@@ -33,7 +33,7 @@ MiroShark routes different workflows to different models. Four independent slots
 | **NER** | `NER_MODEL_NAME` | Entity extraction (structured JSON) | ~85–250 calls |
 | **Wonderwall** | `WONDERWALL_MODEL_NAME` | Agent decisions in simulation loop | ~850–1650 calls |
 
-When a slot is not set it falls back to the Default model. If only `SMART_MODEL_NAME` is set (without `SMART_PROVIDER`/`SMART_BASE_URL`/`SMART_API_KEY`), the smart model inherits the default provider settings.
+When a slot is not set it falls back to the Default model. If only `SMART_MODEL_NAME` is set (without `SMART_PROVIDER`/`SMART_BASE_URL`/`SMART_API_KEY`), the smart model inherits the default provider settings. The same applies to `WONDERWALL_MODEL_NAME` — set `WONDERWALL_BASE_URL` and/or `WONDERWALL_API_KEY` to point Wonderwall at a different OpenAI-compatible endpoint (e.g. a self-hosted vLLM/Modal deployment) without touching the other slots.
 
 See [Models](MODELS.md) for benchmarked recommendations per slot.
 
@@ -48,11 +48,15 @@ LLM_MODEL_NAME=qwen2.5:32b
 
 # ─── Smart model (reports, ontology, graph reasoning — #1 quality lever) ───
 # SMART_PROVIDER=openai
-# SMART_MODEL_NAME=deepseek/deepseek-v3.2      # Cheap preset
-# SMART_MODEL_NAME=anthropic/claude-sonnet-4.6 # Best preset (far stronger reports)
+# SMART_MODEL_NAME=x-ai/grok-4.1-fast          # Cloud preset
 
 # ─── Wonderwall (agent sim loop — #1 cost driver, use cheapest viable) ───
-# WONDERWALL_MODEL_NAME=qwen/qwen3.5-flash-02-23
+# WONDERWALL_MODEL_NAME=xiaomi/mimo-v2-flash
+# Optional: route Wonderwall to a custom OpenAI-compatible endpoint
+# (self-hosted vLLM, Modal, custom fine-tune…). Both fields are
+# optional — leaving either blank inherits LLM_BASE_URL / LLM_API_KEY.
+# WONDERWALL_BASE_URL=https://your-endpoint.example.com/v1
+# WONDERWALL_API_KEY=not-checked
 
 # ─── NER (entity extraction — needs reliable JSON, no hidden CoT) ───
 # NER_MODEL_NAME=x-ai/grok-4.1-fast

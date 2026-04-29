@@ -2,46 +2,45 @@
 
 Four independent model slots (see [Configuration](CONFIGURATION.md#model-slots) for the env vars). This doc covers which models to put in which slot.
 
-## Cloud presets (OpenRouter)
+## Cloud preset (OpenRouter)
 
-Two benchmarked presets ship in `.env.example`. Copy one and set your API key.
+One benchmarked preset ships in `.env.example`. Copy it and set your API key.
 
 Each slot controls a different quality axis:
 
 | Slot | Controls | Key finding |
 |---|---|---|
-| **Default** | Persona richness, sim density | Haiku produces distinct 348-char voices; cheaper models produce generic 170-char copy |
-| **Smart** | Report quality (#1 lever) | Claude Sonnet 9/10, cheaper alternatives 2–5/10 on prior benchmark runs |
+| **Default** | Persona richness, sim density | Mimo V2 Flash gives distinct voices at flash-tier price |
+| **Smart** | Report quality (#1 lever) | Grok-4.1 Fast holds up on ReACT report loops with reasoning disabled |
 | **NER** | Extraction reliability | Needs deterministic JSON — pick a model that doesn't silently emit CoT |
 | **Wonderwall** | Cost (biggest consumer) | 850+ calls, 7M+ tokens. Verbosity matters more than $/M |
 
-### Cheap mode — ~$1/run, ~10 min
+### Cloud mode — ~$1/run, ~10 min
 
-Qwen3.5 Flash + DeepSeek V3.2 + Grok-4.1 Fast. Reasoning is disabled on every slot (`LLM_DISABLE_REASONING=true` sends `reasoning: {enabled: false}` in `extra_body`), which is the difference between a ~45s scenario-suggest call and a ~3s one.
+Mimo V2 Flash personas + Grok-4.1 Fast smart/NER. Reasoning is disabled on every slot (`LLM_DISABLE_REASONING=true` sends `reasoning: {enabled: false}` in `extra_body`), which is the difference between a ~45s scenario-suggest call and a ~3s one.
 
-| Slot | Model | $/M (in/out) | Observed avg latency |
-|---|---|---|---|
-| Default | `qwen/qwen3.5-flash-02-23` | $0.065 / $0.26 | 8.5s (Wonderwall-heavy prompts) |
-| Smart | `deepseek/deepseek-v3.2` | $0.252 / $0.378 | 12.5s (report ReACT loops) |
-| NER | `x-ai/grok-4.1-fast` | $0.20 / $0.50 | 2.0s |
-| Wonderwall | `qwen/qwen3.5-flash-02-23` | $0.065 / $0.26 | 7.6s (per agent action) |
+| Slot | Model | Notes |
+|---|---|---|
+| Default | `xiaomi/mimo-v2-flash` | Persona generation, sim config, memory compaction |
+| Smart | `x-ai/grok-4.1-fast` | Report ReACT loop — only ~19 calls/run |
+| NER | `x-ai/grok-4.1-fast` | Stable JSON with reasoning off |
+| Wonderwall | `xiaomi/mimo-v2-flash` | 850+ agent-action calls/run; keep verbosity low |
 
-Observed on a 359-call end-to-end run (2.99M tokens, ~67 min wall clock): **~$0.50 total** including Grok-`:online` web enrichment. Docs without public figures typically come in under $0.30.
+Embeddings use `openai/text-embedding-3-large` (truncated to 768 dims via Matryoshka). Web enrichment uses `x-ai/grok-4.1-fast:online`.
 
-### Best mode — ~$3.50/run, ~25 min
-
-Claude reports, Haiku personas, cheap Wonderwall. Best report quality at reasonable cost.
-
-| Slot | Model | $/M | Why |
-|---|---|---|---|
-| Default | `anthropic/claude-haiku-4.5` | $0.80/$4.00 | Rich personas, dense sim configs |
-| Smart | `anthropic/claude-sonnet-4.6` | $3.00/$15.00 | 9/10 report quality, only ~19 calls |
-| NER | `x-ai/grok-4.1-fast` | ~$0.20 | Stable JSON with reasoning off |
-| Wonderwall | `qwen/qwen3.5-flash-02-23` | ~$0.10 | Wonderwall doesn't drive quality — Smart does |
-
-> Cheap preset uses `openai/text-embedding-3-large` (truncated to 768 dims via Matryoshka) and `x-ai/grok-4.1-fast:online` for web research. Best preset inherits the same embedding + web-search defaults.
->
 > **Latency note** — every OpenRouter call goes through `LLMClient`, which injects `reasoning: {enabled: false}` into `extra_body` by default. Turn it off with `LLM_DISABLE_REASONING=false` only if a specific slot benefits from chain-of-thought (rare for MiroShark's structured prompts).
+
+### Custom endpoint for Wonderwall
+
+The Wonderwall slot accepts a per-slot endpoint override so you can run a self-hosted or fine-tuned model alongside the OpenRouter-backed Default/Smart/NER slots:
+
+```bash
+WONDERWALL_BASE_URL=https://your-endpoint.example.com/v1
+WONDERWALL_API_KEY=not-checked          # any string for open endpoints
+WONDERWALL_MODEL_NAME=your-model-id
+```
+
+Either field can be omitted — a blank `WONDERWALL_BASE_URL` reuses `LLM_BASE_URL`, a blank `WONDERWALL_API_KEY` reuses `LLM_API_KEY`. Useful for routing the 850+ agent-action calls per run to a vLLM / Modal / Ollama-on-a-server deployment while keeping the report and graph-build slots on a hosted provider.
 
 ## Local mode (Ollama)
 

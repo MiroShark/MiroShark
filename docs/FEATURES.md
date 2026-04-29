@@ -81,6 +81,25 @@ Each round the runner:
 
 Failed calls become `{"_error": "..."}` payloads rather than exceptions — agent prompts stay well-formed. The bridge has a 30-second per-call timeout (`MCP_CALL_TIMEOUT_SEC`) and tears down subprocesses on simulation end (or `atexit` on abnormal exit).
 
+## Custom Wonderwall Endpoint
+
+The simulation loop is the heaviest model consumer in MiroShark — 850–1650 calls per run, 7M+ tokens, all going through CAMEL-AI's per-agent action loop. The Wonderwall slot has its own `WONDERWALL_BASE_URL` + `WONDERWALL_API_KEY` env vars (and matching inputs in **Settings → Advanced → Wonderwall**) so you can route those volume hits to any OpenAI-compatible endpoint without touching the Default/Smart/NER slots — keep graph build, reports, and entity extraction on OpenRouter/Anthropic while the agents talk to a self-hosted vLLM, a Modal/Replicate deployment, an Ollama instance on a separate GPU, or a custom fine-tune of your own.
+
+Both fields are independently optional. A blank `WONDERWALL_BASE_URL` inherits `LLM_BASE_URL`; a blank `WONDERWALL_API_KEY` inherits `LLM_API_KEY`. Open endpoints (no auth) work by passing any non-empty placeholder like `not-checked`.
+
+```bash
+WONDERWALL_BASE_URL=https://your-endpoint.example.com/v1
+WONDERWALL_API_KEY=not-checked
+WONDERWALL_MODEL_NAME=your-model-id
+```
+
+Wiring lives in three places. (1) `backend/scripts/run_parallel_simulation.py` (and the twitter / reddit variants) prefer `WONDERWALL_*` over `LLM_*` when reading env at subprocess start. (2) `backend/app/services/simulation_runner.py` forwards `Config.WONDERWALL_*` into the subprocess `env` at spawn time, so Settings UI updates apply on the next run without a Flask restart. (3) The Settings API (`POST /api/settings`) and the corresponding section of `SettingsPanel.vue` accept all three fields.
+
+Useful when:
+- The Wonderwall character/persona prompts work better with a fine-tune you've trained yourself.
+- You want to bound cost to a fixed-rate self-hosted GPU rather than per-token billing.
+- You want to compare a custom small model's belief drift / coherence against a hosted baseline by running matched simulations with everything but the Wonderwall slot held constant.
+
 ## Publishing for Embed
 
 `EmbedDialog` has a `Public / Private` toggle backed by `is_public` on the simulation state. Embed URLs return `403` on unpublished simulations — flip the toggle (or `POST /api/simulation/<id>/publish`) to make them publicly embeddable. Defaults to private so existing sims are unaffected.

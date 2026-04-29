@@ -29,47 +29,27 @@ def _mask_key(key: str) -> str:
     return '****' + key[-4:] if len(key) > 4 else '****'
 
 
-# Preset blueprints mirror the .env.example Cheap / Best / Local blocks.
+# Preset blueprints mirror the .env.example Cloud / Local blocks.
 # The `key_slots` list names the fields the preset's API key should be
 # copied into when the caller supplies `preset_api_key`.
 _PRESETS = {
     'cheap': {
-        'label': 'Cheap — ~$1/run (Qwen3.5 Flash + DeepSeek V3.2 + Grok-4.1 Fast)',
+        'label': 'Cloud — ~$1/run (Mimo V2 Flash + Grok-4.1 Fast)',
         'fields': {
             'LLM_PROVIDER': 'openai',
             'LLM_BASE_URL': 'https://openrouter.ai/api/v1',
-            'LLM_MODEL_NAME': 'qwen/qwen3.5-flash-02-23',
+            'LLM_MODEL_NAME': 'xiaomi/mimo-v2-flash',
             'SMART_PROVIDER': 'openai',
             'SMART_BASE_URL': 'https://openrouter.ai/api/v1',
-            'SMART_MODEL_NAME': 'deepseek/deepseek-v3.2',
+            'SMART_MODEL_NAME': 'x-ai/grok-4.1-fast',
             'NER_BASE_URL': 'https://openrouter.ai/api/v1',
             'NER_MODEL_NAME': 'x-ai/grok-4.1-fast',
-            'WONDERWALL_MODEL_NAME': 'qwen/qwen3.5-flash-02-23',
+            'WONDERWALL_MODEL_NAME': 'xiaomi/mimo-v2-flash',
             'EMBEDDING_PROVIDER': 'openai',
             'EMBEDDING_BASE_URL': 'https://openrouter.ai/api',
             'EMBEDDING_MODEL': 'openai/text-embedding-3-large',
             'EMBEDDING_DIMENSIONS': 768,
             'WEB_SEARCH_MODEL': 'x-ai/grok-4.1-fast:online',
-        },
-        'key_slots': ['LLM_API_KEY', 'SMART_API_KEY', 'NER_API_KEY', 'EMBEDDING_API_KEY'],
-    },
-    'best': {
-        'label': 'Best — ~$3.50/run (Claude reports, Haiku personas)',
-        'fields': {
-            'LLM_PROVIDER': 'openai',
-            'LLM_BASE_URL': 'https://openrouter.ai/api/v1',
-            'LLM_MODEL_NAME': 'anthropic/claude-haiku-4.5',
-            'SMART_PROVIDER': 'openai',
-            'SMART_BASE_URL': 'https://openrouter.ai/api/v1',
-            'SMART_MODEL_NAME': 'anthropic/claude-sonnet-4.6',
-            'NER_BASE_URL': 'https://openrouter.ai/api/v1',
-            'NER_MODEL_NAME': 'google/gemini-2.0-flash-001',
-            'WONDERWALL_MODEL_NAME': 'google/gemini-2.0-flash-lite-001',
-            'EMBEDDING_PROVIDER': 'openai',
-            'EMBEDDING_BASE_URL': 'https://openrouter.ai/api',
-            'EMBEDDING_MODEL': 'openai/text-embedding-3-small',
-            'EMBEDDING_DIMENSIONS': 768,
-            'WEB_SEARCH_MODEL': 'google/gemini-2.0-flash-001:online',
         },
         'key_slots': ['LLM_API_KEY', 'SMART_API_KEY', 'NER_API_KEY', 'EMBEDDING_API_KEY'],
     },
@@ -125,6 +105,9 @@ def _current_snapshot() -> dict:
         },
         'wonderwall': {
             'model_name': Config.WONDERWALL_MODEL_NAME,
+            'base_url': Config.WONDERWALL_BASE_URL,
+            'api_key_masked': _mask_key(Config.WONDERWALL_API_KEY or ''),
+            'has_api_key': bool(Config.WONDERWALL_API_KEY),
         },
         'embedding': {
             'provider': Config.EMBEDDING_PROVIDER,
@@ -174,12 +157,12 @@ def update_settings():
     Update configuration at runtime. All fields optional.
 
     Body fields:
-      preset: "cheap" | "best" | "local"                    — apply a full preset
+      preset: "cheap" | "local"                              — apply a full preset
       preset_api_key: str                                    — key filled into every preset slot
       llm: { provider, base_url, model_name, api_key }
       smart: { provider, base_url, model_name, api_key }
       ner:   { base_url, model_name, api_key }
-      wonderwall: { model_name }
+      wonderwall: { base_url, model_name, api_key }
       embedding: { provider, base_url, model_name, api_key, dimensions }
       web_search_model: str
       neo4j: { uri, user, password }
@@ -215,6 +198,10 @@ def update_settings():
     wonderwall = body.get('wonderwall') or {}
     if wonderwall.get('model_name') is not None:
         Config.WONDERWALL_MODEL_NAME = wonderwall['model_name']
+    if wonderwall.get('base_url') is not None:
+        Config.WONDERWALL_BASE_URL = wonderwall['base_url']
+    if wonderwall.get('api_key'):
+        Config.WONDERWALL_API_KEY = wonderwall['api_key']
 
     embedding = body.get('embedding') or {}
     if embedding.get('provider') is not None: Config.EMBEDDING_PROVIDER = embedding['provider']

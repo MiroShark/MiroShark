@@ -1074,10 +1074,12 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
         llm_model = boost_model or os.environ.get("LLM_MODEL_NAME", "")
         config_label = "[Boost LLM]"
     else:
-        # Use general configuration
-        llm_api_key = os.environ.get("LLM_API_KEY", "")
-        llm_base_url = os.environ.get("LLM_BASE_URL", "")
-        # WONDERWALL_MODEL_NAME overrides LLM_MODEL_NAME for the simulation loop
+        # Use general configuration. WONDERWALL_* overrides LLM_* per-slot,
+        # so the simulation loop can target a different OpenAI-compatible
+        # endpoint (e.g. a self-hosted vLLM / Modal deployment) without
+        # touching the Default/Smart/NER slots.
+        llm_api_key = os.environ.get("WONDERWALL_API_KEY", "") or os.environ.get("LLM_API_KEY", "")
+        llm_base_url = os.environ.get("WONDERWALL_BASE_URL", "") or os.environ.get("LLM_BASE_URL", "")
         llm_model = os.environ.get("WONDERWALL_MODEL_NAME", "") or os.environ.get("LLM_MODEL_NAME", "")
         config_label = "[General LLM]"
     

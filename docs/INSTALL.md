@@ -91,34 +91,7 @@ git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
 ```
 
-Edit `.env` and paste your OpenRouter key into all five slots (Cheap preset shown — for Best, swap `LLM_MODEL_NAME` to `anthropic/claude-haiku-4.5` and `SMART_MODEL_NAME` to `anthropic/claude-sonnet-4.6`):
-
-```bash
-LLM_API_KEY=sk-or-v1-YOUR_KEY
-LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_MODEL_NAME=qwen/qwen3.5-flash-02-23
-
-SMART_PROVIDER=openai
-SMART_API_KEY=sk-or-v1-YOUR_KEY
-SMART_BASE_URL=https://openrouter.ai/api/v1
-SMART_MODEL_NAME=deepseek/deepseek-v3.2
-
-NER_MODEL_NAME=x-ai/grok-4.1-fast
-NER_BASE_URL=https://openrouter.ai/api/v1
-NER_API_KEY=sk-or-v1-YOUR_KEY
-
-WONDERWALL_MODEL_NAME=qwen/qwen3.5-flash-02-23
-WEB_SEARCH_MODEL=x-ai/grok-4.1-fast:online
-
-OPENAI_API_KEY=sk-or-v1-YOUR_KEY
-OPENAI_API_BASE_URL=https://openrouter.ai/api/v1
-
-EMBEDDING_PROVIDER=openai
-EMBEDDING_MODEL=openai/text-embedding-3-large
-EMBEDDING_BASE_URL=https://openrouter.ai/api
-EMBEDDING_API_KEY=sk-or-v1-YOUR_KEY
-EMBEDDING_DIMENSIONS=768
-```
+`.env.example` ships with the Cloud preset (Mimo V2 Flash + Grok-4.1 Fast) as the active default. Open `.env` and paste your OpenRouter key into the five blank `*_API_KEY=` lines (`LLM_`, `SMART_`, `NER_`, `OPENAI_`, `EMBEDDING_` — same key in all of them). No model edits needed unless you want a different lineup.
 
 Then launch:
 
@@ -135,7 +108,7 @@ What the launcher does:
 5. Launches Vite dev server (`:3000`) and Flask API (`:5001`)
 6. Ctrl+C to stop everything
 
-Open `http://localhost:3000`. First simulation in ~10 min, ~$1 (Cheap) to ~$3.50 (Best). See [Models](MODELS.md) for the full preset breakdown.
+Open `http://localhost:3000`. First simulation in ~10 min, ~$1. See [Models](MODELS.md) for the full preset breakdown.
 
 > Prefer to run everything local? Skip to [Option B (Docker + Ollama)](#option-b-docker--local-ollama) or [Option C (manual Ollama)](#option-c-manual--local-ollama) below.
 
@@ -158,18 +131,18 @@ One key covers every slot, including embeddings. Easiest to set up and the path 
 ```bash
 LLM_API_KEY=sk-or-v1-YOUR_KEY
 LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_MODEL_NAME=qwen/qwen3.5-flash-02-23
+LLM_MODEL_NAME=xiaomi/mimo-v2-flash
 
 SMART_PROVIDER=openai
 SMART_API_KEY=sk-or-v1-YOUR_KEY
 SMART_BASE_URL=https://openrouter.ai/api/v1
-SMART_MODEL_NAME=deepseek/deepseek-v3.2
+SMART_MODEL_NAME=x-ai/grok-4.1-fast
 
 NER_MODEL_NAME=x-ai/grok-4.1-fast
 NER_BASE_URL=https://openrouter.ai/api/v1
 NER_API_KEY=sk-or-v1-YOUR_KEY
 
-WONDERWALL_MODEL_NAME=qwen/qwen3.5-flash-02-23
+WONDERWALL_MODEL_NAME=xiaomi/mimo-v2-flash
 WEB_SEARCH_MODEL=x-ai/grok-4.1-fast:online
 
 OPENAI_API_KEY=sk-or-v1-YOUR_KEY
@@ -184,7 +157,7 @@ EMBEDDING_DIMENSIONS=768
 
 ### Option A.2: OpenAI
 
-Use your OpenAI Platform key directly. Costs are roughly in line with the Best preset.
+Use your OpenAI Platform key directly.
 
 ```bash
 LLM_API_KEY=sk-proj-YOUR_KEY
@@ -243,6 +216,20 @@ EMBEDDING_DIMENSIONS=768
 ```
 
 > Prompt caching (`LLM_PROMPT_CACHING_ENABLED=true`) hits its sweet spot here — the ReACT report loop reuses the same system prompt across iterations, so caching meaningfully reduces the Sonnet bill.
+
+### Option A.4: Custom endpoint for Wonderwall
+
+The Wonderwall slot (the per-agent simulation loop, ~850–1650 calls/run) accepts an independent endpoint override so you can route the volume hits to a self-hosted vLLM, Modal/Replicate deployment, fine-tuned model, or Ollama on a different host — while keeping graph build, reports, and NER on a hosted provider.
+
+Add to any of the configurations above:
+
+```bash
+WONDERWALL_BASE_URL=https://your-endpoint.example.com/v1
+WONDERWALL_API_KEY=not-checked            # any string for open endpoints
+WONDERWALL_MODEL_NAME=your-model-id
+```
+
+Either field can be left blank. A blank `WONDERWALL_BASE_URL` reuses `LLM_BASE_URL`, a blank `WONDERWALL_API_KEY` reuses `LLM_API_KEY`. Settings → Advanced → Wonderwall in the UI exposes the same three fields and updates take effect on the next simulation start (no Flask restart). See [docs/MODELS.md#custom-endpoint-for-wonderwall](MODELS.md#custom-endpoint-for-wonderwall) for the full pattern.
 
 ---
 

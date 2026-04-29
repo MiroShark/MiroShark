@@ -239,7 +239,7 @@
                   v-model="form.smart.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. anthropic/claude-sonnet-4.6"
+                  placeholder="e.g. x-ai/grok-4.1-fast"
                 />
               </div>
             </div>
@@ -253,7 +253,7 @@
                   v-model="form.ner.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. google/gemini-2.0-flash-001"
+                  placeholder="e.g. x-ai/grok-4.1-fast"
                 />
               </div>
             </div>
@@ -267,7 +267,25 @@
                   v-model="form.wonderwall.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. google/gemini-2.0-flash-lite-001"
+                  placeholder="e.g. xiaomi/mimo-v2-flash"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label">Base URL</label>
+                <input
+                  v-model="form.wonderwall.base_url"
+                  class="field-input"
+                  type="text"
+                  placeholder="Inherits LLM base URL when blank"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label">API Key</label>
+                <input
+                  v-model="form.wonderwall.api_key"
+                  class="field-input"
+                  type="password"
+                  :placeholder="currentSettings.wonderwall?.has_api_key ? `Saved: ${currentSettings.wonderwall.api_key_masked}` : 'Inherits LLM key when blank'"
                 />
               </div>
             </div>
@@ -573,7 +591,7 @@ const form = reactive({
   },
   smart: { model_name: '' },
   ner: { model_name: '' },
-  wonderwall: { model_name: '' },
+  wonderwall: { model_name: '', base_url: '', api_key: '' },
   embedding: { provider: 'ollama', model_name: '' },
   web_search_model: '',
   neo4j: {
@@ -644,6 +662,8 @@ const loadCurrentSettings = async () => {
       form.smart.model_name = d.smart?.model_name || ''
       form.ner.model_name = d.ner?.model_name || ''
       form.wonderwall.model_name = d.wonderwall?.model_name || ''
+      form.wonderwall.base_url = d.wonderwall?.base_url || ''
+      form.wonderwall.api_key = '' // never pre-fill
       form.embedding.provider = d.embedding?.provider || 'ollama'
       form.embedding.model_name = d.embedding?.model_name || ''
       form.web_search_model = d.web_search_model || ''
@@ -663,9 +683,9 @@ const loadCurrentSettings = async () => {
 
 const presetOptions = computed(() => currentSettings.value.available_presets || [])
 
-// `local` preset doesn't need an API key — the others do.
+// `local` preset doesn't need an API key — the cloud preset does.
 const presetNeedsKey = computed(() =>
-  form.preset === 'cheap' || form.preset === 'best'
+  form.preset === 'cheap'
 )
 
 // Whether current base URL is OpenRouter
@@ -867,7 +887,11 @@ const saveSettings = async () => {
 
     payload.smart = { model_name: form.smart.model_name }
     payload.ner = { model_name: form.ner.model_name }
-    payload.wonderwall = { model_name: form.wonderwall.model_name }
+    payload.wonderwall = {
+      model_name: form.wonderwall.model_name,
+      base_url: form.wonderwall.base_url,
+    }
+    if (form.wonderwall.api_key) payload.wonderwall.api_key = form.wonderwall.api_key
     payload.embedding = {
       provider: form.embedding.provider,
       model_name: form.embedding.model_name,

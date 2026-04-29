@@ -77,7 +77,7 @@
           
           <h2 class="section-title">Ready</h2>
           <p class="section-desc">
-            First simulation in ~10 min, ~$1 on the Cheap preset. Drop in a doc or pick a trending headline to start.
+            First simulation in ~10 min, ~$1 on the cloud preset. Drop in a doc or pick a trending headline to start.
           </p>
 
 

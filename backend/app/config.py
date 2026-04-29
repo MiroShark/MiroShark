@@ -30,18 +30,16 @@ class Config:
     # LLM configuration (unified OpenAI format)
     # LLM_PROVIDER: "openai" (default, any OpenAI-compatible API) or "claude-code" (local CLI)
     # Default model is used for profile generation, sim config, memory compaction.
-    # Cheap preset: qwen/qwen3.5-flash-02-23 (with LLM_DISABLE_REASONING=true)
-    # Best preset:  anthropic/claude-haiku-4.5 (rich personas, dense sim configs)
+    # Cloud preset: xiaomi/mimo-v2-flash (cheap personas + sim configs)
     LLM_PROVIDER = os.environ.get('LLM_PROVIDER', 'openai')
     LLM_API_KEY = os.environ.get('LLM_API_KEY')
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
-    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'qwen/qwen3.5-flash-02-23')
+    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'xiaomi/mimo-v2-flash')
 
     # Smart model — stronger model for intelligence-sensitive workflows
     # (report generation, ontology extraction, graph reasoning).
     # When not set, these workflows use the default LLM config above.
-    # Cheap preset: deepseek/deepseek-v3.2 (non-reasoning, stable JSON)
-    # Best preset:  anthropic/claude-sonnet-4.6 (9/10 report quality)
+    # Cloud preset: x-ai/grok-4.1-fast (stable JSON, fast reports)
     SMART_PROVIDER = os.environ.get('SMART_PROVIDER', '')   # "openai", "claude-code", or empty (inherit)
     SMART_API_KEY = os.environ.get('SMART_API_KEY', '')
     SMART_BASE_URL = os.environ.get('SMART_BASE_URL', '')
@@ -146,13 +144,19 @@ class Config:
 
     # Wonderwall model — model for Wonderwall/CAMEL agent simulation loop.
     # When not set, uses LLM_MODEL_NAME.
-    # Cheap preset: qwen/qwen3.5-flash-02-23 (same as default to reuse quota)
+    # Cloud preset: xiaomi/mimo-v2-flash (same as default to reuse quota)
     # Wonderwall is the #1 cost driver — 850+ calls per run. Keep it cheap.
     WONDERWALL_MODEL_NAME = os.environ.get('WONDERWALL_MODEL_NAME', '')
+    # Optional per-slot endpoint override — point Wonderwall at a different
+    # OpenAI-compatible API (e.g. a self-hosted Modal/vLLM endpoint) without
+    # affecting the Default/Smart/NER slots. When unset, the simulation
+    # subprocess falls back to LLM_API_KEY / LLM_BASE_URL.
+    WONDERWALL_API_KEY = os.environ.get('WONDERWALL_API_KEY', '')
+    WONDERWALL_BASE_URL = os.environ.get('WONDERWALL_BASE_URL', '')
 
     # NER model — faster model for entity extraction (high-volume, mechanical task)
     # When not set, NER uses the default LLM config above.
-    # Cheap preset: x-ai/grok-4.1-fast (stable JSON with reasoning disabled)
+    # Cloud preset: x-ai/grok-4.1-fast (stable JSON with reasoning disabled)
     NER_MODEL_NAME = os.environ.get('NER_MODEL_NAME', '')
     NER_BASE_URL = os.environ.get('NER_BASE_URL', '')
     NER_API_KEY = os.environ.get('NER_API_KEY', '')

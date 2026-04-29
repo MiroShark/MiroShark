@@ -489,6 +489,16 @@ class SimulationRunner:
             env['PYTHONIOENCODING'] = 'utf-8'  # Ensure stdout/stderr use UTF-8
             env['MIROSHARK_SIM_DIR'] = sim_dir  # Observability: tell agents where to write events.jsonl
             env['MIROSHARK_SIMULATION_ID'] = simulation_id  # Observability: tag Wonderwall events with sim ID
+
+            # Forward runtime Wonderwall slot overrides (Settings UI mutates
+            # Config but not os.environ). Each script prefers WONDERWALL_*
+            # over LLM_* and falls back when empty, so passing through only
+            # non-empty values keeps existing setups untouched.
+            from ..config import Config as _Cfg
+            for _attr in ('WONDERWALL_API_KEY', 'WONDERWALL_BASE_URL', 'WONDERWALL_MODEL_NAME'):
+                _val = getattr(_Cfg, _attr, '') or ''
+                if _val:
+                    env[_attr] = _val
             # Forward run_id (when the orchestrator has set one) so the
             # subprocess's Langfuse `metadata.run_id` / `tags` line up with
             # the orchestrator-side calls — both ends end up under the same

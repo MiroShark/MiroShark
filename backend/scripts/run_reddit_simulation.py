@@ -450,15 +450,18 @@ class RedditSimulationRunner:
         """
         Create LLM model
 
-        Uses configuration from the project root .env file (highest priority):
-        - LLM_API_KEY: API key
-        - LLM_BASE_URL: API base URL
-        - LLM_MODEL_NAME: Model name
+        Uses configuration from the project root .env file (highest priority).
+        WONDERWALL_* overrides LLM_* per-slot, so the simulation loop can
+        target a different OpenAI-compatible endpoint without touching the
+        Default/Smart/NER slots.
+        - WONDERWALL_API_KEY / LLM_API_KEY: API key
+        - WONDERWALL_BASE_URL / LLM_BASE_URL: API base URL
+        - WONDERWALL_MODEL_NAME / LLM_MODEL_NAME: Model name
         """
         # Read configuration from .env first
-        llm_api_key = os.environ.get("LLM_API_KEY", "")
-        llm_base_url = os.environ.get("LLM_BASE_URL", "")
-        llm_model = os.environ.get("LLM_MODEL_NAME", "")
+        llm_api_key = os.environ.get("WONDERWALL_API_KEY", "") or os.environ.get("LLM_API_KEY", "")
+        llm_base_url = os.environ.get("WONDERWALL_BASE_URL", "") or os.environ.get("LLM_BASE_URL", "")
+        llm_model = os.environ.get("WONDERWALL_MODEL_NAME", "") or os.environ.get("LLM_MODEL_NAME", "")
         
         # If not in .env, use config as fallback
         if not llm_model:

@@ -31,7 +31,7 @@
 
 ## Quick start
 
-The recommended path: **one [OpenRouter](https://openrouter.ai/) key + the `./miroshark` launcher.** First simulation in ~10 min, ~$1 (Cheap preset) to ~$3.50 (Best preset).
+The recommended path: **one [OpenRouter](https://openrouter.ai/) key + the `./miroshark` launcher.** First simulation in ~10 min, ~$1.
 
 **Prereqs** — Python 3.11+, Node 18+, Neo4j, and an [OpenRouter key](https://openrouter.ai/).
 
@@ -47,7 +47,9 @@ Then:
 ```bash
 git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
-# Open .env and paste your OpenRouter key into the Best or Cheap preset block
+# Paste your OpenRouter key into the LLM_API_KEY / SMART_API_KEY /
+# NER_API_KEY / OPENAI_API_KEY / EMBEDDING_API_KEY slots (same key,
+# 5 places). Default lineup is Mimo V2 Flash + Grok-4.1 Fast.
 ./miroshark
 ```
 
@@ -71,6 +73,7 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
 | **Preset Templates** | 6 benchmarked scenarios: crypto launch, corporate crisis, political debate, product announcement, campus controversy, historical what-if |
 | **Live Oracle Data** | Opt-in grounded seeds from the [FeedOracle](https://mcp.feedoracle.io/mcp) MCP (484 tools) |
 | **Per-Agent MCP Tools** | Personas can invoke real MCP tools (web search, APIs) during simulation |
+| **Custom Wonderwall Endpoint** | Point the simulation loop at any OpenAI-compatible endpoint (self-hosted vLLM, Modal, fine-tunes…) without affecting Default/Smart/NER. Set `WONDERWALL_BASE_URL` + `WONDERWALL_API_KEY` |
 | **Embed & Publish** | Public/private toggle + embed URLs for sharing finished runs |
 | **Social Share Card** | 1200×630 PNG that auto-unfurls scenario, status, quality, and belief split on Twitter/X, Discord, Slack, LinkedIn |
 | **Animated Belief Replay** | 1200×630 GIF — one frame per round, belief bars sliding to each round's distribution. Discord and Slack auto-play GIFs from the direct URL |
@@ -123,7 +126,7 @@ Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 |---|---|
 | [Install](docs/INSTALL.md) | Every deployment path: cloud, Docker, Ollama, Claude Code |
 | [Configuration](docs/CONFIGURATION.md) | Env vars, model routing, feature flags |
-| [Models](docs/MODELS.md) | Cheap vs Best presets, local Ollama models, benchmark findings |
+| [Models](docs/MODELS.md) | Cloud preset, local Ollama models, benchmark findings |
 | [Architecture](docs/ARCHITECTURE.md) | Simulation engine, memory pipeline, graph retrieval |
 | [Features](docs/FEATURES.md) | Deep dive on every feature in the table above |
 | [HTTP API](docs/API.md) | Every endpoint, grouped by concern — plus interactive Swagger UI at `/api/docs` and a spec at `/api/openapi.yaml` |
