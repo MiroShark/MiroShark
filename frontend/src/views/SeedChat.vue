@@ -57,7 +57,9 @@
       <SeedSlotsPanel
         :seed-state="seedState"
         :researching-claim="researchingClaim"
+        :adding-claim="addingClaim"
         @research-claim="onResearchClaim"
+        @add-claim="onAddClaim"
       />
     </main>
 
@@ -182,6 +184,7 @@ const briefOpen = ref(false)
 const researchReport = ref(null)
 const researching = ref(false)
 const researchingClaim = ref('')
+const addingClaim = ref(false)
 const researchProgressMsg = ref('')
 const regenerating = ref(false)
 
@@ -261,15 +264,12 @@ async function ensureSession() {
   return session.id
 }
 
-async function sendMessage() {
-  const text = draft.value.trim()
-  if (!text || loading.value) return
-
+async function sendText(text) {
+  if (!text || loading.value) return false
   messages.value.push({ role: 'user', content: text })
-  draft.value = ''
   loading.value = true
   error.value = ''
-
+  let succeeded = false
   try {
     const sessionId = await ensureSession()
     const data = await postTurn({
@@ -281,6 +281,7 @@ async function sendMessage() {
     Object.assign(seedState, data.updated_seed_state)
     readyToLaunch.value = data.ready_to_launch
     await refreshSessions()
+    succeeded = true
   } catch (err) {
     const status = err?.response?.status
     if (status === 503) {
@@ -291,6 +292,26 @@ async function sendMessage() {
   } finally {
     loading.value = false
     await scrollMessagesToEnd()
+  }
+  return succeeded
+}
+
+async function sendMessage() {
+  const text = draft.value.trim()
+  if (!text) return
+  draft.value = ''
+  await sendText(text)
+}
+
+async function onAddClaim({ text, source }) {
+  if (!text.trim() || addingClaim.value) return
+  const sourceClause = source && source.trim() ? ` (heard via: ${source.trim()})` : ''
+  const message = `Please add this contested claim to the seed: "${text.trim()}"${sourceClause}. Update the slots accordingly and acknowledge briefly.`
+  addingClaim.value = true
+  try {
+    await sendText(message)
+  } finally {
+    addingClaim.value = false
   }
 }
 

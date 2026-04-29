@@ -68,23 +68,85 @@
             >{{ researchingClaim === c ? '…' : '🔍' }}</button>
           </li>
         </ul>
-        <div v-else class="slot-value muted">optional</div>
+        <div v-else-if="!showAddForm" class="slot-value muted">optional</div>
+
+        <button
+          v-if="!showAddForm"
+          type="button"
+          class="add-claim-link"
+          @click="showAddForm = true"
+        >+ Add claim</button>
+
+        <form v-else class="add-claim-form" @submit.prevent="onSubmitAddClaim">
+          <textarea
+            v-model="newClaimText"
+            placeholder="Paste the talking point or claim verbatim…"
+            rows="3"
+            ref="claimTextEl"
+            :disabled="addingClaim"
+          ></textarea>
+          <input
+            v-model="newClaimSource"
+            type="text"
+            placeholder="Heard where? (optional — outlet / show / ad)"
+            :disabled="addingClaim"
+          />
+          <div class="add-claim-actions">
+            <button
+              type="button"
+              class="cancel-btn"
+              :disabled="addingClaim"
+              @click="cancelAddClaim"
+            >Cancel</button>
+            <button
+              type="submit"
+              class="add-btn"
+              :disabled="!newClaimText.trim() || addingClaim"
+            >{{ addingClaim ? 'Adding…' : 'Add claim' }}</button>
+          </div>
+        </form>
       </div>
     </div>
   </aside>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   seedState: { type: Object, required: true },
   researchingClaim: { type: String, default: '' },
+  addingClaim: { type: Boolean, default: false },
 })
 
-const emit = defineEmits(['research-claim'])
+const emit = defineEmits(['research-claim', 'add-claim'])
 
 const stakeholdersFilled = computed(() => props.seedState.stakeholders.length >= 2)
+
+const showAddForm = ref(false)
+const newClaimText = ref('')
+const newClaimSource = ref('')
+const claimTextEl = ref(null)
+
+function onSubmitAddClaim() {
+  const text = newClaimText.value.trim()
+  if (!text) return
+  emit('add-claim', { text, source: newClaimSource.value.trim() })
+}
+
+function cancelAddClaim() {
+  showAddForm.value = false
+  newClaimText.value = ''
+  newClaimSource.value = ''
+}
+
+watch(() => props.addingClaim, (now, before) => {
+  if (before === true && now === false) {
+    showAddForm.value = false
+    newClaimText.value = ''
+    newClaimSource.value = ''
+  }
+})
 </script>
 
 <style scoped>
@@ -147,4 +209,63 @@ const stakeholdersFilled = computed(() => props.seedState.stakeholders.length >=
 }
 .claim-research-btn:hover { background: #1a1a1a; color: #ccc; }
 .claim-research-btn:disabled { opacity: 0.6; cursor: wait; }
+
+.add-claim-link {
+  background: transparent;
+  border: 0;
+  color: #80b4ff;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-family: inherit;
+  padding: 0.25rem 0;
+  margin-top: 0.4rem;
+  text-align: left;
+}
+.add-claim-link:hover { text-decoration: underline; }
+
+.add-claim-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #161616;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+}
+.add-claim-form textarea,
+.add-claim-form input {
+  background: #0d0d0d;
+  color: #ddd;
+  border: 1px solid #333;
+  border-radius: 3px;
+  padding: 0.4rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+}
+.add-claim-form textarea:disabled,
+.add-claim-form input:disabled { opacity: 0.5; }
+.add-claim-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+.add-claim-form button {
+  padding: 0.35rem 0.75rem;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: inherit;
+  border: 1px solid #444;
+}
+.add-claim-form .add-btn {
+  background: #2a4a2a;
+  color: #d6f5d6;
+}
+.add-claim-form .cancel-btn {
+  background: transparent;
+  color: #888;
+}
+.add-claim-form button:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>
