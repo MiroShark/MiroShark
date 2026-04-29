@@ -1,8 +1,9 @@
 """Pure-data helpers that compact the agent-facing environment payload.
 
-Lives in its own module so the offline unit suite can import the helpers
-without dragging in the CAMEL toolkit (and its torch / transformers
-transitive deps), which the agent_environment runtime path needs.
+Lives in ``backend/lib/`` rather than under ``wonderwall.social_agent`` so the
+offline unit suite can import the helpers without triggering the wonderwall
+package's eager init chain (which transitively pulls in CAMEL → numpy → torch
+and would force the CI dep set to fatten significantly).
 """
 
 from __future__ import annotations

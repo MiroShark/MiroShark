@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from string import Template
 
-from wonderwall.social_agent._env_compact import (
+from lib.env_compact import (
     _MAX_COMMENTS_PER_POST,
     _compact_comment,
     _compact_post_for_agent,
