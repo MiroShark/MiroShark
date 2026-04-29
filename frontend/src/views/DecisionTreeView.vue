@@ -30,6 +30,12 @@
         class="stop-btn"
         @click="stopSynthesizeAll"
       >Stop synth</button>
+      <button
+        type="button"
+        class="foresight-btn"
+        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight"
+        @click="compileForesight"
+      >{{ compilingForesight ? 'Compiling…' : (foresight ? 'View foresight 📄' : 'Compile foresight 📄') }}</button>
     </header>
 
     <div v-if="researchingAll" class="research-progress-banner" role="status" aria-live="polite">
@@ -66,11 +72,32 @@
         @synthesize="onSynthesize"
       />
     </main>
+
+    <div v-if="foresightOpen" class="foresight-overlay" @click.self="foresightOpen = false">
+      <div class="foresight-modal">
+        <header class="foresight-header">
+          <h2>Foresight document</h2>
+          <button type="button" class="close" @click="foresightOpen = false">×</button>
+        </header>
+        <div class="foresight-body" v-html="renderedForesight"></div>
+        <footer class="foresight-footer">
+          <button type="button" class="secondary" @click="copyForesight">Copy markdown</button>
+          <button type="button" class="secondary" @click="downloadForesight">Download .md</button>
+          <button
+            type="button"
+            class="primary"
+            :disabled="compilingForesight"
+            @click="regenerateForesight"
+          >{{ compilingForesight ? 'Regenerating…' : 'Regenerate' }}</button>
+          <button type="button" class="secondary" @click="foresightOpen = false">Close</button>
+        </footer>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TreeNode from '../components/TreeNode.vue'
 import {
@@ -80,7 +107,9 @@ import {
   postTreeResearch,
   postTreeUpdateNode,
   postTreeSynthesize,
+  postCompileForesight,
 } from '../api/seedChat.js'
+import { marked } from 'marked'
 
 const route = useRoute()
 const router = useRouter()
@@ -100,6 +129,14 @@ const researchProgress = ref({ current: 0, total: 0, label: '' })
 const synthesizingAll = ref(false)
 const synthStopRequested = ref(false)
 const synthProgress = ref({ current: 0, total: 0, label: '' })
+
+const foresight = ref('')
+const foresightOpen = ref(false)
+const compilingForesight = ref(false)
+
+const renderedForesight = computed(() =>
+  foresight.value ? marked.parse(foresight.value) : ''
+)
 
 function setBusy(nodeId, action, value) {
   if (!busyMap[nodeId]) busyMap[nodeId] = {}
@@ -133,6 +170,9 @@ async function loadTree() {
     } else {
       const data = await postTreeInit({ session_id: sessionId })
       tree.value = data.tree
+    }
+    if (session?.foresight) {
+      foresight.value = session.foresight
     }
   } catch (err) {
     error.value = err?.response?.data?.error || err.message
@@ -271,6 +311,72 @@ function stopSynthesizeAll() {
   synthStopRequested.value = true
 }
 
+async function compileForesight() {
+  if (!tree.value || compilingForesight.value) return
+  // If we already have a foresight doc, just open the modal
+  if (foresight.value && !foresightOpen.value) {
+    foresightOpen.value = true
+    return
+  }
+  compilingForesight.value = true
+  error.value = ''
+  try {
+    const data = await postCompileForesight({ session_id: sessionId })
+    if (data?.foresight) {
+      foresight.value = data.foresight
+      foresightOpen.value = true
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    compilingForesight.value = false
+  }
+}
+
+async function regenerateForesight() {
+  // Force recompile even if foresight exists
+  if (compilingForesight.value) return
+  compilingForesight.value = true
+  error.value = ''
+  try {
+    const data = await postCompileForesight({ session_id: sessionId })
+    if (data?.foresight) {
+      foresight.value = data.foresight
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    compilingForesight.value = false
+  }
+}
+
+async function copyForesight() {
+  try {
+    await navigator.clipboard.writeText(foresight.value)
+  } catch {
+    error.value = 'Copy failed — your browser blocked clipboard access.'
+  }
+}
+
+function downloadForesight() {
+  if (!foresight.value) return
+  const date = new Date().toISOString().slice(0, 10)
+  const slug = (tree.value?.question || 'foresight')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'foresight'
+  const blob = new Blob([foresight.value], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `foresight-${slug}-${date}.md`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 async function onUpdateNode({ node_id, fields }) {
   try {
     const data = await postTreeUpdateNode({
@@ -391,4 +497,96 @@ onMounted(loadTree)
 }
 .synthesize-all-btn:hover { background: #353559; }
 .synthesize-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.foresight-btn {
+  background: #4a3a2a;
+  color: #f5e8d6;
+  border: 1px solid #6a5a3a;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+.foresight-btn:hover { background: #5a4a35; }
+.foresight-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.foresight-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.foresight-modal {
+  width: min(900px, 90vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.foresight-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid #222;
+}
+.foresight-header h2 { margin: 0; font-size: 1rem; letter-spacing: 0.05em; }
+.foresight-header .close {
+  background: transparent;
+  color: #888;
+  border: 0;
+  font-size: 1.5rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.foresight-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem 1.5rem;
+  line-height: 1.55;
+}
+.foresight-body :deep(h1),
+.foresight-body :deep(h2),
+.foresight-body :deep(h3) { margin-top: 1.25em; }
+.foresight-body :deep(h1) { font-size: 1.4rem; color: #f5e8d6; }
+.foresight-body :deep(h2) {
+  font-size: 1.15rem;
+  color: #e5e5e5;
+  border-bottom: 1px solid #222;
+  padding-bottom: 0.25rem;
+}
+.foresight-body :deep(h3) { font-size: 1rem; color: #ddd; }
+.foresight-body :deep(p) { margin: 0.6em 0; }
+.foresight-body :deep(ul),
+.foresight-body :deep(ol) { padding-left: 1.5rem; }
+.foresight-body :deep(li) { margin: 0.25em 0; }
+.foresight-body :deep(strong) { color: #fff; }
+.foresight-body :deep(a) { color: #80b4ff; }
+
+.foresight-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid #222;
+}
+.foresight-footer button {
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid #444;
+  font-family: inherit;
+}
+.foresight-footer .primary { background: #4ade80; color: #052e16; font-weight: bold; }
+.foresight-footer .secondary { background: #333; color: #ddd; }
+.foresight-footer button:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

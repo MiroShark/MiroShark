@@ -80,3 +80,7 @@ export const postTreeUpdateNode = (data) => {
 export const postTreeSynthesize = (data) => {
   return service.post('/api/seed-chat/tree/synthesize', data, { timeout: 120000 })
 }
+
+export const postCompileForesight = (data) => {
+  return service.post('/api/seed-chat/tree/compile-foresight', data, { timeout: 240000 })
+}

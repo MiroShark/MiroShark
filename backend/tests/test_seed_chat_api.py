@@ -768,3 +768,52 @@ def test_tree_synthesize_404_when_node_missing(client):
 def test_tree_synthesize_400_when_required_missing(client):
     response = client.post("/api/seed-chat/tree/synthesize", json={})
     assert response.status_code == 400
+
+
+def test_tree_compile_foresight_returns_doc_and_persists(client):
+    session = _tree_session_fixture()
+    from app.services.decision_tree import initialise_tree
+    session["tree"] = initialise_tree(session["seed_state"])
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.compile_foresight",
+               return_value="# Foresight\n\n## TL;DR\n..."):
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/compile-foresight",
+            json={"session_id": "tree-1"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["foresight"].startswith("# Foresight")
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["foresight"].startswith("# Foresight")
+
+
+def test_tree_compile_foresight_400_when_tree_not_initialised(client):
+    session = _tree_session_fixture()
+    # No tree
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/compile-foresight",
+            json={"session_id": "tree-1"},
+        )
+    assert response.status_code == 400
+
+
+def test_tree_compile_foresight_404_when_session_missing(client):
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = None
+        response = client.post(
+            "/api/seed-chat/tree/compile-foresight",
+            json={"session_id": "missing"},
+        )
+    assert response.status_code == 404
+
+
+def test_tree_compile_foresight_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/tree/compile-foresight", json={})
+    assert response.status_code == 400

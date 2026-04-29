@@ -19,6 +19,7 @@ from ..services.decision_tree import (
     set_summary,
 )
 from ..services.tree_synthesizer import synthesise_node
+from ..services.foresight_compiler import compile_foresight
 from ..storage.session_store import SessionStore
 from ..utils.logger import get_logger
 
@@ -517,4 +518,35 @@ def tree_synthesize():
         "session_id": session_id,
         "node_id": node_id,
         "summary": summary,
+    })
+
+
+@seed_chat_bp.route("/tree/compile-foresight", methods=["POST"])
+def tree_compile_foresight():
+    payload = request.get_json(silent=True) or {}
+    session_id = payload.get("session_id")
+    if not session_id:
+        return jsonify({"error": "session_id required"}), 400
+
+    session = _store.load(session_id)
+    if session is None:
+        return jsonify({"error": "session_not_found"}), 404
+
+    tree = session.get("tree")
+    if not tree:
+        return jsonify({"error": "tree not initialised"}), 400
+
+    seed_state = session.get("seed_state") or {}
+    try:
+        foresight = compile_foresight(seed_state, tree)
+    except RuntimeError as exc:
+        logger.error("foresight compile failed: %s", exc)
+        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
+
+    session["foresight"] = foresight
+    _store.save(session)
+
+    return jsonify({
+        "session_id": session_id,
+        "foresight": foresight,
     })
