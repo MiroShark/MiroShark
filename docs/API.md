@@ -1,5 +1,7 @@
 # HTTP API Reference
 
+<sup>English · [中文](API.zh-CN.md)</sup>
+
 Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless otherwise noted.
 
 > **Interactive docs:** the running backend serves Swagger UI at `/api/docs` and the OpenAPI 3.1 spec at `/api/openapi.yaml` (or `/api/openapi.json`). Point [`openapi-generator`](https://openapi-generator.tech/) at the spec to produce a Python / TypeScript / Go SDK in one command.

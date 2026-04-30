@@ -18,6 +18,7 @@ from ..services.graph_builder import GraphBuilderService
 from ..services.text_processor import TextProcessor
 from ..utils.file_parser import FileParser
 from ..utils.logger import get_logger
+from ..utils.i18n import get_locale, t as _t
 from ..models.task import TaskManager, TaskStatus
 from ..models.project import ProjectManager, ProjectStatus
 
@@ -40,12 +41,13 @@ def get_project(project_id: str):
     """
     Get project details
     """
+    locale = get_locale(request)
     project = ProjectManager.get_project(project_id)
-    
+
     if not project:
         return jsonify({
             "success": False,
-            "error": f"Project not found: {project_id}"
+            "error": _t(f"Project not found: {project_id}", f"未找到项目:{project_id}", locale)
         }), 404
 
     return jsonify({
@@ -76,12 +78,13 @@ def fetch_url():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
         url = data.get('url', '').strip()
 
         if not url:
-            return jsonify({"success": False, "error": "url is required"}), 400
+            return jsonify({"success": False, "error": _t("url is required", "缺少 url", locale)}), 400
 
         from ..utils.url_fetcher import fetch_url_text
         result = fetch_url_text(url)
@@ -94,7 +97,7 @@ def fetch_url():
         logger.error(f"URL fetch error: {e}")
         return jsonify({
             "success": False,
-            "error": f"Failed to fetch URL: {str(e)}"
+            "error": _t(f"Failed to fetch URL: {str(e)}", f"抓取 URL 失败:{str(e)}", locale)
         }), 500
 
 
@@ -129,6 +132,7 @@ def generate_ontology():
             }
         }
     """
+    locale = get_locale(request)
     try:
         logger.info("=== Starting ontology generation ===")
 
@@ -144,7 +148,11 @@ def generate_ontology():
         if not simulation_requirement:
             return jsonify({
                 "success": False,
-                "error": "Please provide a simulation requirement description (simulation_requirement)"
+                "error": _t(
+                    "Please provide a simulation requirement description (simulation_requirement)",
+                    "请提供模拟需求描述(simulation_requirement)",
+                    locale,
+                )
             }), 400
 
         # Parse URL docs (pre-fetched via /fetch-url)
@@ -162,7 +170,11 @@ def generate_ontology():
         if not has_files and not url_docs:
             return jsonify({
                 "success": False,
-                "error": "Please upload at least one document file or provide URL documents"
+                "error": _t(
+                    "Please upload at least one document file or provide URL documents",
+                    "请至少上传一个文档文件或提供 URL 文档",
+                    locale,
+                )
             }), 400
 
         # Create project
@@ -214,7 +226,11 @@ def generate_ontology():
             ProjectManager.delete_project(project.project_id)
             return jsonify({
                 "success": False,
-                "error": "No documents were successfully processed, please check file formats"
+                "error": _t(
+                    "No documents were successfully processed, please check file formats",
+                    "未成功处理任何文档,请检查文件格式",
+                    locale,
+                )
             }), 400
         
         # Save extracted text
@@ -290,6 +306,7 @@ def build_graph():
             }
         }
     """
+    locale = get_locale(request)
     try:
         logger.info("=== Starting graph build ===")
 
@@ -299,41 +316,49 @@ def build_graph():
             logger.error("Neo4j storage not initialized")
             return jsonify({
                 "success": False,
-                "error": "Neo4j storage is not initialized"
+                "error": _t("Neo4j storage is not initialized", "Neo4j 存储尚未初始化", locale)
             }), 503
-        
+
         # Parse request
         data = request.get_json() or {}
         project_id = data.get('project_id')
         logger.debug(f"Request parameters: project_id={project_id}")
-        
+
         if not project_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide project_id"
+                "error": _t("Please provide project_id", "请提供 project_id", locale)
             }), 400
-        
+
         # Get project
         project = ProjectManager.get_project(project_id)
         if not project:
             return jsonify({
                 "success": False,
-                "error": f"Project not found: {project_id}"
+                "error": _t(f"Project not found: {project_id}", f"未找到项目:{project_id}", locale)
             }), 404
-        
+
         # Check project status
         force = data.get('force', False)  # Force rebuild
-        
+
         if project.status == ProjectStatus.CREATED:
             return jsonify({
                 "success": False,
-                "error": "Ontology not yet generated for this project, please call /ontology/generate first"
+                "error": _t(
+                    "Ontology not yet generated for this project, please call /ontology/generate first",
+                    "该项目尚未生成本体,请先调用 /ontology/generate",
+                    locale,
+                )
             }), 400
-        
+
         if project.status == ProjectStatus.GRAPH_BUILDING and not force:
             return jsonify({
                 "success": False,
-                "error": "Graph is currently being built, please do not resubmit. To force rebuild, add force: true",
+                "error": _t(
+                    "Graph is currently being built, please do not resubmit. To force rebuild, add force: true",
+                    "图谱正在构建中,请勿重复提交。如需强制重建,请添加 force: true",
+                    locale,
+                ),
                 "task_id": project.graph_build_task_id
             }), 400
         
@@ -358,15 +383,15 @@ def build_graph():
         if not text:
             return jsonify({
                 "success": False,
-                "error": "Extracted text content not found"
+                "error": _t("Extracted text content not found", "未找到已提取的文本内容", locale)
             }), 400
-        
+
         # Get ontology
         ontology = project.ontology
         if not ontology:
             return jsonify({
                 "success": False,
-                "error": "Ontology definition not found"
+                "error": _t("Ontology definition not found", "未找到本体定义", locale)
             }), 400
         
         # Create async task
@@ -526,12 +551,13 @@ def get_task(task_id: str):
     """
     Query task status
     """
+    locale = get_locale(request)
     task = TaskManager().get_task(task_id)
-    
+
     if not task:
         return jsonify({
             "success": False,
-            "error": f"Task not found: {task_id}"
+            "error": _t(f"Task not found: {task_id}", f"未找到任务:{task_id}", locale)
         }), 404
     
     return jsonify({
@@ -547,12 +573,13 @@ def get_graph_data(graph_id: str):
     """
     Get graph data (nodes and edges)
     """
+    locale = get_locale(request)
     try:
         storage = current_app.extensions.get('neo4j_storage')
         if not storage:
             return jsonify({
                 "success": False,
-                "error": "Neo4j storage is not initialized"
+                "error": _t("Neo4j storage is not initialized", "Neo4j 存储尚未初始化", locale)
             }), 503
 
         builder = GraphBuilderService(storage=storage)

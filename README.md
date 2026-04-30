@@ -63,7 +63,7 @@ cp .env.example .env
 
 **界面语言** — 启动后,在导航栏右上角点击「中 / EN」按钮即可切换中英文。语言选择会保存在浏览器中,下次访问时自动应用。模板画廊与公开模拟列表的卡片标题/描述也会随之切换。
 
-**其他部署路径** — [一键 Railway / Render](docs/INSTALL.md#one-click-cloud)、[Docker + Ollama](docs/INSTALL.md#option-b-docker--local-ollama)、[手动 Ollama](docs/INSTALL.md#option-c-manual--local-ollama)、[Claude Code CLI](docs/INSTALL.md#option-d-claude-code-no-api-key) — 详见 **[docs/INSTALL.md](docs/INSTALL.md)**。
+**其他部署路径** — [一键 Railway / Render](docs/INSTALL.zh-CN.md)、[Docker + Ollama](docs/INSTALL.zh-CN.md)、[手动 Ollama](docs/INSTALL.zh-CN.md)、[Claude Code CLI](docs/INSTALL.zh-CN.md) — 详见 **[docs/INSTALL.zh-CN.md](docs/INSTALL.zh-CN.md)**。
 
 ### 主要功能
 
@@ -94,7 +94,7 @@ cp .env.example .env
 | **推送通知** | 长耗时图谱 / 模拟 / 报告任务完成时的浏览器推送提醒 |
 | **完成 Webhook** | 模拟一结束即 POST 一份 JSON 摘要 — 一个 URL 字段即可连通 Slack、Discord、Zapier、Make、n8n 或任意自定义端点 |
 
-每项功能详见 **[docs/FEATURES.md](docs/FEATURES.md)**。
+每项功能详见 **[docs/FEATURES.zh-CN.md](docs/FEATURES.zh-CN.md)**。
 
 ### 应用场景
 
@@ -110,17 +110,17 @@ cp .env.example .env
 
 | | |
 |---|---|
-| [安装](docs/INSTALL.md) | 全部部署路径:云端、Docker、Ollama、Claude Code |
-| [配置](docs/CONFIGURATION.md) | 环境变量、模型路由、特性开关 |
-| [模型](docs/MODELS.md) | 云端预设、本地 Ollama 模型、基准发现 |
-| [架构](docs/ARCHITECTURE.md) | 模拟引擎、记忆管线、图谱检索 |
-| [功能](docs/FEATURES.md) | 上述功能表的深入解析 |
-| [HTTP API](docs/API.md) | 全部端点,按关注点分组 — 含 `/api/docs` 交互式 Swagger UI 与 `/api/openapi.yaml` 规范 |
-| [CLI](docs/CLI.md) | `miroshark-cli` 参考 |
-| [MCP](docs/MCP.md) | Claude Desktop / Cursor / Windsurf / Continue 集成 + 报告智能体工具(可在「设置 → AI 集成」中获取自动生成的片段) |
-| [Webhook](docs/WEBHOOKS.md) | 完成 Webhook 载荷、头部、投递语义、Slack/Discord/Zapier/n8n 食谱 |
-| [可观测性](docs/OBSERVABILITY.md) | 调试面板、事件流、日志 |
-| [贡献](CONTRIBUTING.md) | 测试与开发 |
+| [安装](docs/INSTALL.zh-CN.md) | 全部部署路径:云端、Docker、Ollama、Claude Code |
+| [配置](docs/CONFIGURATION.zh-CN.md) | 环境变量、模型路由、特性开关 |
+| [模型](docs/MODELS.zh-CN.md) | 云端预设、本地 Ollama 模型、基准发现 |
+| [架构](docs/ARCHITECTURE.zh-CN.md) | 模拟引擎、记忆管线、图谱检索 |
+| [功能](docs/FEATURES.zh-CN.md) | 上述功能表的深入解析 |
+| [HTTP API](docs/API.zh-CN.md) | 全部端点,按关注点分组 — 含 `/api/docs` 交互式 Swagger UI 与 `/api/openapi.yaml` 规范 |
+| [CLI](docs/CLI.zh-CN.md) | `miroshark-cli` 参考 |
+| [MCP](docs/MCP.zh-CN.md) | Claude Desktop / Cursor / Windsurf / Continue 集成 + 报告智能体工具(可在「设置 → AI 集成」中获取自动生成的片段) |
+| [Webhook](docs/WEBHOOKS.zh-CN.md) | 完成 Webhook 载荷、头部、投递语义、Slack/Discord/Zapier/n8n 食谱 |
+| [可观测性](docs/OBSERVABILITY.zh-CN.md) | 调试面板、事件流、日志 |
+| [贡献](CONTRIBUTING.zh-CN.md) | 测试与开发 |
 
 ### 许可证
 

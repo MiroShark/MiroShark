@@ -1,5 +1,7 @@
 # CLI
 
+<sup>English · [中文](CLI.zh-CN.md)</sup>
+
 A dependency-light HTTP client for a running MiroShark backend.
 
 ## Install

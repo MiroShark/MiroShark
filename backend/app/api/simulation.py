@@ -15,6 +15,7 @@ from flask import request, jsonify, send_file, current_app
 
 from . import simulation_bp
 from ..utils.llm_client import create_smart_llm_client, create_llm_client
+from ..utils.i18n import get_locale, t as _t
 from ..utils.validation import validate_simulation_id
 from ..config import Config
 from ..services.entity_reader import EntityReader
@@ -116,6 +117,7 @@ def require_admin_token(view_func):
 
     @wraps(view_func)
     def _wrapper(*args, **kwargs):
+        locale = get_locale(request)
         expected = _load_admin_token()
         if not expected:
             logger.error(
@@ -125,7 +127,11 @@ def require_admin_token(view_func):
             )
             return jsonify({
                 "success": False,
-                "error": "Admin authentication is not configured on this deployment.",
+                "error": _t(
+                    "Admin authentication is not configured on this deployment.",
+                    "此部署尚未配置管理员身份验证。",
+                    locale,
+                ),
             }), 503
 
         provided = _extract_bearer_token()
@@ -137,7 +143,7 @@ def require_admin_token(view_func):
         ):
             return jsonify({
                 "success": False,
-                "error": "Unauthorized",
+                "error": _t("Unauthorized", "未授权", locale),
             }), 401
 
         return view_func(*args, **kwargs)
@@ -145,14 +151,17 @@ def require_admin_token(view_func):
     return _wrapper
 
 
-def _get_simulation_id_or_400(data: dict) -> tuple:
+def _get_simulation_id_or_400(data: dict, locale: str = "en") -> tuple:
     """Extract and validate simulation_id from POST body.
 
     Returns (simulation_id, None) on success or (None, error_response) on failure.
     """
     simulation_id = data.get('simulation_id')
     if not simulation_id:
-        return None, (jsonify({"success": False, "error": "Please provide simulation_id"}), 400)
+        return None, (jsonify({
+            "success": False,
+            "error": _t("Please provide simulation_id", "请提供 simulation_id", locale),
+        }), 400)
     try:
         validate_simulation_id(simulation_id)
     except ValueError as exc:
@@ -454,6 +463,7 @@ def suggest_scenarios():
             }
         }
     """
+    locale = get_locale(request)
     try:
         client_ip = _client_ip()
         if _scenario_rate_limited(client_ip):
@@ -467,7 +477,11 @@ def suggest_scenarios():
         if not isinstance(preview, str):
             return jsonify({
                 "success": False,
-                "error": "text_preview must be a string"
+                "error": _t(
+                    "text_preview must be a string",
+                    "text_preview 必须是字符串",
+                    locale,
+                )
             }), 400
 
         sim_prompt_raw = data.get('simulation_prompt') or ''
@@ -683,6 +697,7 @@ def ask_mode():
     ``{"success": true, "data": {title, simulation_requirement, seed_document,
     key_actors, suggested_platforms, model, cached}}``.
     """
+    locale = get_locale(request)
     try:
         client_ip = _client_ip()
         if _ask_rate_limited(client_ip):
@@ -696,12 +711,20 @@ def ask_mode():
         if not isinstance(question, str) or len(question) < 8:
             return jsonify({
                 "success": False,
-                "error": "question must be at least 8 characters",
+                "error": _t(
+                    "question must be at least 8 characters",
+                    "问题至少需要 8 个字符",
+                    locale,
+                ),
             }), 400
         if len(question) > _ASK_QUESTION_MAX_CHARS:
             return jsonify({
                 "success": False,
-                "error": f"question too long (max {_ASK_QUESTION_MAX_CHARS} chars)",
+                "error": _t(
+                    f"question too long (max {_ASK_QUESTION_MAX_CHARS} chars)",
+                    f"问题过长(最多 {_ASK_QUESTION_MAX_CHARS} 字符)",
+                    locale,
+                ),
             }), 400
 
         import hashlib
@@ -1267,17 +1290,18 @@ def get_graph_entities(graph_id: str):
 @simulation_bp.route('/entities/<graph_id>/<entity_uuid>', methods=['GET'])
 def get_entity_detail(graph_id: str, entity_uuid: str):
     """Get detailed information for a single entity"""
+    locale = get_locale(request)
     try:
         storage = current_app.extensions.get('neo4j_storage')
         if not storage:
             raise ValueError("GraphStorage not initialized")
         reader = EntityReader(storage)
         entity = reader.get_entity_with_context(graph_id, entity_uuid)
-        
+
         if not entity:
             return jsonify({
                 "success": False,
-                "error": f"Entity not found: {entity_uuid}"
+                "error": _t(f"Entity not found: {entity_uuid}", f"未找到实体:{entity_uuid}", locale)
             }), 404
         
         return jsonify({
@@ -1360,30 +1384,35 @@ def create_simulation():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
+
         project_id = data.get('project_id')
         if not project_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide project_id"
+                "error": _t("Please provide project_id", "请提供 project_id", locale)
             }), 400
-        
+
         project = ProjectManager.get_project(project_id)
         if not project:
             return jsonify({
                 "success": False,
-                "error": f"Project not found: {project_id}"
+                "error": _t(f"Project not found: {project_id}", f"未找到项目:{project_id}", locale)
             }), 404
-        
+
         graph_id = data.get('graph_id') or project.graph_id
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "Graph not yet built for this project, please call /api/graph/build first"
+                "error": _t(
+                    "Graph not yet built for this project, please call /api/graph/build first",
+                    "该项目尚未构建图谱,请先调用 /api/graph/build",
+                    locale,
+                )
             }), 400
-        
+
         manager = SimulationManager()
         state = manager.create_simulation(
             project_id=project_id,
@@ -1428,6 +1457,7 @@ def branch_counterfactual_simulation():
     prepends ``injection_text`` to every agent's observation prompt starting
     at ``trigger_round``.
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
         parent_id = data.get("parent_simulation_id")
@@ -1437,17 +1467,37 @@ def branch_counterfactual_simulation():
         branch_id = data.get("branch_id")
 
         if not parent_id:
-            return jsonify({"success": False, "error": "parent_simulation_id is required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "parent_simulation_id is required",
+                "缺少 parent_simulation_id",
+                locale,
+            )}), 400
         if not injection:
-            return jsonify({"success": False, "error": "injection_text is required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "injection_text is required",
+                "缺少 injection_text",
+                locale,
+            )}), 400
         if len(injection) > 2000:
-            return jsonify({"success": False, "error": "injection_text must be <= 2000 chars"}), 400
+            return jsonify({"success": False, "error": _t(
+                "injection_text must be <= 2000 chars",
+                "injection_text 不能超过 2000 个字符",
+                locale,
+            )}), 400
         try:
             trigger_int = int(trigger)
         except (TypeError, ValueError):
-            return jsonify({"success": False, "error": "trigger_round must be an integer >= 0"}), 400
+            return jsonify({"success": False, "error": _t(
+                "trigger_round must be an integer >= 0",
+                "trigger_round 必须为大于等于 0 的整数",
+                locale,
+            )}), 400
         if trigger_int < 0:
-            return jsonify({"success": False, "error": "trigger_round must be >= 0"}), 400
+            return jsonify({"success": False, "error": _t(
+                "trigger_round must be >= 0",
+                "trigger_round 必须 >= 0",
+                locale,
+            )}), 400
 
         manager = SimulationManager()
         state = manager.branch_counterfactual(
@@ -1492,6 +1542,7 @@ def fork_simulation():
             "data": { ...simulation state... }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
@@ -1499,7 +1550,11 @@ def fork_simulation():
         if not parent_simulation_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide parent_simulation_id"
+                "error": _t(
+                    "Please provide parent_simulation_id",
+                    "请提供 parent_simulation_id",
+                    locale,
+                )
             }), 400
 
         simulation_requirement = data.get('simulation_requirement') or None
@@ -1691,21 +1746,22 @@ def prepare_simulation():
     """
     import threading
     from ..models.task import TaskManager, TaskStatus
-    
+
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
-        simulation_id, err = _get_simulation_id_or_400(data)
+
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
 
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
-        
+
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
         
         # Check if force regeneration is requested
@@ -1737,15 +1793,19 @@ def prepare_simulation():
         if not project:
             return jsonify({
                 "success": False,
-                "error": f"Project not found: {state.project_id}"
+                "error": _t(f"Project not found: {state.project_id}", f"未找到项目:{state.project_id}", locale)
             }), 404
-        
+
         # Get simulation requirement
         simulation_requirement = project.simulation_requirement or ""
         if not simulation_requirement:
             return jsonify({
                 "success": False,
-                "error": "Project missing simulation requirement description (simulation_requirement)"
+                "error": _t(
+                    "Project missing simulation requirement description (simulation_requirement)",
+                    "项目缺少模拟需求描述(simulation_requirement)",
+                    locale,
+                )
             }), 400
         
         # Get document text
@@ -1957,10 +2017,11 @@ def get_prepare_status():
         }
     """
     from ..models.task import TaskManager
-    
+
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
+
         task_id = data.get('task_id')
         simulation_id = data.get('simulation_id')
         if simulation_id:
@@ -2001,9 +2062,13 @@ def get_prepare_status():
                 })
             return jsonify({
                 "success": False,
-                "error": "Please provide task_id or simulation_id"
+                "error": _t(
+                    "Please provide task_id or simulation_id",
+                    "请提供 task_id 或 simulation_id",
+                    locale,
+                )
             }), 400
-        
+
         task_manager = TaskManager()
         task = task_manager.get_task(task_id)
         
@@ -2027,9 +2092,9 @@ def get_prepare_status():
             
             return jsonify({
                 "success": False,
-                "error": f"Task not found: {task_id}"
+                "error": _t(f"Task not found: {task_id}", f"未找到任务:{task_id}", locale)
             }), 404
-        
+
         task_dict = task.to_dict()
         task_dict["already_prepared"] = False
         
@@ -2049,14 +2114,15 @@ def get_prepare_status():
 @simulation_bp.route('/<simulation_id>', methods=['GET'])
 def get_simulation(simulation_id: str):
     """Get simulation status"""
+    locale = get_locale(request)
     try:
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
-        
+
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
         
         result = state.to_dict()
@@ -2378,17 +2444,18 @@ def get_simulation_profiles_realtime(simulation_id: str):
     import json
     import csv
     from datetime import datetime
-    
+
+    locale = get_locale(request)
     try:
         platform = request.args.get('platform', 'reddit')
-        
+
         # Get simulation directory
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
 
         if not os.path.exists(sim_dir):
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
         # Determine file path
@@ -2483,7 +2550,8 @@ def get_simulation_config_realtime(simulation_id: str):
     """
     import json
     from datetime import datetime
-    
+
+    locale = get_locale(request)
     try:
         # Get simulation directory
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
@@ -2491,7 +2559,7 @@ def get_simulation_config_realtime(simulation_id: str):
         if not os.path.exists(sim_dir):
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
         # Config file path
@@ -2601,11 +2669,16 @@ def retry_simulation_config(simulation_id: str):
     from ..models.task import TaskManager, TaskStatus
     from ..config import Config
 
+    locale = get_locale(request)
     try:
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         if not state:
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         # Profiles must exist before we can retry config generation
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
@@ -2616,20 +2689,32 @@ def retry_simulation_config(simulation_id: str):
         if not profiles_exist:
             return jsonify({
                 "success": False,
-                "error": "Agent profiles not found — run /prepare first"
+                "error": _t(
+                    "Agent profiles not found — run /prepare first",
+                    "未找到 Agent 配置文件 — 请先运行 /prepare",
+                    locale,
+                )
             }), 400
 
         # Get project data needed for config generation
         project = ProjectManager.get_project(state.project_id)
         if not project:
-            return jsonify({"success": False, "error": f"Project not found: {state.project_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Project not found: {state.project_id}",
+                f"未找到项目:{state.project_id}",
+                locale,
+            )}), 404
 
         simulation_requirement = project.simulation_requirement or ""
         document_text = ProjectManager.get_extracted_text(state.project_id) or ""
 
         storage = current_app.extensions.get('neo4j_storage')
         if not storage:
-            return jsonify({"success": False, "error": "GraphStorage not initialized"}), 500
+            return jsonify({"success": False, "error": _t(
+                "GraphStorage not initialized",
+                "GraphStorage 尚未初始化",
+                locale,
+            )}), 500
 
         # Reset state so the frontend polling loop sees "preparing" again
         state.status = SimulationStatus.PREPARING
@@ -2723,14 +2808,19 @@ def get_simulation_config(simulation_id: str):
         - platform_configs: Platform configuration
         - generation_reasoning: LLM configuration reasoning explanation
     """
+    locale = get_locale(request)
     try:
         manager = SimulationManager()
         config = manager.get_simulation_config(simulation_id)
-        
+
         if not config:
             return jsonify({
                 "success": False,
-                "error": "Simulation configuration does not exist, please call /prepare endpoint first"
+                "error": _t(
+                    "Simulation configuration does not exist, please call /prepare endpoint first",
+                    "模拟配置不存在,请先调用 /prepare 端点",
+                    locale,
+                )
             }), 404
         
         return jsonify({
@@ -2752,11 +2842,12 @@ def download_project_file(project_id: str, saved_filename: str):
     """Stream a project's uploaded file back to the browser by its
     UUID-based saved_filename. Used by the History modal's file list
     so users can re-download originals they ingested earlier."""
+    locale = get_locale(request)
     try:
         # Reject path-traversal attempts — saved_filename is supposed
         # to be a single segment, not a path.
         if '/' in saved_filename or '\\' in saved_filename or '..' in saved_filename:
-            return jsonify({"success": False, "error": "Invalid filename"}), 400
+            return jsonify({"success": False, "error": _t("Invalid filename", "无效的文件名", locale)}), 400
 
         files_dir = os.path.abspath(
             ProjectManager._get_project_files_dir(project_id)
@@ -2764,9 +2855,9 @@ def download_project_file(project_id: str, saved_filename: str):
         file_path = os.path.abspath(os.path.join(files_dir, saved_filename))
         # Defense-in-depth: ensure resolved path is still inside files_dir
         if not file_path.startswith(files_dir + os.sep):
-            return jsonify({"success": False, "error": "Invalid filename"}), 400
+            return jsonify({"success": False, "error": _t("Invalid filename", "无效的文件名", locale)}), 400
         if not os.path.exists(file_path):
-            return jsonify({"success": False, "error": "File not found"}), 404
+            return jsonify({"success": False, "error": _t("File not found", "未找到文件", locale)}), 404
 
         # Look up the original filename from the project record so the
         # browser saves it with a meaningful name, not the UUID.
@@ -2791,15 +2882,20 @@ def download_project_file(project_id: str, saved_filename: str):
 @simulation_bp.route('/<simulation_id>/config/download', methods=['GET'])
 def download_simulation_config(simulation_id: str):
     """Download simulation configuration file"""
+    locale = get_locale(request)
     try:
         manager = SimulationManager()
         sim_dir = manager._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")
-        
+
         if not os.path.exists(config_path):
             return jsonify({
                 "success": False,
-                "error": "Configuration file does not exist, please call /prepare endpoint first"
+                "error": _t(
+                    "Configuration file does not exist, please call /prepare endpoint first",
+                    "配置文件不存在,请先调用 /prepare 端点",
+                    locale,
+                )
             }), 404
         
         return send_file(
@@ -2828,30 +2924,39 @@ def download_simulation_script(script_name: str):
         - run_parallel_simulation.py
         - action_logger.py
     """
+    locale = get_locale(request)
     try:
         # Scripts located at backend/scripts/ directory
         scripts_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../scripts'))
-        
+
         # Validate script name
         allowed_scripts = [
             "run_twitter_simulation.py",
-            "run_reddit_simulation.py", 
+            "run_reddit_simulation.py",
             "run_parallel_simulation.py",
             "action_logger.py"
         ]
-        
+
         if script_name not in allowed_scripts:
             return jsonify({
                 "success": False,
-                "error": f"Unknown script: {script_name}, options: {allowed_scripts}"
+                "error": _t(
+                    f"Unknown script: {script_name}, options: {allowed_scripts}",
+                    f"未知脚本:{script_name},可选项:{allowed_scripts}",
+                    locale,
+                )
             }), 400
-        
+
         script_path = os.path.join(scripts_dir, script_name)
-        
+
         if not os.path.exists(script_path):
             return jsonify({
                 "success": False,
-                "error": f"Script file does not exist: {script_name}"
+                "error": _t(
+                    f"Script file does not exist: {script_name}",
+                    f"脚本文件不存在:{script_name}",
+                    locale,
+                )
             }), 404
         
         return send_file(
@@ -2884,16 +2989,17 @@ def generate_profiles():
             "platform": "reddit"              // Optional
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
+
         graph_id = data.get('graph_id')
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide graph_id"
+                "error": _t("Please provide graph_id", "请提供 graph_id", locale)
             }), 400
-        
+
         entity_types = data.get('entity_types')
         use_llm = data.get('use_llm', True)
         platform = data.get('platform', 'reddit')
@@ -2907,11 +3013,15 @@ def generate_profiles():
             defined_entity_types=entity_types,
             enrich_with_edges=True
         )
-        
+
         if filtered.filtered_count == 0:
             return jsonify({
                 "success": False,
-                "error": "No matching entities found"
+                "error": _t(
+                    "No matching entities found",
+                    "未找到匹配的实体",
+                    locale,
+                )
             }), 400
         
         generator = WonderwallProfileGenerator()
@@ -2989,10 +3099,11 @@ def start_simulation():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
-        simulation_id, err = _get_simulation_id_or_400(data)
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
 
@@ -3017,18 +3128,30 @@ def start_simulation():
                 if max_rounds <= 0:
                     return jsonify({
                         "success": False,
-                        "error": "max_rounds must be a positive integer"
+                        "error": _t(
+                            "max_rounds must be a positive integer",
+                            "max_rounds 必须为正整数",
+                            locale,
+                        )
                     }), 400
             except (ValueError, TypeError):
                 return jsonify({
                     "success": False,
-                    "error": "max_rounds must be a valid integer"
+                    "error": _t(
+                        "max_rounds must be a valid integer",
+                        "max_rounds 必须是有效的整数",
+                        locale,
+                    )
                 }), 400
 
         if platform not in ['twitter', 'reddit', 'polymarket', 'parallel']:
             return jsonify({
                 "success": False,
-                "error": f"Invalid platform type: {platform}, options: twitter/reddit/polymarket/parallel"
+                "error": _t(
+                    f"Invalid platform type: {platform}, options: twitter/reddit/polymarket/parallel",
+                    f"无效的平台类型:{platform},可选项:twitter/reddit/polymarket/parallel",
+                    locale,
+                )
             }), 400
 
         enable_cross_platform = data.get('enable_cross_platform', True)
@@ -3040,7 +3163,7 @@ def start_simulation():
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
         force_restarted = False
@@ -3067,7 +3190,11 @@ def start_simulation():
                         else:
                             return jsonify({
                                 "success": False,
-                                "error": "Simulation is running, please call /stop endpoint to stop first, or use force=true to force restart"
+                                "error": _t(
+                                    "Simulation is running, please call /stop endpoint to stop first, or use force=true to force restart",
+                                    "模拟正在运行,请先调用 /stop 端点停止,或使用 force=true 强制重启",
+                                    locale,
+                                )
                             }), 400
 
                 # If force mode (and not resuming), clean up run logs
@@ -3086,7 +3213,11 @@ def start_simulation():
                 # Preparation incomplete
                 return jsonify({
                     "success": False,
-                    "error": f"Simulation not ready, current status: {state.status.value}, please call /prepare endpoint first"
+                    "error": _t(
+                        f"Simulation not ready, current status: {state.status.value}, please call /prepare endpoint first",
+                        f"模拟尚未就绪,当前状态:{state.status.value},请先调用 /prepare 端点",
+                        locale,
+                    )
                 }), 400
         
         # Get graph ID (for graph memory update)
@@ -3103,7 +3234,11 @@ def start_simulation():
             if not graph_id:
                 return jsonify({
                     "success": False,
-                    "error": "Enabling graph memory update requires a valid graph_id, please ensure the project has built a graph"
+                    "error": _t(
+                        "Enabling graph memory update requires a valid graph_id, please ensure the project has built a graph",
+                        "启用图谱记忆更新需要有效的 graph_id,请确保项目已构建图谱",
+                        locale,
+                    )
                 }), 400
             
             logger.info(f"Enable graph memory update: simulation_id={simulation_id}, graph_id={graph_id}")
@@ -3180,10 +3315,11 @@ def stop_simulation():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
-        simulation_id, err = _get_simulation_id_or_400(data)
+
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
 
@@ -3615,10 +3751,15 @@ def get_influence_leaderboard(simulation_id: str):
     Compute agent influence scores from simulation action JSONL logs.
     Returns the top 20 agents sorted by score descending.
     """
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         ranked = _compute_influence_ranked(simulation_id, top_n=20)
 
@@ -3648,10 +3789,15 @@ def get_belief_drift(simulation_id: str):
     consensus round (where one stance exceeds 50%), and a plain-English summary.
     Requires trajectory.json generated by the belief tracking system.
     """
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         trajectory_path = os.path.join(sim_dir, "trajectory.json")
         if not os.path.exists(trajectory_path):
@@ -3851,10 +3997,15 @@ def get_counterfactual_drift(simulation_id: str):
 
     Pure data transform over trajectory.json — no LLM calls, no re-simulation.
     """
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         trajectory_path = os.path.join(sim_dir, "trajectory.json")
         if not os.path.exists(trajectory_path):
@@ -4025,10 +4176,15 @@ def get_simulation_quality(simulation_id: str):
     badge (Excellent / Good / Low) plus actionable suggestions.
     Results are cached in quality.json inside the simulation directory.
     """
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         quality_path = os.path.join(sim_dir, "quality.json")
         if os.path.exists(quality_path):
@@ -4425,11 +4581,16 @@ def polymarket_market_prices(simulation_id: str, market_id: int):
     Response: { success, data: { market, points: [{t, price_yes, side, outcome,
     shares, trade_id}] } }
     """
+    locale = get_locale(request)
     try:
         validate_simulation_id(simulation_id)
         db_path = _polymarket_db_path(simulation_id)
         if not os.path.exists(db_path):
-            return jsonify({"success": False, "error": "Polymarket not enabled for this simulation"}), 404
+            return jsonify({"success": False, "error": _t(
+                "Polymarket not enabled for this simulation",
+                "该模拟未启用 Polymarket",
+                locale,
+            )}), 404
 
         import sqlite3
         with sqlite3.connect(db_path) as con:
@@ -4440,7 +4601,11 @@ def polymarket_market_prices(simulation_id: str, market_id: int):
                 (market_id,),
             ).fetchone()
             if not market_row:
-                return jsonify({"success": False, "error": f"Market {market_id} not found"}), 404
+                return jsonify({"success": False, "error": _t(
+                    f"Market {market_id} not found",
+                    f"未找到市场 {market_id}",
+                    locale,
+                )}), 404
             trades = cur.execute(
                 "SELECT trade_id, user_id, side, outcome, shares, price, created_at "
                 "FROM trade WHERE market_id = ? ORDER BY created_at ASC, trade_id ASC",
@@ -4512,11 +4677,16 @@ def publish_simulation(simulation_id: str):
 
     Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
     """
+    locale = get_locale(request)
     try:
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         if not state:
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         payload = request.get_json(silent=True) or {}
         new_value = bool(payload.get("public", True))
@@ -4683,6 +4853,7 @@ def get_embed_summary(simulation_id: str):
     Access: requires ``is_public=True`` on the simulation state. Use the
     ``/publish`` endpoint to toggle.
     """
+    locale = get_locale(request)
     try:
         try:
             summary = _build_embed_summary_payload(simulation_id)
@@ -4692,7 +4863,11 @@ def get_embed_summary(simulation_id: str):
         if not summary.get("is_public"):
             return jsonify({
                 "success": False,
-                "error": "Simulation is not published for embedding. POST /api/simulation/<id>/publish to enable.",
+                "error": _t(
+                    "Simulation is not published for embedding. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布为可嵌入,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
             }), 403
 
         response = jsonify({"success": True, "data": summary})
@@ -4721,6 +4896,7 @@ def get_share_card(simulation_id: str):
     from ..services import share_card as share_card_renderer
     from flask import Response
 
+    locale = get_locale(request)
     try:
         try:
             summary = _build_embed_summary_payload(simulation_id)
@@ -4730,7 +4906,11 @@ def get_share_card(simulation_id: str):
         if not summary.get("is_public"):
             return jsonify({
                 "success": False,
-                "error": "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
             }), 403
 
         cache_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id, "share-cards")
@@ -4781,6 +4961,7 @@ def get_replay_gif(simulation_id: str):
     from ..services import replay_gif as replay_renderer
     from flask import Response
 
+    locale = get_locale(request)
     try:
         try:
             summary = _build_embed_summary_payload(simulation_id)
@@ -4790,7 +4971,11 @@ def get_replay_gif(simulation_id: str):
         if not summary.get("is_public"):
             return jsonify({
                 "success": False,
-                "error": "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
             }), 403
 
         cache_dir = os.path.join(
@@ -4838,6 +5023,7 @@ def _serve_transcript(simulation_id: str, fmt: str):
     from ..services import transcript as transcript_renderer
     from flask import Response
 
+    locale = get_locale(request)
     try:
         try:
             summary = _build_embed_summary_payload(simulation_id)
@@ -4847,7 +5033,11 @@ def _serve_transcript(simulation_id: str, fmt: str):
         if not summary.get("is_public"):
             return jsonify({
                 "success": False,
-                "error": "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
             }), 403
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
@@ -5325,10 +5515,11 @@ def interview_agent():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
-        simulation_id, err = _get_simulation_id_or_400(data)
+
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
         agent_id = data.get('agent_id')
@@ -5339,27 +5530,39 @@ def interview_agent():
         if agent_id is None:
             return jsonify({
                 "success": False,
-                "error": "Please provide agent_id"
+                "error": _t("Please provide agent_id", "请提供 agent_id", locale)
             }), 400
-        
+
         if not prompt:
             return jsonify({
                 "success": False,
-                "error": "Please provide prompt (interview question)"
+                "error": _t(
+                    "Please provide prompt (interview question)",
+                    "请提供 prompt(访谈问题)",
+                    locale,
+                )
             }), 400
 
         # Validate platform parameter
         if platform and platform not in ("twitter", "reddit"):
             return jsonify({
                 "success": False,
-                "error": "platform parameter can only be 'twitter' or 'reddit'"
+                "error": _t(
+                    "platform parameter can only be 'twitter' or 'reddit'",
+                    "platform 参数只能为 'twitter' 或 'reddit'",
+                    locale,
+                )
             }), 400
 
         # Check environment status — auto-restart if needed
         if not _ensure_env_alive(simulation_id):
             return jsonify({
                 "success": False,
-                "error": "Simulation environment could not be started. Please try again."
+                "error": _t(
+                    "Simulation environment could not be started. Please try again.",
+                    "无法启动模拟环境,请重试。",
+                    locale,
+                )
             }), 400
 
         # Optimize prompt, add prefix to prevent agent from calling tools
@@ -5443,10 +5646,11 @@ def interview_agents_batch():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
-        simulation_id, err = _get_simulation_id_or_400(data)
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
         interviews = data.get('interviews')
@@ -5456,14 +5660,22 @@ def interview_agents_batch():
         if not interviews or not isinstance(interviews, list):
             return jsonify({
                 "success": False,
-                "error": "Please provide interviews (interview list)"
+                "error": _t(
+                    "Please provide interviews (interview list)",
+                    "请提供 interviews(访谈列表)",
+                    locale,
+                )
             }), 400
 
         # Validate platform parameter
         if platform and platform not in ("twitter", "reddit"):
             return jsonify({
                 "success": False,
-                "error": "platform parameter can only be 'twitter' or 'reddit'"
+                "error": _t(
+                    "platform parameter can only be 'twitter' or 'reddit'",
+                    "platform 参数只能为 'twitter' 或 'reddit'",
+                    locale,
+                )
             }), 400
 
         # Validate each interview item
@@ -5471,26 +5683,42 @@ def interview_agents_batch():
             if 'agent_id' not in interview:
                 return jsonify({
                     "success": False,
-                    "error": f"Interview list item {i+1} is missing agent_id"
+                    "error": _t(
+                        f"Interview list item {i+1} is missing agent_id",
+                        f"访谈列表第 {i+1} 项缺少 agent_id",
+                        locale,
+                    )
                 }), 400
             if 'prompt' not in interview:
                 return jsonify({
                     "success": False,
-                    "error": f"Interview list item {i+1} is missing prompt"
+                    "error": _t(
+                        f"Interview list item {i+1} is missing prompt",
+                        f"访谈列表第 {i+1} 项缺少 prompt",
+                        locale,
+                    )
                 }), 400
             # Validate each item's platform (if present)
             item_platform = interview.get('platform')
             if item_platform and item_platform not in ("twitter", "reddit"):
                 return jsonify({
                     "success": False,
-                    "error": f"Interview list item {i+1} platform can only be 'twitter' or 'reddit'"
+                    "error": _t(
+                        f"Interview list item {i+1} platform can only be 'twitter' or 'reddit'",
+                        f"访谈列表第 {i+1} 项的 platform 只能为 'twitter' 或 'reddit'",
+                        locale,
+                    )
                 }), 400
 
         # Check environment status — auto-restart if needed
         if not _ensure_env_alive(simulation_id):
             return jsonify({
                 "success": False,
-                "error": "Simulation environment could not be started. Please try again."
+                "error": _t(
+                    "Simulation environment could not be started. Please try again.",
+                    "无法启动模拟环境,请重试。",
+                    locale,
+                )
             }), 400
 
         # Optimize each interview item's prompt, add prefix to prevent agent from calling tools
@@ -5567,10 +5795,11 @@ def get_interview_history():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
-        simulation_id, err = _get_simulation_id_or_400(data)
+
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
         platform = data.get('platform')  # If not specified, return history for both platforms
@@ -5625,10 +5854,11 @@ def get_env_status():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
-        simulation_id, err = _get_simulation_id_or_400(data)
+
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
 
@@ -5668,9 +5898,10 @@ def restart_env():
     Restart simulation environment for interviews (without running simulation).
     Launches the simulation script with --env-only flag.
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        simulation_id, err = _get_simulation_id_or_400(data)
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
 
@@ -5688,7 +5919,11 @@ def restart_env():
         # Check if simulation is prepared
         is_prepared, _ = _check_simulation_prepared(simulation_id)
         if not is_prepared:
-            return jsonify({"success": False, "error": "Simulation not prepared"}), 400
+            return jsonify({"success": False, "error": _t(
+                "Simulation not prepared",
+                "模拟尚未准备完成",
+                locale,
+            )}), 400
 
         # Start the simulation script with --env-only
         run_state = SimulationRunner.start_simulation(
@@ -5743,10 +5978,11 @@ def close_simulation_env():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
-        
-        simulation_id, err = _get_simulation_id_or_400(data)
+
+        simulation_id, err = _get_simulation_id_or_400(data, locale)
         if err:
             return err
         timeout = data.get('timeout', 30)
@@ -5799,6 +6035,7 @@ def export_simulation_data(simulation_id: str):
     Returns:
         File download (application/json or text/csv)
     """
+    locale = get_locale(request)
     try:
         export_format = request.args.get('format', 'json').lower()
         include_raw = request.args.get('include', 'actions,posts,timeline,agent_stats,metadata')
@@ -5807,7 +6044,11 @@ def export_simulation_data(simulation_id: str):
         if export_format not in ('json', 'csv'):
             return jsonify({
                 "success": False,
-                "error": "Unsupported format. Use 'json' or 'csv'."
+                "error": _t(
+                    "Unsupported format. Use 'json' or 'csv'.",
+                    "不支持的格式,请使用 'json' 或 'csv'。",
+                    locale,
+                )
             }), 400
 
         export_data = {}
@@ -5883,7 +6124,11 @@ def export_simulation_data(simulation_id: str):
         if not rows:
             return jsonify({
                 "success": False,
-                "error": "No action data available to export as CSV"
+                "error": _t(
+                    "No action data available to export as CSV",
+                    "没有可导出为 CSV 的动作数据",
+                    locale,
+                )
             }), 404
 
         fieldnames = ['round_num', 'timestamp', 'platform', 'agent_id',
@@ -5941,15 +6186,24 @@ def compare_simulations():
         the other contribute a penalty of 0.5 per missing agent. The final score
         is the mean across all compared agents, clamped to [0, 1].
     """
+    locale = get_locale(request)
     try:
         id1 = request.args.get('id1', '').strip()
         id2 = request.args.get('id2', '').strip()
 
         if not id1 or not id2:
-            return jsonify({"success": False, "error": "Both id1 and id2 are required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "Both id1 and id2 are required",
+                "需要同时提供 id1 和 id2",
+                locale,
+            )}), 400
 
         if id1 == id2:
-            return jsonify({"success": False, "error": "id1 and id2 must be different simulations"}), 400
+            return jsonify({"success": False, "error": _t(
+                "id1 and id2 must be different simulations",
+                "id1 和 id2 必须是不同的模拟",
+                locale,
+            )}), 400
 
         def _load_state(sim_id):
             m = SimulationManager()
@@ -6013,9 +6267,17 @@ def compare_simulations():
         state2 = _load_state(id2)
 
         if not state1:
-            return jsonify({"success": False, "error": f"Simulation not found: {id1}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {id1}",
+                f"未找到模拟:{id1}",
+                locale,
+            )}), 404
         if not state2:
-            return jsonify({"success": False, "error": f"Simulation not found: {id2}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {id2}",
+                f"未找到模拟:{id2}",
+                locale,
+            )}), 404
 
         influence1 = _compute_influence_ranked(id1, top_n=10)
         influence2 = _compute_influence_ranked(id2, top_n=10)
@@ -6123,6 +6385,7 @@ def resolve_simulation(simulation_id: str):
     """
     import sqlite3
 
+    locale = get_locale(request)
     try:
         data = request.get_json(force=True) or {}
         actual_outcome = (data.get("actual_outcome") or "").strip().upper()
@@ -6131,7 +6394,11 @@ def resolve_simulation(simulation_id: str):
         if actual_outcome not in ("YES", "NO"):
             return jsonify({
                 "success": False,
-                "error": "actual_outcome must be 'YES' or 'NO'"
+                "error": _t(
+                    "actual_outcome must be 'YES' or 'NO'",
+                    "actual_outcome 必须为 'YES' 或 'NO'",
+                    locale,
+                )
             }), 400
 
         manager = SimulationManager()
@@ -6139,7 +6406,7 @@ def resolve_simulation(simulation_id: str):
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
@@ -6252,6 +6519,7 @@ def simulation_outcome(simulation_id: str):
     Auth: POST requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
     GET is unauthenticated — the gallery and embed widgets read this.
     """
+    locale = get_locale(request)
     # Gate POST writes on the admin token (GET stays public — the
     # gallery reads this and the embed dialog re-renders the existing
     # annotation when an operator re-opens it).
@@ -6264,19 +6532,27 @@ def simulation_outcome(simulation_id: str):
             )
             return jsonify({
                 "success": False,
-                "error": "Admin authentication is not configured on this deployment.",
+                "error": _t(
+                    "Admin authentication is not configured on this deployment.",
+                    "此部署尚未配置管理员身份验证。",
+                    locale,
+                ),
             }), 503
         provided = _extract_bearer_token()
         if not provided or not hmac.compare_digest(
             provided.encode("utf-8"), expected.encode("utf-8")
         ):
-            return jsonify({"success": False, "error": "Unauthorized"}), 401
+            return jsonify({"success": False, "error": _t("Unauthorized", "未授权", locale)}), 401
 
     try:
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         if not state:
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
 
@@ -6287,7 +6563,11 @@ def simulation_outcome(simulation_id: str):
         if not bool(getattr(state, "is_public", False)):
             return jsonify({
                 "success": False,
-                "error": "Simulation must be public to record an outcome. POST /api/simulation/<id>/publish to enable.",
+                "error": _t(
+                    "Simulation must be public to record an outcome. POST /api/simulation/<id>/publish to enable.",
+                    "必须将模拟设为公开后才能记录结果。请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
             }), 403
 
         data = request.get_json(force=True, silent=True) or {}
@@ -6295,33 +6575,53 @@ def simulation_outcome(simulation_id: str):
         if label not in _VALID_OUTCOME_LABELS:
             return jsonify({
                 "success": False,
-                "error": "label must be one of: correct, incorrect, partial",
+                "error": _t(
+                    "label must be one of: correct, incorrect, partial",
+                    "label 必须为以下之一:correct、incorrect、partial",
+                    locale,
+                ),
             }), 400
 
         outcome_url = (data.get("outcome_url") or "").strip()
         if outcome_url and not (outcome_url.startswith("http://") or outcome_url.startswith("https://")):
             return jsonify({
                 "success": False,
-                "error": "outcome_url must be an http(s) URL",
+                "error": _t(
+                    "outcome_url must be an http(s) URL",
+                    "outcome_url 必须是 http(s) URL",
+                    locale,
+                ),
             }), 400
         if len(outcome_url) > 500:
             return jsonify({
                 "success": False,
-                "error": "outcome_url must be 500 characters or fewer",
+                "error": _t(
+                    "outcome_url must be 500 characters or fewer",
+                    "outcome_url 不能超过 500 个字符",
+                    locale,
+                ),
             }), 400
 
         outcome_summary = (data.get("outcome_summary") or "").strip()
         if len(outcome_summary) > 280:
             return jsonify({
                 "success": False,
-                "error": "outcome_summary must be 280 characters or fewer",
+                "error": _t(
+                    "outcome_summary must be 280 characters or fewer",
+                    "outcome_summary 不能超过 280 个字符",
+                    locale,
+                ),
             }), 400
 
         try:
             os.makedirs(sim_dir, exist_ok=True)
         except OSError as exc:
             logger.error(f"outcome: failed to ensure sim_dir for {simulation_id}: {exc}")
-            return jsonify({"success": False, "error": "Could not persist outcome."}), 500
+            return jsonify({"success": False, "error": _t(
+                "Could not persist outcome.",
+                "无法保存结果。",
+                locale,
+            )}), 500
 
         record = {
             "simulation_id": simulation_id,
@@ -6337,7 +6637,11 @@ def simulation_outcome(simulation_id: str):
                 json.dump(record, f, ensure_ascii=False, indent=2)
         except OSError as exc:
             logger.error(f"outcome: failed to write {outcome_path}: {exc}")
-            return jsonify({"success": False, "error": "Could not persist outcome."}), 500
+            return jsonify({"success": False, "error": _t(
+                "Could not persist outcome.",
+                "无法保存结果。",
+                locale,
+            )}), 500
 
         logger.info(
             f"outcome: recorded label={label} for {simulation_id} (url_set={bool(outcome_url)})"
@@ -6380,6 +6684,7 @@ def generate_simulation_article(simulation_id: str):
             }
         }
     """
+    locale = get_locale(request)
     try:
         body = request.get_json(silent=True) or {}
         force_regenerate = body.get('force_regenerate', False)
@@ -6389,7 +6694,7 @@ def generate_simulation_article(simulation_id: str):
         if not os.path.exists(sim_dir):
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
         # --- Cache check ---
@@ -6800,17 +7105,26 @@ def trace_interview_agent(simulation_id: str, agent_name: str):
             }
         }
     """
+    locale = get_locale(request)
     try:
         body = request.get_json(silent=True) or {}
         question = (body.get('question') or '').strip()
         history = body.get('history') or []
 
         if not question:
-            return jsonify({"success": False, "error": "Please provide a question"}), 400
+            return jsonify({"success": False, "error": _t(
+                "Please provide a question",
+                "请提供问题",
+                locale,
+            )}), 400
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         # --- Get simulation scenario ---
         scenario = ''
@@ -6983,10 +7297,15 @@ def get_agent_interview_transcript(simulation_id: str, agent_name: str):
             }
         }
     """
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         safe_name = ''.join(c if c.isalnum() or c in '-_.' else '_' for c in agent_name)
         transcript_path = os.path.join(sim_dir, 'interviews', f'{safe_name}.json')
@@ -7079,17 +7398,30 @@ def subscribe_push_notification():
     Returns:
         { "success": true }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json(force=True) or {}
         simulation_id = data.get('simulation_id', '').strip()
         subscription = data.get('subscription')
 
         if not simulation_id:
-            return jsonify({"success": False, "error": "simulation_id is required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "simulation_id is required",
+                "缺少 simulation_id",
+                locale,
+            )}), 400
         if not subscription or not isinstance(subscription, dict):
-            return jsonify({"success": False, "error": "subscription object is required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "subscription object is required",
+                "缺少 subscription 对象",
+                locale,
+            )}), 400
         if not subscription.get('endpoint'):
-            return jsonify({"success": False, "error": "subscription.endpoint is required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "subscription.endpoint is required",
+                "缺少 subscription.endpoint",
+                locale,
+            )}), 400
 
         try:
             validate_simulation_id(simulation_id)
@@ -7123,12 +7455,17 @@ def test_push_notification():
     Returns:
         { "success": true }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json(force=True) or {}
         simulation_id = data.get('simulation_id', '').strip()
 
         if not simulation_id:
-            return jsonify({"success": False, "error": "simulation_id is required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "simulation_id is required",
+                "缺少 simulation_id",
+                locale,
+            )}), 400
 
         try:
             validate_simulation_id(simulation_id)
@@ -7182,29 +7519,50 @@ def inject_director_event(simulation_id: str):
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../scripts'))
     from director_events import add_event, get_event_count
 
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
         event_text = (data.get('event_text') or '').strip()
 
         if not event_text:
-            return jsonify({"success": False, "error": "event_text is required"}), 400
+            return jsonify({"success": False, "error": _t(
+                "event_text is required",
+                "缺少 event_text",
+                locale,
+            )}), 400
 
         if len(event_text) > 500:
-            return jsonify({"success": False, "error": "event_text must be under 500 characters"}), 400
+            return jsonify({"success": False, "error": _t(
+                "event_text must be under 500 characters",
+                "event_text 不能超过 500 个字符",
+                locale,
+            )}), 400
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         # Check simulation is running
         state = SimulationRunner.get_run_state(simulation_id)
         if not state or state.runner_status not in [RunnerStatus.RUNNING]:
-            return jsonify({"success": False, "error": "Simulation is not currently running"}), 400
+            return jsonify({"success": False, "error": _t(
+                "Simulation is not currently running",
+                "模拟当前未在运行",
+                locale,
+            )}), 400
 
         # Enforce max 10 events per simulation
         total = get_event_count(sim_dir)
         if total >= 10:
-            return jsonify({"success": False, "error": "Maximum 10 events per simulation reached"}), 400
+            return jsonify({"success": False, "error": _t(
+                "Maximum 10 events per simulation reached",
+                "每次模拟最多 10 个事件,已达上限",
+                locale,
+            )}), 400
 
         current_round = state.current_round or 0
         event = add_event(sim_dir, event_text, current_round)
@@ -7236,10 +7594,15 @@ def get_director_events(simulation_id: str):
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../../scripts'))
     from director_events import get_event_history, get_pending_events
 
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         return jsonify({
             "success": True,
@@ -7262,10 +7625,15 @@ def get_interaction_network(simulation_id: str):
     Results are cached in network.json.
     """
 
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         cache_path = os.path.join(sim_dir, "network.json")
         if os.path.exists(cache_path):
@@ -7760,10 +8128,15 @@ def get_demographic_breakdown(simulation_id: str):
     so no extra collection is required. Results are cached in demographics.json
     inside the simulation directory.
     """
+    locale = get_locale(request)
     try:
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         if not os.path.exists(sim_dir):
-            return jsonify({"success": False, "error": f"Simulation not found: {simulation_id}"}), 404
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
 
         force_refresh = request.args.get('refresh', '').lower() in ('1', 'true', 'yes')
         cache_path = os.path.join(sim_dir, "demographics.json")

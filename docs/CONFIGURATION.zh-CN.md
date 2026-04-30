@@ -1,10 +1,10 @@
-# Configuration
+<sup>[English](CONFIGURATION.md) · 中文</sup>
 
-<sup>English · [中文](CONFIGURATION.zh-CN.md)</sup>
+# 配置
 
-All settings live in `.env` (copy from `.env.example`). The full reference below is organized by concern. For model selection (which model for which slot, benchmarks, Ollama context overrides) see [Models](MODELS.md).
+所有设置都在 `.env`(从 `.env.example` 拷贝)。下面这份完整参考按关注点分组。模型选择(哪个槽位用哪个模型、基准、Ollama 上下文覆盖)请见 [Models](MODELS.zh-CN.md)。
 
-## Minimum required
+## 最低必填项
 
 ```bash
 # LLM
@@ -24,22 +24,22 @@ EMBEDDING_API_KEY=your-api-key
 EMBEDDING_DIMENSIONS=768
 ```
 
-## Model slots
+## 模型槽位
 
-MiroShark routes different workflows to different models. Four independent slots:
+MiroShark 把不同的工作流路由到不同的模型。共有四个相互独立的槽位:
 
-| Slot | Env var | What it does | Volume |
+| 槽位 | 环境变量 | 作用 | 调用量 |
 |---|---|---|---|
-| **Default** | `LLM_MODEL_NAME` | Profiles, sim config, memory compaction | ~75–126 calls |
-| **Smart** | `SMART_MODEL_NAME` | Reports, ontology, graph reasoning | ~19 calls |
-| **NER** | `NER_MODEL_NAME` | Entity extraction (structured JSON) | ~85–250 calls |
-| **Wonderwall** | `WONDERWALL_MODEL_NAME` | Agent decisions in simulation loop | ~850–1650 calls |
+| **Default** | `LLM_MODEL_NAME` | 画像、模拟配置、记忆压缩 | ~75–126 次调用 |
+| **Smart** | `SMART_MODEL_NAME` | 报告、本体、图谱推理 | ~19 次调用 |
+| **NER** | `NER_MODEL_NAME` | 实体抽取(结构化 JSON) | ~85–250 次调用 |
+| **Wonderwall** | `WONDERWALL_MODEL_NAME` | 模拟循环中的智能体决策 | ~850–1650 次调用 |
 
-When a slot is not set it falls back to the Default model. If only `SMART_MODEL_NAME` is set (without `SMART_PROVIDER`/`SMART_BASE_URL`/`SMART_API_KEY`), the smart model inherits the default provider settings. The same applies to `WONDERWALL_MODEL_NAME` — set `WONDERWALL_BASE_URL` and/or `WONDERWALL_API_KEY` to point Wonderwall at a different OpenAI-compatible endpoint (e.g. a self-hosted vLLM/Modal deployment) without touching the other slots.
+未设置的槽位会回退到 Default 模型。如果只设置了 `SMART_MODEL_NAME`(没有设 `SMART_PROVIDER`/`SMART_BASE_URL`/`SMART_API_KEY`),smart 模型会继承 default 的提供商设置。`WONDERWALL_MODEL_NAME` 也是同样的逻辑 — 设置 `WONDERWALL_BASE_URL` 和/或 `WONDERWALL_API_KEY` 就能把 Wonderwall 指向另一个 OpenAI 兼容端点(例如自部署的 vLLM/Modal 部署),而不影响其他槽位。
 
-See [Models](MODELS.md) for benchmarked recommendations per slot.
+每个槽位经过基准测试的推荐配置见 [Models](MODELS.zh-CN.md)。
 
-## Full `.env` reference
+## 完整 `.env` 参考
 
 ```bash
 # ─── LLM (default — profiles, sim config, memory compaction) ───
@@ -161,50 +161,38 @@ OPENAI_API_BASE_URL=http://localhost:11434/v1
 # MIROSHARK_ADMIN_TOKEN=
 ```
 
-## Admin auth (mutation endpoints)
+## 管理员认证(写操作端点)
 
-Three endpoints write to a simulation's on-disk state and are gated on
-a shared operator secret:
+有三个端点会写入某个模拟的本地状态,它们都受同一把运维者密钥保护:
 
-- `POST /api/simulation/<id>/publish` — toggles `is_public`
-- `POST /api/simulation/<id>/resolve` — records the actual outcome
-- `POST /api/simulation/<id>/outcome` — verified-prediction annotation
+- `POST /api/simulation/<id>/publish` — 切换 `is_public`
+- `POST /api/simulation/<id>/resolve` — 记录真实结果
+- `POST /api/simulation/<id>/outcome` — 已验证预测的注解
 
-Send the secret as `Authorization: Bearer $MIROSHARK_ADMIN_TOKEN`. The
-server compares it with `hmac.compare_digest` so the comparison is
-constant-time. Read endpoints (including `GET /outcome`, the public
-gallery, and the embed widget) stay unauthenticated.
+请把密钥以 `Authorization: Bearer $MIROSHARK_ADMIN_TOKEN` 的形式发送。服务端使用 `hmac.compare_digest` 进行恒定时间比较。读端点(包括 `GET /outcome`、公开画廊、嵌入小部件)依然不需要鉴权。
 
-**Fail-closed.** If `MIROSHARK_ADMIN_TOKEN` is unset or empty in the
-backend's process environment, the gated endpoints return
-`503 — admin auth not configured` rather than silently allowing the
-mutation. There is no implicit "no auth required" fallback. An operator
-who forgot to set the secret would otherwise ship an open mutation
-surface with no warning — the 503 makes the misconfig loud.
+**默认拒绝。** 如果 `MIROSHARK_ADMIN_TOKEN` 在后端进程环境中未设置或为空,这些受控端点会返回 `503 — admin auth not configured`,而不是悄悄放行写入。这里没有"无需鉴权"的隐式回退。否则,一个忘记设置密钥的运维者会在毫无警告的情况下上线一个开放的写入接口 — 这个 503 把配置错误变得显眼。
 
-Generate a token with `openssl rand -hex 32` (or any sufficiently long
-random string), set it in `.env`, and restart the backend. The token is
-read at request time so a process restart after rotation is enough — no
-code reload required.
+用 `openssl rand -hex 32`(或者任意足够长的随机字符串)生成 token,把它写入 `.env`,然后重启后端。token 在请求时读取,所以轮换之后只需要重启进程即可 — 无需重新加载代码。
 
-## Feature flags summary
+## 特性开关汇总
 
-All retrieval and memory features are on by default. Disable individually:
+所有检索与记忆特性默认开启。可以分别关闭:
 
-| Flag | Default | What flipping off means |
+| 开关 | 默认值 | 关闭意味着什么 |
 |---|---|---|
-| `RERANKER_ENABLED` | `true` | No cross-encoder rerank; top-N comes straight from hybrid fusion |
-| `GRAPH_SEARCH_ENABLED` | `true` | No BFS traversal from seed entities — vector + BM25 only |
-| `ENTITY_RESOLUTION_ENABLED` | `true` | Duplicates like "NeuralCoin" / "Neural Coin" / "NC" stay separate |
-| `ENTITY_RESOLUTION_USE_LLM` | `true` | Fuzzy + vector only; no LLM reflection step |
-| `CONTRADICTION_DETECTION_ENABLED` | `true` | Conflicting edges both remain valid |
-| `REASONING_TRACE_ENABLED` | `true` | Report reasoning isn't persisted to the graph |
-| `WEB_ENRICHMENT_ENABLED` | `true` | Personas grounded only in the document |
-| `LLM_PROMPT_CACHING_ENABLED` | `true` | No Anthropic prompt caching on system messages |
-| `LLM_DISABLE_REASONING` | `true` | OpenRouter reasoning models emit CoT (~3× higher latency on Qwen3/Grok) |
-| `ORACLE_SEED_ENABLED` | `false` | Templates ignore `oracle_tools` |
-| `MCP_AGENT_TOOLS_ENABLED` | `false` | `tools_enabled` personas can't invoke MCP |
+| `RERANKER_ENABLED` | `true` | 没有 cross-encoder 重排;top-N 直接来自混合融合 |
+| `GRAPH_SEARCH_ENABLED` | `true` | 不再从种子实体做 BFS 遍历 — 仅向量 + BM25 |
+| `ENTITY_RESOLUTION_ENABLED` | `true` | "NeuralCoin" / "Neural Coin" / "NC" 这类重复项会保持独立 |
+| `ENTITY_RESOLUTION_USE_LLM` | `true` | 仅模糊匹配 + 向量;没有 LLM 反思步骤 |
+| `CONTRADICTION_DETECTION_ENABLED` | `true` | 互相冲突的边都保持有效 |
+| `REASONING_TRACE_ENABLED` | `true` | 报告推理过程不会持久化到图谱 |
+| `WEB_ENRICHMENT_ENABLED` | `true` | 画像只基于文档本身 |
+| `LLM_PROMPT_CACHING_ENABLED` | `true` | 系统消息上不再启用 Anthropic 提示词缓存 |
+| `LLM_DISABLE_REASONING` | `true` | OpenRouter 推理模型会输出 CoT(在 Qwen3/Grok 上延迟约高 3 倍) |
+| `ORACLE_SEED_ENABLED` | `false` | 模板会忽略 `oracle_tools` |
+| `MCP_AGENT_TOOLS_ENABLED` | `false` | 标记了 `tools_enabled` 的人设无法调用 MCP |
 
-## Observability
+## 可观测性
 
-See [Observability](OBSERVABILITY.md) for the debug panel (Ctrl+Shift+D) and event stream details.
+调试面板(Ctrl+Shift+D)与事件流细节请见 [Observability](OBSERVABILITY.zh-CN.md)。

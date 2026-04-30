@@ -22,6 +22,7 @@ import html
 from flask import Blueprint, Response, request
 
 from ..services.simulation_manager import SimulationManager
+from ..utils.i18n import get_locale, t as _t
 from ..utils.validation import validate_simulation_id
 
 
@@ -131,10 +132,15 @@ def share_landing(simulation_id: str):
     so private sims fall back to a generic preview rather than leaking
     scenario detail through the meta tags.
     """
+    locale = get_locale(request)
     try:
         validate_simulation_id(simulation_id)
     except ValueError as exc:
-        return Response(f"Invalid simulation id: {exc}", status=400, mimetype="text/plain")
+        return Response(
+            _t(f"Invalid simulation id: {exc}", f"无效的模拟 ID:{exc}", locale),
+            status=400,
+            mimetype="text/plain",
+        )
 
     # Pull just enough to populate OG tags — never raise on missing data.
     scenario = ""

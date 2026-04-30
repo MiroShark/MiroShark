@@ -33,6 +33,7 @@ from ..services.feed import (
     render_feed,
     select_public_cards,
 )
+from ..utils.i18n import get_locale
 from ..utils.logger import get_logger
 
 
@@ -99,6 +100,7 @@ def _serve_feed(fmt: str) -> Response:
 
     base_url = _resolve_base_url()
     feed_path = request.full_path.rstrip("?") or request.path
+    locale = get_locale(request)
 
     body, mime = render_feed(
         fmt,
@@ -106,6 +108,7 @@ def _serve_feed(fmt: str) -> Response:
         base_url=base_url,
         feed_path=feed_path,
         verified_only=verified_only,
+        locale=locale,
     )
 
     response = Response(body, mimetype=mime)

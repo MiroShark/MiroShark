@@ -379,6 +379,7 @@ def render_rss(
     title: str,
     subtitle: str,
     verified_only: bool = False,
+    locale: str = "en",
 ) -> bytes:
     """Render the public-gallery cards as an RSS 2.0 XML feed.
 
@@ -409,7 +410,7 @@ def render_rss(
     ET.SubElement(channel, "generator").text = (
         f"{FEED_GENERATOR_NAME} (https://github.com/aaronjmars/MiroShark)"
     )
-    ET.SubElement(channel, "language").text = "en"
+    ET.SubElement(channel, "language").text = "zh-CN" if locale == "zh-CN" else "en"
 
     cards_list = list(cards)
     most_recent_iso = ""
@@ -496,26 +497,47 @@ def render_feed(
     base_url: str,
     feed_path: str,
     verified_only: bool = False,
+    locale: str = "en",
 ) -> tuple[bytes, str]:
     """Render the feed in the requested format.
 
     Returns ``(body_bytes, mime_type)``. ``fmt`` accepts ``"atom"`` (the
     default) or ``"rss"`` — anything else falls back to Atom so a
     misrouted call still returns a valid feed.
+
+    ``locale`` switches the channel title + description between English
+    (default) and ``zh-CN``. Per-entry scenario text and the bracketed
+    feature names (Feedly / Readwise / Inoreader / NetNewsWire) stay in
+    their source language so reader auto-discovery still matches.
     """
+    is_zh = locale == "zh-CN"
     if verified_only:
-        title = "MiroShark · Verified Predictions"
-        subtitle = (
-            "Public MiroShark simulations whose operators marked a "
-            "real-world outcome — calls that landed (and those that didn't)."
-        )
+        if is_zh:
+            title = "MiroShark · 已验证预言"
+            subtitle = (
+                "已被运营者标注真实世界结果的 MiroShark 公开模拟——"
+                "应验的预言(以及未应验的)。"
+            )
+        else:
+            title = "MiroShark · Verified Predictions"
+            subtitle = (
+                "Public MiroShark simulations whose operators marked a "
+                "real-world outcome — calls that landed (and those that didn't)."
+            )
     else:
-        title = "MiroShark · Public Simulations"
-        subtitle = (
-            "Newest published MiroShark simulations — agent populations, "
-            "belief drift, and prediction outcomes you can fork into your "
-            "own scenarios."
-        )
+        if is_zh:
+            title = "MiroShark · 公开模拟"
+            subtitle = (
+                "最新发布的 MiroShark 模拟——智能体群体、信念漂移与预测结果,"
+                "可分叉到你自己的场景中。"
+            )
+        else:
+            title = "MiroShark · Public Simulations"
+            subtitle = (
+                "Newest published MiroShark simulations — agent populations, "
+                "belief drift, and prediction outcomes you can fork into your "
+                "own scenarios."
+            )
 
     fmt_norm = (fmt or "").strip().lower()
     if fmt_norm == "rss":
@@ -526,6 +548,7 @@ def render_feed(
             title=title,
             subtitle=subtitle,
             verified_only=verified_only,
+            locale=locale,
         )
         mime = "application/rss+xml; charset=utf-8"
     else:

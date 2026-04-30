@@ -15,6 +15,7 @@ from ..services.simulation_manager import SimulationManager
 from ..models.project import ProjectManager
 from ..models.task import TaskManager, TaskStatus
 from ..utils.logger import get_logger
+from ..utils.i18n import get_locale, t as _t
 from ..utils.validation import validate_simulation_id
 
 logger = get_logger('miroshark.api.report')
@@ -59,6 +60,7 @@ def generate_report():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
@@ -66,7 +68,7 @@ def generate_report():
         if not simulation_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide simulation_id"
+                "error": _t("Please provide simulation_id", "请提供 simulation_id", locale)
             }), 400
         try:
             validate_simulation_id(simulation_id)
@@ -82,7 +84,7 @@ def generate_report():
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
         # Check if a report already exists
@@ -105,21 +107,25 @@ def generate_report():
         if not project:
             return jsonify({
                 "success": False,
-                "error": f"Project not found: {state.project_id}"
+                "error": _t(f"Project not found: {state.project_id}", f"未找到项目:{state.project_id}", locale)
             }), 404
 
         graph_id = state.graph_id or project.graph_id
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "Missing graph ID, please ensure the graph has been built"
+                "error": _t(
+                    "Missing graph ID, please ensure the graph has been built",
+                    "缺少图谱 ID,请确认图谱已构建完成",
+                    locale,
+                )
             }), 400
 
         simulation_requirement = project.simulation_requirement
         if not simulation_requirement:
             return jsonify({
                 "success": False,
-                "error": "Missing simulation requirement description"
+                "error": _t("Missing simulation requirement description", "缺少模拟需求描述", locale)
             }), 400
 
         # Pre-generate report_id for immediate return to frontend
@@ -141,7 +147,10 @@ def generate_report():
         # (current_app is not available inside background threads)
         storage = current_app.extensions.get('neo4j_storage')
         if not storage:
-            return jsonify({"success": False, "error": "Neo4j storage not initialized"}), 503
+            return jsonify({
+                "success": False,
+                "error": _t("Neo4j storage not initialized", "Neo4j 存储尚未初始化", locale)
+            }), 503
         graph_tools = GraphToolsService(storage=storage)
 
         # Define background task
@@ -242,6 +251,7 @@ def get_generate_status():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
@@ -272,7 +282,11 @@ def get_generate_status():
         if not task_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide task_id or simulation_id"
+                "error": _t(
+                    "Please provide task_id or simulation_id",
+                    "请提供 task_id 或 simulation_id",
+                    locale,
+                )
             }), 400
 
         task_manager = TaskManager()
@@ -281,7 +295,7 @@ def get_generate_status():
         if not task:
             return jsonify({
                 "success": False,
-                "error": f"Task not found: {task_id}"
+                "error": _t(f"Task not found: {task_id}", f"未找到任务:{task_id}", locale)
             }), 404
 
         return jsonify({
@@ -318,13 +332,14 @@ def get_report(report_id: str):
             }
         }
     """
+    locale = get_locale(request)
     try:
         report = ReportManager.get_report(report_id)
 
         if not report:
             return jsonify({
                 "success": False,
-                "error": f"Report not found: {report_id}"
+                "error": _t(f"Report not found: {report_id}", f"未找到报告:{report_id}", locale)
             }), 404
 
         return jsonify({
@@ -355,13 +370,18 @@ def get_report_by_simulation(simulation_id: str):
             }
         }
     """
+    locale = get_locale(request)
     try:
         report = ReportManager.get_report_by_simulation(simulation_id)
 
         if not report:
             return jsonify({
                 "success": False,
-                "error": f"No report available for this simulation: {simulation_id}",
+                "error": _t(
+                    f"No report available for this simulation: {simulation_id}",
+                    f"该模拟尚无可用报告:{simulation_id}",
+                    locale,
+                ),
                 "has_report": False
             }), 404
 
@@ -387,13 +407,14 @@ def download_report(report_id: str):
 
     Returns a Markdown file
     """
+    locale = get_locale(request)
     try:
         report = ReportManager.get_report(report_id)
 
         if not report:
             return jsonify({
                 "success": False,
-                "error": f"Report not found: {report_id}"
+                "error": _t(f"Report not found: {report_id}", f"未找到报告:{report_id}", locale)
             }), 404
 
         md_path = ReportManager._get_report_markdown_path(report_id)
@@ -429,13 +450,14 @@ def download_report(report_id: str):
 @report_bp.route('/<report_id>', methods=['DELETE'])
 def delete_report(report_id: str):
     """Delete report"""
+    locale = get_locale(request)
     try:
         success = ReportManager.delete_report(report_id)
 
         if not success:
             return jsonify({
                 "success": False,
-                "error": f"Report not found: {report_id}"
+                "error": _t(f"Report not found: {report_id}", f"未找到报告:{report_id}", locale)
             }), 404
 
         return jsonify({
@@ -481,6 +503,7 @@ def chat_with_report_agent():
             }
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
@@ -491,7 +514,7 @@ def chat_with_report_agent():
         if not simulation_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide simulation_id"
+                "error": _t("Please provide simulation_id", "请提供 simulation_id", locale)
             }), 400
         try:
             validate_simulation_id(simulation_id)
@@ -501,7 +524,7 @@ def chat_with_report_agent():
         if not message:
             return jsonify({
                 "success": False,
-                "error": "Please provide message"
+                "error": _t("Please provide message", "请提供 message", locale)
             }), 400
 
         # Get simulation and project info
@@ -511,21 +534,21 @@ def chat_with_report_agent():
         if not state:
             return jsonify({
                 "success": False,
-                "error": f"Simulation not found: {simulation_id}"
+                "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
         project = ProjectManager.get_project(state.project_id)
         if not project:
             return jsonify({
                 "success": False,
-                "error": f"Project not found: {state.project_id}"
+                "error": _t(f"Project not found: {state.project_id}", f"未找到项目:{state.project_id}", locale)
             }), 404
 
         graph_id = state.graph_id or project.graph_id
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "Missing graph ID"
+                "error": _t("Missing graph ID", "缺少图谱 ID", locale)
             }), 400
 
         simulation_requirement = project.simulation_requirement or ""
@@ -533,7 +556,10 @@ def chat_with_report_agent():
         # Create Agent and start conversation
         storage = current_app.extensions.get('neo4j_storage')
         if not storage:
-            return jsonify({"success": False, "error": "Neo4j storage not initialized"}), 503
+            return jsonify({
+                "success": False,
+                "error": _t("Neo4j storage not initialized", "Neo4j 存储尚未初始化", locale)
+            }), 503
         graph_tools = GraphToolsService(storage=storage)
 
         agent = ReportAgent(
@@ -803,6 +829,7 @@ def search_graph_tool():
             "limit": 10
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
@@ -813,7 +840,7 @@ def search_graph_tool():
         if not graph_id or not query:
             return jsonify({
                 "success": False,
-                "error": "Please provide graph_id and query"
+                "error": _t("Please provide graph_id and query", "请提供 graph_id 和 query", locale)
             }), 400
 
         from flask import current_app
@@ -821,7 +848,10 @@ def search_graph_tool():
 
         storage = current_app.extensions.get('neo4j_storage')
         if not storage:
-            return jsonify({"success": False, "error": "Neo4j storage is not initialized"}), 503
+            return jsonify({
+                "success": False,
+                "error": _t("Neo4j storage is not initialized", "Neo4j 存储尚未初始化", locale)
+            }), 503
 
         tools = GraphToolsService(storage=storage)
         result = tools.search_graph(
@@ -854,6 +884,7 @@ def get_graph_statistics_tool():
             "graph_id": "miroshark_xxxx"
         }
     """
+    locale = get_locale(request)
     try:
         data = request.get_json() or {}
 
@@ -862,7 +893,7 @@ def get_graph_statistics_tool():
         if not graph_id:
             return jsonify({
                 "success": False,
-                "error": "Please provide graph_id"
+                "error": _t("Please provide graph_id", "请提供 graph_id", locale)
             }), 400
 
         from flask import current_app
@@ -870,7 +901,10 @@ def get_graph_statistics_tool():
 
         storage = current_app.extensions.get('neo4j_storage')
         if not storage:
-            return jsonify({"success": False, "error": "Neo4j storage is not initialized"}), 503
+            return jsonify({
+                "success": False,
+                "error": _t("Neo4j storage is not initialized", "Neo4j 存储尚未初始化", locale)
+            }), 503
 
         tools = GraphToolsService(storage=storage)
         result = tools.get_graph_statistics(graph_id)

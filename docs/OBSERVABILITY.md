@@ -1,5 +1,7 @@
 # Observability & Debugging
 
+<sup>English · [中文](OBSERVABILITY.zh-CN.md)</sup>
+
 MiroShark includes a built-in observability system with real-time visibility into every LLM call, agent decision, graph build step, and simulation round.
 
 ## Debug panel

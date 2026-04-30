@@ -1,5 +1,7 @@
 # Features
 
+<sup>English · [中文](FEATURES.zh-CN.md)</sup>
+
 Deep dive on every feature. One heading per feature, ordered roughly by when you'd hit it in a typical run.
 
 ## Smart Setup (Scenario Auto-Suggest)

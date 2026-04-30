@@ -1,5 +1,7 @@
 # Contributing
 
+<sup>English · [中文](CONTRIBUTING.zh-CN.md)</sup>
+
 ## Testing
 
 A pytest suite lives at `backend/tests/`.

@@ -1,5 +1,7 @@
 # Webhooks
 
+<sup>English · [中文](WEBHOOKS.zh-CN.md)</sup>
+
 MiroShark fires an outbound HTTP **POST** to a URL of your choosing the moment a simulation reaches a terminal state — `completed` or `failed`. The payload includes the scenario, final consensus, quality assessment, and a public share-card URL so consumers like Slack and Discord auto-unfurl with a rich preview.
 
 > **Tip:** open MiroShark → **Settings → Integrations · Webhook** to paste your URL and fire a test event without leaving the app. The same URL is read by the runner for live runs.

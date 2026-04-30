@@ -1,5 +1,7 @@
 # Architecture
 
+<sup>English · [中文](ARCHITECTURE.zh-CN.md)</sup>
+
 ## Pipeline overview
 
 1. **Graph build** — Extracts entities and relationships from your document into a Neo4j knowledge graph. NER uses few-shot examples and rejection rules to filter garbage entities. Chunk processing is parallelized with batched Neo4j writes (UNWIND).

@@ -1,5 +1,7 @@
 # Models
 
+<sup>English · [中文](MODELS.zh-CN.md)</sup>
+
 Four independent model slots (see [Configuration](CONFIGURATION.md#model-slots) for the env vars). This doc covers which models to put in which slot.
 
 ## Cloud preset (OpenRouter)

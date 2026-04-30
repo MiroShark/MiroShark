@@ -1,5 +1,7 @@
 # MCP
 
+<sup>English · [中文](MCP.zh-CN.md)</sup>
+
 MiroShark ships two MCP surfaces: a **standalone MCP server** so you can query your knowledge graphs from Claude Desktop, Cursor, Windsurf, or Continue, and a set of **report agent tools** used internally by the ReACT report agent.
 
 > **Tip:** open MiroShark → **Settings → AI Integration · MCP** for an auto-generated, copy-paste-ready config snippet for each client. The Settings panel reads `GET /api/mcp/status` and stamps the snippet with the absolute paths on your machine.

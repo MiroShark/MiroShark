@@ -1,5 +1,7 @@
 # Install
 
+<sup>English · [中文](INSTALL.zh-CN.md)</sup>
+
 Pick one of the paths below.
 
 | Path | GPU? | Best for |
