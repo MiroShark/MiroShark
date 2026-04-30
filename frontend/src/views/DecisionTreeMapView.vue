@@ -136,31 +136,34 @@ function drawTree() {
 
   const root = d3.hierarchy(tree.value, d => d.children || [])
 
-  // Vertical hierarchical layout, sized so the largest level fits horizontally
+  // Horizontal blueprint layout: siblings stack vertically, depth grows rightward
   const treeLayout = d3.tree()
-    .nodeSize([NODE_WIDTH + 30, NODE_HEIGHT + 80])
+    .nodeSize([NODE_HEIGHT + 30, NODE_WIDTH + 90])
     .separation((a, b) => a.parent === b.parent ? 1 : 1.3)
 
   treeLayout(root)
 
-  // Compute extents to pan/zoom-fit
+  // Compute extents to pan/zoom-fit (rotated: render-X = d.y depth, render-Y = d.x sibling)
   let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity
   root.each(d => {
-    if (d.x < xMin) xMin = d.x
-    if (d.x > xMax) xMax = d.x
-    if (d.y < yMin) yMin = d.y
-    if (d.y > yMax) yMax = d.y
+    // After rotation: render-X = d.y (depth), render-Y = d.x (sibling)
+    const rx = d.y
+    const ry = d.x
+    if (rx < xMin) xMin = rx
+    if (rx > xMax) xMax = rx
+    if (ry < yMin) yMin = ry
+    if (ry > yMax) yMax = ry
   })
 
   const totalWidth = xMax - xMin + NODE_WIDTH + 80
   const totalHeight = yMax - yMin + NODE_HEIGHT + 80
 
-  svg.attr('viewBox', `${xMin - NODE_WIDTH / 2 - 30} ${yMin - 30} ${totalWidth} ${totalHeight}`)
+  svg.attr('viewBox', `${xMin - 40} ${yMin - NODE_HEIGHT / 2 - 20} ${totalWidth} ${totalHeight}`)
     .attr('preserveAspectRatio', 'xMidYMin meet')
 
   const g = svg.append('g')
 
-  // Links
+  // Links — horizontal Bezier: right edge of source → left edge of target
   g.append('g')
     .attr('fill', 'none')
     .attr('stroke', '#3a3a3a')
@@ -169,21 +172,22 @@ function drawTree() {
     .data(root.links())
     .join('path')
     .attr('d', d => {
-      const sourceX = d.source.x
-      const sourceY = d.source.y + NODE_HEIGHT / 2
-      const targetX = d.target.x
-      const targetY = d.target.y - NODE_HEIGHT / 2
-      const midY = (sourceY + targetY) / 2
-      return `M ${sourceX} ${sourceY} C ${sourceX} ${midY}, ${targetX} ${midY}, ${targetX} ${targetY}`
+      // Horizontal layout: source at right edge, target at left edge.
+      const sourceX = d.source.y + NODE_WIDTH / 2
+      const sourceY = d.source.x
+      const targetX = d.target.y - NODE_WIDTH / 2
+      const targetY = d.target.x
+      const midX = (sourceX + targetX) / 2
+      return `M ${sourceX} ${sourceY} C ${midX} ${sourceY}, ${midX} ${targetY}, ${targetX} ${targetY}`
     })
 
-  // Nodes
+  // Nodes — swap d.x and d.y for horizontal orientation
   const node = g.append('g')
     .selectAll('g')
     .data(root.descendants())
     .join('g')
     .attr('class', 'node-group')
-    .attr('transform', d => `translate(${d.x - NODE_WIDTH / 2}, ${d.y - NODE_HEIGHT / 2})`)
+    .attr('transform', d => `translate(${d.y - NODE_WIDTH / 2}, ${d.x - NODE_HEIGHT / 2})`)
     .style('cursor', 'pointer')
     .on('click', (event, d) => {
       selectedNode.value = d.data
