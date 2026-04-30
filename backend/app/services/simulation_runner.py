@@ -490,6 +490,18 @@ class SimulationRunner:
             env['MIROSHARK_SIM_DIR'] = sim_dir  # Observability: tell agents where to write events.jsonl
             env['MIROSHARK_SIMULATION_ID'] = simulation_id  # Observability: tag Wonderwall events with sim ID
 
+            # Forward the active UI locale into the subprocess so the agent
+            # loop's prompt builders pick up Chinese (or other locales). The
+            # subprocess reads MIROSHARK_LOCALE in its bootstrap and calls
+            # ``set_active_locale`` once before any prompt is built.
+            try:
+                from ..utils.i18n import get_active_locale as _get_active_locale
+                _active = _get_active_locale()
+                if _active:
+                    env['MIROSHARK_LOCALE'] = _active
+            except Exception:
+                pass
+
             # Forward runtime Wonderwall slot overrides (Settings UI mutates
             # Config but not os.environ). Each script prefers WONDERWALL_*
             # over LLM_* and falls back when empty, so passing through only

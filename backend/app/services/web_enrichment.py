@@ -31,6 +31,8 @@ from __future__ import annotations
 from typing import Optional
 
 from ..config import Config
+from ..prompts import get_prompt
+from ..utils.i18n import get_active_locale
 from ..utils.llm_client import create_llm_client, LLMClient
 from ..utils.logger import get_logger
 
@@ -55,24 +57,6 @@ _NOTABLE_ORG_TYPES = {
 # Minimum context length (chars) below which we trigger enrichment
 # even for non-notable entity types
 _THIN_CONTEXT_THRESHOLD = 150
-
-
-_RESEARCH_SYSTEM_PROMPT = """\
-You are a research assistant. Your job is to provide factual background \
-information about a person or organization that will be used to create a \
-realistic simulation persona.
-
-Return ONLY factual information in bullet-point format. Include:
-- Who they are (role, title, affiliation)
-- Key biographical facts (background, education, career)
-- Known public positions and opinions (especially on the simulation topic)
-- Communication style and public persona (formal/informal, confrontational/diplomatic)
-- Notable controversies or achievements
-- Relationships with other notable entities
-
-Be concise. 8-12 bullet points max. If you are unsure about something, \
-skip it rather than guessing. Do NOT add disclaimers or caveats — just the facts.\
-"""
 
 
 class WebEnricher:
@@ -182,24 +166,23 @@ class WebEnricher:
         useful for persona generation. If the model has web search, it'll
         use it. If not, it draws from training data.
         """
+        locale = get_active_locale()
+
         # Build the research prompt
-        parts = [f"Research this entity for a simulation persona:\n"]
-        parts.append(f"**Name:** {entity_name}")
-        parts.append(f"**Type:** {entity_type}")
+        parts = [get_prompt("web_enrichment.user_intro", locale)]
+        parts.append(get_prompt("web_enrichment.user_name_label", locale, name=entity_name))
+        parts.append(get_prompt("web_enrichment.user_type_label", locale, type=entity_type))
 
         if simulation_requirement:
             sr = simulation_requirement.strip()
             if len(sr) > self._SIM_REQUIREMENT_CHAR_CAP:
                 sr = sr[: self._SIM_REQUIREMENT_CHAR_CAP].rstrip() + " […]"
-            parts.append(f"**Simulation context:** {sr}")
+            parts.append(get_prompt("web_enrichment.user_sim_context_label", locale, context=sr))
 
         if existing_context and len(existing_context.strip()) > 20:
             # Give the LLM what we already know so it doesn't repeat it
             truncated = existing_context[:500] if len(existing_context) > 500 else existing_context
-            parts.append(
-                f"\nWe already have this context from our knowledge graph "
-                f"(don't repeat it, add NEW information):\n{truncated}"
-            )
+            parts.append(get_prompt("web_enrichment.user_existing_context", locale, existing=truncated))
 
         user_prompt = "\n".join(parts)
 
@@ -207,7 +190,7 @@ class WebEnricher:
             llm = self._get_llm()
             response = llm.chat(
                 messages=[
-                    {"role": "system", "content": _RESEARCH_SYSTEM_PROMPT},
+                    {"role": "system", "content": get_prompt("web_enrichment.system", locale)},
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.3,
@@ -218,7 +201,7 @@ class WebEnricher:
                 return ""
 
             # Format as context section
-            header = f"### Real-World Research ({entity_name})"
+            header = get_prompt("web_enrichment.header_research", locale, entity_name=entity_name)
             return f"{header}\n{response.strip()}"
 
         except Exception as e:

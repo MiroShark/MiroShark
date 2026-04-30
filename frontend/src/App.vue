@@ -1,10 +1,12 @@
 <template>
   <router-view />
   <DebugPanel />
+  <ZhWarningBanner />
 </template>
 
 <script setup>
 import DebugPanel from './components/DebugPanel.vue'
+import ZhWarningBanner from './components/ZhWarningBanner.vue'
 </script>
 
 <style>

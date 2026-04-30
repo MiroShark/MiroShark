@@ -5,16 +5,26 @@ The frontend forwards the user's chosen locale on every request via the
 A ``?lang=`` query parameter wins over both for share-card / feed URLs that
 need to be locale-pinned in their canonical form.
 
-Only ``en`` (default) and ``zh-CN`` are recognised — anything else falls
-back to ``en`` so callers can pass ``Accept-Language`` straight through.
+Adding a locale: append the BCP-47 code to :data:`SUPPORTED` and add a
+matching prefix branch in :func:`normalize_locale`. Prompt translations
+live under ``app/prompts/locales/<locale>/`` (see
+``app.prompts`` docstring).
 """
 from __future__ import annotations
 
+import contextvars
 from typing import Any, Mapping, Optional
 
 
 SUPPORTED = ("en", "zh-CN")
 DEFAULT = "en"
+
+# Active locale for the current execution context. Set at the API entry
+# point (or simulation runner entry point) and read by deep callers like
+# prompt builders that don't have ``request`` in scope.
+_active_locale: contextvars.ContextVar[str] = contextvars.ContextVar(
+    "miroshark_active_locale", default=DEFAULT
+)
 
 
 def normalize_locale(raw: Optional[str]) -> str:
@@ -62,6 +72,48 @@ def get_locale(request) -> str:
     except Exception:
         pass
     return DEFAULT
+
+
+def get_active_locale() -> str:
+    """Return the locale set for the current execution context."""
+    return _active_locale.get()
+
+
+def set_active_locale(locale: Optional[str]) -> contextvars.Token:
+    """Activate ``locale`` for the current context.
+
+    Returns a token to pass to :func:`reset_active_locale`. Prefer
+    :func:`use_locale` (a context manager) over manual token bookkeeping.
+    """
+    return _active_locale.set(normalize_locale(locale))
+
+
+def reset_active_locale(token: contextvars.Token) -> None:
+    """Reset the active locale to the value it had before ``set_active_locale``."""
+    _active_locale.reset(token)
+
+
+class use_locale:
+    """Context manager that activates a locale for its body.
+
+    Example::
+
+        with use_locale("zh-CN"):
+            run_simulation(...)
+    """
+
+    def __init__(self, locale: Optional[str]):
+        self._locale = locale
+        self._token: Optional[contextvars.Token] = None
+
+    def __enter__(self) -> str:
+        self._token = set_active_locale(self._locale)
+        return get_active_locale()
+
+    def __exit__(self, exc_type, exc, tb) -> None:
+        if self._token is not None:
+            reset_active_locale(self._token)
+            self._token = None
 
 
 def t(en: str, zh: str, locale: str = DEFAULT) -> str:

@@ -97,6 +97,17 @@ _env_file = os.path.join(_project_root, '.env')
 if os.path.exists(_env_file):
     load_dotenv(_env_file)
     print(f"Loaded environment config: {_env_file}")
+
+# Apply the locale chosen in the UI (forwarded as MIROSHARK_LOCALE by the
+# parent Flask process). This activates the prompt registry's locale
+# fallback so Twitter/Reddit/Polymarket personas speak the right language.
+try:
+    from app.utils.i18n import set_active_locale as _set_active_locale
+    _locale_env = os.environ.get('MIROSHARK_LOCALE', '').strip()
+    if _locale_env:
+        _set_active_locale(_locale_env)
+except Exception:
+    pass
 else:
     # Try loading backend/.env
     _backend_env = os.path.join(_backend_dir, '.env')

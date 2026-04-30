@@ -1026,23 +1026,28 @@ class GraphToolsService:
         max_queries: int = 5
     ) -> List[str]:
         """Use LLM to generate sub-questions"""
-        system_prompt = """You are a professional question analysis expert. Your task is to decompose a complex question into multiple sub-questions that can be independently observed in a simulated world.
+        from ..prompts import get_prompt
+        from ..utils.i18n import get_active_locale
+        locale = get_active_locale()
 
-Requirements:
-1. Each sub-question should be specific enough to find related Agent behavior or events in the simulated world
-2. Sub-questions should cover different dimensions of the original question (e.g., who, what, why, how, when, where)
-3. Sub-questions should be relevant to the simulation scenario
-4. Return in JSON format: {"sub_queries": ["sub-question 1", "sub-question 2", ...]}"""
+        system_prompt = get_prompt("graph_tools.subquery_system", locale)
 
-        user_prompt = f"""Simulation requirement background:
-{simulation_requirement}
+        report_context_block = ""
+        if report_context:
+            report_context_block = get_prompt(
+                "graph_tools.subquery_user_report_context",
+                locale,
+                report_context=report_context[:500],
+            )
 
-{f"Report context: {report_context[:500]}" if report_context else ""}
-
-Please decompose the following question into {max_queries} sub-questions:
-{query}
-
-Return the sub-questions as a JSON list."""
+        user_prompt = get_prompt(
+            "graph_tools.subquery_user",
+            locale,
+            simulation_requirement=simulation_requirement,
+            report_context_block=report_context_block,
+            max_queries=max_queries,
+            query=query,
+        )
 
         try:
             response = self.fast_llm.chat_json(
@@ -1582,31 +1587,27 @@ Return the sub-questions as a JSON list."""
             topics_str = f" [{', '.join(topics)}]" if topics else ""
             agent_summaries.append(f"{i}: {name} — {profession}{topics_str}")
 
-        system_prompt = """You are a professional interview planning expert. Your task is to select the most suitable Agents for interview from the simulated Agent list based on the interview requirements.
+        from ..prompts import get_prompt
+        from ..utils.i18n import get_active_locale
+        locale = get_active_locale()
 
-Selection Criteria:
-1. Agent's identity/profession is relevant to the interview topic
-2. Agent may hold unique or valuable perspectives
-3. Select diverse perspectives (e.g., supporters, opposers, neutral, experts, etc.)
-4. Prioritize roles directly related to the event
-
-Return JSON format:
-{
-    "selected_indices": [List of indices of selected Agents],
-    "reasoning": "Explanation of selection rationale"
-}"""
+        system_prompt = get_prompt("graph_tools.interview_select_system", locale)
 
         agents_list = "\n".join(agent_summaries)
-        user_prompt = f"""Interview Requirement:
-{interview_requirement}
-
-Simulation Background:
-{simulation_requirement if simulation_requirement else "Not provided"}
-
-Available Agents ({len(agent_summaries)} total):
-{agents_list}
-
-Select up to {max_agents} agents. Return their indices."""
+        background = (
+            simulation_requirement
+            if simulation_requirement
+            else get_prompt("graph_tools.interview_select_no_background", locale)
+        )
+        user_prompt = get_prompt(
+            "graph_tools.interview_select_user",
+            locale,
+            interview_requirement=interview_requirement,
+            simulation_background=background,
+            total=len(agent_summaries),
+            agents_list=agents_list,
+            max_agents=max_agents,
+        )
 
         try:
             response = self.fast_llm.chat_json(
@@ -1618,7 +1619,10 @@ Select up to {max_agents} agents. Return their indices."""
             )
 
             selected_indices = response.get("selected_indices", [])[:max_agents]
-            reasoning = response.get("reasoning", "Automatically selected based on relevance")
+            reasoning = response.get(
+                "reasoning",
+                get_prompt("graph_tools.interview_select_default_reasoning", locale),
+            )
 
             selected_agents = []
             valid_indices = []
@@ -1633,7 +1637,9 @@ Select up to {max_agents} agents. Return their indices."""
             logger.warning(f"LLM agent selection failed, using default selection: {e}")
             selected = profiles[:max_agents]
             indices = list(range(min(max_agents, len(profiles))))
-            return selected, indices, "Using default selection strategy"
+            return selected, indices, get_prompt(
+                "graph_tools.interview_select_default_strategy", locale,
+            )
 
     def _select_agents_by_name(
         self,
@@ -1740,28 +1746,30 @@ Select up to {max_agents} agents. Return their indices."""
     ) -> List[str]:
         """Use LLM to generate interview questions"""
 
+        from ..prompts import get_prompt
+        from ..utils.i18n import get_active_locale
+        locale = get_active_locale()
         agent_roles = [a.get("profession", "Unknown") for a in selected_agents]
 
-        system_prompt = """You are a professional journalist/interviewer. Based on the interview requirements, generate 3-5 deep interview questions.
+        system_prompt = get_prompt("graph_tools.interview_questions_system", locale)
+        background = (
+            simulation_requirement
+            if simulation_requirement
+            else get_prompt("graph_tools.interview_select_no_background", locale)
+        )
+        user_prompt = get_prompt(
+            "graph_tools.interview_questions_user",
+            locale,
+            interview_requirement=interview_requirement,
+            simulation_background=background,
+            agent_roles=', '.join(agent_roles),
+        )
 
-Question Requirements:
-1. Open-ended questions that encourage detailed answers
-2. Questions that may have different answers for different roles
-3. Cover multiple dimensions: facts, viewpoints, feelings, etc.
-4. Natural language, like real interviews
-5. Keep each question under 50 characters, concise and clear
-6. Ask directly, do not include background explanation or prefix
-
-Return JSON format: {"questions": ["question1", "question2", ...]}"""
-
-        user_prompt = f"""Interview Requirement: {interview_requirement}
-
-Simulation Background: {simulation_requirement if simulation_requirement else "Not provided"}
-
-Interview Subject Roles: {', '.join(agent_roles)}
-
-Please generate 3-5 interview questions."""
-
+        default_q = get_prompt(
+            "graph_tools.interview_questions_default_perspective",
+            locale,
+            topic=interview_requirement,
+        )
         try:
             response = self.fast_llm.chat_json(
                 messages=[
@@ -1771,14 +1779,14 @@ Please generate 3-5 interview questions."""
                 temperature=0.5
             )
 
-            return response.get("questions", [f"What is your perspective on {interview_requirement}?"])
+            return response.get("questions", [default_q])
 
         except Exception as e:
             logger.warning(f"Failed to generate interview questions: {e}")
             return [
-                f"What is your perspective on {interview_requirement}?",
-                "What impact does this have on you or the group you represent?",
-                "How do you think this issue should be solved or improved?"
+                default_q,
+                get_prompt("graph_tools.interview_questions_default_impact", locale),
+                get_prompt("graph_tools.interview_questions_default_solution", locale),
             ]
 
     def _generate_interview_summary(
@@ -1788,35 +1796,24 @@ Please generate 3-5 interview questions."""
     ) -> str:
         """Generate interview summary"""
 
+        from ..prompts import get_prompt
+        from ..utils.i18n import get_active_locale
+        locale = get_active_locale()
+
         if not interviews:
-            return "No interviews completed"
+            return get_prompt("graph_tools.interview_summary_no_interviews", locale)
 
         interview_texts = []
         for interview in interviews:
             interview_texts.append(f"[{interview.agent_name} ({interview.agent_role})]\n{interview.response[:500]}")
 
-        system_prompt = """You are a professional news editor. Please generate an interview summary based on the responses from multiple interviewees.
-
-Summary Requirements:
-1. Extract main viewpoints from all parties
-2. Point out consensus and disagreement among viewpoints
-3. Highlight valuable quotes
-4. Remain objective and neutral, do not favor any side
-5. Keep it under 1000 words
-
-Format Constraints (Must Follow):
-- Use plain text paragraphs, separated by blank lines
-- Do not use Markdown headings (e.g., #, ##, ###)
-- Do not use dividers (e.g., ---, ***)
-- Use appropriate quotes when citing interviewees
-- Can use **bold** to mark keywords, but do not use other Markdown syntax"""
-
-        user_prompt = f"""Interview Topic: {interview_requirement}
-
-Interview Content:
-{"".join(interview_texts)}
-
-Please generate an interview summary."""
+        system_prompt = get_prompt("graph_tools.interview_summary_system", locale)
+        user_prompt = get_prompt(
+            "graph_tools.interview_summary_user",
+            locale,
+            interview_requirement=interview_requirement,
+            interview_content="".join(interview_texts),
+        )
 
         try:
             summary = self.fast_llm.chat(
@@ -1831,7 +1828,12 @@ Please generate an interview summary."""
 
         except Exception as e:
             logger.warning(f"Failed to generate interview summary: {e}")
-            return f"Interviewed {len(interviews)} interviewees, including: " + ", ".join([i.agent_name for i in interviews])
+            return get_prompt(
+                "graph_tools.interview_summary_fallback",
+                locale,
+                count=len(interviews),
+                names=", ".join([i.agent_name for i in interviews]),
+            )
 
     # ================================================================
     # Graph Reasoning Tools (structural analysis, not just retrieval)

@@ -4,52 +4,9 @@ Interface 1: Analyze text content to generate entity and relationship type defin
 """
 
 from typing import Dict, Any, List, Optional
+from ..prompts import get_prompt
+from ..utils.i18n import get_active_locale
 from ..utils.llm_client import LLMClient, create_smart_llm_client
-
-
-# System prompt for ontology generation
-ONTOLOGY_SYSTEM_PROMPT = """You are a knowledge graph ontology designer for a social media simulation system. Output valid JSON only.
-
-Entities represent real-world subjects that can speak on social media: individuals, companies, organizations, government agencies, media outlets, advocacy groups. NOT abstract concepts, topics, or viewpoints.
-
-## Output Format
-
-```json
-{
-    "entity_types": [
-        {
-            "name": "PascalCase name",
-            "description": "Brief description (max 100 chars)",
-            "attributes": [{"name": "snake_case", "type": "text", "description": "..."}],
-            "examples": ["Example 1", "Example 2"]
-        }
-    ],
-    "edge_types": [
-        {
-            "name": "UPPER_SNAKE_CASE",
-            "description": "Brief description (max 100 chars)",
-            "source_targets": [{"source": "SourceType", "target": "TargetType"}],
-            "attributes": []
-        }
-    ],
-    "analysis_summary": "Brief analysis of the text content"
-}
-```
-
-## Entity Type Rules (STRICT)
-
-- Exactly 10 entity types
-- First 8: specific types derived from the text (e.g. Student, Professor, University for academic events; Company, CEO, Employee for business)
-- Last 2 MUST be fallback types: `Person` (any individual) and `Organization` (any organization)
-- Each type needs 1-3 attributes. Reserved attribute names (do NOT use): name, uuid, group_id, created_at, summary. Use full_name, title, role, position, etc.
-- Specific types must have clear non-overlapping boundaries
-
-## Relationship Type Rules
-
-- 6-10 relationship types reflecting social media interactions
-- source_targets must reference your defined entity types
-- Reference types: WORKS_FOR, STUDIES_AT, AFFILIATED_WITH, REPRESENTS, REGULATES, REPORTS_ON, COMMENTS_ON, RESPONDS_TO, SUPPORTS, OPPOSES, COLLABORATES_WITH, COMPETES_WITH
-"""
 
 
 class OntologyGenerator:
@@ -78,15 +35,18 @@ class OntologyGenerator:
         Returns:
             Ontology definition (entity_types, edge_types, etc.)
         """
+        locale = get_active_locale()
+
         # Build user message
         user_message = self._build_user_message(
             document_texts,
             simulation_requirement,
-            additional_context
+            additional_context,
+            locale=locale,
         )
 
         messages = [
-            {"role": "system", "content": ONTOLOGY_SYSTEM_PROMPT},
+            {"role": "system", "content": get_prompt("ontology.system", locale)},
             {"role": "user", "content": user_message}
         ]
 
@@ -111,7 +71,8 @@ class OntologyGenerator:
         self,
         document_texts: List[str],
         simulation_requirement: str,
-        additional_context: Optional[str]
+        additional_context: Optional[str],
+        locale: str = "en",
     ) -> str:
         """Build user message"""
 
@@ -119,37 +80,31 @@ class OntologyGenerator:
         combined_text = "\n\n---\n\n".join(document_texts)
         original_length = len(combined_text)
 
-        # If text exceeds 50,000 characters, truncate (only affects content sent to LLM, does not affect graph building)
+        # If text exceeds the limit, truncate (only affects content sent to LLM, does not affect graph building)
         if len(combined_text) > self.MAX_TEXT_LENGTH_FOR_LLM:
             combined_text = combined_text[:self.MAX_TEXT_LENGTH_FOR_LLM]
-            combined_text += f"\n\n...(Original text has {original_length} characters, first {self.MAX_TEXT_LENGTH_FOR_LLM} characters extracted for ontology analysis)..."
+            combined_text += get_prompt(
+                "ontology.user_truncation_note",
+                locale,
+                original_length=original_length,
+                max_length=self.MAX_TEXT_LENGTH_FOR_LLM,
+            )
 
-        message = f"""## Simulation Requirement
-
-{simulation_requirement}
-
-## Document Content
-
-{combined_text}
-"""
+        message = get_prompt(
+            "ontology.user_intro",
+            locale,
+            simulation_requirement=simulation_requirement,
+            combined_text=combined_text,
+        )
 
         if additional_context:
-            message += f"""
-## Additional Notes
+            message += get_prompt(
+                "ontology.user_additional_context",
+                locale,
+                additional_context=additional_context,
+            )
 
-{additional_context}
-"""
-
-        message += """
-Based on the above content, design entity types and relationship types suitable for social public opinion simulation.
-
-**Rules that must be followed**:
-1. Must output exactly 10 entity types
-2. The last 2 must be fallback types: Person (individual fallback) and Organization (organization fallback)
-3. The first 8 are specific types designed based on text content
-4. All entity types must be real-world subjects that can speak, not abstract concepts
-5. Attribute names cannot use reserved words like name, uuid, group_id, etc.; use full_name, org_name, etc. instead
-"""
+        message += get_prompt("ontology.user_outro", locale)
 
         return message
 

@@ -405,12 +405,19 @@ def build_graph():
         ProjectManager.save_project(project)
         
         # Start background task
+        from ..utils.i18n import use_locale
+        thread_locale = locale  # capture for the worker thread
+
         def build_task():
+            with use_locale(thread_locale):
+                _build_task_impl()
+
+        def _build_task_impl():
             build_logger = get_logger('miroshark.build')
             try:
                 build_logger.info(f"[{task_id}] Starting graph build...")
                 task_manager.update_task(
-                    task_id, 
+                    task_id,
                     status=TaskStatus.PROCESSING,
                     message="Initializing graph build service..."
                 )

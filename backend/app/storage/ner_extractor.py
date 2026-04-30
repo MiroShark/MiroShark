@@ -9,45 +9,11 @@ entities and relations from text chunks, guided by the graph's ontology.
 import logging
 from typing import Dict, Any, Optional
 
+from ..prompts import get_prompt
+from ..utils.i18n import get_active_locale
 from ..utils.llm_client import LLMClient, create_ner_llm_client
 
 logger = logging.getLogger('miroshark.ner_extractor')
-
-# System prompt template for NER/RE extraction
-_SYSTEM_PROMPT = """You are a Named Entity Recognition and Relation Extraction system.
-Given a text and an ontology, extract all entities and relations. Return valid JSON only.
-
-ONTOLOGY:
-{ontology_description}
-
-RULES:
-1. Extract ONLY entity and relation types defined in the ontology.
-2. Normalize names to canonical form ("Jack Ma" not "ma jack"). Merge co-references.
-3. Entity names MUST be proper nouns or specific identifiers — REJECT fragments ("the founder", "a large company"), abstract concepts ("blockchain technology"), and descriptions.
-4. Use the full canonical name when both short and full names appear ("Robin Hanson" not "Hanson").
-5. If no entities or relations are found, return empty lists.
-6. Each relation needs a self-contained fact sentence.
-
-EXAMPLE:
-Input: "Tesla CEO Elon Musk announced plans to cut 10% of the workforce. The move was criticized by the United Auto Workers union."
-Output:
-{{
-  "entities": [
-    {{"name": "Elon Musk", "type": "PublicFigure", "attributes": {{"role": "CEO"}}}},
-    {{"name": "Tesla", "type": "Company", "attributes": {{"industry": "automotive"}}}},
-    {{"name": "United Auto Workers", "type": "Organization", "attributes": {{"type": "labor union"}}}}
-  ],
-  "relations": [
-    {{"source": "Elon Musk", "target": "Tesla", "type": "LEADS", "fact": "Elon Musk is the CEO of Tesla."}},
-    {{"source": "Tesla", "target": "United Auto Workers", "type": "OPPOSES", "fact": "Tesla's workforce cut was criticized by the United Auto Workers union."}}
-  ]
-}}
-
-Return JSON: {{"entities": [...], "relations": [...]}}"""
-
-_USER_PROMPT = """Extract entities and relations from the following text:
-
-{text}"""
 
 
 class NERExtractor:
@@ -75,9 +41,10 @@ class NERExtractor:
         if not text or not text.strip():
             return {"entities": [], "relations": []}
 
+        locale = get_active_locale()
         ontology_desc = self._format_ontology(ontology)
-        system_msg = _SYSTEM_PROMPT.format(ontology_description=ontology_desc)
-        user_msg = _USER_PROMPT.format(text=text.strip())
+        system_msg = get_prompt("ner_extractor.system", locale, ontology_description=ontology_desc)
+        user_msg = get_prompt("ner_extractor.user", locale, text=text.strip())
 
         messages = [
             {"role": "system", "content": system_msg},

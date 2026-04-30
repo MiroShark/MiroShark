@@ -154,55 +154,59 @@ def generate_report():
         graph_tools = GraphToolsService(storage=storage)
 
         # Define background task
+        from ..utils.i18n import use_locale
+        thread_locale = locale  # capture for the worker thread
+
         def run_generate():
-            try:
-                task_manager.update_task(
-                    task_id,
-                    status=TaskStatus.PROCESSING,
-                    progress=0,
-                    message="Initializing Report Agent..."
-                )
-
-                # Create Report Agent
-                agent = ReportAgent(
-                    graph_id=graph_id,
-                    simulation_id=simulation_id,
-                    simulation_requirement=simulation_requirement,
-                    graph_tools=graph_tools
-                )
-
-                # Progress callback
-                def progress_callback(stage, progress, message):
+            with use_locale(thread_locale):
+                try:
                     task_manager.update_task(
                         task_id,
-                        progress=progress,
-                        message=f"[{stage}] {message}"
+                        status=TaskStatus.PROCESSING,
+                        progress=0,
+                        message="Initializing Report Agent..."
                     )
 
-                # Generate report (pass pre-generated report_id)
-                report = agent.generate_report(
-                    progress_callback=progress_callback,
-                    report_id=report_id
-                )
-
-                # Save report
-                ReportManager.save_report(report)
-
-                if report.status == ReportStatus.COMPLETED:
-                    task_manager.complete_task(
-                        task_id,
-                        result={
-                            "report_id": report.report_id,
-                            "simulation_id": simulation_id,
-                            "status": "completed"
-                        }
+                    # Create Report Agent
+                    agent = ReportAgent(
+                        graph_id=graph_id,
+                        simulation_id=simulation_id,
+                        simulation_requirement=simulation_requirement,
+                        graph_tools=graph_tools
                     )
-                else:
-                    task_manager.fail_task(task_id, report.error or "Report generation failed")
 
-            except Exception as e:
-                logger.error(f"Report generation failed: {str(e)}")
-                task_manager.fail_task(task_id, str(e))
+                    # Progress callback
+                    def progress_callback(stage, progress, message):
+                        task_manager.update_task(
+                            task_id,
+                            progress=progress,
+                            message=f"[{stage}] {message}"
+                        )
+
+                    # Generate report (pass pre-generated report_id)
+                    report = agent.generate_report(
+                        progress_callback=progress_callback,
+                        report_id=report_id
+                    )
+
+                    # Save report
+                    ReportManager.save_report(report)
+
+                    if report.status == ReportStatus.COMPLETED:
+                        task_manager.complete_task(
+                            task_id,
+                            result={
+                                "report_id": report.report_id,
+                                "simulation_id": simulation_id,
+                                "status": "completed"
+                            }
+                        )
+                    else:
+                        task_manager.fail_task(task_id, report.error or "Report generation failed")
+
+                except Exception as e:
+                    logger.error(f"Report generation failed: {str(e)}")
+                    task_manager.fail_task(task_id, str(e))
 
         # Start background thread
         thread = threading.Thread(target=run_generate, daemon=True)

@@ -20,6 +20,8 @@ from datetime import datetime
 from enum import Enum
 
 from ..config import Config
+from ..prompts import get_prompt
+from ..utils.i18n import get_active_locale
 from ..utils.llm_client import LLMClient, create_smart_llm_client
 from ..utils.logger import get_logger
 from ..utils.validation import validate_simulation_id
@@ -28,6 +30,29 @@ from .graph_tools import (
 )
 
 logger = get_logger('miroshark.report_agent')
+
+
+def _report_prompt(name: str, **kwargs) -> str:
+    """Locale-aware lookup that falls back to module-level English constants.
+
+    Lets us add Chinese variants in the registry without moving the
+    sizable English constants out of this file. When the registry has
+    no entry for the active locale, the EN constant defined below is
+    used (after manual ``.format(**kwargs)``).
+    """
+    locale = get_active_locale()
+    try:
+        return get_prompt(f"report_agent.{name}", locale, **kwargs)
+    except KeyError:
+        # Fall back to the English module-level constant.
+        constant = _REPORT_PROMPT_FALLBACKS.get(name)
+        if constant is None:
+            raise
+        return constant.format(**kwargs) if kwargs else constant
+
+
+# Filled in at the bottom of the module after all constants are defined.
+_REPORT_PROMPT_FALLBACKS: dict[str, str] = {}
 
 
 class ReportLogger:
@@ -1037,6 +1062,42 @@ Scenario explored: {simulation_requirement}
 
 CHAT_OBSERVATION_SUFFIX = "\n\nPlease answer the question concisely."
 
+# ── Cross-section synthesis prompt ──
+
+SYNTHESIS_SYSTEM_PROMPT = (
+    "You are an expert analyst performing a cross-section synthesis of a scenario exploration report. "
+    "You have just written all the sections below. Now step back and identify meta-patterns."
+)
+
+SYNTHESIS_USER_PROMPT_TEMPLATE = """\
+Here are the sections you've written:
+
+{all_content}
+
+Now write a brief synthesis (300-500 words) that addresses:
+
+1. **Cross-cutting patterns**: What themes or dynamics appear across multiple sections? What connects them?
+2. **Internal contradictions**: Do any sections contain findings that tension or contradict each other? What does this tension reveal?
+3. **The core insight**: In one sentence, what is the single most important non-obvious finding from this entire simulation?
+4. **Epistemic limits**: What important question does this simulation NOT answer? What would we need to investigate further?
+
+Write in the same analytical style as the report. Use **bold** for emphasis. Do NOT use any headings (#, ##, etc.)."""
+
+
+# Register English constants as the registry fallback. Allows
+# Chinese (or future locales) to override individual prompts via
+# ``app/prompts/locales/<locale>/report_agent.py`` without touching
+# this file.
+_REPORT_PROMPT_FALLBACKS.update({
+    "plan_system": PLAN_SYSTEM_PROMPT,
+    "plan_user": PLAN_USER_PROMPT_TEMPLATE,
+    "section_system": SECTION_SYSTEM_PROMPT_TEMPLATE,
+    "section_user": SECTION_USER_PROMPT_TEMPLATE,
+    "chat_system": CHAT_SYSTEM_PROMPT_TEMPLATE,
+    "synthesis_system": SYNTHESIS_SYSTEM_PROMPT,
+    "synthesis_user": SYNTHESIS_USER_PROMPT_TEMPLATE,
+})
+
 
 # ═══════════════════════════════════════════════════════════════
 # ReportAgent Main Class
@@ -2005,8 +2066,9 @@ class ReportAgent:
         if progress_callback:
             progress_callback("planning", 30, "Generating report outline...")
         
-        system_prompt = PLAN_SYSTEM_PROMPT
-        user_prompt = PLAN_USER_PROMPT_TEMPLATE.format(
+        system_prompt = _report_prompt("plan_system")
+        user_prompt = _report_prompt(
+            "plan_user",
             simulation_requirement=self.simulation_requirement,
             total_nodes=context.get('graph_statistics', {}).get('total_nodes', 0),
             total_edges=context.get('graph_statistics', {}).get('total_edges', 0),
@@ -2101,7 +2163,8 @@ class ReportAgent:
             except Exception as e:
                 logger.warning(f"reasoning-trace start_section failed: {e}")
         
-        system_prompt = SECTION_SYSTEM_PROMPT_TEMPLATE.format(
+        system_prompt = _report_prompt(
+            "section_system",
             report_title=outline.title,
             report_summary=outline.summary,
             simulation_requirement=self.simulation_requirement,
@@ -2122,7 +2185,8 @@ class ReportAgent:
         else:
             previous_content = "(This is the first section)"
         
-        user_prompt = SECTION_USER_PROMPT_TEMPLATE.format(
+        user_prompt = _report_prompt(
+            "section_user",
             previous_content=previous_content,
             section_title=section.title,
         )
@@ -2443,24 +2507,11 @@ class ReportAgent:
             sec[:3000] for sec in generated_sections
         )
 
-        system_prompt = (
-            "You are an expert analyst performing a cross-section synthesis of a scenario exploration report. "
-            "You have just written all the sections below. Now step back and identify meta-patterns."
+        system_prompt = _report_prompt("synthesis_system")
+        user_prompt = _report_prompt(
+            "synthesis_user",
+            all_content=all_content,
         )
-
-        user_prompt = f"""\
-Here are the sections you've written:
-
-{all_content}
-
-Now write a brief synthesis (300-500 words) that addresses:
-
-1. **Cross-cutting patterns**: What themes or dynamics appear across multiple sections? What connects them?
-2. **Internal contradictions**: Do any sections contain findings that tension or contradict each other? What does this tension reveal?
-3. **The core insight**: In one sentence, what is the single most important non-obvious finding from this entire simulation?
-4. **Epistemic limits**: What important question does this simulation NOT answer? What would we need to investigate further?
-
-Write in the same analytical style as the report. Use **bold** for emphasis. Do NOT use any headings (#, ##, etc.)."""
 
         try:
             response = self.llm.chat(
@@ -2822,7 +2873,8 @@ Write in the same analytical style as the report. Use **bold** for emphasis. Do 
         except Exception as e:
             logger.warning(f"Failed to get report content: {e}")
         
-        system_prompt = CHAT_SYSTEM_PROMPT_TEMPLATE.format(
+        system_prompt = _report_prompt(
+            "chat_system",
             simulation_requirement=self.simulation_requirement,
             report_content=report_content if report_content else "(No report yet)",
             tools_description=self._get_tools_description(),

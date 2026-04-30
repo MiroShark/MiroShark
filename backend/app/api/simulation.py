@@ -1854,7 +1854,14 @@ def prepare_simulation():
         manager._save_simulation_state(state)
         
         # Define background task
+        from ..utils.i18n import use_locale
+        thread_locale = locale  # capture for the worker thread
+
         def run_prepare():
+            with use_locale(thread_locale):
+                _run_prepare_impl()
+
+        def _run_prepare_impl():
             try:
                 task_manager.update_task(
                     task_id,
@@ -2728,7 +2735,14 @@ def retry_simulation_config(simulation_id: str):
             metadata={"simulation_id": simulation_id}
         )
 
+        from ..utils.i18n import use_locale
+        thread_locale = locale  # capture for the worker thread
+
         def run_config_retry():
+            with use_locale(thread_locale):
+                _run_config_retry_impl()
+
+        def _run_config_retry_impl():
             try:
                 task_manager.update_task(task_id, status=TaskStatus.PROCESSING, progress=0,
                                          message="Retrying config generation...")

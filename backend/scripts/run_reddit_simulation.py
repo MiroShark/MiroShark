@@ -56,6 +56,16 @@ else:
     if os.path.exists(_backend_env):
         load_dotenv(_backend_env)
 
+# Apply the locale chosen in the UI (forwarded as MIROSHARK_LOCALE by the
+# parent Flask process). Activates the prompt registry's locale fallback.
+try:
+    from app.utils.i18n import set_active_locale as _set_active_locale
+    _locale_env = os.environ.get('MIROSHARK_LOCALE', '').strip()
+    if _locale_env:
+        _set_active_locale(_locale_env)
+except Exception:
+    pass
+
 
 import re
 
