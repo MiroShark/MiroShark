@@ -8,6 +8,7 @@ import ReportView from '../views/ReportView.vue'
 import InteractionView from '../views/InteractionView.vue'
 import DecisionLabView from '../views/DecisionLabView.vue'
 import DecisionTreeView from '../views/DecisionTreeView.vue'
+import DecisionTreeMapView from '../views/DecisionTreeMapView.vue'
 
 const routes = [
   { path: '/', name: 'SeedChat', component: SeedChat },
@@ -52,6 +53,12 @@ const routes = [
     path: '/decision-tree/:sessionId',
     name: 'DecisionTree',
     component: DecisionTreeView,
+    props: true,
+  },
+  {
+    path: '/tree-map/:sessionId',
+    name: 'DecisionTreeMap',
+    component: DecisionTreeMapView,
     props: true,
   },
 ]

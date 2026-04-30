@@ -5,6 +5,12 @@
       <div class="brand">DECISION TREE</div>
       <div class="topic">{{ tree?.question || 'Loading…' }}</div>
       <button
+        type="button"
+        class="map-view-btn"
+        :disabled="!tree"
+        @click="goToMap"
+      >Map view 🗺️</button>
+      <button
         v-if="!researchingAll"
         type="button"
         class="research-all-btn"
@@ -158,6 +164,10 @@ function flattenBfs(root) {
 
 function goBack() {
   router.push({ name: 'SeedChat', query: { session: sessionId } })
+}
+
+function goToMap() {
+  router.push({ name: 'DecisionTreeMap', params: { sessionId } })
 }
 
 async function loadTree() {
@@ -589,4 +599,19 @@ onMounted(loadTree)
 .foresight-footer .primary { background: #4ade80; color: #052e16; font-weight: bold; }
 .foresight-footer .secondary { background: #333; color: #ddd; }
 .foresight-footer button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.map-view-btn {
+  background: #4a3a2a;
+  color: #f5e8d6;
+  border: 1px solid #6a5a3a;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+.map-view-btn:hover { background: #5a4a35; }
+.map-view-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
