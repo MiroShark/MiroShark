@@ -55,8 +55,8 @@ const error = ref('')
 const selectedNode = ref(null)
 const svgEl = ref(null)
 
-const NODE_WIDTH = 240
-const NODE_HEIGHT = 130
+const NODE_WIDTH = 220
+const NODE_HEIGHT = 95
 const TYPE_COLORS = {
   central: '#4ade80',
   upstream: '#60a5fa',
@@ -208,44 +208,48 @@ function drawTree() {
   // Question (truncated)
   node.append('text')
     .attr('x', 32)
-    .attr('y', 22)
-    .attr('font-size', 12)
+    .attr('y', 20)
+    .attr('font-size', 11.5)
     .attr('font-weight', 600)
     .attr('fill', '#eee')
-    .text(d => truncate(d.data.question || '', 30))
+    .text(d => truncate(d.data.question || '', 32))
 
-  // Essence (truncated, multi-line via tspan)
-  const essenceText = node.append('text')
+  // Headline (one line — prefers scores.stance_summary, falls back to essence)
+  const headlineText = node.append('text')
     .attr('x', 12)
-    .attr('y', 50)
-    .attr('font-size', 11)
+    .attr('y', 46)
+    .attr('font-size', 10.5)
     .attr('fill', '#bbb')
 
-  essenceText.each(function(d) {
-    const essence = extractEssence(d.data.summary)
-    const lines = wrapText(truncate(essence, 200), 38)
+  headlineText.each(function(d) {
+    const stance = d.data.scores?.stance_summary?.trim() || ''
+    const fallback = extractEssence(d.data.summary)
+    const headline = stance || fallback
     const sel = d3.select(this)
-    lines.slice(0, 3).forEach((line, i) => {
-      sel.append('tspan')
-        .attr('x', 12)
-        .attr('dy', i === 0 ? 0 : 13)
-        .text(line)
-    })
-    if (!essence) {
+    if (!headline) {
       sel.append('tspan')
         .attr('x', 12)
         .attr('dy', 0)
         .attr('font-style', 'italic')
         .attr('fill', '#666')
-        .text('(not yet synthesised)')
+        .text('(not analysed yet)')
+      return
     }
+    // Wrap to at most 2 lines, ~38 chars each
+    const lines = wrapText(truncate(headline, 130), 38)
+    lines.slice(0, 2).forEach((line, i) => {
+      sel.append('tspan')
+        .attr('x', 12)
+        .attr('dy', i === 0 ? 0 : 12)
+        .text(line)
+    })
   })
 
   // Score badges (compact text labels below essence)
   node.each(function(d) {
     if (!d.data.scores) return
     const s = d.data.scores
-    const badgeY = NODE_HEIGHT - 28
+    const badgeY = NODE_HEIGHT - 26
     const badges = [
       { text: `🎲${s.confidence}`, color: confColor(s.confidence) },
       { text: `⚖${s.contestedness}`, color: contColor(s.contestedness) },
@@ -257,18 +261,18 @@ function drawTree() {
       sel.append('text')
         .attr('x', cursorX)
         .attr('y', badgeY)
-        .attr('font-size', 9)
+        .attr('font-size', 8.5)
         .attr('fill', b.color)
         .text(b.text)
-      cursorX += b.text.length * 5.4 + 6
+      cursorX += b.text.length * 5.0 + 4
     }
   })
 
   // Stats footer
   node.append('text')
     .attr('x', 12)
-    .attr('y', NODE_HEIGHT - 12)
-    .attr('font-size', 10)
+    .attr('y', NODE_HEIGHT - 8)
+    .attr('font-size', 9)
     .attr('fill', '#888')
     .text(d => {
       const fetched = fetchedEvidenceCount(d.data)

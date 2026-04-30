@@ -11,10 +11,23 @@
         @click="goToMap"
       >Map view 🗺️</button>
       <button
+        v-if="!autoGrowing"
+        type="button"
+        class="auto-grow-btn"
+        :disabled="!tree || researchingAll || synthesizingAll || scoringAll || compilingForesight"
+        @click="autoGrowAndAnalyse"
+      >Auto-grow & analyse 🌳</button>
+      <button
+        v-else
+        type="button"
+        class="stop-btn"
+        @click="stopAutoGrow"
+      >Stop auto-grow</button>
+      <button
         v-if="!researchingAll"
         type="button"
         class="research-all-btn"
-        :disabled="!tree || synthesizingAll || compilingForesight || scoringAll"
+        :disabled="!tree || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
         @click="researchAll"
       >Research all 🔁</button>
       <button
@@ -27,7 +40,7 @@
         v-if="!synthesizingAll"
         type="button"
         class="synthesize-all-btn"
-        :disabled="!tree || researchingAll || compilingForesight || scoringAll"
+        :disabled="!tree || researchingAll || compilingForesight || scoringAll || autoGrowing"
         @click="synthesizeAll"
       >Synthesize all ✨</button>
       <button
@@ -40,7 +53,7 @@
         v-if="!scoringAll"
         type="button"
         class="score-all-btn"
-        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight"
+        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || autoGrowing"
         @click="scoreAll"
       >Score all 🏷️</button>
       <button
@@ -52,7 +65,7 @@
       <button
         type="button"
         class="foresight-btn"
-        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || scoringAll"
+        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
         @click="compileForesight"
       >{{ compilingForesight ? 'Compiling…' : (foresight ? 'View foresight 📄' : 'Compile foresight 📄') }}</button>
     </header>
@@ -84,6 +97,16 @@
       <span class="progress-text">
         Scoring node {{ scoreProgress.current }} of {{ scoreProgress.total }}:
         <span class="progress-question">"{{ scoreProgress.label }}"</span>
+      </span>
+    </div>
+
+    <div v-if="autoGrowing" class="research-progress-banner" role="status" aria-live="polite">
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="progress-text">
+        Auto-grow [{{ autoGrowProgress.phase }}] {{ autoGrowProgress.current }} of {{ autoGrowProgress.total }}:
+        <span class="progress-question">"{{ autoGrowProgress.label }}"</span>
       </span>
     </div>
 
@@ -164,6 +187,10 @@ const synthProgress = ref({ current: 0, total: 0, label: '' })
 const scoringAll = ref(false)
 const scoreStopRequested = ref(false)
 const scoreProgress = ref({ current: 0, total: 0, label: '' })
+
+const autoGrowing = ref(false)
+const autoGrowStopRequested = ref(false)
+const autoGrowProgress = ref({ phase: '', current: 0, total: 0, label: '' })
 
 const foresight = ref('')
 const foresightOpen = ref(false)
@@ -403,6 +430,112 @@ async function scoreAll() {
 
 function stopScoreAll() {
   scoreStopRequested.value = true
+}
+
+async function autoGrowAndAnalyse() {
+  if (!tree.value || autoGrowing.value) return
+  autoGrowing.value = true
+  autoGrowStopRequested.value = false
+  error.value = ''
+
+  try {
+    // Phase 1: Expand each direct child of the root that has no children yet
+    const roots = (tree.value.children || []).filter(n => !(n.children?.length > 0))
+    autoGrowProgress.value = { phase: 'expanding', current: 0, total: roots.length, label: '' }
+    for (let i = 0; i < roots.length; i++) {
+      if (autoGrowStopRequested.value) break
+      const node = roots[i]
+      autoGrowProgress.value = { phase: 'expanding', current: i + 1, total: roots.length, label: node.question }
+      setBusy(node.id, 'expand', true)
+      try {
+        await postTreeExpand({ session_id: sessionId, node_id: node.id })
+        const session = await getSession(sessionId)
+        if (session?.tree) tree.value = session.tree
+      } catch (err) {
+        const msg = err?.response?.data?.error || err.message
+        error.value = `Expand ${i + 1} failed: ${msg}. Continuing.`
+      } finally {
+        setBusy(node.id, 'expand', false)
+      }
+    }
+
+    if (autoGrowStopRequested.value) return
+
+    // Phase 2: Research every node without evidence
+    const researchTargets = flattenBfs(tree.value).filter(n => !(n.evidence?.length > 0))
+    autoGrowProgress.value = { phase: 'researching', current: 0, total: researchTargets.length, label: '' }
+    for (let i = 0; i < researchTargets.length; i++) {
+      if (autoGrowStopRequested.value) break
+      const node = researchTargets[i]
+      autoGrowProgress.value = { phase: 'researching', current: i + 1, total: researchTargets.length, label: node.question }
+      setBusy(node.id, 'research', true)
+      try {
+        await postTreeResearch({ session_id: sessionId, node_id: node.id })
+        const session = await getSession(sessionId)
+        if (session?.tree) tree.value = session.tree
+      } catch (err) {
+        const msg = err?.response?.data?.error || err.message
+        error.value = `Research ${i + 1} failed: ${msg}. Continuing.`
+      } finally {
+        setBusy(node.id, 'research', false)
+      }
+    }
+
+    if (autoGrowStopRequested.value) return
+
+    // Phase 3: Synthesize every node with evidence but no summary
+    const synthTargets = flattenBfs(tree.value).filter(
+      n => (n.evidence?.length > 0) && !n.summary
+    )
+    autoGrowProgress.value = { phase: 'synthesising', current: 0, total: synthTargets.length, label: '' }
+    for (let i = 0; i < synthTargets.length; i++) {
+      if (autoGrowStopRequested.value) break
+      const node = synthTargets[i]
+      autoGrowProgress.value = { phase: 'synthesising', current: i + 1, total: synthTargets.length, label: node.question }
+      setBusy(node.id, 'synthesize', true)
+      try {
+        await postTreeSynthesize({ session_id: sessionId, node_id: node.id })
+        const session = await getSession(sessionId)
+        if (session?.tree) tree.value = session.tree
+      } catch (err) {
+        const msg = err?.response?.data?.error || err.message
+        error.value = `Synthesise ${i + 1} failed: ${msg}. Continuing.`
+      } finally {
+        setBusy(node.id, 'synthesize', false)
+      }
+    }
+
+    if (autoGrowStopRequested.value) return
+
+    // Phase 4: Score every node that has evidence or summary
+    const scoreTargets = flattenBfs(tree.value).filter(
+      n => (n.evidence?.length > 0 || (n.summary && n.summary.trim()))
+    )
+    autoGrowProgress.value = { phase: 'scoring', current: 0, total: scoreTargets.length, label: '' }
+    for (let i = 0; i < scoreTargets.length; i++) {
+      if (autoGrowStopRequested.value) break
+      const node = scoreTargets[i]
+      autoGrowProgress.value = { phase: 'scoring', current: i + 1, total: scoreTargets.length, label: node.question }
+      setBusy(node.id, 'score', true)
+      try {
+        await postTreeScore({ session_id: sessionId, node_id: node.id })
+        const session = await getSession(sessionId)
+        if (session?.tree) tree.value = session.tree
+      } catch (err) {
+        const msg = err?.response?.data?.error || err.message
+        error.value = `Score ${i + 1} failed: ${msg}. Continuing.`
+      } finally {
+        setBusy(node.id, 'score', false)
+      }
+    }
+  } finally {
+    autoGrowing.value = false
+    autoGrowProgress.value = { phase: '', current: 0, total: 0, label: '' }
+  }
+}
+
+function stopAutoGrow() {
+  autoGrowStopRequested.value = true
 }
 
 async function compileForesight() {
@@ -713,4 +846,19 @@ onMounted(loadTree)
 }
 .map-view-btn:hover { background: #5a4a35; }
 .map-view-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.auto-grow-btn {
+  background: #2a4a3a;
+  color: #d6f5e0;
+  border: 1px solid #3a6a4a;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+.auto-grow-btn:hover { background: #355945; }
+.auto-grow-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
