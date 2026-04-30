@@ -13,6 +13,24 @@
         <span v-else class="question" @click="startEdit">{{ node.question }}</span>
       </div>
 
+      <div v-if="node.scores" class="score-badges">
+        <span :class="['score-badge', `confidence-${node.scores.confidence}`]"
+              :title="`Confidence: ${node.scores.confidence}`">
+          🎲 {{ node.scores.confidence }}
+        </span>
+        <span :class="['score-badge', `contestedness-${node.scores.contestedness}`]"
+              :title="`Contestedness: ${node.scores.contestedness}`">
+          ⚖ {{ node.scores.contestedness }}
+        </span>
+        <span :class="['score-badge', `salience-${node.scores.salience}`]"
+              :title="`Salience: ${node.scores.salience}`">
+          📣 {{ node.scores.salience }}
+        </span>
+      </div>
+      <div v-if="node.scores?.stance_summary" class="stance-summary">
+        ↳ {{ node.scores.stance_summary }}
+      </div>
+
       <textarea
         :value="node.user_notes"
         class="notes"
@@ -55,6 +73,13 @@
           :disabled="busy.synthesize"
           @click="$emit('synthesize', node.id)"
         >{{ busy.synthesize ? 'Synthesizing…' : (node.summary ? 'Re-synthesize ✨' : 'Synthesize ✨') }}</button>
+        <button
+          v-if="node.evidence?.length"
+          type="button"
+          class="action score"
+          :disabled="busy.score"
+          @click="$emit('score', node.id)"
+        >{{ busy.score ? 'Scoring…' : (node.scores ? 'Re-score 🏷️' : 'Score 🏷️') }}</button>
       </div>
     </div>
 
@@ -68,6 +93,7 @@
         @research="$emit('research', $event)"
         @update-node="$emit('update-node', $event)"
         @synthesize="$emit('synthesize', $event)"
+        @score="$emit('score', $event)"
       />
     </div>
   </div>
@@ -82,7 +108,7 @@ const props = defineProps({
   busyMap: { type: Object, default: () => ({}) },
 })
 
-const emit = defineEmits(['expand', 'research', 'update-node', 'synthesize'])
+const emit = defineEmits(['expand', 'research', 'update-node', 'synthesize', 'score'])
 
 const editing = ref(false)
 const draftQuestion = ref('')
@@ -249,4 +275,44 @@ function onNotesBlur(event) {
   border-color: #3a3a6a;
 }
 .action.synthesize:hover { background: #353559; }
+
+.score-badges {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin: 0.4rem 0;
+}
+.score-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 10px;
+  font-family: inherit;
+  border: 1px solid currentColor;
+  white-space: nowrap;
+}
+.score-badge.confidence-high { color: #4ade80; }
+.score-badge.confidence-medium { color: #facc15; }
+.score-badge.confidence-low { color: #94a3b8; }
+.score-badge.contestedness-settled { color: #4ade80; }
+.score-badge.contestedness-contested { color: #facc15; }
+.score-badge.contestedness-disputed { color: #f87171; }
+.score-badge.salience-high { color: #f59e0b; }
+.score-badge.salience-moderate { color: #94a3b8; }
+.score-badge.salience-niche { color: #6b7280; }
+
+.stance-summary {
+  font-size: 0.78rem;
+  color: #aaa;
+  font-style: italic;
+  margin: 0.25rem 0 0.4rem;
+  padding-left: 0.5rem;
+  border-left: 2px solid #2a2a2a;
+}
+
+.action.score {
+  background: #4a3a4a;
+  color: #f5d6f5;
+  border-color: #6a5a6a;
+}
+.action.score:hover { background: #5a4655; }
 </style>

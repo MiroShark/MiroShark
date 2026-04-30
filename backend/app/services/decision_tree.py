@@ -159,6 +159,15 @@ def set_summary(tree: Dict, node_id: str, summary: str) -> bool:
     return True
 
 
+def set_scores(tree: Dict, node_id: str, scores: Dict) -> bool:
+    """Set node.scores. Returns True if found."""
+    node = find_node(tree, node_id)
+    if node is None:
+        return False
+    node["scores"] = scores
+    return True
+
+
 def attach_children(tree: Dict, parent_id: str, children: List[Dict]) -> bool:
     """Append child nodes to a parent. Returns True if parent found."""
     node = find_node(tree, parent_id)

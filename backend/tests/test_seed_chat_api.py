@@ -817,3 +817,49 @@ def test_tree_compile_foresight_404_when_session_missing(client):
 def test_tree_compile_foresight_400_when_session_id_missing(client):
     response = client.post("/api/seed-chat/tree/compile-foresight", json={})
     assert response.status_code == 400
+
+
+def test_tree_score_attaches_scores(client):
+    session = _tree_session_fixture()
+    from app.services.decision_tree import initialise_tree
+    session["tree"] = initialise_tree(session["seed_state"])
+    target_id = session["tree"]["children"][0]["id"]
+
+    fake_scores = {
+        "confidence": "medium",
+        "contestedness": "contested",
+        "salience": "high",
+        "stance_summary": "Evidence is mixed.",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.score_node", return_value=fake_scores):
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/score",
+            json={"session_id": "tree-1", "node_id": target_id},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["scores"] == fake_scores
+    mock_store.save.assert_called_once()
+
+
+def test_tree_score_404_when_node_missing(client):
+    session = _tree_session_fixture()
+    from app.services.decision_tree import initialise_tree
+    session["tree"] = initialise_tree(session["seed_state"])
+
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/score",
+            json={"session_id": "tree-1", "node_id": "no-such"},
+        )
+    assert response.status_code == 404
+
+
+def test_tree_score_400_when_required_missing(client):
+    response = client.post("/api/seed-chat/tree/score", json={})
+    assert response.status_code == 400

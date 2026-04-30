@@ -84,3 +84,7 @@ export const postTreeSynthesize = (data) => {
 export const postCompileForesight = (data) => {
   return service.post('/api/seed-chat/tree/compile-foresight', data, { timeout: 240000 })
 }
+
+export const postTreeScore = (data) => {
+  return service.post('/api/seed-chat/tree/score', data, { timeout: 60000 })
+}

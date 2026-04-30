@@ -17,8 +17,10 @@ from ..services.decision_tree import (
     attach_children,
     propose_subquestions,
     set_summary,
+    set_scores,
 )
 from ..services.tree_synthesizer import synthesise_node
+from ..services.node_scorer import score_node
 from ..services.foresight_compiler import compile_foresight
 from ..storage.session_store import SessionStore
 from ..utils.logger import get_logger
@@ -549,4 +551,41 @@ def tree_compile_foresight():
     return jsonify({
         "session_id": session_id,
         "foresight": foresight,
+    })
+
+
+@seed_chat_bp.route("/tree/score", methods=["POST"])
+def tree_score():
+    payload = request.get_json(silent=True) or {}
+    session_id = payload.get("session_id")
+    node_id = payload.get("node_id")
+    if not session_id or not node_id:
+        return jsonify({"error": "session_id and node_id required"}), 400
+
+    session = _store.load(session_id)
+    if session is None:
+        return jsonify({"error": "session_not_found"}), 404
+
+    tree = session.get("tree")
+    if not tree:
+        return jsonify({"error": "tree not initialised"}), 400
+
+    node = find_node(tree, node_id)
+    if node is None:
+        return jsonify({"error": "node_not_found"}), 404
+
+    try:
+        scores = score_node(node)
+    except RuntimeError as exc:
+        logger.error("node scoring failed: %s", exc)
+        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
+
+    set_scores(tree, node_id, scores)
+    session["tree"] = tree
+    _store.save(session)
+
+    return jsonify({
+        "session_id": session_id,
+        "node_id": node_id,
+        "scores": scores,
     })

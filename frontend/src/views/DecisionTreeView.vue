@@ -14,7 +14,7 @@
         v-if="!researchingAll"
         type="button"
         class="research-all-btn"
-        :disabled="!tree || synthesizingAll"
+        :disabled="!tree || synthesizingAll || compilingForesight || scoringAll"
         @click="researchAll"
       >Research all 🔁</button>
       <button
@@ -27,7 +27,7 @@
         v-if="!synthesizingAll"
         type="button"
         class="synthesize-all-btn"
-        :disabled="!tree || researchingAll"
+        :disabled="!tree || researchingAll || compilingForesight || scoringAll"
         @click="synthesizeAll"
       >Synthesize all ✨</button>
       <button
@@ -37,9 +37,22 @@
         @click="stopSynthesizeAll"
       >Stop synth</button>
       <button
+        v-if="!scoringAll"
+        type="button"
+        class="score-all-btn"
+        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight"
+        @click="scoreAll"
+      >Score all 🏷️</button>
+      <button
+        v-else
+        type="button"
+        class="stop-btn"
+        @click="stopScoreAll"
+      >Stop scoring</button>
+      <button
         type="button"
         class="foresight-btn"
-        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight"
+        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || scoringAll"
         @click="compileForesight"
       >{{ compilingForesight ? 'Compiling…' : (foresight ? 'View foresight 📄' : 'Compile foresight 📄') }}</button>
     </header>
@@ -64,6 +77,16 @@
       </span>
     </div>
 
+    <div v-if="scoringAll" class="research-progress-banner" role="status" aria-live="polite">
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="spinner-dot"></span>
+      <span class="progress-text">
+        Scoring node {{ scoreProgress.current }} of {{ scoreProgress.total }}:
+        <span class="progress-question">"{{ scoreProgress.label }}"</span>
+      </span>
+    </div>
+
     <main class="tree-body">
       <div v-if="error" class="error">{{ error }}</div>
       <div v-if="loading && !tree" class="loading">Loading tree…</div>
@@ -76,6 +99,7 @@
         @research="onResearch"
         @update-node="onUpdateNode"
         @synthesize="onSynthesize"
+        @score="onScore"
       />
     </main>
 
@@ -114,6 +138,7 @@ import {
   postTreeUpdateNode,
   postTreeSynthesize,
   postCompileForesight,
+  postTreeScore,
 } from '../api/seedChat.js'
 import { marked } from 'marked'
 
@@ -135,6 +160,10 @@ const researchProgress = ref({ current: 0, total: 0, label: '' })
 const synthesizingAll = ref(false)
 const synthStopRequested = ref(false)
 const synthProgress = ref({ current: 0, total: 0, label: '' })
+
+const scoringAll = ref(false)
+const scoreStopRequested = ref(false)
+const scoreProgress = ref({ current: 0, total: 0, label: '' })
 
 const foresight = ref('')
 const foresightOpen = ref(false)
@@ -319,6 +348,61 @@ async function synthesizeAll() {
 
 function stopSynthesizeAll() {
   synthStopRequested.value = true
+}
+
+async function onScore(nodeId) {
+  setBusy(nodeId, 'score', true)
+  error.value = ''
+  try {
+    await postTreeScore({ session_id: sessionId, node_id: nodeId })
+    const session = await getSession(sessionId)
+    if (session?.tree) tree.value = session.tree
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    setBusy(nodeId, 'score', false)
+  }
+}
+
+async function scoreAll() {
+  if (!tree.value || scoringAll.value) return
+  const nodes = flattenBfs(tree.value).filter(
+    n => (n.evidence?.length > 0 || (n.summary && n.summary.trim()))
+  )
+  if (nodes.length === 0) {
+    error.value = 'Nothing to score yet — run Research and Synthesize first.'
+    return
+  }
+  scoringAll.value = true
+  scoreStopRequested.value = false
+  error.value = ''
+  scoreProgress.value = { current: 0, total: nodes.length, label: '' }
+  for (let i = 0; i < nodes.length; i++) {
+    if (scoreStopRequested.value) break
+    const node = nodes[i]
+    scoreProgress.value = {
+      current: i + 1,
+      total: nodes.length,
+      label: node.question,
+    }
+    setBusy(node.id, 'score', true)
+    try {
+      await postTreeScore({ session_id: sessionId, node_id: node.id })
+      const session = await getSession(sessionId)
+      if (session?.tree) tree.value = session.tree
+    } catch (err) {
+      const msg = err?.response?.data?.error || err.message
+      error.value = `Node ${i + 1} failed: ${msg}. Continuing.`
+    } finally {
+      setBusy(node.id, 'score', false)
+    }
+  }
+  scoringAll.value = false
+  scoreProgress.value = { current: 0, total: 0, label: '' }
+}
+
+function stopScoreAll() {
+  scoreStopRequested.value = true
 }
 
 async function compileForesight() {
@@ -507,6 +591,21 @@ onMounted(loadTree)
 }
 .synthesize-all-btn:hover { background: #353559; }
 .synthesize-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.score-all-btn {
+  background: #4a3a4a;
+  color: #f5d6f5;
+  border: 1px solid #6a5a6a;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+.score-all-btn:hover { background: #5a4655; }
+.score-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .foresight-btn {
   background: #4a3a2a;

@@ -56,7 +56,7 @@ const selectedNode = ref(null)
 const svgEl = ref(null)
 
 const NODE_WIDTH = 240
-const NODE_HEIGHT = 110
+const NODE_HEIGHT = 130
 const TYPE_COLORS = {
   central: '#4ade80',
   upstream: '#60a5fa',
@@ -77,6 +77,22 @@ function typeIcon(type) {
 
 function renderSummary(md) {
   return marked.parse(md || '')
+}
+
+function confColor(v) {
+  if (v === 'high') return '#4ade80'
+  if (v === 'medium') return '#facc15'
+  return '#94a3b8'
+}
+function contColor(v) {
+  if (v === 'settled') return '#4ade80'
+  if (v === 'disputed') return '#f87171'
+  return '#facc15'
+}
+function salColor(v) {
+  if (v === 'high') return '#f59e0b'
+  if (v === 'niche') return '#6b7280'
+  return '#94a3b8'
 }
 
 function goBack() {
@@ -222,6 +238,29 @@ function drawTree() {
         .attr('font-style', 'italic')
         .attr('fill', '#666')
         .text('(not yet synthesised)')
+    }
+  })
+
+  // Score badges (compact text labels below essence)
+  node.each(function(d) {
+    if (!d.data.scores) return
+    const s = d.data.scores
+    const badgeY = NODE_HEIGHT - 28
+    const badges = [
+      { text: `🎲${s.confidence}`, color: confColor(s.confidence) },
+      { text: `⚖${s.contestedness}`, color: contColor(s.contestedness) },
+      { text: `📣${s.salience}`, color: salColor(s.salience) },
+    ]
+    let cursorX = 12
+    const sel = d3.select(this)
+    for (const b of badges) {
+      sel.append('text')
+        .attr('x', cursorX)
+        .attr('y', badgeY)
+        .attr('font-size', 9)
+        .attr('fill', b.color)
+        .text(b.text)
+      cursorX += b.text.length * 5.4 + 6
     }
   })
 

@@ -137,3 +137,25 @@ def test_set_summary_returns_false_for_unknown_id():
     from app.services.decision_tree import initialise_tree, set_summary
     tree = initialise_tree(_seed_for_tests())
     assert set_summary(tree, "no-id", "x") is False
+
+
+def test_set_scores_writes_to_node():
+    from app.services.decision_tree import initialise_tree, set_scores, find_node
+
+    tree = initialise_tree(_seed_for_tests())
+    target = tree["children"][0]
+    scores = {
+        "confidence": "high",
+        "contestedness": "settled",
+        "salience": "moderate",
+        "stance_summary": "Sample stance.",
+    }
+    ok = set_scores(tree, target["id"], scores)
+    assert ok is True
+    assert find_node(tree, target["id"])["scores"] == scores
+
+
+def test_set_scores_returns_false_for_unknown_id():
+    from app.services.decision_tree import initialise_tree, set_scores
+    tree = initialise_tree(_seed_for_tests())
+    assert set_scores(tree, "no-id", {}) is False
