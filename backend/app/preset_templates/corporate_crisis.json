@@ -47,5 +47,36 @@
       "trigger_round": 48,
       "injection": "CloudLocker Inc. (a direct competitor) has just disclosed a 40M-user breach — 3x the size of DataVault's. The news cycle is pivoting."
     }
-  ]
+  ],
+  "i18n": {
+    "zh-CN": {
+      "name": "企业危机",
+      "category": "商业",
+      "description": "模拟一家大企业在社交媒体上爆发的公关危机。观察客户、员工、记者与维权人士如何塑造叙事、施压公司作出回应。",
+      "tags": ["企业", "公关危机", "品牌声誉", "抵制"],
+      "counterfactual_branches": [
+        {
+          "id": "ceo_resigns",
+          "label": "CEO 在第 2 天辞职",
+          "description": "事件曝光 24 小时后 CEO 辞职,由临时 CEO 接替。",
+          "trigger_round": 24,
+          "injection": "DataVault Inc. CEO 刚刚宣布辞职。董事会已任命 CTO 为临时 CEO。卸任 CEO 表示:「我对延迟披露承担全部责任。」"
+        },
+        {
+          "id": "class_action",
+          "label": "提起集体诉讼",
+          "description": "在第 36 轮前,一家大型律所提起 10 亿美元集体诉讼。",
+          "trigger_round": 36,
+          "injection": "Cohen Milstein 代表 1200 万受影响用户提起 10 亿美元集体诉讼,指控公司故意隐瞒泄露事件。"
+        },
+        {
+          "id": "competitor_breach",
+          "label": "竞争对手出现更大泄露事件",
+          "description": "一家直接竞争对手披露 4000 万用户数据泄露,转移注意力。",
+          "trigger_round": 48,
+          "injection": "CloudLocker Inc.(直接竞争对手)刚刚披露 4000 万用户数据泄露 — 是 DataVault 的 3 倍。新闻焦点正在转移。"
+        }
+      ]
+    }
+  }
 }

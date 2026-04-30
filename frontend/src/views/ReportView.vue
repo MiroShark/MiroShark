@@ -15,21 +15,22 @@
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            {{ { graph: 'Graph', network: 'Network', workbench: 'Workbench' }[mode] }}
+            {{ { graph: $tr('Graph', '图谱'), network: $tr('Network', '网络'), workbench: $tr('Workbench', '工作台') }[mode] }}
           </button>
         </div>
       </div>
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">Step 4/4</span>
-          <span class="step-name">Report Generation</span>
+          <span class="step-num">{{ $tr('Step 4/4', '第 4/4 步') }}</span>
+          <span class="step-name">{{ $tr('Report Generation', '报告生成') }}</span>
         </div>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
           <span class="dot"></span>
           {{ statusText }}
         </span>
+        <LocaleToggle />
       </div>
     </header>
 
@@ -74,6 +75,8 @@ import { useRoute, useRouter } from 'vue-router'
 import GraphPanel from '../components/GraphPanel.vue'
 import NetworkPanel from '../components/NetworkPanel.vue'
 import Step4Report from '../components/Step4Report.vue'
+import LocaleToggle from '../components/LocaleToggle.vue'
+import { tr } from '../i18n'
 import { getProject, getGraphData } from '../api/graph'
 import { getSimulation } from '../api/simulation'
 import { getReport } from '../api/report'
@@ -117,9 +120,9 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return 'Error'
-  if (currentStatus.value === 'completed') return 'Completed'
-  return 'Generating'
+  if (currentStatus.value === 'error') return tr('Error', '错误')
+  if (currentStatus.value === 'completed') return tr('Completed', '已完成')
+  return tr('Generating', '生成中')
 })
 
 // --- Helpers ---

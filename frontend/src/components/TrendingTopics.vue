@@ -2,21 +2,21 @@
   <div v-if="shouldRender" class="tt-wrap">
     <div class="tt-head">
       <span class="tt-label">
-        <span class="tt-dot">◉</span> What's Trending
+        <span class="tt-dot">◉</span> {{ $tr(`What's Trending`, '热门话题') }}
         <span class="tt-sub">{{ statusLine }}</span>
       </span>
       <button
         v-if="!loading"
         class="tt-refresh"
         type="button"
-        title="Refresh feeds"
+        :title="$tr('Refresh feeds', '刷新源')"
         @click="refresh"
       >↻</button>
     </div>
 
     <div v-if="loading && items.length === 0" class="tt-loading">
       <span class="tt-spinner"></span>
-      Pulling current headlines from public feeds…
+      {{ $tr('Pulling current headlines from public feeds…', '正在从公共源拉取最新头条…') }}
     </div>
 
     <div v-else-if="items.length > 0" class="tt-grid">
@@ -37,7 +37,7 @@
         </div>
         <div class="tt-title">{{ item.title }}</div>
         <div class="tt-cta">
-          <span class="tt-cta-text">Simulate</span>
+          <span class="tt-cta-text">{{ $tr('Simulate', '模拟') }}</span>
           <span class="tt-cta-arrow">→</span>
         </div>
       </button>
@@ -63,6 +63,7 @@
 
 import { computed, onMounted, ref } from 'vue'
 import { getTrendingTopics } from '../api/simulation'
+import { tr } from '../i18n'
 
 const props = defineProps({
   // When true, the parent has an active fetch underway and we should
@@ -84,10 +85,10 @@ const shouldRender = computed(() => {
 })
 
 const statusLine = computed(() => {
-  if (loading.value) return '// fetching…'
+  if (loading.value) return tr('// fetching…', '// 抓取中…')
   if (!fetchedAt.value) return ''
   const ago = relativeTime(fetchedAt.value)
-  return cached.value ? `// cached · refreshed ${ago}` : `// refreshed ${ago}`
+  return cached.value ? `// ${tr('cached · refreshed', '已缓存 · 刷新于')} ${ago}` : `// ${tr('refreshed', '刷新于')} ${ago}`
 })
 
 const relativeTime = (iso) => {
@@ -95,13 +96,13 @@ const relativeTime = (iso) => {
   const t = Date.parse(iso)
   if (Number.isNaN(t)) return ''
   const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000))
-  if (diffSec < 60) return 'just now'
+  if (diffSec < 60) return tr('just now', '刚刚')
   const diffMin = Math.floor(diffSec / 60)
-  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffMin < 60) return `${diffMin}${tr('m ago', ' 分钟前')}`
   const diffHr = Math.floor(diffMin / 60)
-  if (diffHr < 24) return `${diffHr}h ago`
+  if (diffHr < 24) return `${diffHr}${tr('h ago', ' 小时前')}`
   const diffDay = Math.floor(diffHr / 24)
-  return `${diffDay}d ago`
+  return `${diffDay}${tr('d ago', ' 天前')}`
 }
 
 const load = async ({ force = false } = {}) => {

@@ -5,17 +5,28 @@
         <!-- Header -->
         <div class="modal-header">
           <div class="modal-title">
-            <span class="title-label">⚙ Settings</span>
+            <span class="title-label">⚙ {{ $tr('Settings', '设置') }}</span>
           </div>
           <button class="close-btn" @click="$emit('close')">✕</button>
         </div>
 
         <div class="warning-stripe"></div>
 
+        <!-- Language Toggle -->
+        <section class="settings-section">
+          <div class="section-header">
+            <span class="section-label">{{ $tr('Language / 语言', '语言 / Language') }}</span>
+          </div>
+          <div class="field-row" style="display:flex;align-items:center;gap:12px;">
+            <label class="field-label">{{ $tr('Interface language', '界面语言') }}</label>
+            <LocaleToggle />
+          </div>
+        </section>
+
         <!-- Current Setup Summary -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">Current Setup</span>
+            <span class="section-label">{{ $tr('Current Setup', '当前配置') }}</span>
             <div class="status-badge" :class="testStatus">
               <span class="badge-dot"></span>
               {{ testStatusText }}
@@ -24,38 +35,38 @@
 
           <div class="setup-grid">
             <div class="setup-row">
-              <span class="setup-key">Default model</span>
+              <span class="setup-key">{{ $tr('Default model', '默认模型') }}</span>
               <span class="setup-val">{{ currentSettings.llm?.model_name || '—' }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">Smart (reports)</span>
+              <span class="setup-key">{{ $tr('Smart (reports)', '智能(报告)') }}</span>
               <span class="setup-val">{{ currentSettings.smart?.model_name || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">NER (extraction)</span>
+              <span class="setup-key">{{ $tr('NER (extraction)', 'NER(实体抽取)') }}</span>
               <span class="setup-val">{{ currentSettings.ner?.model_name || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">Wonderwall (sim loop)</span>
+              <span class="setup-key">{{ $tr('Wonderwall (sim loop)', 'Wonderwall(模拟循环)') }}</span>
               <span class="setup-val">{{ currentSettings.wonderwall?.model_name || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">Embeddings</span>
+              <span class="setup-key">{{ $tr('Embeddings', '嵌入') }}</span>
               <span class="setup-val">
                 {{ currentSettings.embedding?.model_name || '—' }}
               </span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">Web search</span>
+              <span class="setup-key">{{ $tr('Web search', '网页搜索') }}</span>
               <span class="setup-val">{{ currentSettings.web_search_model || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">API key</span>
+              <span class="setup-key">{{ $tr('API key', 'API 密钥') }}</span>
               <span class="setup-val">
                 <span v-if="currentSettings.llm?.has_api_key">
                   {{ currentSettings.llm.api_key_masked }}
                 </span>
-                <span v-else class="setup-missing">not set</span>
+                <span v-else class="setup-missing">{{ $tr('not set', '未设置') }}</span>
               </span>
             </div>
           </div>
@@ -64,14 +75,14 @@
         <!-- Preset Picker -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">Preset</span>
+            <span class="section-label">{{ $tr('Preset', '预设') }}</span>
           </div>
 
           <div class="field-row">
-            <label class="field-label">Config template</label>
+            <label class="field-label">{{ $tr('Config template', '配置模板') }}</label>
             <div class="select-wrapper">
               <select v-model="form.preset" class="field-select">
-                <option value="">Custom — leave fields as they are</option>
+                <option value="">{{ $tr('Custom — leave fields as they are', '自定义 — 保留当前字段') }}</option>
                 <option
                   v-for="p in presetOptions"
                   :key="p.id"
@@ -80,15 +91,15 @@
               </select>
             </div>
             <div class="field-hint">
-              Applies the full set of model slots on save. See
+              {{ $tr('Applies the full set of model slots on save. See', '保存时将应用完整的模型槽配置。请参考') }}
               <a href="https://github.com/aaronjmars/MiroShark/blob/main/.env.example"
                  target="_blank" rel="noopener">.env.example</a>
-              for the exact values each preset uses.
+              {{ $tr('for the exact values each preset uses.', '了解各预设使用的精确值。') }}
             </div>
           </div>
 
           <div v-if="presetNeedsKey" class="field-row">
-            <label class="field-label">OpenRouter API key</label>
+            <label class="field-label">{{ $tr('OpenRouter API key', 'OpenRouter API 密钥') }}</label>
             <div class="key-input-group">
               <input
                 v-model="form.presetApiKey"
@@ -101,8 +112,7 @@
               </button>
             </div>
             <div class="field-hint">
-              Filled into every slot the preset needs (default, smart, NER, embedding).
-              Leave blank to keep your existing keys.
+              {{ $tr('Filled into every slot the preset needs (default, smart, NER, embedding). Leave blank to keep your existing keys.', '将填入预设所需的每个槽(default、smart、NER、embedding)。留空则保留现有密钥。') }}
             </div>
           </div>
         </section>
@@ -110,23 +120,23 @@
         <!-- LLM Configuration -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">LLM Configuration</span>
+            <span class="section-label">{{ $tr('LLM Configuration', 'LLM 配置') }}</span>
           </div>
 
           <!-- Provider -->
           <div class="field-row">
-            <label class="field-label">Provider</label>
+            <label class="field-label">{{ $tr('Provider', '提供商') }}</label>
             <div class="select-wrapper">
               <select v-model="form.llm.provider" class="field-select">
-                <option value="openai">OpenAI-compatible (OpenRouter, Ollama, etc.)</option>
-                <option value="claude-code">Claude Code (local CLI)</option>
+                <option value="openai">{{ $tr('OpenAI-compatible (OpenRouter, Ollama, etc.)', 'OpenAI 兼容(OpenRouter、Ollama 等)') }}</option>
+                <option value="claude-code">{{ $tr('Claude Code (local CLI)', 'Claude Code(本地 CLI)') }}</option>
               </select>
             </div>
           </div>
 
           <!-- Base URL -->
           <div v-if="form.llm.provider !== 'claude-code'" class="field-row">
-            <label class="field-label">Base URL</label>
+            <label class="field-label">{{ $tr('Base URL', '基础 URL') }}</label>
             <input
               v-model="form.llm.base_url"
               class="field-input"
@@ -137,7 +147,7 @@
 
           <!-- Model -->
           <div v-if="form.llm.provider !== 'claude-code'" class="field-row">
-            <label class="field-label">Model</label>
+            <label class="field-label">{{ $tr('Model', '模型') }}</label>
             <div class="model-input-group">
               <div class="select-wrapper model-select-wrapper">
                 <select
@@ -162,14 +172,14 @@
                   v-model="form.llm.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. openai/gpt-4o-mini"
+                  :placeholder="$tr('e.g. openai/gpt-4o-mini', '例如 openai/gpt-4o-mini')"
                 />
               </div>
               <button
                 class="load-models-btn"
                 :disabled="loadingModels || !isOpenRouter"
                 @click="loadOpenRouterModels"
-                :title="isOpenRouter ? 'Load available models from OpenRouter' : 'Only available for OpenRouter base URL'"
+                :title="isOpenRouter ? $tr('Load available models from OpenRouter', '从 OpenRouter 加载可用模型') : $tr('Only available for OpenRouter base URL', '仅在 OpenRouter 基础 URL 下可用')"
               >
                 <span v-if="loadingModels">...</span>
                 <span v-else>↻</span>
@@ -180,7 +190,7 @@
 
           <!-- API Key -->
           <div v-if="form.llm.provider !== 'claude-code'" class="field-row">
-            <label class="field-label">API Key</label>
+            <label class="field-label">{{ $tr('API Key', 'API 密钥') }}</label>
             <div class="key-input-group">
               <input
                 v-model="form.llm.api_key"
@@ -193,7 +203,7 @@
               </button>
             </div>
             <div v-if="currentSettings.llm?.has_api_key && !form.llm.api_key" class="field-hint">
-              Current key: {{ currentSettings.llm.api_key_masked }} — leave blank to keep unchanged
+              {{ $tr('Current key:', '当前密钥:') }} {{ currentSettings.llm.api_key_masked }} {{ $tr('— leave blank to keep unchanged', ' — 留空则保持不变') }}
             </div>
           </div>
 
@@ -204,8 +214,8 @@
               :disabled="testing"
               @click="testConnection"
             >
-              <span v-if="testing">Testing...</span>
-              <span v-else>Test Connection</span>
+              <span v-if="testing">{{ $tr('Testing...', '测试中...') }}</span>
+              <span v-else>{{ $tr('Test Connection', '测试连接') }}</span>
             </button>
             <div v-if="testResult" class="test-result" :class="testResult.success ? 'ok' : 'fail'">
               <span v-if="testResult.success">
@@ -220,109 +230,109 @@
         <section class="settings-section">
           <button class="advanced-toggle" @click="advancedOpen = !advancedOpen">
             <span class="section-label">
-              Advanced slot overrides
+              {{ $tr('Advanced slot overrides', '高级槽位覆盖') }}
             </span>
             <span class="chevron">{{ advancedOpen ? '−' : '+' }}</span>
           </button>
 
           <div v-if="advancedOpen" class="advanced-body">
             <div class="advanced-hint">
-              Each slot falls back to the default LLM config when left empty.
+              {{ $tr('Each slot falls back to the default LLM config when left empty.', '每个槽位为空时将回退到默认 LLM 配置。') }}
             </div>
 
             <!-- Smart -->
             <div class="advanced-group">
-              <div class="advanced-group-title">Smart — report generation</div>
+              <div class="advanced-group-title">{{ $tr('Smart — report generation', '智能 — 报告生成') }}</div>
               <div class="field-row">
-                <label class="field-label">Model</label>
+                <label class="field-label">{{ $tr('Model', '模型') }}</label>
                 <input
                   v-model="form.smart.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. x-ai/grok-4.1-fast"
+                  :placeholder="$tr('e.g. x-ai/grok-4.1-fast', '例如 x-ai/grok-4.1-fast')"
                 />
               </div>
             </div>
 
             <!-- NER -->
             <div class="advanced-group">
-              <div class="advanced-group-title">NER — entity extraction</div>
+              <div class="advanced-group-title">{{ $tr('NER — entity extraction', 'NER — 实体抽取') }}</div>
               <div class="field-row">
-                <label class="field-label">Model</label>
+                <label class="field-label">{{ $tr('Model', '模型') }}</label>
                 <input
                   v-model="form.ner.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. x-ai/grok-4.1-fast"
+                  :placeholder="$tr('e.g. x-ai/grok-4.1-fast', '例如 x-ai/grok-4.1-fast')"
                 />
               </div>
             </div>
 
             <!-- Wonderwall -->
             <div class="advanced-group">
-              <div class="advanced-group-title">Wonderwall — simulation loop</div>
+              <div class="advanced-group-title">{{ $tr('Wonderwall — simulation loop', 'Wonderwall — 模拟循环') }}</div>
               <div class="field-row">
-                <label class="field-label">Model</label>
+                <label class="field-label">{{ $tr('Model', '模型') }}</label>
                 <input
                   v-model="form.wonderwall.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. xiaomi/mimo-v2-flash"
+                  :placeholder="$tr('e.g. xiaomi/mimo-v2-flash', '例如 xiaomi/mimo-v2-flash')"
                 />
               </div>
               <div class="field-row">
-                <label class="field-label">Base URL</label>
+                <label class="field-label">{{ $tr('Base URL', '基础 URL') }}</label>
                 <input
                   v-model="form.wonderwall.base_url"
                   class="field-input"
                   type="text"
-                  placeholder="Inherits LLM base URL when blank"
+                  :placeholder="$tr('Inherits LLM base URL when blank', '留空时继承 LLM 基础 URL')"
                 />
               </div>
               <div class="field-row">
-                <label class="field-label">API Key</label>
+                <label class="field-label">{{ $tr('API Key', 'API 密钥') }}</label>
                 <input
                   v-model="form.wonderwall.api_key"
                   class="field-input"
                   type="password"
-                  :placeholder="currentSettings.wonderwall?.has_api_key ? `Saved: ${currentSettings.wonderwall.api_key_masked}` : 'Inherits LLM key when blank'"
+                  :placeholder="currentSettings.wonderwall?.has_api_key ? `${$tr('Saved:', '已保存:')} ${currentSettings.wonderwall.api_key_masked}` : $tr('Inherits LLM key when blank', '留空时继承 LLM 密钥')"
                 />
               </div>
             </div>
 
             <!-- Embedding -->
             <div class="advanced-group">
-              <div class="advanced-group-title">Embeddings</div>
+              <div class="advanced-group-title">{{ $tr('Embeddings', '嵌入') }}</div>
               <div class="field-row">
-                <label class="field-label">Provider</label>
+                <label class="field-label">{{ $tr('Provider', '提供商') }}</label>
                 <div class="select-wrapper">
                   <select v-model="form.embedding.provider" class="field-select">
-                    <option value="ollama">Ollama (local)</option>
-                    <option value="openai">OpenAI-compatible</option>
+                    <option value="ollama">{{ $tr('Ollama (local)', 'Ollama(本地)') }}</option>
+                    <option value="openai">{{ $tr('OpenAI-compatible', 'OpenAI 兼容') }}</option>
                   </select>
                 </div>
               </div>
               <div class="field-row">
-                <label class="field-label">Model</label>
+                <label class="field-label">{{ $tr('Model', '模型') }}</label>
                 <input
                   v-model="form.embedding.model_name"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. openai/text-embedding-3-small"
+                  :placeholder="$tr('e.g. openai/text-embedding-3-small', '例如 openai/text-embedding-3-small')"
                 />
               </div>
             </div>
 
             <!-- Web Search -->
             <div class="advanced-group">
-              <div class="advanced-group-title">Web search (URL import + enrichment)</div>
+              <div class="advanced-group-title">{{ $tr('Web search (URL import + enrichment)', '网页搜索(URL 导入 + 丰富)') }}</div>
               <div class="field-row">
-                <label class="field-label">Model</label>
+                <label class="field-label">{{ $tr('Model', '模型') }}</label>
                 <input
                   v-model="form.web_search_model"
                   class="field-input"
                   type="text"
-                  placeholder="e.g. google/gemini-2.0-flash-001:online"
+                  :placeholder="$tr('e.g. google/gemini-2.0-flash-001:online', '例如 google/gemini-2.0-flash-001:online')"
                 />
               </div>
             </div>
@@ -332,11 +342,11 @@
         <!-- Neo4j Configuration -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">Graph Database (Neo4j)</span>
+            <span class="section-label">{{ $tr('Graph Database (Neo4j)', '图数据库 (Neo4j)') }}</span>
           </div>
 
           <div class="field-row">
-            <label class="field-label">URI</label>
+            <label class="field-label">{{ $tr('URI', '地址') }}</label>
             <input
               v-model="form.neo4j.uri"
               class="field-input"
@@ -346,7 +356,7 @@
           </div>
 
           <div class="field-row">
-            <label class="field-label">User</label>
+            <label class="field-label">{{ $tr('User', '用户') }}</label>
             <input
               v-model="form.neo4j.user"
               class="field-input"
@@ -356,12 +366,12 @@
           </div>
 
           <div class="field-row">
-            <label class="field-label">Password</label>
+            <label class="field-label">{{ $tr('Password', '密码') }}</label>
             <input
               v-model="form.neo4j.password"
               class="field-input"
               type="password"
-              placeholder="Leave blank to keep unchanged"
+              :placeholder="$tr('Leave blank to keep unchanged', '留空保持不变')"
             />
           </div>
         </section>
@@ -369,7 +379,7 @@
         <!-- Outbound webhook · Slack / Discord / Zapier / n8n / custom -->
         <section class="settings-section ai-section">
           <div class="section-header">
-            <span class="section-label">Integrations · Webhook</span>
+            <span class="section-label">{{ $tr('Integrations · Webhook', '集成 · Webhook') }}</span>
             <div class="status-badge" :class="webhookSavedClass">
               <span class="badge-dot"></span>
               {{ webhookSavedText }}
@@ -377,14 +387,11 @@
           </div>
 
           <div class="ai-intro">
-            POST a JSON summary to your URL the moment a simulation finishes —
-            wires Slack, Discord, Zapier, Make, n8n, IFTTT, or any custom listener.
-            Empty to disable. Payload includes scenario, final consensus, quality,
-            and the share-card URL so links auto-unfurl.
+            {{ $tr('POST a JSON summary to your URL the moment a simulation finishes — wires Slack, Discord, Zapier, Make, n8n, IFTTT, or any custom listener. Empty to disable. Payload includes scenario, final consensus, quality, and the share-card URL so links auto-unfurl.', '模拟结束时立即向你的 URL POST 一份 JSON 摘要 — 可对接 Slack、Discord、Zapier、Make、n8n、IFTTT 或任何自定义监听器。留空以禁用。负载包括情景、最终共识、质量,以及分享卡 URL 以便链接自动展开。') }}
           </div>
 
           <div class="field-row">
-            <label class="field-label">Webhook URL</label>
+            <label class="field-label">{{ $tr('Webhook URL', 'Webhook URL') }}</label>
             <input
               v-model="form.integrations.webhook.url"
               class="field-input"
@@ -394,17 +401,17 @@
               spellcheck="false"
             />
             <div class="field-hint">
-              e.g.
+              {{ $tr('e.g.', '例如') }}
               <code>https://hooks.slack.com/services/T0…/B0…/abc</code>
-              or any URL that accepts a POST.
-              See <a href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md"
-                     target="_blank" rel="noopener">the webhook docs</a>
-              for the payload schema.
+              {{ $tr('or any URL that accepts a POST.', '或任何接受 POST 的 URL。') }}
+              {{ $tr('See', '参见') }} <a href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md"
+                     target="_blank" rel="noopener">{{ $tr('the webhook docs', 'Webhook 文档') }}</a>
+              {{ $tr('for the payload schema.', '了解负载结构。') }}
             </div>
           </div>
 
           <div class="field-row">
-            <label class="field-label">Public base URL <span class="field-label-optional">(optional)</span></label>
+            <label class="field-label">{{ $tr('Public base URL', '公开基础 URL') }} <span class="field-label-optional">{{ $tr('(optional)', '(可选)') }}</span></label>
             <input
               v-model="form.integrations.webhook.public_base_url"
               class="field-input"
@@ -414,9 +421,8 @@
               spellcheck="false"
             />
             <div class="field-hint">
-              When set, the payload includes absolute <code>share_url</code> +
-              <code>share_card_url</code> so Slack &amp; Discord auto-unfurl
-              with the simulation card. Leave blank for relative paths only.
+              {{ $tr('When set, the payload includes absolute', '设置后,负载将包含绝对的') }} <code>share_url</code> +
+              <code>share_card_url</code> {{ $tr('so Slack & Discord auto-unfurl with the simulation card. Leave blank for relative paths only.', '以便 Slack 与 Discord 用模拟卡片自动展开。留空则仅使用相对路径。') }}
             </div>
           </div>
 
@@ -426,14 +432,14 @@
               :disabled="webhookTesting || !webhookCanTest"
               @click="testWebhookFire"
             >
-              {{ webhookTesting ? 'Sending…' : 'Send test event' }}
+              {{ webhookTesting ? $tr('Sending…', '发送中…') : $tr('Send test event', '发送测试事件') }}
             </button>
             <span v-if="webhookTestResult" class="webhook-test-result" :class="webhookTestResult.success ? 'ok' : 'fail'">
               <template v-if="webhookTestResult.success">
-                ✓ Delivered ({{ webhookTestResult.latency_ms }}ms)
+                ✓ {{ $tr('Delivered', '已送达') }} ({{ webhookTestResult.latency_ms }}ms)
               </template>
               <template v-else>
-                ✗ {{ webhookTestResult.error || webhookTestResult.message || 'Failed' }}
+                ✗ {{ webhookTestResult.error || webhookTestResult.message || $tr('Failed', '失败') }}
               </template>
             </span>
           </div>
@@ -442,7 +448,7 @@
         <!-- AI Integration (MCP) -->
         <section class="settings-section ai-section">
           <div class="section-header">
-            <span class="section-label">AI Integration · MCP</span>
+            <span class="section-label">{{ $tr('AI Integration · MCP', 'AI 集成 · MCP') }}</span>
             <div class="status-badge" :class="mcpHealthClass">
               <span class="badge-dot"></span>
               {{ mcpHealthText }}
@@ -450,46 +456,45 @@
           </div>
 
           <div class="ai-intro">
-            Wire MiroShark's knowledge graph into Claude Desktop, Cursor, Windsurf,
-            or Continue. Pick your client, paste the snippet, restart the editor.
+            {{ $tr(`Wire MiroShark's knowledge graph into Claude Desktop, Cursor, Windsurf, or Continue. Pick your client, paste the snippet, restart the editor.`, '将 MiroShark 的知识图谱接入 Claude Desktop、Cursor、Windsurf 或 Continue。选择你的客户端,粘贴代码片段,重启编辑器。') }}
           </div>
 
-          <div v-if="mcpLoading" class="ai-loading">Loading MCP catalog…</div>
+          <div v-if="mcpLoading" class="ai-loading">{{ $tr('Loading MCP catalog…', '加载 MCP 目录…') }}</div>
           <div v-else-if="mcpLoadError" class="ai-error">
             {{ mcpLoadError }}
-            <button class="ai-retry" @click="loadMcpStatus">Retry</button>
+            <button class="ai-retry" @click="loadMcpStatus">{{ $tr('Retry', '重试') }}</button>
           </div>
 
           <div v-else-if="mcpStatus" class="ai-body">
             <!-- Health summary grid -->
             <div class="ai-summary">
               <div class="ai-summary-row">
-                <span class="ai-summary-key">Server file</span>
+                <span class="ai-summary-key">{{ $tr('Server file', '服务文件') }}</span>
                 <span class="ai-summary-val" :class="mcpStatus.paths.mcp_script_exists ? '' : 'setup-missing'">
-                  {{ mcpStatus.paths.mcp_script_exists ? 'present' : 'missing' }}
+                  {{ mcpStatus.paths.mcp_script_exists ? $tr('present', '存在') : $tr('missing', '缺失') }}
                 </span>
               </div>
               <div class="ai-summary-row">
-                <span class="ai-summary-key">Tools exposed</span>
+                <span class="ai-summary-key">{{ $tr('Tools exposed', '已暴露工具') }}</span>
                 <span class="ai-summary-val">{{ mcpStatus.tool_count }}</span>
               </div>
               <div class="ai-summary-row">
                 <span class="ai-summary-key">Neo4j</span>
                 <span class="ai-summary-val" :class="mcpStatus.neo4j.connected ? '' : 'setup-missing'">
-                  {{ mcpStatus.neo4j.connected ? 'connected' : 'unreachable' }}
+                  {{ mcpStatus.neo4j.connected ? $tr('connected', '已连接') : $tr('unreachable', '不可达') }}
                 </span>
               </div>
               <div class="ai-summary-row" v-if="mcpStatus.neo4j.connected">
-                <span class="ai-summary-key">Graphs available</span>
+                <span class="ai-summary-key">{{ $tr('Graphs available', '可用图谱') }}</span>
                 <span class="ai-summary-val">
                   {{ mcpStatus.neo4j.graph_count ?? 0 }}
                   <span class="setup-aux" v-if="mcpStatus.neo4j.entity_count != null">
-                    ({{ mcpStatus.neo4j.entity_count }} entities)
+                    ({{ mcpStatus.neo4j.entity_count }} {{ $tr('entities', '个实体') }})
                   </span>
                 </span>
               </div>
               <div class="ai-summary-row" v-if="mcpStatus.neo4j.error">
-                <span class="ai-summary-key">Error</span>
+                <span class="ai-summary-key">{{ $tr('Error', '错误') }}</span>
                 <span class="ai-summary-val ai-error-text">{{ mcpStatus.neo4j.error }}</span>
               </div>
             </div>
@@ -512,7 +517,7 @@
             <!-- Active client snippet -->
             <div v-if="currentClient" class="ai-client">
               <div class="ai-client-file">
-                <span class="ai-client-file-label">Config file:</span>
+                <span class="ai-client-file-label">{{ $tr('Config file:', '配置文件:') }}</span>
                 <code class="ai-client-file-path">{{ currentClient.file }}</code>
               </div>
               <div class="ai-snippet-wrap">
@@ -532,7 +537,7 @@
 
             <!-- Tool catalog (collapsed by default) -->
             <button class="ai-tools-toggle" @click="toolsOpen = !toolsOpen">
-              <span>{{ toolsOpen ? '▾' : '▸' }} {{ mcpStatus.tool_count }} tools available</span>
+              <span>{{ toolsOpen ? '▾' : '▸' }} {{ mcpStatus.tool_count }} {{ $tr('tools available', '个可用工具') }}</span>
             </button>
             <ul v-if="toolsOpen" class="ai-tools-list">
               <li v-for="t in mcpStatus.tools" :key="t.name" class="ai-tool">
@@ -542,8 +547,8 @@
             </ul>
 
             <div class="ai-docs-link">
-              Need a deeper walkthrough?
-              <a :href="mcpStatus.docs_url" target="_blank" rel="noopener">Read the full MCP guide →</a>
+              {{ $tr('Need a deeper walkthrough?', '需要更深入的指南?') }}
+              <a :href="mcpStatus.docs_url" target="_blank" rel="noopener">{{ $tr('Read the full MCP guide →', '阅读完整的 MCP 指南 →') }}</a>
             </div>
           </div>
         </section>
@@ -551,12 +556,12 @@
         <!-- Footer -->
         <div class="modal-footer">
           <div v-if="saveError" class="save-error">{{ saveError }}</div>
-          <div v-if="saveSuccess" class="save-success">✓ Settings saved (runtime — edit .env to persist across restarts)</div>
+          <div v-if="saveSuccess" class="save-success">✓ {{ $tr('Settings saved (runtime — edit .env to persist across restarts)', '设置已保存(运行时 — 编辑 .env 以在重启后保留)') }}</div>
           <div class="footer-actions">
-            <button class="cancel-btn" @click="$emit('close')">Cancel</button>
+            <button class="cancel-btn" @click="$emit('close')">{{ $tr('Cancel', '取消') }}</button>
             <button class="save-btn" :disabled="saving" @click="saveSettings">
-              <span v-if="saving">Saving...</span>
-              <span v-else>Save Settings →</span>
+              <span v-if="saving">{{ $tr('Saving...', '保存中...') }}</span>
+              <span v-else>{{ $tr('Save Settings →', '保存设置 →') }}</span>
             </button>
           </div>
         </div>
@@ -569,6 +574,8 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { getSettings, updateSettings, testLlmConnection, testWebhook } from '../api/settings'
 import { getMcpStatus } from '../api/mcp'
+import { tr } from '../i18n'
+import LocaleToggle from './LocaleToggle.vue'
 
 const props = defineProps({
   open: { type: Boolean, required: true }
@@ -618,7 +625,7 @@ const modelList = ref([])
 const loadingModels = ref(false)
 const modelLoadError = ref('')
 const advancedOpen = ref(false)
-const inheritMarker = '— inherits default —'
+const inheritMarker = tr('— inherits default —', '— 继承默认值 —')
 
 // Webhook integration state
 const webhookTesting = ref(false)
@@ -727,7 +734,7 @@ const loadOpenRouterModels = async () => {
         })
     }
   } catch (_) {
-    modelLoadError.value = 'Could not load model list — check your network connection.'
+    modelLoadError.value = tr('Could not load model list — check your network connection.', '无法加载模型列表 — 请检查网络连接。')
   } finally {
     loadingModels.value = false
   }
@@ -756,10 +763,10 @@ const loadMcpStatus = async () => {
     if (res?.success && res.data) {
       mcpStatus.value = res.data
     } else {
-      mcpLoadError.value = res?.error || 'MCP status unavailable'
+      mcpLoadError.value = res?.error || tr('MCP status unavailable', 'MCP 状态不可用')
     }
   } catch (e) {
-    mcpLoadError.value = e?.message || 'MCP status request failed'
+    mcpLoadError.value = e?.message || tr('MCP status request failed', 'MCP 状态请求失败')
   } finally {
     mcpLoading.value = false
   }
@@ -777,17 +784,17 @@ const mcpHealthClass = computed(() => {
 })
 
 const mcpHealthText = computed(() => {
-  if (!mcpStatus.value) return 'Loading'
-  if (!mcpStatus.value.paths.mcp_script_exists) return 'Server file missing'
-  return mcpStatus.value.neo4j.connected ? 'Ready' : 'Neo4j down'
+  if (!mcpStatus.value) return tr('Loading', '加载中')
+  if (!mcpStatus.value.paths.mcp_script_exists) return tr('Server file missing', '服务文件缺失')
+  return mcpStatus.value.neo4j.connected ? tr('Ready', '就绪') : tr('Neo4j down', 'Neo4j 不可用')
 })
 
 const formatJson = (obj) => JSON.stringify(obj, null, 2)
 
 const copyButtonLabel = computed(() => {
-  if (copyState.value === 'ok') return '✓ Copied'
-  if (copyState.value === 'fail') return '✗ Copy failed'
-  return 'Copy snippet'
+  if (copyState.value === 'ok') return '✓ ' + tr('Copied', '已复制')
+  if (copyState.value === 'fail') return '✗ ' + tr('Copy failed', '复制失败')
+  return tr('Copy snippet', '复制代码片段')
 })
 
 const copySnippet = async () => {
@@ -822,8 +829,8 @@ const testStatus = computed(() => {
 })
 
 const testStatusText = computed(() => {
-  if (!testResult.value) return 'Not tested'
-  return testResult.value.success ? 'Connected' : 'Failed'
+  if (!testResult.value) return tr('Not tested', '未测试')
+  return testResult.value.success ? tr('Connected', '已连接') : tr('Failed', '失败')
 })
 
 const webhookConfigured = computed(() =>
@@ -832,15 +839,15 @@ const webhookConfigured = computed(() =>
 
 const webhookSavedClass = computed(() => (webhookConfigured.value ? 'ok' : 'idle'))
 const webhookSavedText = computed(() =>
-  webhookConfigured.value ? 'Configured' : 'Not configured'
+  webhookConfigured.value ? tr('Configured', '已配置') : tr('Not configured', '未配置')
 )
 
 const webhookPlaceholder = computed(() => {
   if (webhookConfigured.value) {
     const masked = currentSettings.value.integrations?.webhook?.url_masked
     return masked
-      ? `${masked} — leave blank to keep, type to replace`
-      : 'Leave blank to keep saved URL, type to replace'
+      ? `${masked}${tr(' — leave blank to keep, type to replace', ' — 留空保留,输入以替换')}`
+      : tr('Leave blank to keep saved URL, type to replace', '留空保留已保存的 URL,输入以替换')
   }
   return 'https://hooks.slack.com/services/T0…/B0…/abc'
 })
@@ -859,7 +866,7 @@ const testWebhookFire = async () => {
     const res = await testWebhook(url, baseUrl)
     webhookTestResult.value = res
   } catch (e) {
-    webhookTestResult.value = { success: false, error: e?.message || 'Network error' }
+    webhookTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误') }
   } finally {
     webhookTesting.value = false
   }
@@ -927,7 +934,7 @@ const saveSettings = async () => {
       form.integrations.webhook.url = ''
       setTimeout(() => { saveSuccess.value = false }, 4000)
     } else {
-      saveError.value = res?.error || 'Save failed'
+      saveError.value = res?.error || tr('Save failed', '保存失败')
     }
   } catch (e) {
     saveError.value = e.message

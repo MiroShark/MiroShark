@@ -5,13 +5,13 @@
   >
     <div v-if="loading" class="embed-state">
       <div class="embed-spinner"></div>
-      <span>Loading simulation…</span>
+      <span>{{ $tr('Loading simulation…', '加载模拟中…') }}</span>
     </div>
 
     <div v-else-if="error" class="embed-state embed-error">
       <span>{{ error }}</span>
       <a class="embed-footer-link" :href="simulationUrl" target="_blank" rel="noopener">
-        Open on MiroShark ↗
+        {{ $tr('Open on MiroShark ↗', '在 MiroShark 中打开 ↗') }}
       </a>
     </div>
 
@@ -21,9 +21,9 @@
         <div class="embed-meta">
           <span class="embed-pill status" :class="statusClass">{{ statusLabel }}</span>
           <span v-if="hasRounds" class="embed-pill">
-            Round {{ summary.current_round }}/{{ summary.total_rounds || summary.current_round }}
+            {{ $tr('Round', '轮次') }} {{ summary.current_round }}/{{ summary.total_rounds || summary.current_round }}
           </span>
-          <span class="embed-pill">{{ summary.profiles_count || 0 }} agents</span>
+          <span class="embed-pill">{{ summary.profiles_count || 0 }} {{ $tr('agents', '智能体') }}</span>
           <span v-if="summary.quality && summary.quality.health" class="embed-pill quality" :class="qualityClass">
             {{ summary.quality.health }}
           </span>
@@ -53,21 +53,21 @@
           />
         </svg>
         <div v-else class="embed-empty-chart">
-          <span>No belief trajectory yet</span>
+          <span>{{ $tr('No belief trajectory yet', '暂无信念轨迹') }}</span>
         </div>
 
         <div v-if="hasBelief && !chartOnly" class="embed-final-row">
           <span class="final-chip bullish">
             <span class="chip-dot"></span>
-            Bullish {{ finalBullish }}%
+            {{ $tr('Bullish', '看涨') }} {{ finalBullish }}%
           </span>
           <span class="final-chip neutral">
             <span class="chip-dot"></span>
-            Neutral {{ finalNeutral }}%
+            {{ $tr('Neutral', '中立') }} {{ finalNeutral }}%
           </span>
           <span class="final-chip bearish">
             <span class="chip-dot"></span>
-            Bearish {{ finalBearish }}%
+            {{ $tr('Bearish', '看跌') }} {{ finalBearish }}%
           </span>
         </div>
       </div>
@@ -80,7 +80,7 @@
           </span>
         </div>
         <a class="embed-footer-link" :href="simulationUrl" target="_blank" rel="noopener">
-          Powered by <strong>MiroShark</strong> ↗
+          {{ $tr('Powered by', '技术支持:') }} <strong>MiroShark</strong> ↗
         </a>
       </footer>
     </template>
@@ -91,6 +91,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getEmbedSummary } from '../api/simulation'
+import { tr } from '../i18n'
 
 const props = defineProps({
   simulationId: {
@@ -115,7 +116,7 @@ const summary = ref(null)
 
 const scenarioTitle = computed(() => {
   const raw = (summary.value?.scenario || '').trim()
-  if (!raw) return 'Untitled simulation'
+  if (!raw) return tr('Untitled simulation', '未命名模拟')
   return raw.length > 140 ? raw.slice(0, 140).trimEnd() + '…' : raw
 })
 
@@ -125,12 +126,12 @@ const simulationUrl = computed(() => {
 })
 
 const statusLabel = computed(() => {
-  if (!summary.value) return 'Unknown'
+  if (!summary.value) return tr('Unknown', '未知')
   const s = (summary.value.runner_status || summary.value.status || '').toLowerCase()
-  if (s === 'completed' || s === 'finished' || s === 'stopped') return 'Completed'
-  if (s === 'running' || s === 'in_progress') return 'Running'
-  if (s === 'error' || s === 'failed') return 'Failed'
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : 'Ready'
+  if (s === 'completed' || s === 'finished' || s === 'stopped') return tr('Completed', '已完成')
+  if (s === 'running' || s === 'in_progress') return tr('Running', '运行中')
+  if (s === 'error' || s === 'failed') return tr('Failed', '失败')
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : tr('Ready', '就绪')
 })
 
 const statusClass = computed(() => {
@@ -159,18 +160,18 @@ const qualityClass = computed(() => {
 const consensusLabel = computed(() => {
   const b = summary.value?.belief
   if (!b?.consensus_round) return ''
-  return `Consensus formed at round ${b.consensus_round} (${b.consensus_stance})`
+  return `${tr('Consensus formed at round', '共识形成于第')} ${b.consensus_round}${tr('', '轮')} (${b.consensus_stance})`
 })
 
 const resolutionLabel = computed(() => {
   const r = summary.value?.resolution
   if (!r) return ''
   if (r.accuracy_score !== null && r.accuracy_score !== undefined) {
-    if (r.accuracy_score >= 1.0) return `✓ Correct · Actual ${r.actual_outcome}`
-    if (r.accuracy_score <= 0.0) return `✗ Missed · Actual ${r.actual_outcome}`
-    return `~ Split · Actual ${r.actual_outcome}`
+    if (r.accuracy_score >= 1.0) return `✓ ${tr('Correct', '正确')} · ${tr('Actual', '实际')} ${r.actual_outcome}`
+    if (r.accuracy_score <= 0.0) return `✗ ${tr('Missed', '未中')} · ${tr('Actual', '实际')} ${r.actual_outcome}`
+    return `~ ${tr('Split', '部分')} · ${tr('Actual', '实际')} ${r.actual_outcome}`
   }
-  return `Actual ${r.actual_outcome}`
+  return `${tr('Actual', '实际')} ${r.actual_outcome}`
 })
 
 const resolutionClass = computed(() => {
@@ -182,8 +183,8 @@ const resolutionClass = computed(() => {
 })
 
 const chartAriaLabel = computed(() => {
-  if (!hasBelief.value) return 'No belief trajectory'
-  return `Belief drift across ${summary.value.belief.rounds.length} rounds`
+  if (!hasBelief.value) return tr('No belief trajectory', '无信念轨迹')
+  return `${tr('Belief drift across', '信念漂移历经')} ${summary.value.belief.rounds.length} ${tr('rounds', '轮次')}`
 })
 
 // Stacked area chart paths — stack order bullish (top), neutral (middle), bearish (bottom).
@@ -251,7 +252,7 @@ const isCompact = computed(() => {
 
 const fetchData = async () => {
   if (!simulationId.value) {
-    error.value = 'Missing simulation id'
+    error.value = tr('Missing simulation id', '缺少模拟 ID')
     loading.value = false
     return
   }
@@ -260,10 +261,10 @@ const fetchData = async () => {
     if (res?.success) {
       summary.value = res.data
     } else {
-      error.value = res?.error || 'Failed to load simulation'
+      error.value = res?.error || tr('Failed to load simulation', '加载模拟失败')
     }
   } catch (err) {
-    error.value = err?.response?.data?.error || err?.message || 'Failed to load simulation'
+    error.value = err?.response?.data?.error || err?.message || tr('Failed to load simulation', '加载模拟失败')
   } finally {
     loading.value = false
   }

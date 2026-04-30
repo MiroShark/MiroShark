@@ -4,54 +4,53 @@
     <div class="wi-header">
       <div class="wi-title">
         <span class="wi-icon">◐</span>
-        <span class="wi-label">WHAT IF? — COUNTERFACTUAL</span>
+        <span class="wi-label">{{ $tr('WHAT IF? — COUNTERFACTUAL', '假设性 — 反事实') }}</span>
       </div>
       <div class="wi-header-actions">
         <button
           class="wi-export-btn"
           :disabled="!hasChartData || exporting || !copySupported"
-          :title="copySupported ? 'Copy chart as PNG (with MiroShark watermark)' : 'Image copy not supported in this browser'"
+          :title="copySupported ? $tr('Copy chart as PNG (with MiroShark watermark)', '复制图表为 PNG(含 MiroShark 水印)') : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制')"
           @click="copyChart"
         >
-          {{ copiedFlash ? 'Copied' : 'Copy' }}
+          {{ copiedFlash ? $tr('Copied', '已复制') : $tr('Copy', '复制') }}
         </button>
         <button
           class="wi-export-btn"
           :disabled="!hasChartData || exporting"
           @click="downloadChart"
-          title="Download chart as PNG (with MiroShark watermark)"
+          :title="$tr('Download chart as PNG (with MiroShark watermark)', '下载图表为 PNG(含 MiroShark 水印)')"
         >
-          Download ↓
+          {{ $tr('Download ↓', '下载 ↓') }}
         </button>
       </div>
     </div>
 
     <div class="wi-hint">
-      Pick up to {{ MAX_PICKS }} agents to remove, then recompute to see how
-      consensus would have shifted. Uses existing trajectory data — no re-run.
+      {{ $tr('Pick up to', '最多挑选') }} {{ MAX_PICKS }} {{ $tr('agents to remove, then recompute to see how consensus would have shifted. Uses existing trajectory data — no re-run.', '个智能体进行移除,然后重新计算以查看共识将如何变化。使用现有轨迹数据 — 无需重新运行。') }}
     </div>
 
     <!-- Loading agents -->
     <div v-if="agentsLoading" class="wi-state">
       <div class="pulse-ring"></div>
-      <span>Loading agents...</span>
+      <span>{{ $tr('Loading agents...', '加载智能体中...') }}</span>
     </div>
 
     <!-- No agents -->
     <div v-else-if="!agents.length" class="wi-state">
-      <span>No influence data yet — run the simulation first.</span>
+      <span>{{ $tr('No influence data yet — run the simulation first.', '暂无影响力数据 — 请先运行模拟。') }}</span>
     </div>
 
     <template v-else>
       <!-- Agent picker row -->
       <div class="wi-picker">
         <div class="wi-picker-header">
-          <span class="wi-picker-title">Top agents by influence</span>
+          <span class="wi-picker-title">{{ $tr('Top agents by influence', '影响力排名靠前的智能体') }}</span>
           <button
             v-if="selectedNames.length"
             class="wi-clear"
             @click="clearSelection"
-          >Clear ({{ selectedNames.length }})</button>
+          >{{ $tr('Clear', '清除') }} ({{ selectedNames.length }})</button>
         </div>
         <div class="wi-agent-grid">
           <label
@@ -82,7 +81,7 @@
             @click="compute"
           >
             <span v-if="computing" class="wi-spinner"></span>
-            {{ computing ? 'Recomputing...' : 'Recompute counterfactual' }}
+            {{ computing ? $tr('Recomputing...', '重新计算中...') : $tr('Recompute counterfactual', '重新计算反事实') }}
           </button>
         </div>
       </div>
@@ -166,7 +165,7 @@
                 :x="xS(origData.consensus_round) + 4" :y="MT + 10"
                 fill="rgba(10,10,10,0.45)" font-size="9"
                 font-family="'Space Mono', monospace"
-              >orig r{{ origData.consensus_round }}</text>
+              >{{ $tr('orig r', '原 r') }}{{ origData.consensus_round }}</text>
             </g>
             <g v-if="cfData?.consensus_round != null && cfData.consensus_round !== origData?.consensus_round">
               <line
@@ -179,7 +178,7 @@
                 :x="xS(cfData.consensus_round) + 4" :y="MT + 22"
                 fill="#43C165" font-size="9"
                 font-family="'Space Mono', monospace"
-              >cf r{{ cfData.consensus_round }}</text>
+              >{{ $tr('cf r', '反 r') }}{{ cfData.consensus_round }}</text>
             </g>
 
             <!-- X axis -->
@@ -194,17 +193,17 @@
               :x="ML + (W - ML - MR) / 2" :y="H - 2"
               fill="rgba(10,10,10,0.3)" font-size="9"
               font-family="'Space Mono', monospace" text-anchor="middle"
-            >Round — bullish %</text>
+            >{{ $tr('Round — bullish %', '轮次 — 看涨 %') }}</text>
           </svg>
 
           <div class="wi-legend">
             <span class="wi-legend-item">
               <span class="wi-legend-swatch orig"></span>
-              Original ({{ origData?.agent_count ?? '–' }} agents)
+              {{ $tr('Original', '原始') }} ({{ origData?.agent_count ?? '–' }} {{ $tr('agents', '智能体') }})
             </span>
             <span class="wi-legend-item">
               <span class="wi-legend-swatch cf"></span>
-              Counterfactual ({{ cfData?.agent_count ?? '–' }} agents)
+              {{ $tr('Counterfactual', '反事实') }} ({{ cfData?.agent_count ?? '–' }} {{ $tr('agents', '智能体') }})
             </span>
           </div>
         </div>
@@ -212,7 +211,7 @@
         <!-- Impact summary -->
         <div class="wi-impact">
           <div class="wi-impact-row">
-            <span class="wi-impact-label">Final bullish share</span>
+            <span class="wi-impact-label">{{ $tr('Final bullish share', '最终看涨占比') }}</span>
             <span class="wi-impact-values">
               <span class="wi-val orig">{{ fmtPct(origData?.final_bullish_pct) }}</span>
               <span class="wi-arrow">→</span>
@@ -221,11 +220,11 @@
                 v-if="result?.delta_final_bullish != null"
                 class="wi-delta"
                 :class="deltaClass(result.delta_final_bullish)"
-              >{{ fmtDelta(result.delta_final_bullish) }} pts</span>
+              >{{ fmtDelta(result.delta_final_bullish) }} {{ $tr('pts', '点') }}</span>
             </span>
           </div>
           <div class="wi-impact-row">
-            <span class="wi-impact-label">Consensus round</span>
+            <span class="wi-impact-label">{{ $tr('Consensus round', '共识轮次') }}</span>
             <span class="wi-impact-values">
               <span class="wi-val orig">{{ fmtRound(origData?.consensus_round) }}</span>
               <span class="wi-arrow">→</span>
@@ -234,20 +233,20 @@
                 v-if="result?.delta_consensus_round != null"
                 class="wi-delta"
                 :class="deltaClass(result.delta_consensus_round, true)"
-              >{{ fmtDelta(result.delta_consensus_round) }} rounds</span>
+              >{{ fmtDelta(result.delta_consensus_round) }} {{ $tr('rounds', '轮次') }}</span>
             </span>
           </div>
           <div v-if="result?.impact" class="wi-impact-badge-row">
             <span
               class="wi-impact-badge"
               :class="'impact-' + result.impact"
-            >{{ impactLabel(result.impact) }} influence</span>
+            >{{ impactLabel(result.impact) }} {{ $tr('influence', '影响力') }}</span>
           </div>
           <div v-if="result?.summary" class="wi-summary">
             {{ result.summary }}
           </div>
           <div v-if="result?.excluded_unresolved?.length" class="wi-warn">
-            Couldn't match: {{ result.excluded_unresolved.join(', ') }}
+            {{ $tr(`Couldn't match:`, '未能匹配:') }} {{ result.excluded_unresolved.join(', ') }}
           </div>
         </div>
       </div>
@@ -265,6 +264,7 @@ import {
   canCopyImageToClipboard,
   buildTitledHeader,
 } from '../utils/chartExport'
+import { tr } from '../i18n'
 
 const props = defineProps({
   simulationId: { type: String, required: true },
@@ -362,7 +362,7 @@ const cfEnd = computed(() => {
 })
 
 const fmtPct = (v) => (v == null ? '–' : `${v}%`)
-const fmtRound = (v) => (v == null ? 'no consensus' : `r${v}`)
+const fmtRound = (v) => (v == null ? tr('no consensus', '未达成共识') : `r${v}`)
 const fmtDelta = (v) => {
   if (v == null) return '–'
   const sign = v > 0 ? '+' : ''
@@ -377,9 +377,9 @@ const deltaClass = (v, invert = false) => {
   return 'neutral'
 }
 const impactLabel = (kind) => {
-  if (kind === 'strong') return 'Strong'
-  if (kind === 'moderate') return 'Moderate'
-  return 'Minimal'
+  if (kind === 'strong') return tr('Strong', '强')
+  if (kind === 'moderate') return tr('Moderate', '中等')
+  return tr('Minimal', '微小')
 }
 
 const loadAgents = async () => {
@@ -423,12 +423,12 @@ const compute = async () => {
     if (res?.success && res.data) {
       result.value = res.data
     } else if (res?.success && !res.data) {
-      error.value = res.message || 'No trajectory data available for this simulation.'
+      error.value = res.message || tr('No trajectory data available for this simulation.', '此模拟暂无轨迹数据。')
     } else {
-      error.value = res?.error || 'Failed to compute counterfactual.'
+      error.value = res?.error || tr('Failed to compute counterfactual.', '反事实计算失败。')
     }
   } catch (err) {
-    error.value = err?.message || 'Failed to compute counterfactual.'
+    error.value = err?.message || tr('Failed to compute counterfactual.', '反事实计算失败。')
   } finally {
     computing.value = false
   }
@@ -441,13 +441,13 @@ const _buildExportCanvas = () => {
     throw new Error('No chart to export')
   }
   const removed = selectedNames.value.length
-    ? `Removed ${selectedNames.value.join(', ')}`
-    : 'Counterfactual drift'
+    ? `${tr('Removed', '已移除')} ${selectedNames.value.join(', ')}`
+    : tr('Counterfactual drift', '反事实漂移')
   const deltaStr = result.value?.delta_final_bullish != null
-    ? `${result.value.delta_final_bullish >= 0 ? '+' : ''}${result.value.delta_final_bullish} pts on bullish share`
+    ? `${result.value.delta_final_bullish >= 0 ? '+' : ''}${result.value.delta_final_bullish} ${tr('pts on bullish share', '点看涨占比')}`
     : null
   const { drawHeader, headerHeight } = buildTitledHeader({
-    title: `What If? — ${removed}`,
+    title: `${tr('What If?', '假设性?')} — ${removed}`,
     subtitle: deltaStr,
     width: W,
   })

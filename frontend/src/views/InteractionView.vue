@@ -8,28 +8,29 @@
       
       <div class="header-center">
         <div class="view-switcher">
-          <button 
+          <button
             v-for="mode in ['graph', 'workbench']"
             :key="mode"
             class="switch-btn"
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            {{ { graph: 'Graph', workbench: 'Workbench' }[mode] }}
+            {{ { graph: $tr('Graph', '图谱'), workbench: $tr('Workbench', '工作台') }[mode] }}
           </button>
         </div>
       </div>
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">Step 4/4</span>
-          <span class="step-name">Deep Interaction</span>
+          <span class="step-num">{{ $tr('Step 4/4', '第 4/4 步') }}</span>
+          <span class="step-name">{{ $tr('Deep Interaction', '深度交互') }}</span>
         </div>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
           <span class="dot"></span>
           {{ statusText }}
         </span>
+        <LocaleToggle />
       </div>
     </header>
 
@@ -67,6 +68,8 @@ import { ref, computed, watchEffect, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import GraphPanel from '../components/GraphPanel.vue'
 import Step5Interaction from '../components/Step5Interaction.vue'
+import LocaleToggle from '../components/LocaleToggle.vue'
+import { tr } from '../i18n'
 import { getProject, getGraphData } from '../api/graph'
 import { getSimulation } from '../api/simulation'
 import { getReport } from '../api/report'
@@ -110,10 +113,10 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return 'Error'
-  if (currentStatus.value === 'completed') return 'Completed'
-  if (currentStatus.value === 'processing') return 'Processing'
-  return 'Ready'
+  if (currentStatus.value === 'error') return tr('Error', '错误')
+  if (currentStatus.value === 'completed') return tr('Completed', '已完成')
+  if (currentStatus.value === 'processing') return tr('Processing', '处理中')
+  return tr('Ready', '就绪')
 })
 
 // --- Helpers ---

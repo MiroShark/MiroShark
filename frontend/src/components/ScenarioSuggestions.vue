@@ -3,21 +3,21 @@
     <div v-if="shouldShow" class="ss-wrap">
       <div class="ss-head">
         <span class="ss-label">
-          <span class="ss-dot">◈</span> Smart Setup
+          <span class="ss-dot">◈</span> {{ $tr('Smart Setup', '智能设置') }}
           <span class="ss-sub">{{ statusLine }}</span>
         </span>
         <button
           v-if="!loading"
           class="ss-close"
           type="button"
-          title="Dismiss suggestions"
+          :title="$tr('Dismiss suggestions', '关闭建议')"
           @click="dismiss"
         >×</button>
       </div>
 
       <div v-if="loading" class="ss-loading">
         <span class="ss-spinner"></span>
-        Drafting three scenarios from your document…
+        {{ $tr('Drafting three scenarios from your document…', '正在根据你的文档起草三个情景…') }}
       </div>
 
       <div v-else-if="suggestions.length > 0" class="ss-cards">
@@ -28,8 +28,8 @@
           :class="cardClass(s.label)"
         >
           <div class="ss-card-head">
-            <span class="ss-badge" :class="badgeClass(s.label)">{{ s.label }}</span>
-            <span class="ss-range">Initial YES {{ s.expected_yes_range[0] }}–{{ s.expected_yes_range[1] }}%</span>
+            <span class="ss-badge" :class="badgeClass(s.label)">{{ s.label === 'Bull' ? $tr('Bull', '看涨') : s.label === 'Bear' ? $tr('Bear', '看跌') : s.label === 'Neutral' ? $tr('Neutral', '中立') : s.label }}</span>
+            <span class="ss-range">{{ $tr('Initial YES', '初始 YES') }} {{ s.expected_yes_range[0] }}–{{ s.expected_yes_range[1] }}%</span>
           </div>
           <div class="ss-question">{{ s.question }}</div>
           <div v-if="s.rationale" class="ss-rationale">{{ s.rationale }}</div>
@@ -37,7 +37,7 @@
             class="ss-use"
             type="button"
             @click="useSuggestion(s, idx)"
-          >Use this →</button>
+          >{{ $tr('Use this →', '使用 →') }}</button>
         </div>
       </div>
 
@@ -65,6 +65,7 @@
 
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { suggestScenarios } from '../api/simulation'
+import { tr } from '../i18n'
 
 const props = defineProps({
   textPreview: { type: String, default: '' },
@@ -93,8 +94,8 @@ const shouldShow = computed(() => {
 })
 
 const statusLine = computed(() => {
-  if (loading.value) return '// generating…'
-  if (suggestions.value.length > 0) return '// pick one or refine your own'
+  if (loading.value) return tr('// generating…', '// 生成中…')
+  if (suggestions.value.length > 0) return tr('// pick one or refine your own', '// 选择一个或自行完善')
   return ''
 })
 

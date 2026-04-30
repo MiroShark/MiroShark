@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { locale } from '../i18n'
 
 // Create axios instance
 const service = axios.create({
@@ -9,9 +10,15 @@ const service = axios.create({
   }
 })
 
-// Request interceptor
+// Request interceptor — forwards the active UI locale so the backend can
+// localise template metadata, error messages, and feed copy.
 service.interceptors.request.use(
   config => {
+    if (locale && locale.value) {
+      config.headers = config.headers || {}
+      config.headers['X-MiroShark-Locale'] = locale.value
+      config.headers['Accept-Language'] = locale.value
+    }
     return config
   },
   error => {

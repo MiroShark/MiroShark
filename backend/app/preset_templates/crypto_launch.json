@@ -42,5 +42,36 @@
       "trigger_round": 24,
       "injection": "The SEC has just sent NeuralCoin a Wells notice stating the token may qualify as an unregistered security. The team has 30 days to respond."
     }
-  ]
+  ],
+  "i18n": {
+    "zh-CN": {
+      "name": "加密代币发布",
+      "category": "加密货币与金融",
+      "description": "模拟一款新加密代币发布时的社交媒体狂热。观察交易员、KOL、怀疑者与散户如何制造炒作循环、传播 FUD,以及推动市场情绪。",
+      "tags": ["加密货币", "交易", "炒作", "市场情绪"],
+      "counterfactual_branches": [
+        {
+          "id": "rug_pull",
+          "label": "团队钱包抽干流动性",
+          "description": "团队在第 12 小时左右撤走流动性 — Rug Pull。",
+          "trigger_round": 12,
+          "injection": "链上监控检测到一笔异常的多签交易,正在抽走 180 万美元的 $NRAL 流动性。团队的钱包地址全部沉默。"
+        },
+        {
+          "id": "cex_listing",
+          "label": "一线 CEX 确认上线",
+          "description": "在第 18 轮,一家前 5 中心化交易所宣布上线 $NRAL。",
+          "trigger_round": 18,
+          "injection": "币安正式宣布 $NRAL/USDT 永续合约将在 6 小时后上线。受此消息影响,代币上涨 70%。"
+        },
+        {
+          "id": "sec_notice",
+          "label": "SEC 发出 Wells 通知",
+          "description": "SEC 向 $NRAL 发出 Wells 通知,将其定性为未注册证券。",
+          "trigger_round": 24,
+          "injection": "SEC 刚刚向 NeuralCoin 发出 Wells 通知,称该代币可能构成未注册证券。团队需在 30 天内作出回应。"
+        }
+      ]
+    }
+  }
 }

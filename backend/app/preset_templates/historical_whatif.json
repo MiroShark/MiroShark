@@ -24,5 +24,13 @@
     "enable_twitter": true,
     "enable_reddit": true,
     "enable_polymarket": true
+  },
+  "i18n": {
+    "zh-CN": {
+      "name": "历史假设",
+      "category": "历史",
+      "description": "模拟一段反事实的历史情景 — 如果关键事件走向不同会怎样?观察学者、爱好者、记者与大众如何讨论这条平行时间线及其影响。",
+      "tags": ["历史", "反事实", "假设", "太空竞赛"]
+    }
   }
 }

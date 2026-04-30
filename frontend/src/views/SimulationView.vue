@@ -5,31 +5,32 @@
       <div class="header-left">
         <div class="brand" @click="router.push('/')">MIROSHARK</div>
       </div>
-      
+
       <div class="header-center">
         <div class="view-switcher">
-          <button 
-            v-for="mode in ['graph', 'split', 'workbench']" 
+          <button
+            v-for="mode in ['graph', 'split', 'workbench']"
             :key="mode"
             class="switch-btn"
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            {{ { graph: 'Graph', split: 'Split View', workbench: 'Workbench' }[mode] }}
+            {{ { graph: $tr('Graph', '图谱'), split: $tr('Split View', '分屏视图'), workbench: $tr('Workbench', '工作台') }[mode] }}
           </button>
         </div>
       </div>
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">Step 2/4</span>
-          <span class="step-name">Agent Setup</span>
+          <span class="step-num">{{ $tr('Step 2/4', '第 2/4 步') }}</span>
+          <span class="step-name">{{ $tr('Agent Setup', '智能体设置') }}</span>
         </div>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
           <span class="dot"></span>
           {{ statusText }}
         </span>
+        <LocaleToggle />
       </div>
     </header>
 
@@ -70,6 +71,8 @@ import { ref, computed, watchEffect, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import GraphPanel from '../components/GraphPanel.vue'
 import Step2EnvSetup from '../components/Step2EnvSetup.vue'
+import LocaleToggle from '../components/LocaleToggle.vue'
+import { tr } from '../i18n'
 import { getProject, getGraphData } from '../api/graph'
 import { getSimulation, stopSimulation, getEnvStatus, closeSimulationEnv } from '../api/simulation'
 
@@ -112,15 +115,15 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return 'Error'
-  if (currentStatus.value === 'completed') return 'Ready'
+  if (currentStatus.value === 'error') return tr('Error', '错误')
+  if (currentStatus.value === 'completed') return tr('Ready', '就绪')
   switch (currentPhase.value) {
-    case 0: return 'Initializing'
-    case 1: return 'Generating Profiles'
-    case 2: return 'Generating Config'
-    case 3: return 'Orchestrating'
-    case 4: return 'Ready'
-    default: return 'Preparing'
+    case 0: return tr('Initializing', '初始化中')
+    case 1: return tr('Generating Profiles', '生成画像中')
+    case 2: return tr('Generating Config', '生成配置中')
+    case 3: return tr('Orchestrating', '编排中')
+    case 4: return tr('Ready', '就绪')
+    default: return tr('Preparing', '准备中')
   }
 })
 

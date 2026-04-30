@@ -7,7 +7,7 @@
         v-if="phase !== 1"
         class="action-btn secondary"
         @click="emit('go-back')"
-      >← Config</button>
+      >{{ $tr('← Config', '← 配置') }}</button>
 
       <!-- Pause (while running) -->
       <button
@@ -17,7 +17,7 @@
         @click="handleStopSimulation"
       >
         <span v-if="isStopping" class="loading-spinner-small"></span>
-        {{ isStopping ? 'Pausing...' : 'Pause' }}
+        {{ isStopping ? $tr('Pausing...', '暂停中…') : $tr('Pause', '暂停') }}
       </button>
 
       <!-- Restart (when stopped, completed, or failed) -->
@@ -27,7 +27,7 @@
         :disabled="isStarting"
         @click="handleRestart"
       >
-        ↻ {{ runStatus.runner_status === 'failed' ? 'Restart (failed)' : 'Restart' }}
+        ↻ {{ runStatus.runner_status === 'failed' ? $tr('Restart (failed)', '重启(失败)') : $tr('Restart', '重启') }}
       </button>
 
       <!-- Replay (when simulation has data) -->
@@ -36,7 +36,7 @@
         class="action-btn secondary"
         @click="openReplay"
       >
-        ▶ Replay
+        ▶ {{ $tr('Replay', '回放') }}
       </button>
 
       <!-- Generate Article (when simulation has data) -->
@@ -44,9 +44,9 @@
         v-if="phase === 2 && allActions.length > 0"
         class="action-btn secondary"
         @click="openArticleDrawer"
-        title="Generate a publishable article brief from simulation results"
+        :title="$tr('Generate a publishable article brief from simulation results', '从模拟结果生成可发布的文章简报')"
       >
-        ▤ Article
+        ▤ {{ $tr('Article', '文章') }}
       </button>
 
       <!-- Influence Leaderboard toggle -->
@@ -55,9 +55,9 @@
         class="action-btn secondary"
         :class="{ active: showInfluence }"
         @click="toggleOverlay('influence')"
-        title="Agent influence leaderboard"
+        :title="$tr('Agent influence leaderboard', '智能体影响力排行榜')"
       >
-        ◈ Influence
+        ◈ {{ $tr('Influence', '影响力') }}
       </button>
 
       <!-- Belief Drift Chart toggle -->
@@ -66,9 +66,9 @@
         class="action-btn secondary"
         :class="{ active: showBeliefDrift }"
         @click="toggleOverlay('drift')"
-        title="Aggregate belief drift chart"
+        :title="$tr('Aggregate belief drift chart', '群体信念漂移图')"
       >
-        ◎ Drift
+        ◎ {{ $tr('Drift', '漂移') }}
       </button>
 
       <!-- Interaction Network toggle -->
@@ -77,9 +77,9 @@
         class="action-btn secondary"
         :class="{ active: showNetwork }"
         @click="toggleOverlay('network')"
-        title="Agent interaction network graph"
+        :title="$tr('Agent interaction network graph', '智能体互动网络图')"
       >
-        ⬡ Network
+        ⬡ {{ $tr('Network', '网络') }}
       </button>
 
       <!-- Demographic Breakdown toggle -->
@@ -88,9 +88,9 @@
         class="action-btn secondary"
         :class="{ active: showDemographics }"
         @click="toggleOverlay('demographics')"
-        title="Agent demographic breakdown (age, gender, country, actor type, platform)"
+        :title="$tr('Agent demographic breakdown (age, gender, country, actor type, platform)', '智能体人口统计分布(年龄、性别、国家、角色类型、平台)')"
       >
-        ◇ Demographics
+        ◇ {{ $tr('Demographics', '人口统计') }}
       </button>
 
       <!-- Prediction Markets (only when polymarket is enabled/has data) -->
@@ -99,10 +99,10 @@
         class="action-btn secondary polymarket-btn"
         :class="{ active: showPolymarketChart }"
         @click="toggleOverlay('markets')"
-        title="Live prediction market price chart"
+        :title="$tr('Live prediction market price chart', '实时预测市场价格图')"
       >
         <img src="/pm.png" class="btn-platform-icon" alt="" />
-        Markets
+        {{ $tr('Markets', '市场') }}
       </button>
 
       <!-- What If? Counterfactual toggle -->
@@ -111,9 +111,9 @@
         class="action-btn secondary"
         :class="{ active: showWhatIf }"
         @click="toggleOverlay('whatif')"
-        title="What If? — remove agents and recompute belief drift from existing trajectory"
+        :title="$tr('What If? — remove agents and recompute belief drift from existing trajectory', '假如?— 移除智能体并基于现有轨迹重新计算信念漂移')"
       >
-        ◐ What If?
+        ◐ {{ $tr('What If?', '假如?') }}
       </button>
 
       <!-- Director Mode toggle (only while simulation is running) -->
@@ -122,9 +122,9 @@
         class="action-btn secondary director-btn"
         :class="{ active: showDirector }"
         @click="toggleOverlay('director')"
-        :title="directorEventsTotal >= 10 ? 'Director Mode — max events reached' : 'Director Mode — inject a breaking event into the simulation'"
+        :title="directorEventsTotal >= 10 ? $tr('Director Mode — max events reached', '导演模式 — 已达事件上限') : $tr('Director Mode — inject a breaking event into the simulation', '导演模式 — 向模拟中注入突发事件')"
       >
-        ⚡ Director
+        ⚡ {{ $tr('Director', '导演') }}
         <span v-if="directorEventsTotal > 0" class="director-badge">{{ directorEventsTotal }}/10</span>
       </button>
 
@@ -134,9 +134,9 @@
         class="action-btn secondary"
         :class="{ active: showBranch }"
         @click="toggleOverlay('branch')"
-        title="Fork this simulation with a narrative injection scheduled for a specific round"
+        :title="$tr('Fork this simulation with a narrative injection scheduled for a specific round', '在指定轮次插入叙事注入,以分支此模拟')"
       >
-        ⤷ Branch
+        ⤷ {{ $tr('Branch', '分支') }}
       </button>
 
       <!-- Resume (when paused/stopped/failed with partial data) -->
@@ -147,7 +147,7 @@
         @click="handleResume"
       >
         <span v-if="isStarting" class="loading-spinner-small"></span>
-        {{ isStarting ? 'Resuming...' : 'Resume' }}
+        {{ isStarting ? $tr('Resuming...', '继续中…') : $tr('Resume', '继续') }}
       </button>
 
       <!-- Skip to Report / Generate Report -->
@@ -157,15 +157,15 @@
         @click="handleNextStep"
       >
         <span v-if="isGeneratingReport" class="loading-spinner-small"></span>
-        <template v-if="isGeneratingReport">Starting...</template>
-        <template v-else-if="phase === 1">Skip to Report ⟶</template>
-        <template v-else>Report →</template>
+        <template v-if="isGeneratingReport">{{ $tr('Starting...', '启动中…') }}</template>
+        <template v-else-if="phase === 1">{{ $tr('Skip to Report ⟶', '跳至报告 ⟶') }}</template>
+        <template v-else>{{ $tr('Report →', '报告 →') }}</template>
       </button>
     </div>
 
     <!-- Total Events Summary -->
     <div class="events-summary">
-      <span class="events-label">TOTAL EVENTS:</span>
+      <span class="events-label">{{ $tr('TOTAL EVENTS:', '总事件数:') }}</span>
       <span class="events-total">{{ (runStatus.twitter_actions_count || 0) + (runStatus.reddit_actions_count || 0) + (runStatus.polymarket_actions_count || 0) }}</span>
       <span class="events-divider"></span>
       <span class="events-platform">X <span class="events-count">{{ runStatus.twitter_actions_count || 0 }}</span></span>
@@ -189,32 +189,32 @@
     <!-- Quality Diagnostics Panel (expandable) -->
     <div v-if="showQualityPanel && qualityData" class="quality-panel">
       <div class="qp-header">
-        <span class="qp-title">QUALITY DIAGNOSTICS</span>
+        <span class="qp-title">{{ $tr('QUALITY DIAGNOSTICS', '质量诊断') }}</span>
         <button class="qp-close" @click="showQualityPanel = false">×</button>
       </div>
       <div class="qp-metrics">
         <div class="qp-metric">
-          <span class="qp-label">Participation</span>
+          <span class="qp-label">{{ $tr('Participation', '参与度') }}</span>
           <div class="qp-bar-wrap"><div class="qp-bar" :class="qualityData.participation_rate >= 0.8 ? 'qp-good' : qualityData.participation_rate >= 0.6 ? 'qp-ok' : 'qp-low'" :style="{ width: Math.round(qualityData.participation_rate * 100) + '%' }"></div></div>
           <span class="qp-val">{{ Math.round(qualityData.participation_rate * 100) }}%</span>
         </div>
         <div v-if="qualityData.stance_entropy !== null" class="qp-metric">
-          <span class="qp-label">Stance Diversity</span>
+          <span class="qp-label">{{ $tr('Stance Diversity', '立场多样性') }}</span>
           <div class="qp-bar-wrap"><div class="qp-bar" :class="qualityData.stance_entropy >= 0.5 ? 'qp-good' : qualityData.stance_entropy >= 0.3 ? 'qp-ok' : 'qp-low'" :style="{ width: Math.round(qualityData.stance_entropy * 100) + '%' }"></div></div>
           <span class="qp-val">{{ Math.round(qualityData.stance_entropy * 100) }}%</span>
         </div>
         <div class="qp-metric">
-          <span class="qp-label">Cross-Platform</span>
+          <span class="qp-label">{{ $tr('Cross-Platform', '跨平台') }}</span>
           <div class="qp-bar-wrap"><div class="qp-bar" :class="qualityData.cross_platform_rate >= 0.2 ? 'qp-good' : qualityData.cross_platform_rate >= 0.1 ? 'qp-ok' : 'qp-low'" :style="{ width: Math.min(Math.round(qualityData.cross_platform_rate * 100), 100) + '%' }"></div></div>
           <span class="qp-val">{{ Math.round(qualityData.cross_platform_rate * 100) }}%</span>
         </div>
         <div v-if="qualityData.convergence_round !== null" class="qp-metric">
-          <span class="qp-label">Consensus</span>
-          <span class="qp-val qp-convergence">Round {{ qualityData.convergence_round }}</span>
+          <span class="qp-label">{{ $tr('Consensus', '共识') }}</span>
+          <span class="qp-val qp-convergence">{{ $tr('Round', '第') }} {{ qualityData.convergence_round }} {{ $tr('', '轮') }}</span>
         </div>
       </div>
       <div v-if="qualityData.suggestions && qualityData.suggestions.length" class="qp-suggestions">
-        <div class="qp-suggestions-title">Try for next run:</div>
+        <div class="qp-suggestions-title">{{ $tr('Try for next run:', '下次运行可尝试:') }}</div>
         <div v-for="(s, i) in qualityData.suggestions" :key="i" class="qp-suggestion">{{ s }}</div>
       </div>
     </div>
@@ -227,12 +227,12 @@
           <div class="platform-left">
             <svg class="platform-icon" viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             <span class="platform-name">X</span>
-            <span v-if="runStatus.twitter_completed" class="status-badge done">done</span>
+            <span v-if="runStatus.twitter_completed" class="status-badge done">{{ $tr('done', '完成') }}</span>
           </div>
           <div class="platform-stats">
-            <span class="stat"><span class="stat-label">RND</span><span class="stat-value mono">{{ runStatus.twitter_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span></span>
-            <span class="stat"><span class="stat-label">TIME</span><span class="stat-value mono">{{ twitterElapsedTime }}</span></span>
-            <span class="stat"><span class="stat-label">ACTS</span><span class="stat-value mono">{{ runStatus.twitter_actions_count || 0 }}</span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('RND', '轮次') }}</span><span class="stat-value mono">{{ runStatus.twitter_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('TIME', '时间') }}</span><span class="stat-value mono">{{ twitterElapsedTime }}</span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('ACTS', '动作') }}</span><span class="stat-value mono">{{ runStatus.twitter_actions_count || 0 }}</span></span>
           </div>
           <div class="platform-actions-list"><span class="action-tag">POST</span><span class="action-tag">LIKE</span><span class="action-tag">REPOST</span><span class="action-tag">QUOTE</span><span class="action-tag">FOLLOW</span></div>
         </div>
@@ -242,12 +242,12 @@
           <div class="platform-left">
             <img src="/reddit.png" class="platform-icon-img" alt="Reddit" />
             <span class="platform-name">Reddit</span>
-            <span v-if="runStatus.reddit_completed" class="status-badge done">done</span>
+            <span v-if="runStatus.reddit_completed" class="status-badge done">{{ $tr('done', '完成') }}</span>
           </div>
           <div class="platform-stats">
-            <span class="stat"><span class="stat-label">RND</span><span class="stat-value mono">{{ runStatus.reddit_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span></span>
-            <span class="stat"><span class="stat-label">TIME</span><span class="stat-value mono">{{ redditElapsedTime }}</span></span>
-            <span class="stat"><span class="stat-label">ACTS</span><span class="stat-value mono">{{ runStatus.reddit_actions_count || 0 }}</span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('RND', '轮次') }}</span><span class="stat-value mono">{{ runStatus.reddit_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('TIME', '时间') }}</span><span class="stat-value mono">{{ redditElapsedTime }}</span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('ACTS', '动作') }}</span><span class="stat-value mono">{{ runStatus.reddit_actions_count || 0 }}</span></span>
           </div>
           <div class="platform-actions-list"><span class="action-tag">POST</span><span class="action-tag">COMMENT</span><span class="action-tag">LIKE</span><span class="action-tag">DISLIKE</span><span class="action-tag">SEARCH</span><span class="action-tag">FOLLOW</span></div>
         </div>
@@ -257,12 +257,12 @@
           <div class="platform-left">
             <img src="/pm.png" class="platform-icon-img" alt="Polymarket" />
             <span class="platform-name">Polymarket</span>
-            <span v-if="runStatus.polymarket_completed" class="status-badge done">done</span>
+            <span v-if="runStatus.polymarket_completed" class="status-badge done">{{ $tr('done', '完成') }}</span>
           </div>
           <div class="platform-stats">
-            <span class="stat"><span class="stat-label">RND</span><span class="stat-value mono">{{ runStatus.polymarket_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span></span>
-            <span class="stat"><span class="stat-label">TIME</span><span class="stat-value mono">{{ polymarketElapsedTime }}</span></span>
-            <span class="stat"><span class="stat-label">TRADES</span><span class="stat-value mono">{{ runStatus.polymarket_actions_count || 0 }}</span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('RND', '轮次') }}</span><span class="stat-value mono">{{ runStatus.polymarket_current_round || 0 }}<span class="stat-total">/{{ runStatus.total_rounds || maxRounds || '-' }}</span></span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('TIME', '时间') }}</span><span class="stat-value mono">{{ polymarketElapsedTime }}</span></span>
+            <span class="stat"><span class="stat-label">{{ $tr('TRADES', '交易') }}</span><span class="stat-value mono">{{ runStatus.polymarket_actions_count || 0 }}</span></span>
           </div>
           <div class="platform-actions-list"><span class="action-tag">BROWSE</span><span class="action-tag">BUY</span><span class="action-tag">SELL</span><span class="action-tag">CREATE</span><span class="action-tag">COMMENT</span></div>
         </div>
@@ -335,16 +335,16 @@
       <div class="director-header">
         <div class="director-title">
           <span class="director-icon">⚡</span>
-          <span class="director-label">DIRECTOR MODE</span>
+          <span class="director-label">{{ $tr('DIRECTOR MODE', '导演模式') }}</span>
         </div>
-        <span class="director-hint">Inject a breaking event — all agents receive it at the next round boundary</span>
+        <span class="director-hint">{{ $tr('Inject a breaking event — all agents receive it at the next round boundary', '注入一个突发事件 — 所有智能体将在下一轮边界接收到它') }}</span>
       </div>
 
       <div class="director-form">
         <textarea
           v-model="directorEventText"
           class="director-input"
-          placeholder="Describe the event (e.g. 'Central bank unexpectedly raised rates by 100bps')..."
+          :placeholder="$tr(`Describe the event (e.g. 'Central bank unexpectedly raised rates by 100bps')...`, `描述事件(例如「央行意外加息 100 个基点」)…`)"
           maxlength="500"
           :disabled="directorEventsTotal >= 10 || isInjectingEvent"
           rows="3"
@@ -357,7 +357,7 @@
             @click="handleInjectEvent"
           >
             <span v-if="isInjectingEvent" class="loading-spinner-small"></span>
-            {{ isInjectingEvent ? 'Injecting...' : directorEventsTotal >= 10 ? 'Max events reached' : 'Inject Event' }}
+            {{ isInjectingEvent ? $tr('Injecting...', '注入中…') : directorEventsTotal >= 10 ? $tr('Max events reached', '已达事件上限') : $tr('Inject Event', '注入事件') }}
           </button>
         </div>
         <div v-if="directorError" class="director-error">{{ directorError }}</div>
@@ -365,17 +365,17 @@
 
       <!-- Event History -->
       <div v-if="directorEventHistory.length > 0" class="director-history">
-        <div class="director-history-title">Injected Events</div>
+        <div class="director-history-title">{{ $tr('Injected Events', '已注入事件') }}</div>
         <button
           v-for="evt in directorEventHistory"
           :key="evt.id"
           class="director-event-card director-event-card-clickable"
           type="button"
-          title="Show this event on the timeline"
+          :title="$tr('Show this event on the timeline', '在时间线上显示此事件')"
           @click="jumpToDirectorEvent(evt)"
         >
           <div class="director-event-header">
-            <span class="director-event-badge">⚡ ROUND {{ evt.injected_at_round || evt.submitted_at_round }}</span>
+            <span class="director-event-badge">⚡ {{ $tr('ROUND', '轮次') }} {{ evt.injected_at_round || evt.submitted_at_round }}</span>
             <span class="director-event-time">{{ formatEventTime(evt.timestamp) }}</span>
             <span class="director-event-jump">↗</span>
           </div>
@@ -385,14 +385,14 @@
 
       <!-- Pending Events -->
       <div v-if="directorPendingEvents.length > 0" class="director-history">
-        <div class="director-history-title">Pending (will inject next round)</div>
+        <div class="director-history-title">{{ $tr('Pending (will inject next round)', '等待中(将在下一轮注入)') }}</div>
         <div
           v-for="evt in directorPendingEvents"
           :key="evt.id"
           class="director-event-card pending"
         >
           <div class="director-event-header">
-            <span class="director-event-badge pending-badge">◌ QUEUED</span>
+            <span class="director-event-badge pending-badge">◌ {{ $tr('QUEUED', '已排队') }}</span>
           </div>
           <div class="director-event-text">{{ evt.event_text }}</div>
         </div>
@@ -412,9 +412,9 @@
       <div v-if="filteredPlatform" class="agent-filter-bar">
         <div class="filter-info">
           <span class="filter-name" :class="filteredPlatform">{{ filteredPlatform === 'twitter' ? 'X' : filteredPlatform === 'reddit' ? 'Reddit' : 'Polymarket' }}</span>
-          <span class="filter-count">{{ chronologicalActions.length }} events</span>
+          <span class="filter-count">{{ chronologicalActions.length }} {{ $tr('events', '事件') }}</span>
         </div>
-        <button class="filter-clear" @click="clearPlatformFilter">Clear</button>
+        <button class="filter-clear" @click="clearPlatformFilter">{{ $tr('Clear', '清除') }}</button>
       </div>
 
       <!-- Agent Filter Bar -->
@@ -422,9 +422,9 @@
         <div class="filter-info">
           <div class="avatar-placeholder">{{ filteredAgent[0] }}</div>
           <span class="filter-name">{{ filteredAgent }}</span>
-          <span class="filter-count">{{ chronologicalActions.length }} events</span>
+          <span class="filter-count">{{ chronologicalActions.length }} {{ $tr('events', '事件') }}</span>
         </div>
-        <button class="filter-clear" @click="clearAgentFilter">Clear</button>
+        <button class="filter-clear" @click="clearAgentFilter">{{ $tr('Clear', '清除') }}</button>
       </div>
 
       <!-- Timeline Feed -->
@@ -447,7 +447,7 @@
             <div v-if="action._isDirectorEvent" class="timeline-card director-card">
               <div class="director-inline-banner">
                 <span class="director-inline-icon">⚡</span>
-                <span class="director-inline-label">BREAKING — Round {{ action.round_num }}</span>
+                <span class="director-inline-label">{{ $tr('BREAKING — Round', '突发 — 第') }} {{ action.round_num }}{{ $tr('', ' 轮') }}</span>
               </div>
               <div class="director-inline-text">{{ action.action_args?.content }}</div>
             </div>
@@ -486,7 +486,7 @@
                   <div v-if="action.action_args?.original_content" class="quoted-block">
                     <div class="quote-header">
                       <svg class="icon-small" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-                      <span class="quote-label">@{{ action.action_args.original_author_name || 'User' }}</span>
+                      <span class="quote-label">@{{ action.action_args.original_author_name || $tr('User', '用户') }}</span>
                     </div>
                     <div class="quote-text">
                       {{ truncateContent(action.action_args.original_content, 150) }}
@@ -498,7 +498,7 @@
                 <template v-if="action.action_type === 'REPOST'">
                   <div class="repost-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-                    <span class="repost-label">Reposted from @{{ action.action_args?.original_author_name || 'User' }}</span>
+                    <span class="repost-label">{{ $tr('Reposted from @', '转发自 @') }}{{ action.action_args?.original_author_name || $tr('User', '用户') }}</span>
                   </div>
                   <div v-if="action.action_args?.original_content" class="repost-content">
                     {{ truncateContent(action.action_args.original_content, 200) }}
@@ -509,7 +509,7 @@
                 <template v-if="action.action_type === 'LIKE_POST'">
                   <div class="like-info">
                     <svg class="icon-small filled" viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-                    <span class="like-label">Liked @{{ action.action_args?.post_author_name || 'User' }}'s post</span>
+                    <span class="like-label">{{ $tr('Liked @', '点赞了 @') }}{{ action.action_args?.post_author_name || $tr('User', '用户') }}{{ $tr(`'s post`, ' 的帖子') }}</span>
                   </div>
                   <div v-if="action.action_args?.post_content" class="liked-content">
                     "{{ truncateContent(action.action_args.post_content, 120) }}"
@@ -523,7 +523,7 @@
                   </div>
                   <div v-if="action.action_args?.post_id" class="comment-context">
                     <svg class="icon-small" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
-                    <span>Reply to post #{{ action.action_args.post_id }}</span>
+                    <span>{{ $tr('Reply to post #', '回复帖子 #') }}{{ action.action_args.post_id }}</span>
                   </div>
                 </template>
 
@@ -531,7 +531,7 @@
                 <template v-if="action.action_type === 'SEARCH_POSTS'">
                   <div class="search-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                    <span class="search-label">Search Query:</span>
+                    <span class="search-label">{{ $tr('Search Query:', '搜索查询:') }}</span>
                     <span class="search-query">"{{ action.action_args?.query || '' }}"</span>
                   </div>
                 </template>
@@ -540,7 +540,7 @@
                 <template v-if="action.action_type === 'FOLLOW'">
                   <div class="follow-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
-                    <span class="follow-label">Followed @{{ action.action_args?.target_user_name || action.action_args?.target_user || action.action_args?.user_id || 'User' }}</span>
+                    <span class="follow-label">{{ $tr('Followed @', '关注了 @') }}{{ action.action_args?.target_user_name || action.action_args?.target_user || action.action_args?.user_id || $tr('User', '用户') }}</span>
                   </div>
                 </template>
 
@@ -548,7 +548,7 @@
                 <template v-if="action.action_type === 'DISLIKE_POST'">
                   <div class="like-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
-                    <span class="like-label">Disliked @{{ action.action_args?.post_author_name || 'User' }}'s post</span>
+                    <span class="like-label">{{ $tr('Disliked @', '踩了 @') }}{{ action.action_args?.post_author_name || $tr('User', '用户') }}{{ $tr(`'s post`, ' 的帖子') }}</span>
                   </div>
                   <div v-if="action.action_args?.post_content" class="liked-content">
                     "{{ truncateContent(action.action_args.post_content, 120) }}"
@@ -559,7 +559,7 @@
                 <template v-if="action.action_type === 'DISLIKE_COMMENT'">
                   <div class="like-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>
-                    <span class="like-label">Disliked @{{ action.action_args?.comment_author_name || 'User' }}'s comment</span>
+                    <span class="like-label">{{ $tr('Disliked @', '踩了 @') }}{{ action.action_args?.comment_author_name || $tr('User', '用户') }}{{ $tr(`'s comment`, ' 的评论') }}</span>
                   </div>
                   <div v-if="action.action_args?.comment_content" class="liked-content">
                     "{{ truncateContent(action.action_args.comment_content, 120) }}"
@@ -570,7 +570,7 @@
                 <template v-if="action.action_type === 'MUTE'">
                   <div class="follow-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5L6 9H2v6h4l5 4V5z"></path><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
-                    <span class="follow-label">Muted @{{ action.action_args?.target_user_name || action.action_args?.user_id || 'User' }}</span>
+                    <span class="follow-label">{{ $tr('Muted @', '静音了 @') }}{{ action.action_args?.target_user_name || action.action_args?.user_id || $tr('User', '用户') }}</span>
                   </div>
                 </template>
 
@@ -579,7 +579,7 @@
                   <div class="vote-info">
                     <svg v-if="action.action_type === 'UPVOTE_POST'" class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
                     <svg v-else class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                    <span class="vote-label">{{ action.action_type === 'UPVOTE_POST' ? 'Upvoted' : 'Downvoted' }} Post</span>
+                    <span class="vote-label">{{ action.action_type === 'UPVOTE_POST' ? $tr('Upvoted', '顶') : $tr('Downvoted', '踩') }} {{ $tr('Post', '帖子') }}</span>
                   </div>
                   <div v-if="action.action_args?.post_content" class="voted-content">
                     "{{ truncateContent(action.action_args.post_content, 120) }}"
@@ -590,50 +590,50 @@
                 <template v-if="action.action_type === 'DO_NOTHING'">
                   <div class="idle-info">
                     <svg class="icon-small" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                    <span class="idle-label">Action Skipped</span>
+                    <span class="idle-label">{{ $tr('Action Skipped', '跳过此动作') }}</span>
                   </div>
                 </template>
 
                 <!-- BUY_SHARES -->
                 <template v-if="action.action_type === 'BUY_SHARES'">
                   <div class="trade-info">
-                    <span class="trade-direction buy">BUY</span>
-                    <span class="trade-detail">{{ formatShares(action.action_args?.shares) }} <strong>{{ action.action_args?.outcome }}</strong> shares</span>
+                    <span class="trade-direction buy">{{ $tr('BUY', '买入') }}</span>
+                    <span class="trade-detail">{{ formatShares(action.action_args?.shares) }} <strong>{{ action.action_args?.outcome }}</strong> {{ $tr('shares', '份额') }}</span>
                     <span class="trade-cost">@ ${{ formatPrice(action.action_args?.price) }}</span>
                     <span class="trade-total">${{ formatPrice(action.action_args?.cost) }}</span>
                   </div>
-                  <div v-if="action.action_args?.market_id" class="market-ref">Market #{{ action.action_args.market_id }}</div>
+                  <div v-if="action.action_args?.market_id" class="market-ref">{{ $tr('Market #', '市场 #') }}{{ action.action_args.market_id }}</div>
                 </template>
 
                 <!-- SELL_SHARES -->
                 <template v-if="action.action_type === 'SELL_SHARES'">
                   <div class="trade-info">
-                    <span class="trade-direction sell">SELL</span>
-                    <span class="trade-detail">{{ formatShares(action.action_args?.shares) }} <strong>{{ action.action_args?.outcome }}</strong> shares</span>
+                    <span class="trade-direction sell">{{ $tr('SELL', '卖出') }}</span>
+                    <span class="trade-detail">{{ formatShares(action.action_args?.shares) }} <strong>{{ action.action_args?.outcome }}</strong> {{ $tr('shares', '份额') }}</span>
                     <span class="trade-cost">@ ${{ formatPrice(action.action_args?.price || (action.action_args?.usd_received && action.action_args?.shares ? action.action_args.usd_received / action.action_args.shares : null)) }}</span>
                     <span class="trade-total text-green">${{ formatPrice(action.action_args?.usd_received) }}</span>
                   </div>
-                  <div v-if="action.action_args?.market_id" class="market-ref">Market #{{ action.action_args.market_id }}</div>
+                  <div v-if="action.action_args?.market_id" class="market-ref">{{ $tr('Market #', '市场 #') }}{{ action.action_args.market_id }}</div>
                 </template>
 
                 <!-- CREATE_MARKET -->
                 <template v-if="action.action_type === 'CREATE_MARKET'">
                   <div class="market-question">"{{ action.action_args?.question }}"</div>
-                  <div v-if="action.action_args?.market_id" class="market-ref">Market #{{ action.action_args.market_id }}</div>
+                  <div v-if="action.action_args?.market_id" class="market-ref">{{ $tr('Market #', '市场 #') }}{{ action.action_args.market_id }}</div>
                 </template>
 
                 <!-- COMMENT_ON_MARKET -->
                 <template v-if="action.action_type === 'COMMENT_ON_MARKET'">
                   <div v-if="action.action_args?.content" class="content-text">{{ action.action_args.content }}</div>
-                  <div v-if="action.action_args?.market_id" class="market-ref">Market #{{ action.action_args.market_id }}</div>
+                  <div v-if="action.action_args?.market_id" class="market-ref">{{ $tr('Market #', '市场 #') }}{{ action.action_args.market_id }}</div>
                 </template>
 
                 <!-- BROWSE_MARKETS / VIEW_PORTFOLIO -->
                 <template v-if="action.action_type === 'BROWSE_MARKETS'">
-                  <div class="idle-info"><span class="idle-label">Browsed active markets</span></div>
+                  <div class="idle-info"><span class="idle-label">{{ $tr('Browsed active markets', '浏览活跃市场') }}</span></div>
                 </template>
                 <template v-if="action.action_type === 'VIEW_PORTFOLIO'">
-                  <div class="idle-info"><span class="idle-label">Checked portfolio</span></div>
+                  <div class="idle-info"><span class="idle-label">{{ $tr('Checked portfolio', '查看持仓') }}</span></div>
                 </template>
 
                 <!-- Generic fallback -->
@@ -643,7 +643,7 @@
               </div>
 
               <div class="card-footer">
-                <span class="time-tag">R{{ action.round_num }} • {{ formatActionTime(action.timestamp) }}</span>
+                <span class="time-tag">{{ $tr('R', '第') }}{{ action.round_num }}{{ $tr('', ' 轮') }} • {{ formatActionTime(action.timestamp) }}</span>
                 <!-- Platform tag removed as it is in header now -->
               </div>
             </div>
@@ -652,7 +652,7 @@
 
         <div v-if="allActions.length === 0" class="waiting-state">
           <div class="pulse-ring"></div>
-          <span>Waiting for agent actions...</span>
+          <span>{{ $tr('Waiting for agent actions...', '等待智能体动作…') }}</span>
         </div>
       </div>
     </div>
@@ -660,8 +660,8 @@
     <!-- Bottom Info / Logs -->
     <div class="system-logs" :class="{ collapsed: monitorCollapsed }">
       <div class="log-header" @click="monitorCollapsed = !monitorCollapsed">
-        <span class="log-title">SIMULATION MONITOR <span class="log-toggle">{{ monitorCollapsed ? '▲' : '▼' }}</span></span>
-        <span class="log-id copyable" @click.stop="copySimId" :title="copied ? 'Copied!' : 'Click to copy'">{{ simulationId || 'NO_SIMULATION' }}{{ copied ? ' ✓' : '' }}</span>
+        <span class="log-title">{{ $tr('SIMULATION MONITOR', '模拟监控') }} <span class="log-toggle">{{ monitorCollapsed ? '▲' : '▼' }}</span></span>
+        <span class="log-id copyable" @click.stop="copySimId" :title="copied ? $tr('Copied!', '已复制!') : $tr('Click to copy', '点击复制')">{{ simulationId || $tr('NO_SIMULATION', '无模拟') }}{{ copied ? ' ✓' : '' }}</span>
       </div>
       <div v-show="!monitorCollapsed" class="log-content" ref="logContent">
         <div class="log-line" v-for="(log, idx) in systemLogs" :key="idx">
@@ -676,20 +676,20 @@
       <div v-if="showArticleDrawer" class="article-drawer-overlay" @click.self="showArticleDrawer = false">
         <div class="article-drawer">
           <div class="article-drawer-header">
-            <span class="article-drawer-title">Generated Article</span>
+            <span class="article-drawer-title">{{ $tr('Generated Article', '已生成的文章') }}</span>
             <div class="article-drawer-actions">
               <button
                 class="article-action-btn"
                 :disabled="isGeneratingArticle || !articleText"
                 @click="copyArticle"
-                :title="articleCopied ? 'Copied!' : 'Copy to clipboard'"
-              >{{ articleCopied ? 'Copied!' : 'Copy' }}</button>
+                :title="articleCopied ? $tr('Copied!', '已复制!') : $tr('Copy to clipboard', '复制到剪贴板')"
+              >{{ articleCopied ? $tr('Copied!', '已复制!') : $tr('Copy', '复制') }}</button>
               <button
                 class="article-action-btn"
                 :disabled="isGeneratingArticle || !articleText"
                 @click="downloadArticle"
-                title="Download as .md"
-              >Download .md</button>
+                :title="$tr('Download as .md', '下载为 .md 文件')"
+              >{{ $tr('Download .md', '下载 .md') }}</button>
               <button class="article-close-btn" @click="showArticleDrawer = false">&#x2715;</button>
             </div>
           </div>
@@ -709,13 +709,13 @@
                 <div class="skel-line long"></div>
                 <div class="skel-line short"></div>
               </div>
-              <span class="article-loading-label">Generating article from simulation data...</span>
+              <span class="article-loading-label">{{ $tr('Generating article from simulation data...', '正在从模拟数据生成文章…') }}</span>
             </div>
 
             <!-- Error state -->
             <div v-else-if="articleError" class="article-error">
               <span class="article-error-msg">{{ articleError }}</span>
-              <button class="article-action-btn" @click="generateArticle">Retry</button>
+              <button class="article-action-btn" @click="generateArticle">{{ $tr('Retry', '重试') }}</button>
             </div>
 
             <!-- Article content -->
@@ -756,6 +756,7 @@ import DemographicBreakdown from './DemographicBreakdown.vue'
 import WhatIfPanel from './WhatIfPanel.vue'
 import CounterfactualBranchPanel from './CounterfactualBranchPanel.vue'
 import PolymarketChart from './PolymarketChart.vue'
+import { tr } from '../i18n'
 
 const props = defineProps({
   simulationId: String,
@@ -843,10 +844,10 @@ const showQualityPanel = ref(false)
 const qualityTooltip = computed(() => {
   const q = qualityData.value
   if (!q) return ''
-  const parts = [`Health: ${q.health}`, `Participation ${Math.round(q.participation_rate * 100)}%`]
+  const parts = [tr(`Health: ${q.health}`, `健康度:${q.health}`), tr(`Participation ${Math.round(q.participation_rate * 100)}%`, `参与度 ${Math.round(q.participation_rate * 100)}%`)]
   if (q.stance_entropy !== null) {
-    const level = q.stance_entropy >= 0.7 ? 'high' : q.stance_entropy >= 0.4 ? 'medium' : 'low'
-    parts.push(`Diversity: ${level}`)
+    const level = q.stance_entropy >= 0.7 ? tr('high', '高') : q.stance_entropy >= 0.4 ? tr('medium', '中') : tr('low', '低')
+    parts.push(tr(`Diversity: ${level}`, `多样性:${level}`))
   }
   return parts.join(' · ')
 })
@@ -885,10 +886,10 @@ const handleInjectEvent = async () => {
       directorEventsTotal.value = res.total_events
       await loadDirectorEvents()
     } else {
-      directorError.value = res.error || 'Failed to inject event'
+      directorError.value = res.error || tr('Failed to inject event', '注入事件失败')
     }
   } catch (err) {
-    directorError.value = err.response?.data?.error || err.message || 'Failed to inject event'
+    directorError.value = err.response?.data?.error || err.message || tr('Failed to inject event', '注入事件失败')
   } finally {
     isInjectingEvent.value = false
   }
@@ -1078,7 +1079,7 @@ const resetAllState = () => {
 // Start simulation
 const doStartSimulation = async () => {
   if (!props.simulationId) {
-    addLog('Error: missing simulationId')
+    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId'))
     return
   }
 
@@ -1087,7 +1088,7 @@ const doStartSimulation = async () => {
 
   isStarting.value = true
   startError.value = null
-  addLog('Starting dual-platform parallel simulation...')
+  addLog(tr('Starting dual-platform parallel simulation...', '正在启动双平台并行模拟…'))
   emit('update-status', 'processing')
   
   try {
@@ -1101,33 +1102,33 @@ const doStartSimulation = async () => {
     
     if (props.maxRounds) {
       params.max_rounds = props.maxRounds
-      addLog(`Set max simulation rounds: ${props.maxRounds}`)
+      addLog(tr(`Set max simulation rounds: ${props.maxRounds}`, `设定最大模拟轮次:${props.maxRounds}`))
     }
 
-    addLog('Dynamic graph memory update mode enabled')
-    
+    addLog(tr('Dynamic graph memory update mode enabled', '已启用动态图记忆更新模式'))
+
     const res = await startSimulation(params)
-    
+
     if (res.success && res.data) {
       if (res.data.force_restarted) {
-        addLog('Old simulation logs cleaned, restarting simulation')
+        addLog(tr('Old simulation logs cleaned, restarting simulation', '已清理旧的模拟日志,重新启动模拟'))
       }
-      addLog('Simulation engine started successfully')
-      addLog(`  ├─ PID: ${res.data.process_pid || '-'}`)
-      
+      addLog(tr('Simulation engine started successfully', '模拟引擎启动成功'))
+      addLog(tr(`  ├─ PID: ${res.data.process_pid || '-'}`, `  ├─ PID:${res.data.process_pid || '-'}`))
+
       phase.value = 1
       runStatus.value = res.data
-      
+
       startStatusPolling()
       startDetailPolling()
     } else {
-      startError.value = res.error || 'Start failed'
-      addLog(`Start failed: ${res.error || 'Unknown error'}`)
+      startError.value = res.error || tr('Start failed', '启动失败')
+      addLog(tr(`Start failed: ${res.error || 'Unknown error'}`, `启动失败:${res.error || '未知错误'}`))
       emit('update-status', 'error')
     }
   } catch (err) {
     startError.value = err.message
-    addLog(`Start error: ${err.message}`)
+    addLog(tr(`Start error: ${err.message}`, `启动出错:${err.message}`))
     emit('update-status', 'error')
   } finally {
     isStarting.value = false
@@ -1142,7 +1143,7 @@ const handleResume = async () => {
   if (!props.simulationId) return
 
   const fromRound = runStatus.value.current_round || 0
-  addLog(`Resuming simulation from round ${fromRound}...`)
+  addLog(tr(`Resuming simulation from round ${fromRound}...`, `从第 ${fromRound} 轮继续模拟…`))
 
   isStarting.value = true
   startError.value = null
@@ -1162,20 +1163,20 @@ const handleResume = async () => {
     const res = await resumeSimulation(params)
 
     if (res.success && res.data) {
-      addLog(`Resumed from round ${res.data.resumed_from_round || fromRound}`)
-      addLog(`  ├─ PID: ${res.data.process_pid || '-'}`)
+      addLog(tr(`Resumed from round ${res.data.resumed_from_round || fromRound}`, `已从第 ${res.data.resumed_from_round || fromRound} 轮继续`))
+      addLog(tr(`  ├─ PID: ${res.data.process_pid || '-'}`, `  ├─ PID:${res.data.process_pid || '-'}`))
       phase.value = 1
       runStatus.value = { ...runStatus.value, ...res.data }
       startStatusPolling()
       startDetailPolling()
     } else {
-      startError.value = res.error || 'Resume failed'
-      addLog(`Resume failed: ${res.error || 'Unknown error'}`)
+      startError.value = res.error || tr('Resume failed', '继续失败')
+      addLog(tr(`Resume failed: ${res.error || 'Unknown error'}`, `继续失败:${res.error || '未知错误'}`))
       emit('update-status', 'error')
     }
   } catch (err) {
     startError.value = err.message
-    addLog(`Resume error: ${err.message}`)
+    addLog(tr(`Resume error: ${err.message}`, `继续出错:${err.message}`))
     emit('update-status', 'error')
   } finally {
     isStarting.value = false
@@ -1190,7 +1191,7 @@ const openReplay = () => {
 // Restart simulation (force restart from scratch)
 const handleRestart = async () => {
   if (!props.simulationId) return
-  addLog('Restarting simulation from scratch...')
+  addLog(tr('Restarting simulation from scratch...', '从零重新启动模拟…'))
   resetAllState()
   doStartSimulation()
 }
@@ -1200,21 +1201,21 @@ const handleStopSimulation = async () => {
   if (!props.simulationId) return
 
   isStopping.value = true
-  addLog('Stopping simulation...')
-  
+  addLog(tr('Stopping simulation...', '正在停止模拟…'))
+
   try {
     const res = await stopSimulation({ simulation_id: props.simulationId })
-    
+
     if (res.success) {
-      addLog('Simulation stopped')
+      addLog(tr('Simulation stopped', '模拟已停止'))
       phase.value = 2
       stopPolling()
       emit('update-status', 'completed')
     } else {
-      addLog(`Stop failed: ${res.error || 'Unknown error'}`)
+      addLog(tr(`Stop failed: ${res.error || 'Unknown error'}`, `停止失败:${res.error || '未知错误'}`))
     }
   } catch (err) {
-    addLog(`Stop error: ${err.message}`)
+    addLog(tr(`Stop error: ${err.message}`, `停止出错:${err.message}`))
   } finally {
     isStopping.value = false
   }
@@ -1260,12 +1261,12 @@ const fetchRunStatus = async () => {
       
       // Detect round changes for each platform and output logs
       if (data.twitter_current_round > prevTwitterRound.value) {
-        addLog(`[Plaza] R${data.twitter_current_round}/${data.total_rounds} | T:${data.twitter_simulated_hours || 0}h | A:${data.twitter_actions_count}`)
+        addLog(tr(`[Plaza] R${data.twitter_current_round}/${data.total_rounds} | T:${data.twitter_simulated_hours || 0}h | A:${data.twitter_actions_count}`, `[广场] R${data.twitter_current_round}/${data.total_rounds} | T:${data.twitter_simulated_hours || 0}h | A:${data.twitter_actions_count}`))
         prevTwitterRound.value = data.twitter_current_round
       }
-      
+
       if (data.reddit_current_round > prevRedditRound.value) {
-        addLog(`[Community] R${data.reddit_current_round}/${data.total_rounds} | T:${data.reddit_simulated_hours || 0}h | A:${data.reddit_actions_count}`)
+        addLog(tr(`[Community] R${data.reddit_current_round}/${data.total_rounds} | T:${data.reddit_simulated_hours || 0}h | A:${data.reddit_actions_count}`, `[社区] R${data.reddit_current_round}/${data.total_rounds} | T:${data.reddit_simulated_hours || 0}h | A:${data.reddit_actions_count}`))
         prevRedditRound.value = data.reddit_current_round
       }
       
@@ -1278,9 +1279,9 @@ const fetchRunStatus = async () => {
       
       if (isCompleted || platformsCompleted) {
         if (platformsCompleted && !isCompleted) {
-          addLog('All platform simulations have ended')
+          addLog(tr('All platform simulations have ended', '所有平台模拟均已结束'))
         }
-        addLog('Simulation completed')
+        addLog(tr('Simulation completed', '模拟已完成'))
         phase.value = 2
         stopPolling()
         emit('update-status', 'completed')
@@ -1379,7 +1380,7 @@ const getActionTypeLabel = (type) => {
     'VIEW_PORTFOLIO': 'PORTFOLIO',
     'COMMENT_ON_MARKET': 'COMMENT',
   }
-  return labels[type] || type || 'UNKNOWN'
+  return labels[type] || type || tr('UNKNOWN', '未知')
 }
 
 const getActionTypeClass = (type) => {
@@ -1430,12 +1431,12 @@ const formatActionTime = (timestamp) => {
 
 const handleNextStep = async () => {
   if (!props.simulationId) {
-    addLog('Error: missing simulationId')
+    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId'))
     return
   }
 
   if (isGeneratingReport.value) {
-    addLog('Report generation request already sent, please wait...')
+    addLog(tr('Report generation request already sent, please wait...', '报告生成请求已发送,请稍候…'))
     return
   }
 
@@ -1443,15 +1444,15 @@ const handleNextStep = async () => {
 
   // If simulation is still running, stop it first
   if (phase.value === 1) {
-    addLog('Stopping simulation before generating report...')
+    addLog(tr('Stopping simulation before generating report...', '正在停止模拟以生成报告…'))
     try {
       await stopSimulation({ simulation_id: props.simulationId })
       phase.value = 2
       stopPolling()
-      addLog('Simulation stopped — proceeding with partial data')
+      addLog(tr('Simulation stopped — proceeding with partial data', '模拟已停止 — 将使用部分数据继续'))
       emit('update-status', 'completed')
     } catch (err) {
-      addLog(`Warning: could not stop simulation (${err.message}), proceeding anyway`)
+      addLog(tr(`Warning: could not stop simulation (${err.message}), proceeding anyway`, `警告:无法停止模拟(${err.message}),仍将继续`))
       stopPolling()
       phase.value = 2
     }
@@ -1459,7 +1460,7 @@ const handleNextStep = async () => {
 
   try {
     // First try to get existing report (don't regenerate)
-    addLog('Checking for existing report...')
+    addLog(tr('Checking for existing report...', '正在检查已有报告…'))
     const res = await generateReport({
       simulation_id: props.simulationId,
       force_regenerate: false
@@ -1468,17 +1469,17 @@ const handleNextStep = async () => {
     if (res.success && res.data) {
       const reportId = res.data.report_id
       if (res.data.already_generated) {
-        addLog(`Found existing report: ${reportId}`)
+        addLog(tr(`Found existing report: ${reportId}`, `找到已有报告:${reportId}`))
       } else {
-        addLog(`Report generation started: ${reportId}`)
+        addLog(tr(`Report generation started: ${reportId}`, `报告生成已启动:${reportId}`))
       }
       router.push({ name: 'Report', params: { reportId } })
     } else {
-      addLog(`Failed to start report generation: ${res.error || 'Unknown error'}`)
+      addLog(tr(`Failed to start report generation: ${res.error || 'Unknown error'}`, `启动报告生成失败:${res.error || '未知错误'}`))
       isGeneratingReport.value = false
     }
   } catch (err) {
-    addLog(`Report generation error: ${err.message}`)
+    addLog(tr(`Report generation error: ${err.message}`, `报告生成出错:${err.message}`))
     isGeneratingReport.value = false
   }
 }
@@ -1505,7 +1506,7 @@ const tryResumeOrStart = async () => {
 
       if (status === 'running' || status === 'starting') {
         // Simulation is still running — reconnect to it
-        addLog(`Reconnecting to running simulation (round ${res.data.current_round}/${res.data.total_rounds})...`)
+        addLog(tr(`Reconnecting to running simulation (round ${res.data.current_round}/${res.data.total_rounds})...`, `正在重新连接运行中的模拟(第 ${res.data.current_round}/${res.data.total_rounds} 轮)…`))
         runStatus.value = res.data
         phase.value = 1
         emit('update-status', 'processing')
@@ -1517,7 +1518,7 @@ const tryResumeOrStart = async () => {
       if (status === 'completed' || status === 'stopped') {
         // Already finished — show completed state
         const totalActions = (res.data.twitter_actions_count || 0) + (res.data.reddit_actions_count || 0)
-        addLog(`Previous simulation found: ${status} (${totalActions} actions, round ${res.data.current_round}/${res.data.total_rounds})`)
+        addLog(tr(`Previous simulation found: ${status} (${totalActions} actions, round ${res.data.current_round}/${res.data.total_rounds})`, `发现之前的模拟:${status}(${totalActions} 个动作,第 ${res.data.current_round}/${res.data.total_rounds} 轮)`))
         runStatus.value = res.data
         phase.value = 2
         emit('update-status', 'completed')
@@ -1530,8 +1531,8 @@ const tryResumeOrStart = async () => {
         // Crashed — show partial data, let user decide
         const totalActions = (res.data.twitter_actions_count || 0) + (res.data.reddit_actions_count || 0)
         if (totalActions > 0) {
-          addLog(`Previous simulation crashed at round ${res.data.current_round}/${res.data.total_rounds} with ${totalActions} actions`)
-          addLog('You can generate a report from partial data or restart')
+          addLog(tr(`Previous simulation crashed at round ${res.data.current_round}/${res.data.total_rounds} with ${totalActions} actions`, `之前的模拟在第 ${res.data.current_round}/${res.data.total_rounds} 轮崩溃,共 ${totalActions} 个动作`))
+          addLog(tr('You can generate a report from partial data or restart', '您可以基于部分数据生成报告或重新启动'))
           runStatus.value = res.data
           phase.value = 2  // treat as completed so buttons work
           emit('update-status', 'completed')
@@ -1539,7 +1540,7 @@ const tryResumeOrStart = async () => {
           return
         }
         // No data — just start fresh
-        addLog('Previous simulation failed with no data — starting fresh')
+        addLog(tr('Previous simulation failed with no data — starting fresh', '之前的模拟失败且无数据 — 重新开始'))
       }
     }
   } catch (err) {
@@ -1565,10 +1566,10 @@ const generateArticle = async () => {
     if (res.success && res.data?.article_text) {
       articleText.value = res.data.article_text
     } else {
-      articleError.value = res.error || 'Failed to generate article.'
+      articleError.value = res.error || tr('Failed to generate article.', '生成文章失败。')
     }
   } catch (err) {
-    articleError.value = err?.message || 'Network error generating article.'
+    articleError.value = err?.message || tr('Network error generating article.', '生成文章时发生网络错误。')
   } finally {
     isGeneratingArticle.value = false
   }
@@ -1607,7 +1608,7 @@ watch(phase, (newPhase) => {
 })
 
 onMounted(() => {
-  addLog('Step3 Simulation Run initialized')
+  addLog(tr('Step3 Simulation Run initialized', '第 3 步 模拟运行已初始化'))
   tryResumeOrStart()
 })
 

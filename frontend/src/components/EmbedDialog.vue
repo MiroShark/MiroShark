@@ -7,7 +7,7 @@
           <div class="embed-dialog-header">
             <div class="embed-dialog-title">
               <span class="title-icon">⌘</span>
-              <span>Embed simulation</span>
+              <span>{{ $tr('Embed simulation', '嵌入模拟') }}</span>
               <span class="title-sub">{{ formatSimulationId(simulationId) }}</span>
             </div>
             <button class="embed-dialog-close" @click="$emit('close')">×</button>
@@ -15,8 +15,7 @@
 
           <!-- Description -->
           <p class="embed-dialog-desc">
-            Paste the iframe below into Notion, Substack, Medium, a GitHub README, or any HTML page.
-            The widget loads live from this MiroShark instance and updates automatically as the simulation changes.
+            {{ $tr('Paste the iframe below into Notion, Substack, Medium, a GitHub README, or any HTML page. The widget loads live from this MiroShark instance and updates automatically as the simulation changes.', '将下面的 iframe 粘贴到 Notion、Substack、Medium、GitHub README 或任何 HTML 页面中。组件从当前 MiroShark 实例实时加载,并随模拟变化自动更新。') }}
           </p>
 
           <!-- Public toggle -->
@@ -24,7 +23,7 @@
             <label class="embed-public-toggle">
               <input type="checkbox" :checked="isPublic" @change="togglePublic" :disabled="publishing" />
               <span class="embed-public-label">
-                {{ isPublic ? 'Public — embeddable by anyone with the URL' : 'Private — embed URL returns 403' }}
+                {{ isPublic ? $tr('Public — embeddable by anyone with the URL', '公开 — 任何获得 URL 的人都可嵌入') : $tr('Private — embed URL returns 403', '私有 — 嵌入 URL 返回 403') }}
               </span>
             </label>
             <span v-if="publishError" class="embed-public-error">{{ publishError }}</span>
@@ -32,7 +31,7 @@
 
           <!-- Size presets -->
           <div class="embed-size-row">
-            <span class="embed-size-label">Size</span>
+            <span class="embed-size-label">{{ $tr('Size', '尺寸') }}</span>
             <div class="embed-size-buttons">
               <button
                 v-for="preset in sizePresets"
@@ -41,15 +40,15 @@
                 :class="{ active: activePreset === preset.name }"
                 @click="activePreset = preset.name"
               >
-                {{ preset.name }}
+                {{ translatePresetName(preset.name) }}
                 <span class="embed-size-dim">{{ preset.width }}×{{ preset.height }}</span>
               </button>
             </div>
             <label class="embed-theme-toggle">
-              <span>Theme</span>
+              <span>{{ $tr('Theme', '主题') }}</span>
               <select v-model="theme" class="embed-theme-select">
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
+                <option value="light">{{ $tr('Light', '浅色') }}</option>
+                <option value="dark">{{ $tr('Dark', '深色') }}</option>
               </select>
             </label>
           </div>
@@ -72,9 +71,9 @@
           <div class="embed-snippets">
             <div class="snippet-block">
               <div class="snippet-head">
-                <span class="snippet-label">HTML iframe</span>
+                <span class="snippet-label">{{ $tr('HTML iframe', 'HTML iframe') }}</span>
                 <button class="snippet-copy-btn" @click="copy('iframe')">
-                  {{ copied === 'iframe' ? '✓ Copied' : 'Copy' }}
+                  {{ copied === 'iframe' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy', '复制') }}
                 </button>
               </div>
               <pre class="snippet-code"><code>{{ iframeSnippet }}</code></pre>
@@ -82,9 +81,9 @@
 
             <div class="snippet-block">
               <div class="snippet-head">
-                <span class="snippet-label">Markdown (Notion / Substack auto-embed)</span>
+                <span class="snippet-label">{{ $tr('Markdown (Notion / Substack auto-embed)', 'Markdown(Notion / Substack 自动嵌入)') }}</span>
                 <button class="snippet-copy-btn" @click="copy('markdown')">
-                  {{ copied === 'markdown' ? '✓ Copied' : 'Copy' }}
+                  {{ copied === 'markdown' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy', '复制') }}
                 </button>
               </div>
               <pre class="snippet-code"><code>{{ markdownSnippet }}</code></pre>
@@ -92,9 +91,9 @@
 
             <div class="snippet-block">
               <div class="snippet-head">
-                <span class="snippet-label">Direct URL</span>
+                <span class="snippet-label">{{ $tr('Direct URL', '直接 URL') }}</span>
                 <button class="snippet-copy-btn" @click="copy('url')">
-                  {{ copied === 'url' ? '✓ Copied' : 'Copy' }}
+                  {{ copied === 'url' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy', '复制') }}
                 </button>
               </div>
               <pre class="snippet-code"><code>{{ embedUrl }}</code></pre>
@@ -105,15 +104,12 @@
           <div class="share-card-section">
             <div class="share-card-divider">
               <span class="divider-line"></span>
-              <span class="divider-text">Social card</span>
+              <span class="divider-text">{{ $tr('Social card', '社交卡片') }}</span>
               <span class="divider-line"></span>
             </div>
 
             <p class="share-card-desc">
-              A 1200×630 PNG with the scenario headline, status, quality, and
-              belief split — the same image Twitter/X, Discord, Slack, and
-              LinkedIn unfurl automatically when someone pastes the share
-              link.
+              {{ $tr('A 1200×630 PNG with the scenario headline, status, quality, and belief split — the same image Twitter/X, Discord, Slack, and LinkedIn unfurl automatically when someone pastes the share link.', '一张 1200×630 的 PNG,包含情景标题、状态、质量和信念分布 — Twitter/X、Discord、Slack 和 LinkedIn 在有人粘贴分享链接时会自动展开此图。') }}
             </p>
 
             <div class="share-card-preview-wrap">
@@ -126,16 +122,16 @@
                 @error="onShareCardError"
               />
               <div v-else class="share-card-empty">
-                {{ isPublic ? 'Loading preview…' : 'Publish the simulation to enable the share card.' }}
+                {{ isPublic ? $tr('Loading preview…', '加载预览中…') : $tr('Publish the simulation to enable the share card.', '发布模拟以启用分享卡片。') }}
               </div>
             </div>
 
             <div class="share-card-actions">
               <div class="snippet-block share-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">Share link (auto-unfurls with card)</span>
+                  <span class="snippet-label">{{ $tr('Share link (auto-unfurls with card)', '分享链接(随卡片自动展开)') }}</span>
                   <button class="snippet-copy-btn" @click="copy('share')" :disabled="!isPublic">
-                    {{ copied === 'share' ? '✓ Copied' : 'Copy link' }}
+                    {{ copied === 'share' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy link', '复制链接') }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ shareLandingUrl || '—' }}</code></pre>
@@ -143,9 +139,9 @@
 
               <div class="snippet-block share-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">Card image URL (for manual paste)</span>
+                  <span class="snippet-label">{{ $tr('Card image URL (for manual paste)', '卡片图片 URL(供手动粘贴)') }}</span>
                   <button class="snippet-copy-btn" @click="copy('card')" :disabled="!isPublic">
-                    {{ copied === 'card' ? '✓ Copied' : 'Copy URL' }}
+                    {{ copied === 'card' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ shareCardUrl || '—' }}</code></pre>
@@ -157,7 +153,7 @@
                 :href="shareCardUrl"
                 :download="`miroshark-${simulationId.slice(0, 12)}.png`"
               >
-                ↓ Download PNG
+                ↓ {{ $tr('Download PNG', '下载 PNG') }}
               </a>
             </div>
 
@@ -168,11 +164,9 @@
               <div class="replay-head">
                 <span class="replay-icon">▶</span>
                 <div class="replay-head-body">
-                  <div class="replay-title">Belief replay (animated)</div>
+                  <div class="replay-title">{{ $tr('Belief replay (animated)', '信念回放(动画)') }}</div>
                   <div class="replay-sub">
-                    Same canvas as the share card, one frame per round.
-                    Discord and Slack auto-play GIFs from the direct URL —
-                    drop the link in a channel and it plays inline.
+                    {{ $tr('Same canvas as the share card, one frame per round. Discord and Slack auto-play GIFs from the direct URL — drop the link in a channel and it plays inline.', '与分享卡片相同的画布,每轮一帧。Discord 和 Slack 会从直接 URL 自动播放 GIF — 在频道里贴上链接即可内联播放。') }}
                   </div>
                 </div>
               </div>
@@ -194,23 +188,23 @@
                 />
                 <div v-if="!replayPlay" class="replay-overlay">
                   <span class="replay-overlay-icon">▶</span>
-                  <span class="replay-overlay-text">Tap to play</span>
+                  <span class="replay-overlay-text">{{ $tr('Tap to play', '点击播放') }}</span>
                 </div>
               </div>
               <div v-else class="replay-empty">
-                Publish the simulation to enable the belief replay GIF.
+                {{ $tr('Publish the simulation to enable the belief replay GIF.', '发布模拟以启用信念回放 GIF。') }}
               </div>
 
               <div class="replay-actions">
                 <div class="snippet-block share-snippet">
                   <div class="snippet-head">
-                    <span class="snippet-label">Replay GIF URL (auto-plays in Discord / Slack)</span>
+                    <span class="snippet-label">{{ $tr('Replay GIF URL (auto-plays in Discord / Slack)', '回放 GIF URL(在 Discord / Slack 中自动播放)') }}</span>
                     <button
                       class="snippet-copy-btn"
                       @click="copy('replay')"
                       :disabled="!isPublic"
                     >
-                      {{ copied === 'replay' ? '✓ Copied' : 'Copy URL' }}
+                      {{ copied === 'replay' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
                     </button>
                   </div>
                   <pre class="snippet-code"><code>{{ replayGifUrl || '—' }}</code></pre>
@@ -222,7 +216,7 @@
                   :href="replayGifUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-replay.gif`"
                 >
-                  ↓ Download GIF
+                  ↓ {{ $tr('Download GIF', '下载 GIF') }}
                 </a>
               </div>
             </div>
@@ -236,11 +230,9 @@
               <div class="transcript-head">
                 <span class="transcript-icon">📄</span>
                 <div class="transcript-head-body">
-                  <div class="transcript-title">Export transcript</div>
+                  <div class="transcript-title">{{ $tr('Export transcript', '导出对话记录') }}</div>
                   <div class="transcript-sub">
-                    Per-round agent posts + stance labels + final
-                    consensus. Cite the simulation in a research paper
-                    or a Substack post without screenshotting.
+                    {{ $tr('Per-round agent posts + stance labels + final consensus. Cite the simulation in a research paper or a Substack post without screenshotting.', '逐轮智能体帖子 + 立场标签 + 最终共识。在研究论文或 Substack 文章中引用该模拟,无需截屏。') }}
                   </div>
                 </div>
               </div>
@@ -252,7 +244,7 @@
                   :href="transcriptMarkdownUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-transcript.md`"
                 >
-                  ↓ Download .md
+                  ↓ {{ $tr('Download .md', '下载 .md') }}
                 </a>
                 <a
                   v-if="isPublic && transcriptJsonUrl"
@@ -260,22 +252,22 @@
                   :href="transcriptJsonUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-transcript.json`"
                 >
-                  ↓ Download .json
+                  ↓ {{ $tr('Download .json', '下载 .json') }}
                 </a>
                 <span v-if="!isPublic" class="transcript-empty">
-                  Publish the simulation to enable the transcript export.
+                  {{ $tr('Publish the simulation to enable the transcript export.', '发布模拟以启用对话记录导出。') }}
                 </span>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">Markdown URL (Notion / Obsidian "Import from URL")</span>
+                  <span class="snippet-label">{{ $tr(`Markdown URL (Notion / Obsidian "Import from URL")`, 'Markdown URL(Notion / Obsidian「从 URL 导入」)') }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('transcriptMd')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'transcriptMd' ? '✓ Copied' : 'Copy URL' }}
+                    {{ copied === 'transcriptMd' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ transcriptMarkdownUrl || '—' }}</code></pre>
@@ -291,16 +283,15 @@
                 <span class="outcome-icon">📍</span>
                 <div class="outcome-head-body">
                   <div class="outcome-title">
-                    Mark outcome
+                    {{ $tr('Mark outcome', '标记结果') }}
                     <span v-if="outcome && outcome.label" class="outcome-saved-tag">
                       ✓ {{ outcomeLabelText(outcome.label) }}
                     </span>
                   </div>
                   <div class="outcome-sub">
-                    Did this simulation predict a real event? Annotate it and
-                    your run lands on
+                    {{ $tr('Did this simulation predict a real event? Annotate it and your run lands on', '此模拟预测到了真实事件吗?为它做标注,你的运行将出现在') }}
                     <a href="/verified" target="_blank" rel="noopener">/verified</a>
-                    — the public hall of calls that landed.
+                    {{ $tr('— the public hall of calls that landed.', ' — 已落地预测的公开展示厅。') }}
                   </div>
                 </div>
               </div>
@@ -326,14 +317,14 @@
                 <input
                   v-model="outcomeForm.outcome_url"
                   type="url"
-                  placeholder="Outcome URL (article, tweet, dashboard) — optional"
+                  :placeholder="$tr('Outcome URL (article, tweet, dashboard) — optional', '结果 URL(文章、推文、仪表板)— 可选')"
                   class="outcome-input"
                   :disabled="!isPublic"
                   maxlength="500"
                 />
                 <textarea
                   v-model="outcomeForm.outcome_summary"
-                  placeholder="What happened, in one or two sentences (max 280 chars)"
+                  :placeholder="$tr('What happened, in one or two sentences (max 280 chars)', '用一两句话描述发生了什么(最多 280 字符)')"
                   class="outcome-textarea"
                   :disabled="!isPublic"
                   maxlength="280"
@@ -349,9 +340,9 @@
                     @click="submitOutcome"
                     :disabled="!isPublic || !outcomeForm.label || outcomeSubmitting"
                   >
-                    <span v-if="outcomeSubmitting">Saving…</span>
-                    <span v-else-if="outcome">Update outcome</span>
-                    <span v-else>Save outcome</span>
+                    <span v-if="outcomeSubmitting">{{ $tr('Saving…', '保存中…') }}</span>
+                    <span v-else-if="outcome">{{ $tr('Update outcome', '更新结果') }}</span>
+                    <span v-else>{{ $tr('Save outcome', '保存结果') }}</span>
                   </button>
                   <a
                     v-if="outcome"
@@ -360,7 +351,7 @@
                     rel="noopener"
                     class="outcome-link"
                   >
-                    View on /verified ↗
+                    {{ $tr('View on /verified ↗', '在 /verified 查看 ↗') }}
                   </a>
                 </div>
 
@@ -377,21 +368,18 @@
               <div class="gallery-callout-icon">◎</div>
               <div class="gallery-callout-body">
                 <div class="gallery-callout-title">
-                  {{ isPublic ? 'Live on the public gallery' : 'Submit to the public gallery' }}
+                  {{ isPublic ? $tr('Live on the public gallery', '已发布到公开画廊') : $tr('Submit to the public gallery', '提交到公开画廊') }}
                 </div>
                 <div class="gallery-callout-desc">
                   <template v-if="isPublic">
-                    This simulation is now visible on
+                    {{ $tr('This simulation is now visible on', '此模拟现可在以下页面查看') }}
                     <a href="/explore" target="_blank" rel="noopener">/explore</a> —
-                    the public gallery where anyone can browse published runs
-                    and fork them into their own simulations.
+                    {{ $tr('the public gallery where anyone can browse published runs and fork them into their own simulations.', '公开画廊,任何人都可浏览已发布运行并派生为自己的模拟。') }}
                   </template>
                   <template v-else>
-                    Toggle "Public" above and this run joins the community
-                    gallery at
+                    {{ $tr(`Toggle "Public" above and this run joins the community gallery at`, '将上方切换为「公开」,该运行将加入社区画廊') }}
                     <a href="/explore" target="_blank" rel="noopener">/explore</a>.
-                    Others can browse it, view the full belief drift, and
-                    fork your agents into their own scenarios.
+                    {{ $tr('Others can browse it, view the full belief drift, and fork your agents into their own scenarios.', '其他人可以浏览、查看完整的信念漂移,并将你的智能体派生到他们自己的情景中。') }}
                   </template>
                 </div>
               </div>
@@ -402,7 +390,7 @@
                 rel="noopener"
                 class="gallery-callout-link"
               >
-                Open gallery ↗
+                {{ $tr('Open gallery ↗', '打开画廊 ↗') }}
               </a>
             </div>
 
@@ -416,12 +404,10 @@
                 <span class="feed-callout-icon">📡</span>
                 <div class="feed-callout-body">
                   <div class="feed-callout-title">
-                    Follow the gallery via RSS
+                    {{ $tr('Follow the gallery via RSS', '通过 RSS 关注画廊') }}
                   </div>
                   <div class="feed-callout-desc">
-                    Every newly published MiroShark simulation appears in
-                    your reader (Feedly, Readwise, Inoreader, Obsidian
-                    RSS, NetNewsWire, …). No login, no account.
+                    {{ $tr('Every newly published MiroShark simulation appears in your reader (Feedly, Readwise, Inoreader, Obsidian RSS, NetNewsWire, …). No login, no account.', '每个新发布的 MiroShark 模拟都会出现在你的阅读器中(Feedly、Readwise、Inoreader、Obsidian RSS、NetNewsWire 等)。无需登录,无需账户。') }}
                   </div>
                 </div>
               </div>
@@ -431,16 +417,16 @@
                   :href="feedAtomUrl"
                   target="_blank"
                   rel="noopener"
-                  title="Atom 1.0 feed of the public gallery"
+                  :title="$tr('Atom 1.0 feed of the public gallery', '公开画廊的 Atom 1.0 源')"
                 >
-                  Atom feed ↗
+                  {{ $tr('Atom feed ↗', 'Atom 源 ↗') }}
                 </a>
                 <a
                   class="feed-callout-link feed-callout-link-secondary"
                   :href="feedRssUrl"
                   target="_blank"
                   rel="noopener"
-                  title="RSS 2.0 feed of the public gallery"
+                  :title="$tr('RSS 2.0 feed of the public gallery', '公开画廊的 RSS 2.0 源')"
                 >
                   RSS 2.0 ↗
                 </a>
@@ -449,9 +435,9 @@
                   :href="feedVerifiedAtomUrl"
                   target="_blank"
                   rel="noopener"
-                  title="Atom feed restricted to verified predictions only"
+                  :title="$tr('Atom feed restricted to verified predictions only', '仅限已验证预测的 Atom 源')"
                 >
-                  Verified only ↗
+                  {{ $tr('Verified only ↗', '仅已验证 ↗') }}
                 </a>
               </div>
             </div>
@@ -460,8 +446,8 @@
           <!-- Hint -->
           <div class="embed-dialog-hint">
             <span class="hint-icon">ⓘ</span>
-            The widget reads from this instance's API, so viewers must be able to reach
-            <code>{{ origin }}</code>. For public embeds, deploy MiroShark somewhere reachable from the internet.
+            {{ $tr(`The widget reads from this instance's API, so viewers must be able to reach`, '组件读取自当前实例的 API,因此查看者必须能访问') }}
+            <code>{{ origin }}</code>. {{ $tr('For public embeds, deploy MiroShark somewhere reachable from the internet.', '若要进行公开嵌入,请将 MiroShark 部署到互联网可访问的位置。') }}
           </div>
         </div>
       </div>
@@ -483,6 +469,16 @@ import {
   getSimulationOutcome,
   submitSimulationOutcome,
 } from '../api/simulation'
+import { tr } from '../i18n'
+
+const translatePresetName = (name) => {
+  const map = {
+    'Compact': tr('Compact', '紧凑'),
+    'Standard': tr('Standard', '标准'),
+    'Wide': tr('Wide', '宽屏'),
+  }
+  return map[name] || name
+}
 
 const props = defineProps({
   open: { type: Boolean, default: false },
@@ -504,7 +500,7 @@ const togglePublic = async () => {
     const res = await publishSimulation(props.simulationId, next)
     isPublic.value = res?.data?.is_public ?? next
   } catch (err) {
-    publishError.value = err?.response?.data?.error || err?.message || 'Publish failed'
+    publishError.value = err?.response?.data?.error || err?.message || tr('Publish failed', '发布失败')
   } finally {
     publishing.value = false
   }
@@ -513,7 +509,7 @@ const togglePublic = async () => {
 const sizePresets = [
   { name: 'Compact', width: 480, height: 260 },
   { name: 'Standard', width: 640, height: 340 },
-  { name: 'Wide', width: 800, height: 420 }
+  { name: 'Wide', width: 800, height: 420 },
 ]
 
 const activePreset = ref('Standard')
@@ -672,9 +668,9 @@ const copy = async (which) => {
 
 // ── Verified-prediction outcome submission ─────────────────────────────
 const outcomeOptions = [
-  { value: 'correct', label: 'Called it', icon: '📍' },
-  { value: 'partial', label: 'Partial', icon: '◑' },
-  { value: 'incorrect', label: 'Called wrong', icon: '⚠' },
+  { value: 'correct', label: tr('Called it', '命中'), icon: '📍' },
+  { value: 'partial', label: tr('Partial', '部分命中'), icon: '◑' },
+  { value: 'incorrect', label: tr('Called wrong', '判断错误'), icon: '⚠' },
 ]
 
 const outcomeForm = reactive({
@@ -734,15 +730,15 @@ const submitOutcome = async () => {
     if (res?.success && res.data) {
       _applyOutcomeToForm(res.data)
       outcomeMessage.value =
-        'Outcome saved — your simulation is visible in the Verified filter.'
+        tr('Outcome saved — your simulation is visible in the Verified filter.', '结果已保存 — 你的模拟现在「已验证」筛选中可见。')
       outcomeMessageClass.value = 'outcome-message-success'
     } else {
-      outcomeMessage.value = res?.error || 'Could not save outcome.'
+      outcomeMessage.value = res?.error || tr('Could not save outcome.', '无法保存结果。')
       outcomeMessageClass.value = 'outcome-message-error'
     }
   } catch (err) {
     outcomeMessage.value =
-      err?.response?.data?.error || err?.message || 'Could not save outcome.'
+      err?.response?.data?.error || err?.message || tr('Could not save outcome.', '无法保存结果。')
     outcomeMessageClass.value = 'outcome-message-error'
   } finally {
     outcomeSubmitting.value = false

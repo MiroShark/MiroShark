@@ -12,25 +12,25 @@
 
     <!-- Track Record Summary (shown when any simulation has been resolved) -->
     <div v-if="trackRecord" class="track-record-bar">
-      <span class="track-record-label">Track Record</span>
-      <span class="track-record-stat">{{ trackRecord.total }} resolved</span>
+      <span class="track-record-label">{{ $tr('Track Record', '战绩记录') }}</span>
+      <span class="track-record-stat">{{ trackRecord.total }} {{ $tr('resolved', '已结算') }}</span>
       <span v-if="trackRecord.overallAccuracy !== null" class="track-record-accuracy" :class="trackRecord.overallAccuracy >= 60 ? 'good' : 'poor'">
-        {{ trackRecord.overallAccuracy }}% accurate
+        {{ trackRecord.overallAccuracy }}% {{ $tr('accurate', '准确') }}
       </span>
-      <span v-if="trackRecord.correct > 0" class="track-record-correct">{{ trackRecord.correct }} correct</span>
+      <span v-if="trackRecord.correct > 0" class="track-record-correct">{{ trackRecord.correct }} {{ $tr('correct', '正确') }}</span>
     </div>
 
     <!-- Title Area -->
     <div class="section-header">
       <div class="section-line"></div>
-      <span class="section-title">Simulation Records</span>
+      <span class="section-title">{{ $tr('Simulation Records', '模拟记录') }}</span>
       <div class="section-line"></div>
       <button
         v-if="projects.length >= 2"
         class="compare-mode-btn"
         :class="{ active: compareMode }"
         @click="toggleCompareMode"
-      >{{ compareMode ? (compareSelections.length === 2 ? 'Compare →' : `${compareSelections.length}/2 selected`) : '⇄ Compare' }}</button>
+      >{{ compareMode ? (compareSelections.length === 2 ? $tr('Compare →', '对比 →') : `${compareSelections.length}/2 ${$tr('selected', '已选')}`) : $tr('⇄ Compare', '⇄ 对比') }}</button>
     </div>
 
     <!-- Search & Filter Bar -->
@@ -39,33 +39,33 @@
         <input
           v-model="searchQuery"
           class="search-input"
-          placeholder="Search scenarios..."
+          :placeholder="$tr('Search scenarios...', '搜索情景...')"
           type="text"
         />
         <span v-if="searchQuery" class="search-clear" @click="searchQuery = ''">×</span>
       </div>
       <div class="filter-controls">
         <select v-model="statusFilter" class="filter-select">
-          <option value="all">All Status</option>
-          <option value="completed">Completed</option>
-          <option value="in-progress">In Progress</option>
-          <option value="not-started">Not Started</option>
+          <option value="all">{{ $tr('All Status', '全部状态') }}</option>
+          <option value="completed">{{ $tr('Completed', '已完成') }}</option>
+          <option value="in-progress">{{ $tr('In Progress', '进行中') }}</option>
+          <option value="not-started">{{ $tr('Not Started', '未开始') }}</option>
         </select>
         <select v-model="dateFilter" class="filter-select">
-          <option value="all">All Time</option>
-          <option value="today">Today</option>
-          <option value="week">This Week</option>
-          <option value="month">This Month</option>
+          <option value="all">{{ $tr('All Time', '全部时间') }}</option>
+          <option value="today">{{ $tr('Today', '今天') }}</option>
+          <option value="week">{{ $tr('This Week', '本周') }}</option>
+          <option value="month">{{ $tr('This Month', '本月') }}</option>
         </select>
         <select v-model="sortOrder" class="filter-select">
-          <option value="newest">Newest First</option>
-          <option value="oldest">Oldest First</option>
-          <option value="most-agents">Most Agents</option>
-          <option value="most-rounds">Most Rounds</option>
+          <option value="newest">{{ $tr('Newest First', '最新优先') }}</option>
+          <option value="oldest">{{ $tr('Oldest First', '最早优先') }}</option>
+          <option value="most-agents">{{ $tr('Most Agents', '智能体最多') }}</option>
+          <option value="most-rounds">{{ $tr('Most Rounds', '轮次最多') }}</option>
         </select>
         <label class="forks-only-label">
           <input type="checkbox" v-model="forksOnly" class="forks-only-check" />
-          Forks Only
+          {{ $tr('Forks Only', '仅派生') }}
         </label>
       </div>
       <span
@@ -93,7 +93,7 @@
             <span
               v-if="project.parent_simulation_id"
               class="fork-badge"
-              :title="`Forked from ${formatSimulationId(project.parent_simulation_id)}`"
+              :title="$tr('Forked from', '派生自') + ' ' + formatSimulationId(project.parent_simulation_id)"
             >⑂</span>
             <span
               v-if="project.resolution"
@@ -104,7 +104,7 @@
             <span
               v-else-if="project.status === 'completed'"
               class="resolution-badge pending"
-              title="Awaiting outcome resolution"
+              :title="$tr('Awaiting outcome resolution', '等待结果结算')"
             >⏳</span>
             <span
               v-if="project.quality && project.quality.health"
@@ -115,16 +115,16 @@
             <span
               class="status-icon"
               :class="{ available: project.project_id, unavailable: !project.project_id }"
-              title="Graph Build"
+              :title="$tr('Graph Build', '图谱构建')"
             >◇</span>
             <span
               class="status-icon available"
-              title="Agent Setup"
+              :title="$tr('Agent Setup', '智能体配置')"
             >◈</span>
             <span
               class="status-icon"
               :class="{ available: project.report_id, unavailable: !project.report_id }"
-              title="Analysis Report"
+              :title="$tr('Analysis Report', '分析报告')"
             >◆</span>
           </div>
         </div>
@@ -146,13 +146,13 @@
             </div>
             <!-- Show hint if more files exist -->
             <div v-if="project.files.length > 3" class="files-more">
-              +{{ project.files.length - 3 }} files
+              +{{ project.files.length - 3 }} {{ $tr('files', '个文件') }}
             </div>
           </div>
           <!-- Placeholder when no files -->
           <div class="files-empty" v-else>
             <span class="empty-file-icon">◇</span>
-            <span class="empty-file-text">No files</span>
+            <span class="empty-file-text">{{ $tr('No files', '无文件') }}</span>
           </div>
         </div>
 
@@ -189,14 +189,14 @@
     <!-- No results state (projects exist but filters hide them all) -->
     <div v-else-if="projects.length > 0 && !loading" class="no-results-state">
       <span class="no-results-icon">◇</span>
-      <span class="no-results-text">No simulations match your filters</span>
-      <button class="clear-filters-btn" @click="clearFilters">Clear Filters</button>
+      <span class="no-results-text">{{ $tr('No simulations match your filters', '没有匹配筛选条件的模拟') }}</span>
+      <button class="clear-filters-btn" @click="clearFilters">{{ $tr('Clear Filters', '清除筛选') }}</button>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <span class="loading-spinner"></span>
-      <span class="loading-text">Loading...</span>
+      <span class="loading-text">{{ $tr('Loading...', '加载中...') }}</span>
     </div>
 
     <!-- History Replay Detail Modal -->
@@ -220,13 +220,13 @@
             <div class="modal-body">
               <!-- Simulation Requirement -->
               <div class="modal-section">
-                <div class="modal-label">Simulation Requirement</div>
-                <div class="modal-requirement">{{ selectedProject.simulation_requirement || 'None' }}</div>
+                <div class="modal-label">{{ $tr('Simulation Requirement', '模拟需求') }}</div>
+                <div class="modal-requirement">{{ selectedProject.simulation_requirement || $tr('None', '无') }}</div>
               </div>
 
               <!-- File List -->
               <div class="modal-section">
-                <div class="modal-label">Associated Files</div>
+                <div class="modal-label">{{ $tr('Associated Files', '关联文件') }}</div>
                 <div class="modal-files" v-if="selectedProject.files && selectedProject.files.length > 0">
                   <component
                     :is="fileLinkFor(file, selectedProject) ? 'a' : 'div'"
@@ -243,14 +243,14 @@
                     <span class="modal-file-name">{{ file.filename }}</span>
                   </component>
                 </div>
-                <div class="modal-empty" v-else>No associated files</div>
+                <div class="modal-empty" v-else>{{ $tr('No associated files', '无关联文件') }}</div>
               </div>
             </div>
 
             <!-- Simulation Replay Divider -->
             <div class="modal-divider">
               <span class="divider-line"></span>
-              <span class="divider-text">Simulation Replay</span>
+              <span class="divider-text">{{ $tr('Simulation Replay', '模拟回放') }}</span>
               <span class="divider-line"></span>
             </div>
 
@@ -261,25 +261,25 @@
                 @click="goToProject"
                 :disabled="!selectedProject.project_id"
               >
-                <span class="btn-step">Step1</span>
+                <span class="btn-step">{{ $tr('Step1', '第1步') }}</span>
                 <span class="btn-icon">◇</span>
-                <span class="btn-text">Graph Build</span>
+                <span class="btn-text">{{ $tr('Graph Build', '图谱构建') }}</span>
               </button>
               <button
                 class="modal-btn btn-simulation"
                 @click="goToSimulation"
               >
-                <span class="btn-step">Step2</span>
+                <span class="btn-step">{{ $tr('Step2', '第2步') }}</span>
                 <span class="btn-icon">◈</span>
-                <span class="btn-text">Agent Setup</span>
+                <span class="btn-text">{{ $tr('Agent Setup', '智能体配置') }}</span>
               </button>
               <button
                 class="modal-btn btn-simrun"
                 @click="goToSimulationRun"
               >
-                <span class="btn-step">Step3</span>
+                <span class="btn-step">{{ $tr('Step3', '第3步') }}</span>
                 <span class="btn-icon">◆</span>
-                <span class="btn-text">Simulation Run</span>
+                <span class="btn-text">{{ $tr('Simulation Run', '模拟运行') }}</span>
               </button>
               <button
                 class="modal-btn btn-replay"
@@ -288,86 +288,86 @@
               >
                 <span class="btn-step">▶</span>
                 <span class="btn-icon">◈</span>
-                <span class="btn-text">Replay</span>
+                <span class="btn-text">{{ $tr('Replay', '回放') }}</span>
               </button>
               <button
                 class="modal-btn btn-report"
                 @click="goToReport"
                 :disabled="!selectedProject.report_id"
               >
-                <span class="btn-step">Step4</span>
+                <span class="btn-step">{{ $tr('Step4', '第4步') }}</span>
                 <span class="btn-icon">◆</span>
-                <span class="btn-text">Analysis Report</span>
+                <span class="btn-text">{{ $tr('Analysis Report', '分析报告') }}</span>
               </button>
               <button
                 class="modal-btn btn-interaction"
                 @click="goToInteraction"
                 :disabled="!selectedProject.report_id"
               >
-                <span class="btn-step">Step5</span>
+                <span class="btn-step">{{ $tr('Step5', '第5步') }}</span>
                 <span class="btn-icon">◈</span>
-                <span class="btn-text">Deep Interaction</span>
+                <span class="btn-text">{{ $tr('Deep Interaction', '深度互动') }}</span>
               </button>
             </div>
             <!-- Non-replayable Hint -->
             <div class="modal-playback-hint">
-              <span class="hint-text">Select a step to replay from the simulation history</span>
+              <span class="hint-text">{{ $tr('Select a step to replay from the simulation history', '从模拟历史中选择一个步骤进行回放') }}</span>
             </div>
 
             <!-- Resolve Prediction Section (completed simulations only) -->
             <div v-if="selectedProject.status === 'completed' || selectedProject.current_round > 0" class="modal-resolve-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">Prediction Outcome</span>
+                <span class="divider-text">{{ $tr('Prediction Outcome', '预测结果') }}</span>
                 <span class="divider-line"></span>
               </div>
 
               <!-- Already resolved: show result -->
               <div v-if="selectedProject.resolution && !showResolvePanel" class="resolve-result">
                 <div class="resolve-result-row">
-                  <span class="resolve-label">Actual Outcome</span>
+                  <span class="resolve-label">{{ $tr('Actual Outcome', '实际结果') }}</span>
                   <span class="resolve-value outcome-badge" :class="selectedProject.resolution.actual_outcome === 'YES' ? 'yes' : 'no'">
                     {{ selectedProject.resolution.actual_outcome }}
                   </span>
                 </div>
                 <div v-if="selectedProject.resolution.predicted_consensus" class="resolve-result-row">
-                  <span class="resolve-label">Agent Consensus</span>
+                  <span class="resolve-label">{{ $tr('Agent Consensus', '智能体共识') }}</span>
                   <span class="resolve-value outcome-badge" :class="selectedProject.resolution.predicted_consensus === 'YES' ? 'yes' : 'no'">
                     {{ selectedProject.resolution.predicted_consensus }}
                     <span class="resolve-confidence">{{ Math.round(selectedProject.resolution.predicted_confidence * 100) }}%</span>
                   </span>
                 </div>
                 <div v-if="selectedProject.resolution.accuracy_score !== null" class="resolve-result-row">
-                  <span class="resolve-label">Accuracy</span>
+                  <span class="resolve-label">{{ $tr('Accuracy', '准确率') }}</span>
                   <span class="resolve-value accuracy-value"
                     :class="selectedProject.resolution.accuracy_score >= 1.0 ? 'correct' : (selectedProject.resolution.accuracy_score <= 0.0 && selectedProject.resolution.accuracy_score !== null) ? 'wrong' : 'split'">
-                    {{ selectedProject.resolution.accuracy_score >= 1.0 ? '✓ Correct' : (selectedProject.resolution.accuracy_score <= 0.0 && selectedProject.resolution.accuracy_score !== null) ? '✗ Incorrect' : '~ Split' }}
+                    {{ selectedProject.resolution.accuracy_score >= 1.0 ? $tr('✓ Correct', '✓ 正确') : (selectedProject.resolution.accuracy_score <= 0.0 && selectedProject.resolution.accuracy_score !== null) ? $tr('✗ Incorrect', '✗ 错误') : $tr('~ Split', '~ 分歧') }}
                   </span>
                 </div>
                 <div v-if="selectedProject.resolution.notes" class="resolve-notes">{{ selectedProject.resolution.notes }}</div>
-                <button class="resolve-reopen-btn" @click="openResolvePanel">Re-resolve</button>
+                <button class="resolve-reopen-btn" @click="openResolvePanel">{{ $tr('Re-resolve', '重新结算') }}</button>
               </div>
 
               <!-- Not yet resolved or re-resolving -->
               <div v-else-if="!showResolvePanel" class="resolve-intro">
-                <p class="resolve-desc">Did the simulation correctly predict what happened? Record the real-world outcome to build your accuracy track record.</p>
-                <button class="resolve-trigger-btn" @click="openResolvePanel">⌘ Record Outcome</button>
+                <p class="resolve-desc">{{ $tr('Did the simulation correctly predict what happened? Record the real-world outcome to build your accuracy track record.', '模拟是否正确预测了实际发生的事情?记录真实结果以建立你的准确率战绩。') }}</p>
+                <button class="resolve-trigger-btn" @click="openResolvePanel">⌘ {{ $tr('Record Outcome', '记录结果') }}</button>
               </div>
 
               <div v-if="showResolvePanel" class="resolve-form">
-                <p class="resolve-form-label">What actually happened?</p>
+                <p class="resolve-form-label">{{ $tr('What actually happened?', '实际发生了什么?') }}</p>
                 <div v-if="resolveError" class="resolve-error">{{ resolveError }}</div>
                 <div class="resolve-buttons">
                   <button class="resolve-outcome-btn yes" :disabled="resolving" @click="executeResolve('YES')">
                     <span v-if="resolving" class="loading-spinner-small"></span>
-                    YES — It happened
+                    {{ $tr('YES — It happened', 'YES — 发生了') }}
                   </button>
                   <button class="resolve-outcome-btn no" :disabled="resolving" @click="executeResolve('NO')">
                     <span v-if="resolving" class="loading-spinner-small"></span>
-                    NO — It didn't happen
+                    {{ $tr(`NO — It didn't happen`, 'NO — 没有发生') }}
                   </button>
                 </div>
-                <button class="resolve-cancel-btn" @click="closeResolvePanel" :disabled="resolving">Cancel</button>
+                <button class="resolve-cancel-btn" @click="closeResolvePanel" :disabled="resolving">{{ $tr('Cancel', '取消') }}</button>
               </div>
             </div>
 
@@ -375,45 +375,45 @@
             <div v-if="selectedQuality" class="modal-quality-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">Simulation Quality</span>
+                <span class="divider-text">{{ $tr('Simulation Quality', '模拟质量') }}</span>
                 <span class="divider-line"></span>
               </div>
 
               <div class="quality-overview">
                 <div class="quality-health-badge" :class="selectedQuality.health.toLowerCase()">
-                  {{ selectedQuality.health }}
+                  {{ translateHealth(selectedQuality.health) }}
                 </div>
                 <div class="quality-metrics">
                   <div class="quality-metric">
-                    <span class="metric-label">Participation</span>
+                    <span class="metric-label">{{ $tr('Participation', '参与度') }}</span>
                     <div class="metric-bar-wrap">
                       <div class="metric-bar" :class="selectedQuality.participation_rate >= 0.8 ? 'bar-good' : selectedQuality.participation_rate >= 0.6 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.round(selectedQuality.participation_rate * 100) + '%' }"></div>
                     </div>
                     <span class="metric-value">{{ Math.round(selectedQuality.participation_rate * 100) }}%</span>
                   </div>
                   <div class="quality-metric" v-if="selectedQuality.stance_entropy !== null">
-                    <span class="metric-label">Stance Diversity</span>
+                    <span class="metric-label">{{ $tr('Stance Diversity', '立场多样性') }}</span>
                     <div class="metric-bar-wrap">
                       <div class="metric-bar" :class="selectedQuality.stance_entropy >= 0.5 ? 'bar-good' : selectedQuality.stance_entropy >= 0.3 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.round(selectedQuality.stance_entropy * 100) + '%' }"></div>
                     </div>
                     <span class="metric-value">{{ Math.round(selectedQuality.stance_entropy * 100) }}%</span>
                   </div>
                   <div class="quality-metric">
-                    <span class="metric-label">Cross-Platform</span>
+                    <span class="metric-label">{{ $tr('Cross-Platform', '跨平台') }}</span>
                     <div class="metric-bar-wrap">
                       <div class="metric-bar" :class="selectedQuality.cross_platform_rate >= 0.2 ? 'bar-good' : selectedQuality.cross_platform_rate >= 0.1 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.min(Math.round(selectedQuality.cross_platform_rate * 100), 100) + '%' }"></div>
                     </div>
                     <span class="metric-value">{{ Math.round(selectedQuality.cross_platform_rate * 100) }}%</span>
                   </div>
                   <div class="quality-metric" v-if="selectedQuality.convergence_round !== null">
-                    <span class="metric-label">Consensus</span>
-                    <span class="metric-value convergence-tag">Round {{ selectedQuality.convergence_round }}</span>
+                    <span class="metric-label">{{ $tr('Consensus', '共识') }}</span>
+                    <span class="metric-value convergence-tag">{{ $isZh() ? `第 ${selectedQuality.convergence_round} 轮` : `Round ${selectedQuality.convergence_round}` }}</span>
                   </div>
                 </div>
               </div>
 
               <div v-if="selectedQuality.suggestions && selectedQuality.suggestions.length" class="quality-suggestions">
-                <div class="suggestions-label">Try for next run:</div>
+                <div class="suggestions-label">{{ $tr('Try for next run:', '下次运行可尝试:') }}</div>
                 <div v-for="(s, i) in selectedQuality.suggestions" :key="i" class="suggestion-chip">{{ s }}</div>
               </div>
             </div>
@@ -422,13 +422,13 @@
             <div class="modal-embed-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">Embed</span>
+                <span class="divider-text">{{ $tr('Embed', '嵌入') }}</span>
                 <span class="divider-line"></span>
               </div>
 
               <div class="embed-intro">
-                <p class="embed-desc">Drop this simulation into a Notion page, blog post, or README as a live widget — updates automatically as the simulation progresses.</p>
-                <button class="embed-trigger-btn" @click="openEmbedDialog">⌘ Get Embed Code</button>
+                <p class="embed-desc">{{ $tr('Drop this simulation into a Notion page, blog post, or README as a live widget — updates automatically as the simulation progresses.', '将此模拟作为实时组件嵌入 Notion 页面、博客文章或 README — 模拟进展时会自动更新。') }}</p>
+                <button class="embed-trigger-btn" @click="openEmbedDialog">⌘ {{ $tr('Get Embed Code', '获取嵌入代码') }}</button>
               </div>
             </div>
 
@@ -436,32 +436,32 @@
             <div class="modal-fork-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">Fork</span>
+                <span class="divider-text">{{ $tr('Fork', '派生') }}</span>
                 <span class="divider-line"></span>
               </div>
 
               <div v-if="!showForkPanel" class="fork-intro">
-                <p class="fork-desc">Clone this simulation with a new scenario — agent profiles are reused instantly.</p>
-                <button class="fork-trigger-btn" @click="openForkPanel">⑂ Fork Simulation</button>
+                <p class="fork-desc">{{ $tr('Clone this simulation with a new scenario — agent profiles are reused instantly.', '使用新情景克隆此模拟 — 智能体画像将立即复用。') }}</p>
+                <button class="fork-trigger-btn" @click="openForkPanel">⑂ {{ $tr('Fork Simulation', '派生模拟') }}</button>
                 <div v-if="selectedProject.parent_simulation_id" class="fork-lineage-badge">
-                  ⑂ Forked from <span class="fork-parent-id">{{ formatSimulationId(selectedProject.parent_simulation_id) }}</span>
+                  ⑂ {{ $tr('Forked from', '派生自') }} <span class="fork-parent-id">{{ formatSimulationId(selectedProject.parent_simulation_id) }}</span>
                 </div>
               </div>
 
               <div v-else class="fork-form">
-                <label class="fork-label">Scenario (edit to explore a variant)</label>
+                <label class="fork-label">{{ $tr('Scenario (edit to explore a variant)', '情景(编辑以探索变体)') }}</label>
                 <textarea
                   v-model="forkRequirement"
                   class="fork-textarea"
-                  placeholder="Describe the scenario you want to simulate..."
+                  :placeholder="$tr('Describe the scenario you want to simulate...', '描述你想要模拟的情景...')"
                   rows="3"
                 ></textarea>
-                <p class="fork-note">Agent profiles will be copied from the parent simulation — no re-preparation needed.</p>
+                <p class="fork-note">{{ $tr('Agent profiles will be copied from the parent simulation — no re-preparation needed.', '智能体画像将从父级模拟复制 — 无需重新准备。') }}</p>
                 <div v-if="forkError" class="fork-error">{{ forkError }}</div>
                 <div class="fork-actions">
-                  <button class="fork-cancel-btn" @click="closeForkPanel" :disabled="forking">Cancel</button>
+                  <button class="fork-cancel-btn" @click="closeForkPanel" :disabled="forking">{{ $tr('Cancel', '取消') }}</button>
                   <button class="fork-submit-btn" @click="executeFork" :disabled="forking">
-                    {{ forking ? 'Forking...' : '⑂ Fork & Open' }}
+                    {{ forking ? $tr('Forking...', '派生中...') : $tr('⑂ Fork & Open', '⑂ 派生并打开') }}
                   </button>
                 </div>
               </div>
@@ -486,6 +486,18 @@ import { useRouter, useRoute } from 'vue-router'
 import { getSimulationHistory, forkSimulation, resolveSimulation, getSimulationQuality } from '../api/simulation'
 import { truncate as truncateText } from '../utils/text'
 import EmbedDialog from './EmbedDialog.vue'
+import { tr } from '../i18n'
+
+const translateHealth = (health) => {
+  if (!health) return ''
+  const map = {
+    'Excellent': tr('Excellent', '优秀'),
+    'Good': tr('Good', '良好'),
+    'Fair': tr('Fair', '一般'),
+    'Poor': tr('Poor', '差'),
+  }
+  return map[health] || health
+}
 
 const router = useRouter()
 const route = useRoute()
@@ -761,7 +773,7 @@ const formatTime = (dateStr) => {
 
 // Generate title from simulation requirement (first 20 chars)
 const getSimulationTitle = (requirement) => {
-  if (!requirement) return 'Untitled Simulation'
+  if (!requirement) return tr('Untitled Simulation', '未命名模拟')
   const title = requirement.slice(0, 20)
   return requirement.length > 20 ? title + '...' : title
 }
@@ -777,8 +789,8 @@ const formatSimulationId = (simulationId) => {
 const formatRounds = (simulation) => {
   const current = simulation.current_round || 0
   const total = simulation.total_rounds || 0
-  if (total === 0) return 'Not Started'
-  return `${current}/${total} rounds`
+  if (total === 0) return tr('Not Started', '未开始')
+  return `${current}/${total} ${tr('rounds', '轮次')}`
 }
 
 // Get file type (for styling)
@@ -799,9 +811,9 @@ const getFileType = (filename) => {
 
 // Get file type label text
 const getFileTypeLabel = (filename) => {
-  if (!filename) return 'FILE'
+  if (!filename) return tr('FILE', '文件')
   const ext = filename.split('.').pop()?.toUpperCase()
-  return ext || 'FILE'
+  return ext || tr('FILE', '文件')
 }
 
 // Build a clickable URL for an associated file:
@@ -819,7 +831,7 @@ const fileLinkFor = (file, project) => {
 
 // Truncate filename (preserve extension)
 const truncateFilename = (filename, maxLength) => {
-  if (!filename) return 'Unknown file'
+  if (!filename) return tr('Unknown file', '未知文件')
   if (filename.length <= maxLength) return filename
 
   const ext = filename.includes('.') ? '.' + filename.split('.').pop() : ''
@@ -950,10 +962,10 @@ const executeFork = async () => {
       await loadHistory()
       router.push({ name: 'SimulationRun', params: { simulationId: newSimId } })
     } else {
-      forkError.value = response.error || 'Fork failed'
+      forkError.value = response.error || tr('Fork failed', '派生失败')
     }
   } catch (err) {
-    forkError.value = err?.response?.data?.error || err.message || 'Fork failed'
+    forkError.value = err?.response?.data?.error || err.message || tr('Fork failed', '派生失败')
   } finally {
     forking.value = false
   }
@@ -979,29 +991,29 @@ const getResolutionLabel = (project) => {
   const r = project.resolution
   if (!r) return null
   if (r.accuracy_score === null || r.accuracy_score === undefined) {
-    return { text: `Resolved: ${r.actual_outcome}`, cls: 'resolved-no-score' }
+    return { text: `${tr('Resolved:', '已结算:')} ${r.actual_outcome}`, cls: 'resolved-no-score' }
   }
   if (r.accuracy_score >= 1.0) {
     const pct = r.predicted_confidence ? Math.round(r.predicted_confidence * 100) : null
-    return { text: `✓ Correct${pct ? ` — ${pct}% confident` : ''}`, cls: 'resolved-correct' }
+    return { text: `${tr('✓ Correct', '✓ 正确')}${pct ? ` — ${pct}% ${tr('confident', '置信度')}` : ''}`, cls: 'resolved-correct' }
   }
   if (r.accuracy_score <= 0.0) {
     const pct = r.predicted_confidence ? Math.round(r.predicted_confidence * 100) : null
-    return { text: `✗ Incorrect${pct ? ` — ${pct}% confident` : ''}`, cls: 'resolved-wrong' }
+    return { text: `${tr('✗ Incorrect', '✗ 错误')}${pct ? ` — ${pct}% ${tr('confident', '置信度')}` : ''}`, cls: 'resolved-wrong' }
   }
-  return { text: '~ Split', cls: 'resolved-split' }
+  return { text: tr('~ Split', '~ 分歧'), cls: 'resolved-split' }
 }
 
 const getQualityTooltip = (q) => {
   if (!q) return ''
-  const parts = [`Simulation Health: ${q.health}`]
-  parts.push(`Participation ${Math.round(q.participation_rate * 100)}%`)
+  const parts = [`${tr('Simulation Health:', '模拟健康度:')} ${translateHealth(q.health)}`]
+  parts.push(`${tr('Participation', '参与度')} ${Math.round(q.participation_rate * 100)}%`)
   if (q.stance_entropy !== null && q.stance_entropy !== undefined) {
-    const level = q.stance_entropy >= 0.7 ? 'high' : q.stance_entropy >= 0.4 ? 'medium' : 'low'
-    parts.push(`Stance diversity: ${level}`)
+    const level = q.stance_entropy >= 0.7 ? tr('high', '高') : q.stance_entropy >= 0.4 ? tr('medium', '中') : tr('low', '低')
+    parts.push(`${tr('Stance diversity:', '立场多样性:')} ${level}`)
   }
   if (q.convergence_round !== null && q.convergence_round !== undefined) {
-    parts.push(`Consensus at round ${q.convergence_round}`)
+    parts.push(tr(`Consensus at round ${q.convergence_round}`, `共识于第 ${q.convergence_round} 轮`))
   }
   return parts.join(' · ')
 }
@@ -1031,10 +1043,10 @@ const executeResolve = async (outcome) => {
       if (idx >= 0) projects.value[idx].resolution = response.data
       showResolvePanel.value = false
     } else {
-      resolveError.value = response.error || 'Resolve failed'
+      resolveError.value = response.error || tr('Resolve failed', '结算失败')
     }
   } catch (err) {
-    resolveError.value = err?.response?.data?.error || err.message || 'Resolve failed'
+    resolveError.value = err?.response?.data?.error || err.message || tr('Resolve failed', '结算失败')
   } finally {
     resolving.value = false
   }

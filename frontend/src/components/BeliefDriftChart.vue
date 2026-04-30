@@ -4,39 +4,39 @@
     <div class="bd-header">
       <div class="bd-title">
         <span class="bd-icon">◎</span>
-        <span class="bd-label">DRIFT</span>
+        <span class="bd-label">{{ $tr('DRIFT', '漂移') }}</span>
       </div>
       <div class="bd-header-actions">
         <button
           class="bd-export-btn"
           :disabled="!hasData || exporting || !copySupported"
-          :title="copySupported ? 'Copy chart as PNG (with MiroShark watermark)' : 'Image copy not supported in this browser'"
+          :title="copySupported ? $tr('Copy chart as PNG (with MiroShark watermark)', '复制图表为 PNG(含 MiroShark 水印)') : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制')"
           @click="copyChart"
         >
-          {{ copiedFlash ? 'Copied' : 'Copy' }}
+          {{ copiedFlash ? $tr('Copied', '已复制') : $tr('Copy', '复制') }}
         </button>
         <button
           class="bd-export-btn"
           :disabled="!hasData || exporting"
           @click="downloadChart"
-          title="Download chart as PNG (with MiroShark watermark)"
+          :title="$tr('Download chart as PNG (with MiroShark watermark)', '下载图表为 PNG(含 MiroShark 水印)')"
         >
-          Download ↓
+          {{ $tr('Download ↓', '下载 ↓') }}
         </button>
       </div>
     </div>
 
     <!-- Legend -->
     <div class="bd-legend">
-      <span class="legend-item"><span class="legend-dot bullish-dot"></span>Bullish (&gt;+0.2)</span>
-      <span class="legend-item"><span class="legend-dot neutral-dot"></span>Neutral</span>
-      <span class="legend-item"><span class="legend-dot bearish-dot"></span>Bearish (&lt;-0.2)</span>
+      <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨') }} (&gt;+0.2)</span>
+      <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立') }}</span>
+      <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌') }} (&lt;-0.2)</span>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="bd-state">
       <div class="pulse-ring"></div>
-      <span>Computing belief drift...</span>
+      <span>{{ $tr('Computing belief drift...', '计算信念漂移中...') }}</span>
     </div>
 
     <!-- Error -->
@@ -44,8 +44,8 @@
 
     <!-- No trajectory data -->
     <div v-else-if="!hasData" class="bd-state">
-      <span>No belief trajectory data available.</span>
-      <span class="bd-hint">Run a simulation with belief tracking enabled.</span>
+      <span>{{ $tr('No belief trajectory data available.', '暂无信念轨迹数据。') }}</span>
+      <span class="bd-hint">{{ $tr('Run a simulation with belief tracking enabled.', '请启用信念追踪运行模拟。') }}</span>
     </div>
 
     <!-- Chart -->
@@ -107,7 +107,7 @@
           v-if="driftData.consensus_round != null"
           :x="xS(driftData.consensus_round) + 4" :y="MT + 12"
           fill="rgba(10,10,10,0.5)" font-size="9" font-family="monospace"
-        >consensus r{{ driftData.consensus_round }}</text>
+        >{{ $tr('consensus r', '共识 r') }}{{ driftData.consensus_round }}</text>
 
         <!-- Director event injection markers -->
         <g v-for="(evt, idx) in eventMarkers" :key="'evt' + idx">
@@ -138,7 +138,7 @@
           :x="ML + (W - ML - MR) / 2" :y="H - 2"
           fill="rgba(10,10,10,0.3)" font-size="9"
           font-family="monospace" text-anchor="middle"
-        >Round</text>
+        >{{ $tr('Round', '轮次') }}</text>
       </svg>
     </div>
 
@@ -149,7 +149,7 @@
 
     <!-- Topics footer -->
     <div v-if="driftData?.topics?.length" class="bd-topics">
-      Topics: {{ driftData.topics.join(' · ') }}
+      {{ $tr('Topics:', '话题:') }} {{ driftData.topics.join(' · ') }}
     </div>
   </div>
 </template>
@@ -164,6 +164,7 @@ import {
   canCopyImageToClipboard,
   buildTitledHeader,
 } from '../utils/chartExport'
+import { tr } from '../i18n'
 
 const props = defineProps({
   simulationId: { type: String, required: true },
@@ -262,10 +263,10 @@ const load = async () => {
     } else if (res.success && !res.data) {
       driftData.value = null
     } else {
-      error.value = res.error || 'Failed to load belief drift data.'
+      error.value = res.error || tr('Failed to load belief drift data.', '加载信念漂移数据失败。')
     }
   } catch (err) {
-    error.value = err.message || 'Failed to load belief drift.'
+    error.value = err.message || tr('Failed to load belief drift.', '加载信念漂移失败。')
   } finally {
     loading.value = false
   }
@@ -279,11 +280,11 @@ const _buildExportCanvas = () => {
   const bullish = d.bullish || []
   const bearish = d.bearish || []
   const parts = []
-  if (bullish.length) parts.push(`${bullish[bullish.length - 1]}% bullish`)
-  if (bearish.length) parts.push(`${bearish[bearish.length - 1]}% bearish`)
+  if (bullish.length) parts.push(`${bullish[bullish.length - 1]}% ${tr('bullish', '看涨')}`)
+  if (bearish.length) parts.push(`${bearish[bearish.length - 1]}% ${tr('bearish', '看跌')}`)
   const { drawHeader, headerHeight } = buildTitledHeader({
-    title: 'Belief drift — bullish / neutral / bearish',
-    subtitle: parts.length ? `Final: ${parts.join(' · ')}` : null,
+    title: tr('Belief drift — bullish / neutral / bearish', '信念漂移 — 看涨 / 中立 / 看跌'),
+    subtitle: parts.length ? `${tr('Final:', '最终:')} ${parts.join(' · ')}` : null,
     width: W,
   })
   return renderSvgToCanvas(svgRef.value, {

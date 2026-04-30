@@ -4,13 +4,14 @@
     <nav class="navbar">
       <div class="nav-brand">MIROSHARK</div>
       <div class="nav-links">
-        <router-link to="/explore" class="explore-link" title="Browse public simulations">
-          <span class="compass">◎</span> Explore
+        <router-link to="/explore" class="explore-link" :title="$tr('Browse public simulations', '浏览公开模拟')">
+          <span class="compass">◎</span> {{ $tr('Explore', '浏览') }}
         </router-link>
         <a href="https://github.com/aaronjmars/MiroShark" target="_blank" class="github-link">
           GitHub <span class="arrow">↗</span>
         </a>
-        <button class="settings-btn" @click="settingsOpen = true" title="Settings">
+        <LocaleToggle />
+        <button class="settings-btn" @click="settingsOpen = true" :title="$tr('Settings', '设置')">
           ⚙
         </button>
       </div>
@@ -44,19 +45,22 @@
       <!-- Upper Section: Hero Area -->
       <section class="hero-section">
         <div class="tag-row">
-          <span class="orange-tag">Universal Swarm Intelligence Engine</span>
+          <span class="orange-tag">{{ $tr('Universal Swarm Intelligence Engine', '通用群体智能引擎') }}</span>
         </div>
 
         <h1 class="main-title">
-          <span class="gradient-text">Simulate anything, for $1</span>
+          <span class="gradient-text">{{ $tr('Simulate anything, for $1', '一切皆可模拟,只需 $1') }}</span>
         </h1>
 
         <div class="hero-desc">
-          <p>
+          <p v-if="!$isZh()">
             Drop in anything — a press release, a news headline, a policy draft, a question you can't answer, a historical what-if — and <span class="highlight-bold">MiroShark</span> spawns <span class="highlight-orange">hundreds of agents</span> that react to it hour by hour. Posting, arguing, trading, changing their minds.
           </p>
+          <p v-else>
+            放入任何素材 — 新闻稿、头条、政策草案、一个无解的问题、一段历史假设 — <span class="highlight-bold">MiroShark</span> 会派出<span class="highlight-orange">数百个智能体</span>,每小时一轮地做出反应。发帖、辩论、交易、改变想法。
+          </p>
           <p class="slogan-text">
-            Don't predict the future. Simulate it<span class="blinking-cursor">_</span>
+            {{ $tr("Don't predict the future. Simulate it", '不要预测未来。模拟它') }}<span class="blinking-cursor">_</span>
           </p>
         </div>
 
@@ -72,47 +76,47 @@
         <!-- Left Column: Status & Steps -->
         <div class="left-panel">
           <div class="panel-header">
-            <span class="status-dot">■</span> System Status
+            <span class="status-dot">■</span> {{ $tr('System Status', '系统状态') }}
           </div>
-          
-          <h2 class="section-title">Ready</h2>
+
+          <h2 class="section-title">{{ $tr('Ready', '就绪') }}</h2>
           <p class="section-desc">
-            First simulation in ~10 min, ~$1 on the cloud preset. Drop in a doc or pick a trending headline to start.
+            {{ $tr('First simulation in ~10 min, ~$1 on the cloud preset. Drop in a doc or pick a trending headline to start.', '使用云端预设,首次模拟约 10 分钟、约 $1。投入一份文档或挑一条热门头条即可开始。') }}
           </p>
 
 
           <!-- What it does (from README) -->
           <div class="steps-container">
             <div class="steps-header">
-               <span class="diamond-icon">◇</span> What it does
+               <span class="diamond-icon">◇</span> {{ $tr('What it does', '它做什么') }}
             </div>
             <div class="workflow-list">
               <div class="workflow-item">
                 <span class="step-num">01</span>
                 <div class="step-info">
-                  <div class="step-title">You bring a scenario</div>
-                  <div class="step-desc">MiroShark builds the world around it — extracts actors, stakes, and open questions from your input.</div>
+                  <div class="step-title">{{ $tr('You bring a scenario', '你提供一个情景') }}</div>
+                  <div class="step-desc">{{ $tr('MiroShark builds the world around it — extracts actors, stakes, and open questions from your input.', 'MiroShark 围绕它构建世界 — 从你的输入中提取角色、利害关系与待解问题。') }}</div>
                 </div>
               </div>
               <div class="workflow-item">
                 <span class="step-num">02</span>
                 <div class="step-info">
-                  <div class="step-title">Hundreds of grounded agents</div>
-                  <div class="step-desc">React on Twitter, Reddit, and a prediction market. Hour by hour, round after round.</div>
+                  <div class="step-title">{{ $tr('Hundreds of grounded agents', '数百个有据可依的智能体') }}</div>
+                  <div class="step-desc">{{ $tr('React on Twitter, Reddit, and a prediction market. Hour by hour, round after round.', '在 Twitter、Reddit 与预测市场上做出反应。每小时一轮,一轮接一轮。') }}</div>
                 </div>
               </div>
               <div class="workflow-item">
                 <span class="step-num">03</span>
                 <div class="step-info">
-                  <div class="step-title">Steer the timeline</div>
-                  <div class="step-desc">Chat with any agent. Drop breaking news mid-run. Fork a counterfactual and watch it diverge.</div>
+                  <div class="step-title">{{ $tr('Steer the timeline', '掌舵时间线') }}</div>
+                  <div class="step-desc">{{ $tr('Chat with any agent. Drop breaking news mid-run. Fork a counterfactual and watch it diverge.', '与任意智能体对话。在运行中投入突发新闻。派生一个反事实分支并观察其偏离。') }}</div>
                 </div>
               </div>
               <div class="workflow-item">
                 <span class="step-num">04</span>
                 <div class="step-info">
-                  <div class="step-title">Get a report</div>
-                  <div class="step-desc">A Substack-style write-up of what happened, citing actual posts and trades from the run.</div>
+                  <div class="step-title">{{ $tr('Get a report', '生成报告') }}</div>
+                  <div class="step-desc">{{ $tr('A Substack-style write-up of what happened, citing actual posts and trades from the run.', 'Substack 风格的复盘文章,引用本次运行中的真实发帖与交易。') }}</div>
                 </div>
               </div>
             </div>
@@ -125,8 +129,8 @@
             <!-- Upload Area -->
             <div class="console-section">
               <div class="console-header">
-                <span class="console-label">01 / Reality Seeds</span>
-                <span class="console-meta">Supported formats: PDF, MD, TXT</span>
+                <span class="console-label">{{ $tr('01 / Reality Seeds', '01 / 现实种子') }}</span>
+                <span class="console-meta">{{ $tr('Supported formats: PDF, MD, TXT', '支持格式:PDF、MD、TXT') }}</span>
               </div>
               
               <div 
@@ -149,8 +153,8 @@
                 
                 <div v-if="files.length === 0" class="upload-placeholder">
                   <div class="upload-icon">↑</div>
-                  <div class="upload-title">Drop Files to Upload</div>
-                  <div class="upload-hint">or click to browse the file system</div>
+                  <div class="upload-title">{{ $tr('Drop Files to Upload', '拖入文件以上传') }}</div>
+                  <div class="upload-hint">{{ $tr('or click to browse the file system', '或点击浏览文件系统') }}</div>
                 </div>
                 
                 <div v-else class="file-list">
@@ -166,15 +170,15 @@
             <!-- Ask Mode (no document needed) -->
             <div class="console-section url-section">
               <div class="console-header">
-                <span class="console-label">01a / Just Ask</span>
-                <span class="console-meta">No document? Type a question, we synthesize a briefing.</span>
+                <span class="console-label">{{ $tr('01a / Just Ask', '01a / 直接提问') }}</span>
+                <span class="console-meta">{{ $tr('No document? Type a question, we synthesize a briefing.', '没有文档?输入一个问题,我们会合成一份简报。') }}</span>
               </div>
               <div class="url-input-row">
                 <input
                   v-model="askQuestion"
                   class="url-input"
                   type="text"
-                  placeholder="e.g. Will the EU AI Act's biometrics clause survive the final trilogue?"
+                  :placeholder="$tr(`e.g. Will the EU AI Act's biometrics clause survive the final trilogue?`, '例如:欧盟人工智能法案的生物识别条款能否在最终三方会议中存活?')"
                   :disabled="loading || askBusy"
                   @keydown.enter.prevent="runAskMode"
                 />
@@ -184,11 +188,11 @@
                   :disabled="!askQuestion.trim() || loading || askBusy"
                 >
                   <span v-if="askBusy">...</span>
-                  <span v-else>Research →</span>
+                  <span v-else>{{ $tr('Research →', '研究 →') }}</span>
                 </button>
               </div>
               <div v-if="askError" class="url-error">{{ askError }}</div>
-              <div v-if="askBusy" class="url-doc-meta" style="margin-top:6px">Synthesizing briefing — this uses the Smart model and takes ~20–30s.</div>
+              <div v-if="askBusy" class="url-doc-meta" style="margin-top:6px">{{ $tr('Synthesizing briefing — this uses the Smart model and takes ~20–30s.', '正在合成简报 — 使用 Smart 模型,大约需要 20–30 秒。') }}</div>
               <div v-if="askDocs.length > 0" class="url-doc-list">
                 <div
                   v-for="doc in askDocs"
@@ -196,7 +200,7 @@
                   class="url-doc-item"
                   role="button"
                   tabindex="0"
-                  title="Click to preview the generated briefing"
+                  :title="$tr('Click to preview the generated briefing', '点击预览生成的简报')"
                   @click="previewDoc = doc"
                   @keydown.enter.prevent="previewDoc = doc"
                   @keydown.space.prevent="previewDoc = doc"
@@ -204,7 +208,7 @@
                   <span class="url-doc-icon">◈</span>
                   <div class="url-doc-info">
                     <div class="url-doc-title" :title="doc.title">{{ truncate(doc.title, 70) }}</div>
-                    <div class="url-doc-meta" :title="doc.url">{{ doc.char_count.toLocaleString() }} chars · {{ truncate(doc.url, 72) }}</div>
+                    <div class="url-doc-meta" :title="doc.url">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符') }} · {{ truncate(doc.url, 72) }}</div>
                   </div>
                   <button @click.stop="removeUrlDocByRef(doc)" class="remove-btn">×</button>
                 </div>
@@ -214,8 +218,8 @@
             <!-- URL Input Section -->
             <div class="console-section url-section">
               <div class="console-header">
-                <span class="console-label">01b / URL Import</span>
-                <span class="console-meta">Paste article or report URL</span>
+                <span class="console-label">{{ $tr('01b / URL Import', '01b / 网址导入') }}</span>
+                <span class="console-meta">{{ $tr('Paste article or report URL', '粘贴文章或报告网址') }}</span>
               </div>
               <div class="url-input-row">
                 <input
@@ -232,7 +236,7 @@
                   :disabled="!urlInput.trim() || loading || urlFetching"
                 >
                   <span v-if="urlFetching">...</span>
-                  <span v-else>Fetch →</span>
+                  <span v-else>{{ $tr('Fetch →', '抓取 →') }}</span>
                 </button>
               </div>
               <div v-if="urlError" class="url-error">{{ urlError }}</div>
@@ -243,7 +247,7 @@
                   class="url-doc-item"
                   role="button"
                   tabindex="0"
-                  title="Click to preview the extracted content"
+                  :title="$tr('Click to preview the extracted content', '点击预览提取的内容')"
                   @click="previewDoc = doc"
                   @keydown.enter.prevent="previewDoc = doc"
                   @keydown.space.prevent="previewDoc = doc"
@@ -251,7 +255,7 @@
                   <span class="url-doc-icon">◈</span>
                   <div class="url-doc-info">
                     <div class="url-doc-title" :title="doc.title">{{ truncate(doc.title, 70) }}</div>
-                    <div class="url-doc-meta" :title="doc.url">{{ doc.char_count.toLocaleString() }} chars · {{ truncate(doc.url, 72) }}</div>
+                    <div class="url-doc-meta" :title="doc.url">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符') }} · {{ truncate(doc.url, 72) }}</div>
                   </div>
                   <button @click.stop="removeUrlDocByRef(doc)" class="remove-btn">×</button>
                 </div>
@@ -264,13 +268,13 @@
 
             <!-- Divider -->
             <div class="console-divider">
-              <span>Input Parameters</span>
+              <span>{{ $tr('Input Parameters', '输入参数') }}</span>
             </div>
 
             <!-- Input Area -->
             <div class="console-section">
               <div class="console-header">
-                <span class="console-label">>_ 02 / Simulation Prompt</span>
+                <span class="console-label">{{ $tr('>_ 02 / Simulation Prompt', '>_ 02 / 模拟提示词') }}</span>
               </div>
               <ScenarioSuggestions
                 :text-preview="scenarioSuggestPreview"
@@ -281,23 +285,23 @@
                 <textarea
                   v-model="formData.simulationRequirement"
                   class="code-input"
-                  placeholder="// Enter your simulation or prediction requirements in natural language (e.g., If a university announces the revocation of a disciplinary action against a student, what public opinion trends will emerge?)"
+                  :placeholder="$tr('// Enter your simulation or prediction requirements in natural language (e.g., If a university announces the revocation of a disciplinary action against a student, what public opinion trends will emerge?)', '// 用自然语言描述你的模拟或预测需求(例如:如果一所大学宣布撤销对一名学生的纪律处分,会出现哪些舆论走向?)')"
                   rows="6"
                   :disabled="loading"
                 ></textarea>
-                <div class="model-badge">Engine: MiroShark-V1.0</div>
+                <div class="model-badge">{{ $tr('Engine: MiroShark-V1.0', '引擎:MiroShark-V1.0') }}</div>
               </div>
             </div>
 
             <!-- Start Button -->
             <div class="console-section btn-section">
-              <button 
+              <button
                 class="start-engine-btn"
                 @click="startSimulation"
                 :disabled="!canSubmit || loading"
               >
-                <span v-if="!loading">Launch Simulation</span>
-                <span v-else>Initializing...</span>
+                <span v-if="!loading">{{ $tr('Launch Simulation', '启动模拟') }}</span>
+                <span v-else>{{ $tr('Initializing...', '初始化中...') }}</span>
                 <span class="btn-arrow">→</span>
               </button>
             </div>
@@ -323,8 +327,10 @@ import TemplateGallery from '../components/TemplateGallery.vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
 import ScenarioSuggestions from '../components/ScenarioSuggestions.vue'
 import TrendingTopics from '../components/TrendingTopics.vue'
+import LocaleToggle from '../components/LocaleToggle.vue'
 import { fetchUrl } from '../api/graph'
 import { askMode } from '../api/simulation'
+import { tr } from '../i18n'
 
 const settingsOpen = ref(false)
 const previewDoc = ref(null)
@@ -487,7 +493,7 @@ const fetchUrlDoc = async () => {
 
   // Prevent duplicate URLs
   if (urlDocs.value.some(d => d.url === url)) {
-    urlError.value = 'This URL has already been added.'
+    urlError.value = tr('This URL has already been added.', '此网址已添加过。')
     return
   }
 
@@ -499,10 +505,10 @@ const fetchUrlDoc = async () => {
       urlDocs.value.push(res.data)
       urlInput.value = ''
     } else {
-      urlError.value = res.error || 'Failed to fetch URL.'
+      urlError.value = res.error || tr('Failed to fetch URL.', '抓取网址失败。')
     }
   } catch (err) {
-    urlError.value = err.message || 'Failed to fetch URL.'
+    urlError.value = err.message || tr('Failed to fetch URL.', '抓取网址失败。')
   } finally {
     urlFetching.value = false
   }
@@ -519,7 +525,7 @@ const runAskMode = async () => {
   try {
     const res = await askMode(q)
     if (!res.success) {
-      askError.value = res.error || 'Ask mode failed.'
+      askError.value = res.error || tr('Ask mode failed.', '提问模式失败。')
       return
     }
     const d = res.data
@@ -539,7 +545,7 @@ const runAskMode = async () => {
     }
     askQuestion.value = ''
   } catch (err) {
-    askError.value = err?.response?.data?.error || err?.message || 'Ask mode failed.'
+    askError.value = err?.response?.data?.error || err?.message || tr('Ask mode failed.', '提问模式失败。')
   } finally {
     askBusy.value = false
   }
@@ -552,7 +558,7 @@ const runAskMode = async () => {
 const handleTrendingSelect = ({ url }) => {
   if (!url || urlFetching.value) return
   if (urlDocs.value.some(d => d.url === url)) {
-    urlError.value = 'This URL is already loaded.'
+    urlError.value = tr('This URL is already loaded.', '此网址已加载。')
     return
   }
   urlInput.value = url

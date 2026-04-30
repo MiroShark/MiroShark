@@ -24,5 +24,13 @@
     "enable_twitter": true,
     "enable_reddit": true,
     "enable_polymarket": true
+  },
+  "i18n": {
+    "zh-CN": {
+      "name": "产品发布",
+      "category": "科技",
+      "description": "模拟互联网对一款重磅科技产品发布的反应。看开发者、爱好者、分析师与普通用户如何争论功能、定价以及是否对得起宣传声量。",
+      "tags": ["科技", "产品发布", "消费", "炒作"]
+    }
   }
 }

@@ -2,10 +2,10 @@
   <div class="explore-container">
     <!-- Top Navigation Bar (mirrors Home.vue nav for visual consistency) -->
     <nav class="navbar">
-      <router-link to="/" class="nav-brand" title="Back to home">MIROSHARK</router-link>
+      <router-link to="/" class="nav-brand" :title="$tr('Back to home', '返回首页')">MIROSHARK</router-link>
       <div class="nav-links">
-        <router-link to="/" class="nav-link" title="Back to home">
-          <span class="arrow">←</span> Home
+        <router-link to="/" class="nav-link" :title="$tr('Back to home', '返回首页')">
+          <span class="arrow">←</span> {{ $tr('Home', '首页') }}
         </router-link>
         <a
           href="https://github.com/aaronjmars/MiroShark"
@@ -15,6 +15,7 @@
         >
           GitHub <span class="arrow">↗</span>
         </a>
+        <LocaleToggle />
       </div>
     </nav>
 
@@ -22,38 +23,33 @@
       <!-- Header -->
       <header class="explore-header">
         <div class="tag-row">
-          <span class="orange-tag">{{ verifiedOnly ? '📍 Verified' : '◎ Explore' }}</span>
+          <span class="orange-tag">{{ verifiedOnly ? $tr('📍 Verified', '📍 已验证') : $tr('◎ Explore', '◎ 浏览') }}</span>
           <span class="meta-sep">·</span>
           <span class="meta-text">
-            {{ verifiedOnly ? 'Predictions that called real events' : 'Public simulation gallery' }}
+            {{ verifiedOnly ? $tr('Predictions that called real events', '预言已对应真实事件') : $tr('Public simulation gallery', '公开模拟图库') }}
           </span>
         </div>
-        <h1 class="page-title">{{ verifiedOnly ? 'Calls that landed.' : 'Simulations the community ran.' }}</h1>
+        <h1 class="page-title">{{ verifiedOnly ? $tr('Calls that landed.', '命中的预言。') : $tr('Simulations the community ran.', '社区运行的模拟。') }}</h1>
         <p class="page-subtitle">
           <template v-if="verifiedOnly">
-            Each card is a public MiroShark run whose operator marked the
-            real-world outcome. Hover the badge for the source link, open
-            one to see how the agent consensus formed, or fork it to test
-            the same agent population on a fresh scenario.
+            {{ $tr('Each card is a public MiroShark run whose operator marked the real-world outcome. Hover the badge for the source link, open one to see how the agent consensus formed, or fork it to test the same agent population on a fresh scenario.', '每张卡片都是一次由运营者标注了真实结果的公开 MiroShark 运行。将鼠标悬停在徽章上查看出处链接,点击查看智能体共识如何形成,或派生它以使用同一组智能体测试新的情景。') }}
           </template>
           <template v-else>
-            Every card is a real MiroShark run someone published. Open one to see
-            the full belief drift, agent network, and prediction outcome — or fork
-            it in one click and run your own variant with the same agent population.
+            {{ $tr("Every card is a real MiroShark run someone published. Open one to see the full belief drift, agent network, and prediction outcome — or fork it in one click and run your own variant with the same agent population.", '每张卡片都是有人发布的真实 MiroShark 运行。打开任一张可查看完整的信念漂移、智能体网络与预测结果 — 或一键派生,使用同一组智能体运行你自己的变体。') }}
           </template>
         </p>
         <div class="stats-row">
           <span class="stat-chip">
             <span class="stat-num">{{ loading ? '…' : total }}</span>
-            <span class="stat-label">{{ verifiedOnly ? 'verified' : 'published' }}</span>
+            <span class="stat-label">{{ verifiedOnly ? $tr('verified', '已验证') : $tr('published', '已发布') }}</span>
           </span>
           <span v-if="!verifiedOnly && !loading && items.length > 0" class="stat-chip">
             <span class="stat-num">{{ resolvedCount }}</span>
-            <span class="stat-label">resolved</span>
+            <span class="stat-label">{{ $tr('resolved', '已结算') }}</span>
           </span>
           <span v-if="!verifiedOnly && !loading && items.length > 0" class="stat-chip">
             <span class="stat-num">{{ verifiedCount }}</span>
-            <span class="stat-label">verified</span>
+            <span class="stat-label">{{ $tr('verified', '已验证') }}</span>
           </span>
 
           <!-- Verified filter chip — toggles a `?verified=1` fetch + the
@@ -63,10 +59,10 @@
             :class="{ 'filter-chip-active': verifiedFilter }"
             @click="toggleVerifiedFilter"
             :disabled="loading"
-            :title="verifiedFilter ? 'Show all public simulations' : 'Show only simulations with a recorded outcome'"
+            :title="verifiedFilter ? $tr('Show all public simulations', '显示全部公开模拟') : $tr('Show only simulations with a recorded outcome', '只显示已记录结果的模拟')"
           >
             <span class="filter-chip-icon">📍</span>
-            <span>Verified only</span>
+            <span>{{ $tr('Verified only', '仅已验证') }}</span>
           </button>
 
           <!-- RSS subscription chip — feed mirrors the active view
@@ -79,22 +75,22 @@
             rel="noopener"
             :title="
               verifiedFilter
-                ? 'Subscribe to verified-only Atom feed in Feedly / Readwise / Inoreader / NetNewsWire'
-                : 'Subscribe to all public simulations as an Atom feed in Feedly / Readwise / Inoreader / NetNewsWire'
+                ? $tr('Subscribe to verified-only Atom feed in Feedly / Readwise / Inoreader / NetNewsWire', '在 Feedly / Readwise / Inoreader / NetNewsWire 中订阅仅含已验证内容的 Atom 源')
+                : $tr('Subscribe to all public simulations as an Atom feed in Feedly / Readwise / Inoreader / NetNewsWire', '在 Feedly / Readwise / Inoreader / NetNewsWire 中以 Atom 源订阅全部公开模拟')
             "
           >
             <span class="filter-chip-icon">📡</span>
-            <span>Subscribe via RSS</span>
+            <span>{{ $tr('Subscribe via RSS', '通过 RSS 订阅') }}</span>
           </a>
 
           <button
             class="refresh-btn"
             @click="refresh"
             :disabled="loading"
-            title="Re-fetch the gallery"
+            :title="$tr('Re-fetch the gallery', '重新获取图库')"
           >
             <span v-if="loading">…</span>
-            <span v-else>↻ Refresh</span>
+            <span v-else>{{ $tr('↻ Refresh', '↻ 刷新') }}</span>
           </button>
         </div>
       </header>
@@ -109,34 +105,31 @@
       <!-- Error -->
       <div v-else-if="error" class="gallery-error">
         <div class="error-icon">⚠</div>
-        <div class="error-title">Couldn't load the gallery</div>
+        <div class="error-title">{{ $tr("Couldn't load the gallery", '无法加载图库') }}</div>
         <div class="error-msg">{{ error }}</div>
-        <button class="error-retry" @click="refresh">Try again</button>
+        <button class="error-retry" @click="refresh">{{ $tr('Try again', '重试') }}</button>
       </div>
 
       <!-- Empty -->
       <div v-else-if="items.length === 0" class="gallery-empty">
         <div class="empty-icon">{{ verifiedFilter ? '📍' : '◇' }}</div>
         <div class="empty-title">
-          {{ verifiedFilter ? 'No verified predictions yet.' : 'No public simulations yet.' }}
+          {{ verifiedFilter ? $tr('No verified predictions yet.', '暂无已验证的预言。') : $tr('No public simulations yet.', '暂无公开模拟。') }}
         </div>
         <div class="empty-msg">
           <template v-if="verifiedFilter">
-            Once an operator marks a public simulation's real-world outcome
-            from the Embed dialog, it shows up here. In the meantime, browse
-            every published run on
+            {{ $tr("Once an operator marks a public simulation's real-world outcome from the Embed dialog, it shows up here. In the meantime, browse every published run on", '当运营者从嵌入对话框中标记公开模拟的真实结果后,它会出现在这里。在此期间,可在以下位置浏览所有已发布的运行') }}
             <router-link to="/explore" class="inline-link">/explore</router-link>.
           </template>
           <template v-else>
-            Yours could be first. Run a simulation, click the share icon on the
-            result page, toggle "Public" — it'll appear here within 30 seconds.
+            {{ $tr(`Yours could be first. Run a simulation, click the share icon on the result page, toggle "Public" — it'll appear here within 30 seconds.`, '你的可能是第一个。运行一次模拟,在结果页点击分享图标,切换为「公开」 — 它会在 30 秒内出现在这里。') }}
           </template>
         </div>
         <router-link
           :to="verifiedFilter ? '/explore' : '/'"
           class="empty-cta"
         >
-          {{ verifiedFilter ? 'Browse all public sims →' : 'Run a simulation →' }}
+          {{ verifiedFilter ? $tr('Browse all public sims →', '浏览全部公开模拟 →') : $tr('Run a simulation →', '运行一次模拟 →') }}
         </router-link>
       </div>
 
@@ -157,7 +150,7 @@
           <router-link
             :to="{ name: 'SimulationRun', params: { simulationId: item.simulation_id } }"
             class="card-thumb-link"
-            :title="item.scenario || 'Open simulation'"
+            :title="item.scenario || $tr('Open simulation', '打开模拟')"
           >
             <img
               :src="shareCardSrc(item)"
@@ -172,7 +165,7 @@
           <!-- Body -->
           <div class="card-body">
             <h2 class="card-scenario" :title="item.scenario">
-              {{ item.scenario || '(untitled scenario)' }}
+              {{ item.scenario || $tr('(untitled scenario)', '(未命名情景)') }}
             </h2>
 
             <div class="card-pills">
@@ -194,7 +187,7 @@
                 v-if="item.quality_health"
                 class="pill"
                 :class="qualityPillClass(item.quality_health)"
-                :title="'Quality health: ' + item.quality_health"
+                :title="$tr('Quality health: ', '质量健康度:') + item.quality_health"
               >
                 ◉ {{ item.quality_health }}
               </span>
@@ -202,22 +195,22 @@
                 v-if="dominantStance(item)"
                 class="pill"
                 :class="stancePillClass(dominantStance(item).label)"
-                :title="'Final consensus: ' + stanceTooltip(item)"
+                :title="$tr('Final consensus: ', '最终共识:') + stanceTooltip(item)"
               >
                 {{ stanceGlyph(dominantStance(item).label) }}
-                {{ dominantStance(item).label }} {{ dominantStance(item).pct }}%
+                {{ stanceLabel(dominantStance(item).label) }} {{ dominantStance(item).pct }}%
               </span>
               <span
                 v-if="item.resolution_outcome"
                 class="pill pill-resolved"
-                :title="'Real-world outcome recorded: ' + item.resolution_outcome"
+                :title="$tr('Real-world outcome recorded: ', '真实结果已记录:') + item.resolution_outcome"
               >
-                ✓ Resolved · {{ item.resolution_outcome }}
+                ✓ {{ $tr('Resolved', '已结算') }} · {{ item.resolution_outcome }}
               </span>
               <span
                 v-else
                 class="pill pill-status"
-                :title="'Runner status: ' + item.runner_status"
+                :title="$tr('Runner status: ', '运行状态:') + item.runner_status"
               >
                 {{ formatStatus(item) }}
               </span>
@@ -244,12 +237,12 @@
 
             <div class="card-meta">
               <span class="meta-item">
-                <span class="meta-label">Agents</span>
+                <span class="meta-label">{{ $tr('Agents', '智能体') }}</span>
                 <span class="meta-val">{{ item.agent_count || 0 }}</span>
               </span>
               <span class="meta-sep">·</span>
               <span class="meta-item">
-                <span class="meta-label">Rounds</span>
+                <span class="meta-label">{{ $tr('Rounds', '轮次') }}</span>
                 <span class="meta-val">
                   {{ item.current_round || 0 }}<span v-if="item.total_rounds">/{{ item.total_rounds }}</span>
                 </span>
@@ -266,16 +259,16 @@
                 :to="{ name: 'SimulationRun', params: { simulationId: item.simulation_id } }"
                 class="action-btn action-view"
               >
-                Open →
+                {{ $tr('Open →', '打开 →') }}
               </router-link>
               <button
                 class="action-btn action-fork"
                 @click="forkAndOpen(item)"
                 :disabled="forkingId === item.simulation_id"
-                :title="'Copy this simulation\'s agents + config into a new run'"
+                :title="$tr(`Copy this simulation's agents + config into a new run`, '将此模拟的智能体与配置复制到一次新的运行')"
               >
-                <span v-if="forkingId === item.simulation_id">Forking…</span>
-                <span v-else>Fork this →</span>
+                <span v-if="forkingId === item.simulation_id">{{ $tr('Forking…', '派生中…') }}</span>
+                <span v-else>{{ $tr('Fork this →', '派生此项 →') }}</span>
               </button>
             </div>
             <div
@@ -295,8 +288,8 @@
           @click="loadMore"
           :disabled="loadingMore"
         >
-          <span v-if="loadingMore">Loading…</span>
-          <span v-else>Load more ({{ total - items.length }} remaining)</span>
+          <span v-if="loadingMore">{{ $tr('Loading…', '加载中…') }}</span>
+          <span v-else>{{ $tr('Load more', '加载更多') }} ({{ total - items.length }} {{ $tr('remaining', '剩余') }})</span>
         </button>
       </div>
     </div>
@@ -304,7 +297,7 @@
     <footer class="explore-footer">
       <span class="footer-line"></span>
       <span class="footer-text">
-        Want yours here? Run a sim, open the Embed dialog, toggle "Public."
+        {{ $tr(`Want yours here? Run a sim, open the Embed dialog, toggle "Public."`, '想让你的也出现在这里?运行一次模拟,打开嵌入对话框,切换为「公开」即可。') }}
       </span>
       <span class="footer-line"></span>
     </footer>
@@ -320,6 +313,8 @@ import {
   getShareCardUrl,
   getFeedUrl,
 } from '../api/simulation'
+import LocaleToggle from '../components/LocaleToggle.vue'
+import { tr } from '../i18n'
 
 const props = defineProps({
   // When true, the view boots in verified-only mode. Wired to the
@@ -400,13 +395,20 @@ const stancePillClass = (label) => {
   return 'pill-neutral'
 }
 
+const stanceLabel = (label) => {
+  if (label === 'Bullish') return tr('Bullish', '看涨')
+  if (label === 'Bearish') return tr('Bearish', '看跌')
+  if (label === 'Neutral') return tr('Neutral', '中立')
+  return label
+}
+
 const stanceTooltip = (item) => {
   const c = item.final_consensus
   if (!c) return ''
   const b = (c.bullish ?? 0).toFixed(1)
   const n = (c.neutral ?? 0).toFixed(1)
   const be = (c.bearish ?? 0).toFixed(1)
-  return `Bullish ${b}% · Neutral ${n}% · Bearish ${be}%`
+  return `${tr('Bullish', '看涨')} ${b}% · ${tr('Neutral', '中立')} ${n}% · ${tr('Bearish', '看跌')} ${be}%`
 }
 
 const qualityPillClass = (health) => {
@@ -430,9 +432,9 @@ const formatDate = (iso) => {
 }
 
 const outcomePillLabel = (label) => {
-  if (label === 'correct') return 'Verified'
-  if (label === 'incorrect') return 'Called wrong'
-  if (label === 'partial') return 'Partial'
+  if (label === 'correct') return tr('Verified', '已验证')
+  if (label === 'incorrect') return tr('Called wrong', '预言落空')
+  if (label === 'partial') return tr('Partial', '部分命中')
   return ''
 }
 
@@ -465,7 +467,7 @@ const loadPage = async (offset = 0) => {
     verifiedOnly: verifiedFilter.value,
   })
   if (!res?.success) {
-    throw new Error(res?.error || 'Request failed')
+    throw new Error(res?.error || tr('Request failed', '请求失败'))
   }
   return {
     data: res.data || [],
@@ -509,7 +511,7 @@ const refresh = async () => {
     forkErrors.value = {}
   } catch (err) {
     error.value =
-      err?.response?.data?.error || err?.message || 'Failed to load gallery'
+      err?.response?.data?.error || err?.message || tr('Failed to load gallery', '无法加载图库')
   } finally {
     loading.value = false
   }
@@ -528,7 +530,7 @@ const loadMore = async () => {
     hasMore.value = page.hasMore
   } catch (err) {
     error.value =
-      err?.response?.data?.error || err?.message || 'Failed to load more'
+      err?.response?.data?.error || err?.message || tr('Failed to load more', '加载更多失败')
   } finally {
     loadingMore.value = false
   }
@@ -543,16 +545,16 @@ const forkAndOpen = async (item) => {
       parent_simulation_id: item.simulation_id,
     })
     if (!res?.success) {
-      throw new Error(res?.error || 'Fork failed')
+      throw new Error(res?.error || tr('Fork failed', '派生失败'))
     }
     const newId = res.data?.simulation_id
-    if (!newId) throw new Error('Fork did not return a simulation_id')
+    if (!newId) throw new Error(tr('Fork did not return a simulation_id', '派生未返回 simulation_id'))
     router.push({ name: 'SimulationRun', params: { simulationId: newId } })
   } catch (err) {
     forkErrors.value = {
       ...forkErrors.value,
       [item.simulation_id]:
-        err?.response?.data?.error || err?.message || 'Fork failed',
+        err?.response?.data?.error || err?.message || tr('Fork failed', '派生失败'),
     }
   } finally {
     forkingId.value = ''

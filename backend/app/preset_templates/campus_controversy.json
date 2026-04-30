@@ -15,5 +15,13 @@
     "enable_twitter": true,
     "enable_reddit": true,
     "enable_polymarket": false
+  },
+  "i18n": {
+    "zh-CN": {
+      "name": "校园风波",
+      "category": "教育",
+      "description": "模拟一场大学政策争议在社交媒体上掀起的风暴。观察学生、教职工、校友、记者与活动人士如何组成阵营并推动舆论走向。",
+      "tags": ["大学", "学生", "政策", "行动主义"]
+    }
   }
 }

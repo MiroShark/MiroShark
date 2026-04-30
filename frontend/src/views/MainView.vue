@@ -8,28 +8,29 @@
       
       <div class="header-center">
         <div class="view-switcher">
-          <button 
-            v-for="mode in ['graph', 'split', 'workbench']" 
+          <button
+            v-for="mode in ['graph', 'split', 'workbench']"
             :key="mode"
             class="switch-btn"
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            {{ { graph: 'Graph', split: 'Split', workbench: 'Workbench' }[mode] }}
+            {{ viewModeLabel(mode) }}
           </button>
         </div>
       </div>
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">Step {{ currentStep }}/4</span>
-          <span class="step-name">{{ stepNames[currentStep - 1] }}</span>
+          <span class="step-num">{{ $tr('Step', '步骤') }} {{ currentStep }}/4</span>
+          <span class="step-name">{{ stepName(currentStep - 1) }}</span>
         </div>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
           <span class="dot"></span>
           {{ statusText }}
         </span>
+        <LocaleToggle />
       </div>
     </header>
 
@@ -80,8 +81,10 @@ import { useRoute, useRouter } from 'vue-router'
 import GraphPanel from '../components/GraphPanel.vue'
 import Step1GraphBuild from '../components/Step1GraphBuild.vue'
 import Step2EnvSetup from '../components/Step2EnvSetup.vue'
+import LocaleToggle from '../components/LocaleToggle.vue'
 import { generateOntology, getProject, buildGraph, getTaskStatus, getGraphData } from '../api/graph'
 import { getPendingUpload, clearPendingUpload } from '../store/pendingUpload'
+import { tr } from '../i18n'
 
 const route = useRoute()
 const router = useRouter()
@@ -91,7 +94,15 @@ const viewMode = ref('split') // graph | split | workbench
 
 // Step State
 const currentStep = ref(1) // 1: Graph Construction, 2: Agent Setup, 3: Start Simulation, 4: Report Generation, 5: Deep Interaction
-const stepNames = ['Graph Construction', 'Agent Setup', 'Start Simulation', 'Report Generation']
+const stepNamesEn = ['Graph Construction', 'Agent Setup', 'Start Simulation', 'Report Generation']
+const stepNamesZh = ['图谱构建', '智能体配置', '启动模拟', '生成报告']
+const stepNames = stepNamesEn // legacy ref kept for handlers below
+const stepName = (i) => tr(stepNamesEn[i] || '', stepNamesZh[i] || '')
+const viewModeLabel = (mode) => {
+  const en = { graph: 'Graph', split: 'Split', workbench: 'Workbench' }
+  const zh = { graph: '图谱', split: '分屏', workbench: '工作台' }
+  return tr(en[mode], zh[mode])
+}
 
 // Data State
 const currentProjectId = ref(route.params.projectId)
@@ -131,11 +142,11 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (error.value) return 'Error'
-  if (currentPhase.value >= 2) return 'Ready'
-  if (currentPhase.value === 1) return 'Building Graph'
-  if (currentPhase.value === 0) return 'Generating Ontology'
-  return 'Idle'
+  if (error.value) return tr('Error', '错误')
+  if (currentPhase.value >= 2) return tr('Ready', '就绪')
+  if (currentPhase.value === 1) return tr('Building Graph', '构建图谱中')
+  if (currentPhase.value === 0) return tr('Generating Ontology', '生成本体中')
+  return tr('Idle', '空闲')
 })
 
 // --- Helpers ---
@@ -193,7 +204,7 @@ const handleNewProject = async () => {
   const hasTemplate = !!pending.templateSeedText
   const hasUrlDocs = pending.urlDocs && pending.urlDocs.length > 0
   if (!pending.isPending || (!hasFiles && !hasTemplate && !hasUrlDocs)) {
-    error.value = 'No pending files found.'
+    error.value = tr('No pending files found.', '没有待处理的文件。')
     addLog('Error: No pending files found for new project.')
     return
   }
@@ -232,7 +243,7 @@ const handleNewProject = async () => {
       addLog(`Ontology generated successfully for project ${res.data.project_id}`)
       await startBuildGraph()
     } else {
-      error.value = res.error || 'Ontology generation failed'
+      error.value = res.error || tr('Ontology generation failed', '本体生成失败')
       addLog(`Error generating ontology: ${error.value}`)
     }
   } catch (err) {
@@ -281,7 +292,7 @@ const updatePhaseByStatus = (status) => {
     case 'ontology_generated': currentPhase.value = 0; break;
     case 'graph_building': currentPhase.value = 1; break;
     case 'graph_completed': currentPhase.value = 2; break;
-    case 'failed': error.value = 'Project failed'; break;
+    case 'failed': error.value = tr('Project failed', '项目失败'); break;
   }
 }
 

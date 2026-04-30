@@ -1,14 +1,14 @@
 <template>
   <div class="graph-panel">
     <div class="panel-header">
-      <span class="panel-title">Graph Overview</span>
+      <span class="panel-title">{{ $tr('Graph Overview', '图谱概览') }}</span>
       <!-- Top Toolbar (Internal Top Right) -->
       <div class="header-tools">
-        <button class="tool-btn" @click="$emit('refresh')" :disabled="loading" title="Refresh Graph">
+        <button class="tool-btn" @click="$emit('refresh')" :disabled="loading" :title="$tr('Refresh Graph', '刷新图谱')">
           <span class="icon-refresh" :class="{ 'spinning': loading }">↻</span>
-          <span class="btn-text">Refresh</span>
+          <span class="btn-text">{{ $tr('Refresh', '刷新') }}</span>
         </button>
-        <button class="tool-btn" @click="$emit('toggle-maximize')" title="Maximize/Restore">
+        <button class="tool-btn" @click="$emit('toggle-maximize')" :title="$tr('Maximize/Restore', '最大化/还原')">
           <span class="icon-maximize">⛶</span>
         </button>
       </div>
@@ -27,56 +27,56 @@
               <path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-4.04z" />
             </svg>
           </div>
-          Updating in real time...
+          {{ $tr('Updating in real time...', '实时更新中...') }}
           <span class="hint-close" @click="hideUpdateHint = true">&times;</span>
         </div>
-        
-        
+
+
         <!-- Node/Edge Detail Panel -->
         <div v-if="selectedItem" class="detail-panel">
           <div class="detail-panel-header">
-            <span class="detail-title">{{ selectedItem.type === 'node' ? 'Agent Details' : 'Relationship' }}</span>
+            <span class="detail-title">{{ selectedItem.type === 'node' ? $tr('Agent Details', '智能体详情') : $tr('Relationship', '关系') }}</span>
             <span v-if="selectedItem.type === 'node'" class="detail-type-badge" :style="{ background: selectedItem.color, color: '#fff' }">
               {{ selectedItem.entityType }}
             </span>
             <button class="detail-close" @click="closeDetailPanel">×</button>
           </div>
-          
+
           <!-- Node Details -->
           <div v-if="selectedItem.type === 'node'" class="detail-content">
             <div class="detail-row">
-              <span class="detail-label">Name:</span>
+              <span class="detail-label">{{ $tr('Name:', '名称:') }}</span>
               <span class="detail-value">{{ selectedItem.data.name }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">UUID:</span>
+              <span class="detail-label">{{ $tr('UUID:', 'UUID:') }}</span>
               <span class="detail-value uuid-text copyable" @click="copyText(selectedItem.data.uuid)">{{ selectedItem.data.uuid }}</span>
             </div>
             <div class="detail-row" v-if="selectedItem.data.created_at">
-              <span class="detail-label">Created:</span>
+              <span class="detail-label">{{ $tr('Created:', '创建时间:') }}</span>
               <span class="detail-value">{{ formatDateTime(selectedItem.data.created_at) }}</span>
             </div>
-            
+
             <!-- Properties -->
             <div class="detail-section" v-if="selectedItem.data.attributes && Object.keys(selectedItem.data.attributes).length > 0">
-              <div class="section-title">Properties:</div>
+              <div class="section-title">{{ $tr('Properties:', '属性:') }}</div>
               <div class="properties-list">
                 <div v-for="(value, key) in selectedItem.data.attributes" :key="key" class="property-item">
                   <span class="property-key">{{ key }}:</span>
-                  <span class="property-value">{{ value || 'None' }}</span>
+                  <span class="property-value">{{ value || $tr('None', '无') }}</span>
                 </div>
               </div>
             </div>
-            
+
             <!-- Summary -->
             <div class="detail-section" v-if="selectedItem.data.summary">
-              <div class="section-title">Summary:</div>
+              <div class="section-title">{{ $tr('Summary:', '摘要:') }}</div>
               <div class="summary-text">{{ selectedItem.data.summary }}</div>
             </div>
-            
+
             <!-- Labels -->
             <div class="detail-section" v-if="selectedItem.data.labels && selectedItem.data.labels.length > 0">
-              <div class="section-title">Labels:</div>
+              <div class="section-title">{{ $tr('Labels:', '标签:') }}</div>
               <div class="labels-list">
                 <span v-for="label in selectedItem.data.labels" :key="label" class="label-tag">
                   {{ label }}
@@ -88,8 +88,8 @@
             <div class="detail-section" v-if="simulationId">
               <div class="section-title actions-title" @click="actionsExpanded = !actionsExpanded" style="cursor: pointer;">
                 <span class="actions-toggle">{{ actionsExpanded ? '▼' : '▶' }}</span>
-                Agent Actions
-                <span v-if="agentActionsLoading" class="actions-loading">loading...</span>
+                {{ $tr('Agent Actions', '智能体动作') }}
+                <span v-if="agentActionsLoading" class="actions-loading">{{ $tr('loading...', '加载中...') }}</span>
                 <span v-else-if="agentActions.length > 0" class="actions-count">{{ agentActions.length }}</span>
               </div>
               <div v-show="actionsExpanded">
@@ -112,65 +112,65 @@
                     <!-- Expanded details -->
                     <div v-show="expandedActions.has(idx)" class="action-details">
                       <div class="action-detail-row" v-if="action.timestamp">
-                        <span class="action-detail-label">Time</span>
+                        <span class="action-detail-label">{{ $tr('Time', '时间') }}</span>
                         <span class="action-detail-value">{{ action.timestamp }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.agent_name">
-                        <span class="action-detail-label">Agent</span>
+                        <span class="action-detail-label">{{ $tr('Agent', '智能体') }}</span>
                         <span class="action-detail-value">{{ action.agent_name }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.agent_id != null">
-                        <span class="action-detail-label">Agent ID</span>
+                        <span class="action-detail-label">{{ $tr('Agent ID', '智能体 ID') }}</span>
                         <span class="action-detail-value mono">{{ action.agent_id }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.post_id != null">
-                        <span class="action-detail-label">Post ID</span>
+                        <span class="action-detail-label">{{ $tr('Post ID', '帖子 ID') }}</span>
                         <span class="action-detail-value mono">#{{ action.action_args.post_id }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.comment_id != null">
-                        <span class="action-detail-label">Comment ID</span>
+                        <span class="action-detail-label">{{ $tr('Comment ID', '评论 ID') }}</span>
                         <span class="action-detail-value mono">#{{ action.action_args.comment_id }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.target_post_id != null">
-                        <span class="action-detail-label">Target Post</span>
+                        <span class="action-detail-label">{{ $tr('Target Post', '目标帖子') }}</span>
                         <span class="action-detail-value mono">#{{ action.action_args.target_post_id }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.market_id != null">
-                        <span class="action-detail-label">Market</span>
+                        <span class="action-detail-label">{{ $tr('Market', '市场') }}</span>
                         <span class="action-detail-value mono">#{{ action.action_args.market_id }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.outcome">
-                        <span class="action-detail-label">Position</span>
+                        <span class="action-detail-label">{{ $tr('Position', '仓位') }}</span>
                         <span class="action-detail-value" :class="action.action_args.outcome === 'YES' ? 'text-green' : 'text-orange'">{{ action.action_args.outcome }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.cost != null">
-                        <span class="action-detail-label">Cost</span>
+                        <span class="action-detail-label">{{ $tr('Cost', '成本') }}</span>
                         <span class="action-detail-value">${{ action.action_args.cost.toFixed(2) }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.shares != null">
-                        <span class="action-detail-label">Shares</span>
+                        <span class="action-detail-label">{{ $tr('Shares', '份额') }}</span>
                         <span class="action-detail-value">{{ action.action_args.shares.toFixed(2) }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.price != null">
-                        <span class="action-detail-label">Price</span>
+                        <span class="action-detail-label">{{ $tr('Price', '价格') }}</span>
                         <span class="action-detail-value">${{ action.action_args.price.toFixed(4) }}</span>
                       </div>
                       <div class="action-detail-row" v-else-if="action.action_args?.usd_received != null && action.action_args?.shares">
-                        <span class="action-detail-label">Price</span>
+                        <span class="action-detail-label">{{ $tr('Price', '价格') }}</span>
                         <span class="action-detail-value">${{ (action.action_args.usd_received / action.action_args.shares).toFixed(4) }}</span>
                       </div>
                       <div class="action-detail-row" v-if="action.action_args?.usd_received != null">
-                        <span class="action-detail-label">Received</span>
+                        <span class="action-detail-label">{{ $tr('Received', '已收到') }}</span>
                         <span class="action-detail-value text-green">${{ action.action_args.usd_received.toFixed(2) }}</span>
                       </div>
                       <div class="action-detail-row">
-                        <span class="action-detail-label">Success</span>
-                        <span class="action-detail-value" :class="action.success ? 'text-green' : 'text-orange'">{{ action.success ? 'YES' : 'NO' }}</span>
+                        <span class="action-detail-label">{{ $tr('Success', '成功') }}</span>
+                        <span class="action-detail-value" :class="action.success ? 'text-green' : 'text-orange'">{{ action.success ? $tr('YES', '是') : $tr('NO', '否') }}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-                <div v-else-if="!agentActionsLoading" class="actions-empty">No actions recorded yet</div>
+                <div v-else-if="!agentActionsLoading" class="actions-empty">{{ $tr('No actions recorded yet', '尚未记录任何动作') }}</div>
               </div>
             </div>
           </div>
@@ -180,18 +180,18 @@
             <!-- Self-loop Group Details -->
             <template v-if="selectedItem.data.isSelfLoopGroup">
               <div class="edge-relation-header self-loop-header">
-                {{ selectedItem.data.source_name }} - Self Relations
-                <span class="self-loop-count">{{ selectedItem.data.selfLoopCount }} items</span>
+                {{ selectedItem.data.source_name }} - {{ $tr('Self Relations', '自我关系') }}
+                <span class="self-loop-count">{{ selectedItem.data.selfLoopCount }} {{ $tr('items', '项') }}</span>
               </div>
-              
+
               <div class="self-loop-list">
-                <div 
-                  v-for="(loop, idx) in selectedItem.data.selfLoopEdges" 
-                  :key="loop.uuid || idx" 
+                <div
+                  v-for="(loop, idx) in selectedItem.data.selfLoopEdges"
+                  :key="loop.uuid || idx"
                   class="self-loop-item"
                   :class="{ expanded: expandedSelfLoops.has(loop.uuid || idx) }"
                 >
-                  <div 
+                  <div
                     class="self-loop-item-header"
                     @click="toggleSelfLoop(loop.uuid || idx)"
                   >
@@ -199,26 +199,26 @@
                     <span class="self-loop-name">{{ loop.name || loop.fact_type || 'RELATED' }}</span>
                     <span class="self-loop-toggle">{{ expandedSelfLoops.has(loop.uuid || idx) ? '−' : '+' }}</span>
                   </div>
-                  
+
                   <div class="self-loop-item-content" v-show="expandedSelfLoops.has(loop.uuid || idx)">
                     <div class="detail-row" v-if="loop.uuid">
-                      <span class="detail-label">UUID:</span>
+                      <span class="detail-label">{{ $tr('UUID:', 'UUID:') }}</span>
                       <span class="detail-value uuid-text copyable" @click="copyText(loop.uuid)">{{ loop.uuid }}</span>
                     </div>
                     <div class="detail-row" v-if="loop.fact">
-                      <span class="detail-label">Fact:</span>
+                      <span class="detail-label">{{ $tr('Fact:', '事实:') }}</span>
                       <span class="detail-value fact-text">{{ loop.fact }}</span>
                     </div>
                     <div class="detail-row" v-if="loop.fact_type">
-                      <span class="detail-label">Type:</span>
+                      <span class="detail-label">{{ $tr('Type:', '类型:') }}</span>
                       <span class="detail-value">{{ loop.fact_type }}</span>
                     </div>
                     <div class="detail-row" v-if="loop.created_at">
-                      <span class="detail-label">Created:</span>
+                      <span class="detail-label">{{ $tr('Created:', '创建时间:') }}</span>
                       <span class="detail-value">{{ formatDateTime(loop.created_at) }}</span>
                     </div>
                     <div v-if="loop.episodes && loop.episodes.length > 0" class="self-loop-episodes">
-                      <span class="detail-label">Episodes:</span>
+                      <span class="detail-label">{{ $tr('Episodes:', '片段:') }}</span>
                       <div class="episodes-list compact">
                         <span v-for="ep in loop.episodes" :key="ep" class="episode-tag small">{{ ep }}</span>
                       </div>
@@ -227,69 +227,69 @@
                 </div>
               </div>
             </template>
-            
+
             <!-- Normal Edge Details -->
             <template v-else>
               <div class="edge-relation-header">
                 {{ selectedItem.data.source_name }} → {{ selectedItem.data.name || 'RELATED_TO' }} → {{ selectedItem.data.target_name }}
               </div>
-              
+
               <div class="detail-row">
-                <span class="detail-label">UUID:</span>
+                <span class="detail-label">{{ $tr('UUID:', 'UUID:') }}</span>
                 <span class="detail-value uuid-text copyable" @click="copyText(selectedItem.data.uuid)">{{ selectedItem.data.uuid }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Label:</span>
+                <span class="detail-label">{{ $tr('Label:', '标签:') }}</span>
                 <span class="detail-value">{{ selectedItem.data.name || 'RELATED_TO' }}</span>
               </div>
               <div class="detail-row">
-                <span class="detail-label">Type:</span>
-                <span class="detail-value">{{ selectedItem.data.fact_type || 'Unknown' }}</span>
+                <span class="detail-label">{{ $tr('Type:', '类型:') }}</span>
+                <span class="detail-value">{{ selectedItem.data.fact_type || $tr('Unknown', '未知') }}</span>
               </div>
               <div class="detail-row" v-if="selectedItem.data.fact">
-                <span class="detail-label">Fact:</span>
+                <span class="detail-label">{{ $tr('Fact:', '事实:') }}</span>
                 <span class="detail-value fact-text">{{ selectedItem.data.fact }}</span>
               </div>
-              
+
               <!-- Episodes -->
               <div class="detail-section" v-if="selectedItem.data.episodes && selectedItem.data.episodes.length > 0">
-                <div class="section-title">Episodes:</div>
+                <div class="section-title">{{ $tr('Episodes:', '片段:') }}</div>
                 <div class="episodes-list">
                   <span v-for="ep in selectedItem.data.episodes" :key="ep" class="episode-tag">
                     {{ ep }}
                   </span>
                 </div>
               </div>
-              
+
               <div class="detail-row" v-if="selectedItem.data.created_at">
-                <span class="detail-label">Created:</span>
+                <span class="detail-label">{{ $tr('Created:', '创建时间:') }}</span>
                 <span class="detail-value">{{ formatDateTime(selectedItem.data.created_at) }}</span>
               </div>
               <div class="detail-row" v-if="selectedItem.data.valid_at">
-                <span class="detail-label">Valid From:</span>
+                <span class="detail-label">{{ $tr('Valid From:', '生效时间:') }}</span>
                 <span class="detail-value">{{ formatDateTime(selectedItem.data.valid_at) }}</span>
               </div>
             </template>
           </div>
         </div>
       </div>
-      
+
       <!-- Loading State -->
       <div v-else-if="loading" class="graph-state">
         <div class="loading-spinner"></div>
-        <p>Loading graph data...</p>
+        <p>{{ $tr('Loading graph data...', '加载图谱数据中...') }}</p>
       </div>
-      
+
       <!-- Waiting/Empty State -->
       <div v-else class="graph-state">
         <div class="empty-icon">❖</div>
-        <p class="empty-text">Waiting for ontology generation...</p>
+        <p class="empty-text">{{ $tr('Waiting for ontology generation...', '等待本体生成...') }}</p>
       </div>
     </div>
 
     <!-- Bottom Legend (Bottom Left) -->
     <div v-if="graphData && entityTypes.length" class="graph-legend">
-      <span class="legend-title">Entity Types</span>
+      <span class="legend-title">{{ $tr('Entity Types', '实体类型') }}</span>
       <div class="legend-items">
         <div
           class="legend-item"
@@ -303,7 +303,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- Edge Labels Toggle -->
     <div v-if="graphData" class="graph-toggles">
       <div class="toggle-row">
@@ -311,14 +311,14 @@
           <input type="checkbox" v-model="showLinks" />
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">Show Links</span>
+        <span class="toggle-label">{{ $tr('Show Links', '显示连接') }}</span>
       </div>
       <div class="toggle-row">
         <label class="toggle-switch">
           <input type="checkbox" v-model="showEdgeLabels" />
           <span class="slider"></span>
         </label>
-        <span class="toggle-label">Show Edge Labels</span>
+        <span class="toggle-label">{{ $tr('Show Edge Labels', '显示边标签') }}</span>
       </div>
     </div>
   </div>

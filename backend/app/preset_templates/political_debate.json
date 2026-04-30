@@ -24,5 +24,13 @@
     "enable_twitter": true,
     "enable_reddit": true,
     "enable_polymarket": true
+  },
+  "i18n": {
+    "zh-CN": {
+      "name": "政治辩论",
+      "category": "政治",
+      "description": "模拟一场激烈政治辩论后的舆论动态。观察不同选民群体、媒体人物与政治评论员如何反应、结盟,并在 48 小时内调整立场。",
+      "tags": ["政治", "舆论", "辩论", "极化"]
+    }
   }
 }

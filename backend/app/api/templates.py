@@ -8,6 +8,7 @@ from flask import jsonify, request
 
 from . import templates_bp
 from ..utils.logger import get_logger
+from ..utils.i18n import get_locale, apply_i18n, t as _t
 from ..services.oracle_seed import resolve_oracle_tools
 
 logger = get_logger('miroshark.api.templates')
@@ -62,22 +63,24 @@ def list_templates():
     """
     try:
         templates = _load_templates()
+        locale = get_locale(request)
 
         summaries = []
-        for t in templates:
-            branches = t.get("counterfactual_branches", []) or []
-            oracle_tools = t.get("oracle_tools", []) or []
+        for tpl in templates:
+            localized = apply_i18n(tpl, locale)
+            branches = localized.get("counterfactual_branches", []) or []
+            oracle_tools = localized.get("oracle_tools", []) or []
             summaries.append({
-                "id": t["id"],
-                "name": t["name"],
-                "category": t.get("category", ""),
-                "description": t.get("description", ""),
-                "icon": t.get("icon", ""),
-                "difficulty": t.get("difficulty", "medium"),
-                "estimated_agents": t.get("estimated_agents", 0),
-                "estimated_rounds": t.get("estimated_rounds", 0),
-                "platforms": t.get("platforms", []),
-                "tags": t.get("tags", []),
+                "id": localized["id"],
+                "name": localized["name"],
+                "category": localized.get("category", ""),
+                "description": localized.get("description", ""),
+                "icon": localized.get("icon", ""),
+                "difficulty": localized.get("difficulty", "medium"),
+                "estimated_agents": localized.get("estimated_agents", 0),
+                "estimated_rounds": localized.get("estimated_rounds", 0),
+                "platforms": localized.get("platforms", []),
+                "tags": localized.get("tags", []),
                 "has_counterfactuals": len(branches) > 0,
                 "counterfactual_count": len(branches),
                 "has_oracle_tools": len(oracle_tools) > 0,
@@ -105,16 +108,17 @@ def get_template(template_id: str):
     simulation_requirement for use in the creation flow.
     """
     try:
+        locale = get_locale(request)
         filepath = os.path.realpath(os.path.join(TEMPLATES_DIR, f"{template_id}.json"))
         if not filepath.startswith(os.path.realpath(TEMPLATES_DIR)):
             return jsonify({
                 "success": False,
-                "error": "Invalid template ID"
+                "error": _t("Invalid template ID", "无效的模板 ID", locale)
             }), 400
         if not os.path.exists(filepath):
             return jsonify({
                 "success": False,
-                "error": f"Template not found: {template_id}"
+                "error": _t(f"Template not found: {template_id}", f"未找到模板:{template_id}", locale)
             }), 404
 
         with open(filepath, 'r', encoding='utf-8') as f:
@@ -132,6 +136,8 @@ def get_template(template_id: str):
                     template['oracle_enriched'] = True
             except Exception as exc:
                 logger.warning(f"oracle enrichment failed for {template_id}: {exc}")
+
+        template = apply_i18n(template, locale)
 
         return jsonify({
             "success": True,

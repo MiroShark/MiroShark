@@ -3,24 +3,22 @@
     <div class="cf-header">
       <div class="cf-title">
         <span class="cf-icon">⤷</span>
-        <span class="cf-label">COUNTERFACTUAL BRANCH</span>
+        <span class="cf-label">{{ $tr('COUNTERFACTUAL BRANCH', '反事实分支') }}</span>
       </div>
       <span class="cf-hint">
-        Fork this simulation from round N with a narrative injection.
-        Preserves the agent population; the runner promotes your injection into
-        a director event when round {{ triggerRound || 'N' }} arrives.
+        {{ $tr('Fork this simulation from round N with a narrative injection. Preserves the agent population; the runner promotes your injection into a director event when round', '从第 N 轮派生此模拟,并注入一段叙事。保留智能体人群;当达到第') }} {{ triggerRound || 'N' }} {{ $tr('arrives.', '轮时,运行器会将你的注入提升为导演事件。') }}
       </span>
     </div>
 
     <!-- Preset-branch dropdown (when the source template declared them) -->
     <div v-if="presetBranches.length" class="cf-preset-row">
-      <label class="cf-preset-label">Preset</label>
+      <label class="cf-preset-label">{{ $tr('Preset', '预设') }}</label>
       <select
         class="cf-preset-select"
         :value="selectedPresetId"
         @change="applyPreset($event.target.value)"
       >
-        <option value="">— custom —</option>
+        <option value="">{{ $tr('— custom —', '— 自定义 —') }}</option>
         <option
           v-for="b in presetBranches"
           :key="b.id"
@@ -31,7 +29,7 @@
 
     <!-- Trigger round picker -->
     <div class="cf-form-row">
-      <label class="cf-form-label">Trigger round</label>
+      <label class="cf-form-label">{{ $tr('Trigger round', '触发轮次') }}</label>
       <input
         type="number"
         class="cf-form-input cf-form-input--narrow"
@@ -41,31 +39,31 @@
         :disabled="busy"
       />
       <span class="cf-form-meta">
-        of {{ totalRounds || '?' }} · currently at round {{ currentRound }}
+        {{ $tr('of', '共') }} {{ totalRounds || '?' }} · {{ $tr('currently at round', '当前在第') }} {{ currentRound }}
       </span>
     </div>
 
     <!-- Short label -->
     <div class="cf-form-row">
-      <label class="cf-form-label">Label</label>
+      <label class="cf-form-label">{{ $tr('Label', '标签') }}</label>
       <input
         type="text"
         class="cf-form-input"
         v-model="label"
         maxlength="80"
-        placeholder="e.g. CEO resigns"
+        :placeholder="$tr('e.g. CEO resigns', '例如 CEO 辞职')"
         :disabled="busy"
       />
     </div>
 
     <!-- Injection text -->
     <div class="cf-form-row cf-form-row--stack">
-      <label class="cf-form-label">Injection (breaking-news style)</label>
+      <label class="cf-form-label">{{ $tr('Injection (breaking-news style)', '注入内容(突发新闻风格)') }}</label>
       <textarea
         class="cf-form-textarea"
         v-model="injectionText"
         maxlength="2000"
-        placeholder="The board has just announced the CEO's resignation, effective immediately. The CFO steps in as interim lead."
+        :placeholder="$tr(`The board has just announced the CEO's resignation, effective immediately. The CFO steps in as interim lead.`, '董事会刚刚宣布 CEO 立即辞职,CFO 作为临时负责人接任。')"
         rows="4"
         :disabled="busy"
       ></textarea>
@@ -76,11 +74,11 @@
 
     <div v-if="error" class="cf-error">{{ error }}</div>
     <div v-if="result" class="cf-result">
-      Branch created: <code>{{ result.simulation_id }}</code>
+      {{ $tr('Branch created:', '分支已创建:') }} <code>{{ result.simulation_id }}</code>
       <span v-if="result.config_diff?.counterfactual?.label">
         · "{{ result.config_diff.counterfactual.label }}"
       </span>
-      <button class="cf-open-btn" @click="openBranch">Open →</button>
+      <button class="cf-open-btn" @click="openBranch">{{ $tr('Open →', '打开 →') }}</button>
     </div>
 
     <div class="cf-actions">
@@ -88,14 +86,14 @@
         class="cf-cancel"
         @click="$emit('close')"
         :disabled="busy"
-      >Cancel</button>
+      >{{ $tr('Cancel', '取消') }}</button>
       <button
         class="cf-submit"
         :disabled="!canSubmit || busy"
         @click="submit"
       >
         <span v-if="busy" class="cf-spinner"></span>
-        {{ busy ? 'Forking…' : 'Fork branch →' }}
+        {{ busy ? $tr('Forking…', '派生中…') : $tr('Fork branch →', '派生分支 →') }}
       </button>
     </div>
   </div>
@@ -105,6 +103,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { branchCounterfactual } from '../api/simulation'
+import { tr } from '../i18n'
 
 const props = defineProps({
   simulationId: { type: String, required: true },
@@ -158,12 +157,12 @@ const submit = async () => {
       branchId: selectedPresetId.value || undefined,
     })
     if (!res.success) {
-      error.value = res.error || 'Branch failed.'
+      error.value = res.error || tr('Branch failed.', '分支创建失败。')
       return
     }
     result.value = res.data
   } catch (err) {
-    error.value = err?.response?.data?.error || err?.message || 'Branch failed.'
+    error.value = err?.response?.data?.error || err?.message || tr('Branch failed.', '分支创建失败。')
   } finally {
     busy.value = false
   }

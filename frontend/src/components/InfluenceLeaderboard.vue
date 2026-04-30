@@ -4,15 +4,15 @@
     <div class="lb-header">
       <div class="lb-title">
         <span class="lb-icon">◈</span>
-        <span class="lb-label">AGENT INFLUENCE LEADERBOARD</span>
+        <span class="lb-label">{{ $tr('AGENT INFLUENCE LEADERBOARD', '智能体影响力排行榜') }}</span>
       </div>
       <button
         class="export-btn"
         :disabled="!agents.length"
         @click="exportReport"
-        title="Download influence report as JSON"
+        :title="$tr('Download influence report as JSON', '下载影响力报告 JSON')"
       >
-        Export JSON ↓
+        {{ $tr('Export JSON ↓', '导出 JSON ↓') }}
       </button>
     </div>
 
@@ -27,8 +27,8 @@
               <div>
                 <div class="iv-name">{{ interviewAgent.agent_name }}</div>
                 <div class="iv-meta">
-                  Rank #{{ interviewAgent.rank }} · {{ interviewAgent.influence_score }} pts
-                  · {{ interviewAgent.posts_created }} posts
+                  {{ $tr('Rank', '排名') }} #{{ interviewAgent.rank }} · {{ interviewAgent.influence_score }} {{ $tr('pts', '分') }}
+                  · {{ interviewAgent.posts_created }} {{ $tr('posts', '帖子') }}
                 </div>
               </div>
             </div>
@@ -38,8 +38,8 @@
           <!-- Chat thread -->
           <div class="iv-thread" ref="threadEl">
             <div v-if="!interviewHistory.length && !interviewLoading" class="iv-empty">
-              Ask {{ interviewAgent.agent_name }} about their simulation experience.
-              Try: "Why did you post so much in the early rounds?" or "What changed your mind?"
+              {{ $tr('Ask', '询问') }} {{ interviewAgent.agent_name }} {{ $tr('about their simulation experience.', '关于他们的模拟体验。') }}
+              {{ $tr(`Try: "Why did you post so much in the early rounds?" or "What changed your mind?"`, '试试:"你为什么在前几轮发帖这么多?" 或 "什么改变了你的想法?"') }}
             </div>
             <div
               v-for="(qa, i) in interviewHistory"
@@ -47,7 +47,7 @@
               class="iv-qa-pair"
             >
               <div class="iv-question">
-                <span class="iv-role">You</span>
+                <span class="iv-role">{{ $tr('You', '你') }}</span>
                 <span class="iv-text">{{ qa.question }}</span>
               </div>
               <div class="iv-answer">
@@ -57,7 +57,7 @@
             </div>
             <div v-if="interviewLoading" class="iv-thinking">
               <div class="iv-dots"><span></span><span></span><span></span></div>
-              <span>{{ interviewAgent.agent_name }} is thinking...</span>
+              <span>{{ interviewAgent.agent_name }} {{ $tr('is thinking...', '正在思考...') }}</span>
             </div>
           </div>
 
@@ -68,7 +68,7 @@
               v-model="interviewQuestion"
               class="iv-input"
               type="text"
-              placeholder="Ask a question..."
+              :placeholder="$tr('Ask a question...', '提问...')"
               :disabled="interviewLoading"
               @keydown.enter.prevent="submitQuestion"
             />
@@ -77,7 +77,7 @@
               :disabled="interviewLoading || !interviewQuestion.trim()"
               @click="submitQuestion"
             >
-              Ask
+              {{ $tr('Ask', '提问') }}
             </button>
           </div>
 
@@ -89,15 +89,15 @@
 
     <!-- Score legend -->
     <div class="lb-legend">
-      <span class="legend-item"><span class="legend-dot engage"></span>Engagement ×3</span>
-      <span class="legend-item"><span class="legend-dot platform"></span>Platforms ×5</span>
-      <span class="legend-item"><span class="legend-dot post"></span>Posts ×1</span>
+      <span class="legend-item"><span class="legend-dot engage"></span>{{ $tr('Engagement ×3', '互动 ×3') }}</span>
+      <span class="legend-item"><span class="legend-dot platform"></span>{{ $tr('Platforms ×5', '平台 ×5') }}</span>
+      <span class="legend-item"><span class="legend-dot post"></span>{{ $tr('Posts ×1', '帖子 ×1') }}</span>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="lb-loading">
       <div class="pulse-ring"></div>
-      <span>Computing influence scores...</span>
+      <span>{{ $tr('Computing influence scores...', '正在计算影响力分数...') }}</span>
     </div>
 
     <!-- Error -->
@@ -105,7 +105,7 @@
 
     <!-- Empty -->
     <div v-else-if="!agents.length" class="lb-empty">
-      No simulation data available yet. Run the simulation first.
+      {{ $tr('No simulation data available yet. Run the simulation first.', '尚无模拟数据。请先运行模拟。') }}
     </div>
 
     <!-- Leaderboard rows -->
@@ -136,12 +136,12 @@
 
         <!-- Score breakdown -->
         <div class="lb-breakdown">
-          <div class="bd-item" title="Engagement received (likes, reposts, quotes)">
-            <span class="bd-label engage">ENG</span>
+          <div class="bd-item" :title="$tr('Engagement received (likes, reposts, quotes)', '收到的互动(点赞、转发、引用)')">
+            <span class="bd-label engage">{{ $tr('ENG', '互动') }}</span>
             <span class="bd-value">{{ agent.engagement_received }}</span>
           </div>
-          <div class="bd-item" title="Original posts created">
-            <span class="bd-label post">PST</span>
+          <div class="bd-item" :title="$tr('Original posts created', '发布的原创帖子')">
+            <span class="bd-label post">{{ $tr('PST', '帖子') }}</span>
             <span class="bd-value">{{ agent.posts_created }}</span>
           </div>
         </div>
@@ -161,16 +161,16 @@
         <button
           class="iv-btn"
           @click.stop="openInterview(agent)"
-          title="Interview this agent about their simulation"
+          :title="$tr('Interview this agent about their simulation', '采访这位智能体关于其模拟的经历')"
         >
-          ▶ Interview
+          ▶ {{ $tr('Interview', '采访') }}
         </button>
       </div>
     </div>
 
     <!-- Footer -->
     <div v-if="totalAgents > agents.length" class="lb-footer">
-      Showing top {{ agents.length }} of {{ totalAgents }} agents
+      {{ $tr('Showing top', '显示前') }} {{ agents.length }} {{ $tr('of', '/共') }} {{ totalAgents }} {{ $tr('agents', '个智能体') }}
     </div>
   </div>
 </template>
@@ -178,6 +178,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { getInfluenceLeaderboard, traceInterviewAgent, getAgentInterview } from '../api/simulation'
+import { tr } from '../i18n'
 
 const props = defineProps({
   simulationId: { type: String, required: true },
@@ -217,10 +218,10 @@ const load = async () => {
       agents.value = res.data.agents || []
       totalAgents.value = res.data.total_agents || 0
     } else {
-      error.value = res.error || 'Failed to load influence data.'
+      error.value = res.error || tr('Failed to load influence data.', '加载影响力数据失败。')
     }
   } catch (err) {
-    error.value = err.message || 'Failed to load influence data.'
+    error.value = err.message || tr('Failed to load influence data.', '加载影响力数据失败。')
   } finally {
     loading.value = false
   }
@@ -300,10 +301,10 @@ const submitQuestion = async () => {
       await nextTick()
       scrollThread()
     } else {
-      interviewError.value = res.error || 'Failed to get a response.'
+      interviewError.value = res.error || tr('Failed to get a response.', '未能获取回复。')
     }
   } catch (err) {
-    interviewError.value = err.message || 'Request failed.'
+    interviewError.value = err.message || tr('Request failed.', '请求失败。')
   } finally {
     interviewLoading.value = false
     await nextTick()
