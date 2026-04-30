@@ -147,16 +147,6 @@ Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 | [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
 | [Contributing](CONTRIBUTING.md) | Tests and development |
 
-### License
-
-AGPL-3.0. See [LICENSE](./LICENSE).
-
-Support the project: `0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
-
-### Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=aaronjmars/miroshark&type=Date)](https://www.star-history.com/#aaronjmars/miroshark&Date)
-
 ---
 
 <a id="中文"></a>
@@ -260,9 +250,15 @@ cp .env.example .env
 | [可观测性](docs/OBSERVABILITY.zh-CN.md) | 调试面板、事件流、日志 |
 | [贡献](CONTRIBUTING.zh-CN.md) | 测试与开发 |
 
-### 许可证
+---
 
+## License · 许可证
+
+AGPL-3.0. See [LICENSE](./LICENSE).
 AGPL-3.0,详见 [LICENSE](./LICENSE)。
 
-支持本项目:`0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
+Support the project · 支持本项目:`0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=aaronjmars/miroshark&type=Date)](https://www.star-history.com/#aaronjmars/miroshark&Date)
