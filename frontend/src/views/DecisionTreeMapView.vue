@@ -4,6 +4,7 @@
       <button class="back-btn" type="button" @click="goBack">← List view 📋</button>
       <div class="brand">DECISION MAP</div>
       <div class="topic">{{ tree?.question || 'Loading…' }}</div>
+      <button class="back-btn" type="button" :disabled="!tree" @click="resetView">Reset view</button>
       <button class="back-btn" type="button" @click="goChat">Back to chat</button>
     </header>
 
@@ -54,9 +55,10 @@ const loading = ref(true)
 const error = ref('')
 const selectedNode = ref(null)
 const svgEl = ref(null)
+let zoomBehaviour = null
 
-const NODE_WIDTH = 220
-const NODE_HEIGHT = 95
+const NODE_WIDTH = 200
+const NODE_HEIGHT = 80
 const TYPE_COLORS = {
   central: '#4ade80',
   upstream: '#60a5fa',
@@ -103,6 +105,12 @@ function goChat() {
   router.push({ name: 'SeedChat', query: { session: sessionId } })
 }
 
+function resetView() {
+  if (!svgEl.value || !zoomBehaviour) return
+  const svg = d3.select(svgEl.value)
+  svg.transition().duration(300).call(zoomBehaviour.transform, d3.zoomIdentity)
+}
+
 async function loadTree() {
   loading.value = true
   error.value = ''
@@ -126,8 +134,8 @@ function drawTree() {
   if (!svgEl.value || !tree.value) return
 
   const container = svgEl.value.parentElement
-  const width = container.clientWidth
-  const height = Math.max(800, container.clientHeight)
+  const width = container.clientWidth || 1200
+  const height = container.clientHeight || 800
 
   const svg = d3.select(svgEl.value)
     .attr('width', width)
@@ -138,8 +146,8 @@ function drawTree() {
 
   // Horizontal blueprint layout: siblings stack vertically, depth grows rightward
   const treeLayout = d3.tree()
-    .nodeSize([NODE_HEIGHT + 30, NODE_WIDTH + 90])
-    .separation((a, b) => a.parent === b.parent ? 1 : 1.3)
+    .nodeSize([NODE_HEIGHT + 60, NODE_WIDTH + 130])
+    .separation((a, b) => a.parent === b.parent ? 1 : 1.4)
 
   treeLayout(root)
 
@@ -161,7 +169,16 @@ function drawTree() {
   svg.attr('viewBox', `${xMin - 40} ${yMin - NODE_HEIGHT / 2 - 20} ${totalWidth} ${totalHeight}`)
     .attr('preserveAspectRatio', 'xMidYMin meet')
 
-  const g = svg.append('g')
+  const g = svg.append('g').attr('class', 'zoom-root')
+
+  // Wheel-zoom + drag-pan
+  zoomBehaviour = d3.zoom()
+    .scaleExtent([0.2, 4])
+    .on('zoom', (event) => {
+      g.attr('transform', event.transform)
+    })
+
+  svg.call(zoomBehaviour)
 
   // Links — horizontal Bezier: right edge of source → left edge of target
   g.append('g')
@@ -211,18 +228,18 @@ function drawTree() {
 
   // Question (truncated)
   node.append('text')
-    .attr('x', 32)
-    .attr('y', 20)
-    .attr('font-size', 11.5)
+    .attr('x', 28)
+    .attr('y', 18)
+    .attr('font-size', 11)
     .attr('font-weight', 600)
     .attr('fill', '#eee')
     .text(d => truncate(d.data.question || '', 32))
 
   // Headline (one line — prefers scores.stance_summary, falls back to essence)
   const headlineText = node.append('text')
-    .attr('x', 12)
-    .attr('y', 46)
-    .attr('font-size', 10.5)
+    .attr('x', 10)
+    .attr('y', 38)
+    .attr('font-size', 10)
     .attr('fill', '#bbb')
 
   headlineText.each(function(d) {
@@ -240,11 +257,11 @@ function drawTree() {
       return
     }
     // Wrap to at most 2 lines, ~38 chars each
-    const lines = wrapText(truncate(headline, 130), 38)
+    const lines = wrapText(truncate(headline, 110), 36)
     lines.slice(0, 2).forEach((line, i) => {
       sel.append('tspan')
         .attr('x', 12)
-        .attr('dy', i === 0 ? 0 : 12)
+        .attr('dy', i === 0 ? 0 : 11)
         .text(line)
     })
   })
@@ -253,7 +270,7 @@ function drawTree() {
   node.each(function(d) {
     if (!d.data.scores) return
     const s = d.data.scores
-    const badgeY = NODE_HEIGHT - 26
+    const badgeY = NODE_HEIGHT - 22
     const badges = [
       { text: `🎲${s.confidence}`, color: confColor(s.confidence) },
       { text: `⚖${s.contestedness}`, color: contColor(s.contestedness) },
@@ -265,18 +282,18 @@ function drawTree() {
       sel.append('text')
         .attr('x', cursorX)
         .attr('y', badgeY)
-        .attr('font-size', 8.5)
+        .attr('font-size', 8)
         .attr('fill', b.color)
         .text(b.text)
-      cursorX += b.text.length * 5.0 + 4
+      cursorX += b.text.length * 4.7 + 4
     }
   })
 
   // Stats footer
   node.append('text')
     .attr('x', 12)
-    .attr('y', NODE_HEIGHT - 8)
-    .attr('font-size', 9)
+    .attr('y', NODE_HEIGHT - 7)
+    .attr('font-size', 8.5)
     .attr('fill', '#888')
     .text(d => {
       const fetched = fetchedEvidenceCount(d.data)
@@ -356,14 +373,16 @@ watch(tree, async () => {
 
 .map-canvas-wrap {
   flex: 1;
-  overflow: auto;
-  padding: 2rem;
+  overflow: hidden;
+  padding: 0;
   min-height: 600px;
+  cursor: grab;
 }
+.map-canvas-wrap:active { cursor: grabbing; }
 .map-svg {
   display: block;
-  margin: 0 auto;
-  min-width: 100%;
+  width: 100%;
+  height: 100%;
 }
 
 .detail-pane {
