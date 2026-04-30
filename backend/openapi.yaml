@@ -1278,6 +1278,70 @@ paths:
   # Export
   # ────────────────────────────────────────────────────────────────────
 
+  /api/feed.atom:
+    get:
+      tags: [Publish & Embed]
+      summary: Atom 1.0 syndication feed of the public simulation gallery.
+      description: |
+        Public MiroShark simulations rendered as an Atom 1.0 XML feed so
+        researchers and tooling operators can subscribe via Feedly,
+        Readwise, Inoreader, Obsidian RSS, NetNewsWire — every newly
+        published simulation lands in their reader the same way an AI
+        newsletter does.
+
+        Mirrors `GET /api/simulation/public` selection (publish-gated,
+        sorted by `created_at` desc, capped at 20 entries) so a
+        subscription stays in lockstep with what shows up on `/explore`.
+        Pure stdlib XML — zero new dependencies.
+
+        Each entry carries: scenario as title, consensus split + quality
+        + outcome label as summary, share-card PNG as `<media:thumbnail>`
+        + `<media:content>`, replay GIF as `<media:content>` so River-
+        view aggregators surface motion previews automatically.
+
+        Browsers auto-discover this feed via the `<link rel="alternate"
+        type="application/atom+xml">` tag in `index.html`.
+      parameters:
+        - in: query
+          name: verified
+          description: |
+            Truthy values (`1`, `true`, `yes`, `on`) restrict the feed to
+            simulations with a recorded outcome annotation — the same
+            curated set the `/verified` page surfaces.
+          schema: { type: string }
+      responses:
+        "200":
+          description: |
+            Atom 1.0 XML document with `Cache-Control: public, max-age=300`.
+          content:
+            application/atom+xml:
+              schema: { type: string }
+
+  /api/feed.rss:
+    get:
+      tags: [Publish & Embed]
+      summary: RSS 2.0 syndication feed of the public simulation gallery.
+      description: |
+        Same content + selection as `/api/feed.atom` rendered as RSS 2.0
+        for older readers and self-hosted aggregators that haven't moved
+        off the legacy format. Published runs include their share-card
+        PNG as an `<enclosure>` so podcast-style readers handle it
+        natively.
+      parameters:
+        - in: query
+          name: verified
+          description: |
+            Truthy values (`1`, `true`, `yes`, `on`) restrict the feed to
+            simulations with a recorded outcome annotation.
+          schema: { type: string }
+      responses:
+        "200":
+          description: |
+            RSS 2.0 XML document with `Cache-Control: public, max-age=300`.
+          content:
+            application/rss+xml:
+              schema: { type: string }
+
   /api/simulation/{simulation_id}/export:
     get:
       tags: [Export]

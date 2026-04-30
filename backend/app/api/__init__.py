@@ -12,6 +12,7 @@ settings_bp = Blueprint('settings', __name__)
 observability_bp = Blueprint('observability', __name__)
 mcp_bp = Blueprint('mcp', __name__)
 docs_bp = Blueprint('docs', __name__)
+feed_bp = Blueprint('feed', __name__)
 
 from . import graph  # noqa: E402, F401
 from . import simulation  # noqa: E402, F401
@@ -21,6 +22,7 @@ from . import settings  # noqa: E402, F401
 from . import observability  # noqa: E402, F401
 from . import mcp  # noqa: E402, F401
 from . import docs  # noqa: E402, F401
+from . import feed  # noqa: E402, F401
 
 # share_bp is mounted at the root (no /api prefix) so the public landing
 # URL stays clean — see api/share.py.

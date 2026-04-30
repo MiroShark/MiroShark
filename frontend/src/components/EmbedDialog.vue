@@ -405,6 +405,56 @@
                 Open gallery ↗
               </a>
             </div>
+
+            <!-- RSS / Atom syndication — passive subscription channel
+                 for researchers and tooling that already read AI/DeFi
+                 content via Feedly / Readwise / Inoreader / Obsidian
+                 RSS. Every newly published MiroShark simulation lands
+                 in their reader without anyone curating it. -->
+            <div class="feed-callout">
+              <div class="feed-callout-head">
+                <span class="feed-callout-icon">📡</span>
+                <div class="feed-callout-body">
+                  <div class="feed-callout-title">
+                    Follow the gallery via RSS
+                  </div>
+                  <div class="feed-callout-desc">
+                    Every newly published MiroShark simulation appears in
+                    your reader (Feedly, Readwise, Inoreader, Obsidian
+                    RSS, NetNewsWire, …). No login, no account.
+                  </div>
+                </div>
+              </div>
+              <div class="feed-callout-actions">
+                <a
+                  class="feed-callout-link"
+                  :href="feedAtomUrl"
+                  target="_blank"
+                  rel="noopener"
+                  title="Atom 1.0 feed of the public gallery"
+                >
+                  Atom feed ↗
+                </a>
+                <a
+                  class="feed-callout-link feed-callout-link-secondary"
+                  :href="feedRssUrl"
+                  target="_blank"
+                  rel="noopener"
+                  title="RSS 2.0 feed of the public gallery"
+                >
+                  RSS 2.0 ↗
+                </a>
+                <a
+                  class="feed-callout-link feed-callout-link-secondary"
+                  :href="feedVerifiedAtomUrl"
+                  target="_blank"
+                  rel="noopener"
+                  title="Atom feed restricted to verified predictions only"
+                >
+                  Verified only ↗
+                </a>
+              </div>
+            </div>
           </div>
 
           <!-- Hint -->
@@ -429,6 +479,7 @@ import {
   getShareLandingUrl,
   getTranscriptMarkdownUrl,
   getTranscriptJsonUrl,
+  getFeedUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
 } from '../api/simulation'
@@ -533,6 +584,20 @@ const transcriptJsonUrl = computed(() => {
   if (!props.simulationId || !origin.value) return ''
   return getTranscriptJsonUrl(props.simulationId, origin.value)
 })
+
+// Public-gallery syndication URLs — independent of `simulationId` (the
+// feed lists everyone's published runs), but kept on the embed dialog
+// so an operator who just toggled their sim public can subscribe to the
+// stream they're now part of in one click.
+const feedAtomUrl = computed(() =>
+  getFeedUrl({ format: 'atom', verified: false, origin: origin.value }),
+)
+const feedRssUrl = computed(() =>
+  getFeedUrl({ format: 'rss', verified: false, origin: origin.value }),
+)
+const feedVerifiedAtomUrl = computed(() =>
+  getFeedUrl({ format: 'atom', verified: true, origin: origin.value }),
+)
 
 const replayLoaded = ref(false)
 const replayPlay = ref(false)
@@ -1610,6 +1675,91 @@ watch(isPublic, () => {
 
 .gallery-callout-link:hover {
   background: #0a0a0a;
+}
+
+/* RSS / Atom feed callout — same anatomy as the gallery callout but
+   with a wraparound action row (three feed flavours). Reads as a
+   secondary discovery affordance, not a primary action, so the chips
+   are outline-styled rather than filled. */
+.feed-callout {
+  margin-top: 12px;
+  padding: 14px 16px;
+  background: #fafafa;
+  border: 1px dashed rgba(10, 10, 10, 0.18);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feed-callout-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.feed-callout-icon {
+  font-size: 22px;
+  line-height: 1;
+  color: var(--color-orange, #ff6b1a);
+  padding-top: 2px;
+}
+
+.feed-callout-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-callout-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  margin-bottom: 4px;
+}
+
+.feed-callout-desc {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #4a4a4a;
+}
+
+.feed-callout-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-left: 34px;
+}
+
+.feed-callout-link {
+  padding: 6px 12px;
+  background: var(--color-orange, #ff6b1a);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border-radius: 6px;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.feed-callout-link:hover {
+  background: #0a0a0a;
+}
+
+.feed-callout-link-secondary {
+  background: transparent;
+  color: var(--color-orange, #ff6b1a);
+  border: 1px solid rgba(255, 107, 26, 0.45);
+}
+
+.feed-callout-link-secondary:hover {
+  background: var(--color-orange, #ff6b1a);
+  color: #fff;
+  border-color: var(--color-orange, #ff6b1a);
 }
 
 .snippet-copy-btn:disabled {

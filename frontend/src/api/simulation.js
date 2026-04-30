@@ -489,6 +489,31 @@ export const getShareLandingUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the public-gallery syndication feed.
+ *
+ * Atom 1.0 by default — the format browsers auto-discover and modern
+ * readers prefer. Pass `format: 'rss'` for the RSS 2.0 variant. When
+ * `verified` is truthy the feed is restricted to simulations with a
+ * recorded outcome annotation (the `/verified` curated hall).
+ *
+ * The endpoint is publish-gated: every entry is a simulation already
+ * visible on /explore, so subscribing maps 1:1 to "every new public
+ * MiroShark simulation lands in my reader."
+ *
+ * @param {Object} [options]
+ * @param {('atom'|'rss')} [options.format='atom']
+ * @param {boolean} [options.verified=false]
+ * @param {string} [options.origin]
+ * @returns {string}
+ */
+export const getFeedUrl = ({ format = 'atom', verified = false, origin } = {}) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  const ext = format === 'rss' ? 'rss' : 'atom'
+  const query = verified ? '?verified=1' : ''
+  return `${base}/api/feed.${ext}${query}`
+}
+
+/**
  * Branch a simulation with a narrative injection at a specific round.
  * The new simulation is READY and shares the parent's agent population;
  * when the runner hits trigger_round it auto-promotes the injection into

@@ -99,6 +99,7 @@ _BLUEPRINT_PREFIXES = {
     "observability_bp":  "/api/observability",
     "mcp_bp":            "/api/mcp",
     "docs_bp":           "/api",
+    "feed_bp":           "/api",
     # share_bp is mounted at the root with no prefix — see app/__init__.py.
     "share_bp":          "",
 }

@@ -146,6 +146,25 @@ Two endpoints, same payload, different encoding:
 
 Both endpoints share the share-card publish gate (`is_public=true`). Per-agent stance labels use the same ±0.2 threshold as every other surface — a "bullish" agent on the gallery is the same agent's tag in the transcript. The Embed dialog exposes a "Download .md" + "Download .json" pair beneath the replay-GIF row.
 
+## Public Gallery Feeds (RSS / Atom)
+
+The same cards `/explore` renders, served as a syndication feed so researchers and tooling already on Feedly / Readwise / Inoreader / NetNewsWire / Obsidian RSS subscribe in their existing toolchain — no login, no MiroShark account. Every newly published simulation lands in their reader the same way an AI newsletter or Substack post does.
+
+Two endpoints, same payload, different XML format:
+
+- `GET /api/feed.atom` — Atom 1.0 (preferred — modern readers + the default browser auto-discovery target).
+- `GET /api/feed.rss` — RSS 2.0 (kept for older self-hosted aggregators and academic RSS pipelines).
+
+Each entry carries the scenario as the title (truncated with an ellipsis past 100 chars), the bullish / neutral / bearish consensus split as the summary line, the share-card PNG as `<media:thumbnail>` + `<media:content>` (so River-view aggregators surface a preview image), and the animated replay GIF as a second `<media:content>` (so Feedly's magazine layout shows motion). Outcome and quality are exposed as `<category>` elements so subscribers can filter on them in their reader.
+
+- **Verified-only feed:** append `?verified=1` for the curated stream of simulations whose operators marked a real-world outcome — the syndication mirror of `/verified`.
+- **Selection:** mirrors `GET /api/simulation/public` exactly — newest 20 published runs, sorted by `created_at` descending, publish-gated.
+- **Auto-discovery:** the SPA's `index.html` declares `<link rel="alternate" type="application/atom+xml">` (and the RSS variant) so browsers expose the feed via the address-bar globe icon.
+- **Caching:** `Cache-Control: public, max-age=300` — five minutes is short enough for newly published sims to appear in the next aggregator poll, long enough to absorb aggressive polling without taxing the gallery query.
+- **Implementation:** pure stdlib (`xml.etree.ElementTree` + `html`). Zero new dependencies; same ±0.2 stance threshold as every other surface so a "62% bullish" string matches the gallery card byte-for-byte.
+
+The Embed dialog has a "Follow the gallery via RSS" callout with one-click subscribe links for the Atom feed, the RSS 2.0 feed, and the verified-only Atom feed. The /explore header has a "📡 Subscribe via RSS" chip that mirrors the active filter (verified-only when the filter is on).
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

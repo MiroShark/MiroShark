@@ -69,6 +69,24 @@
             <span>Verified only</span>
           </button>
 
+          <!-- RSS subscription chip — feed mirrors the active view
+               (verified-only when the filter is on). Drops the user into
+               their RSS reader's "subscribe to feed" flow. -->
+          <a
+            class="filter-chip filter-chip-feed"
+            :href="feedUrl"
+            target="_blank"
+            rel="noopener"
+            :title="
+              verifiedFilter
+                ? 'Subscribe to verified-only Atom feed in Feedly / Readwise / Inoreader / NetNewsWire'
+                : 'Subscribe to all public simulations as an Atom feed in Feedly / Readwise / Inoreader / NetNewsWire'
+            "
+          >
+            <span class="filter-chip-icon">📡</span>
+            <span>Subscribe via RSS</span>
+          </a>
+
           <button
             class="refresh-btn"
             @click="refresh"
@@ -300,6 +318,7 @@ import {
   getPublicSimulations,
   forkSimulation,
   getShareCardUrl,
+  getFeedUrl,
 } from '../api/simulation'
 
 const props = defineProps({
@@ -321,6 +340,10 @@ const error = ref('')
 const forkingId = ref('')
 const forkErrors = ref({})
 const verifiedFilter = ref(props.verifiedOnly)
+
+const feedUrl = computed(() =>
+  getFeedUrl({ format: 'atom', verified: verifiedFilter.value }),
+)
 
 const resolvedCount = computed(
   () => items.value.filter((item) => item.resolution_outcome).length,
@@ -1019,6 +1042,20 @@ a.pill-verified:hover {
 
 .filter-chip-icon {
   font-family: sans-serif;
+}
+
+/* The feed chip is visually subordinate to "Verified only" — it's a
+   passive subscription action, not a content filter — so it reads as a
+   muted text link until hover. */
+.filter-chip-feed {
+  text-decoration: none;
+  color: rgba(10, 10, 10, 0.6);
+  border-color: rgba(10, 10, 10, 0.18);
+}
+
+.filter-chip-feed:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
 }
 
 .inline-link {

@@ -79,7 +79,7 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, share_bp
+    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
@@ -91,6 +91,11 @@ def create_app(config_class=Config):
     # /api/openapi.yaml, /api/openapi.json (no extra sub-prefix — the spec
     # URL is the developer-facing surface so we keep it short).
     app.register_blueprint(docs_bp, url_prefix='/api')
+    # feed_bp serves the public-gallery syndication feeds at
+    # /api/feed.atom + /api/feed.rss — short URLs at the /api root so
+    # feed auto-discovery scripts and aggregators find them without
+    # digging through the /api/simulation namespace.
+    app.register_blueprint(feed_bp, url_prefix='/api')
     # share_bp serves the public OG-tag landing page at /share/<sim_id>
     # (no prefix — keeps the social share URL short).
     app.register_blueprint(share_bp)
