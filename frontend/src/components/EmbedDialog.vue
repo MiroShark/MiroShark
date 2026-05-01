@@ -274,6 +274,63 @@
               </div>
             </div>
 
+            <!-- Belief trajectory data export — pairs with the share
+                 card / replay GIF / transcript as the fifth share
+                 surface. The previous four cover the qualitative read
+                 of a simulation; this one gives Pandas / Excel /
+                 Tableau / R / Observable users the raw numbers. -->
+            <div class="transcript-section trajectory-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">📊</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">{{ $tr('Export trajectory data', '导出轨迹数据') }}</div>
+                  <div class="transcript-sub">
+                    {{ $tr('One row per round — bullish / neutral / bearish %, participating agents, post + engagement counts. Pandas, Excel, Tableau, R, and Observable consume CSV natively.', '每轮一行 — 看涨 / 中性 / 看跌 %、参与的智能体、帖子和互动数。Pandas、Excel、Tableau、R 和 Observable 原生消费 CSV。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="transcript-actions">
+                <a
+                  v-if="isPublic && trajectoryCsvUrl"
+                  class="transcript-download-btn"
+                  :href="trajectoryCsvUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-trajectory.csv`"
+                >
+                  ↓ {{ $tr('Download .csv', '下载 .csv') }}
+                </a>
+                <a
+                  v-if="isPublic && trajectoryJsonlUrl"
+                  class="transcript-download-btn transcript-download-btn-secondary"
+                  :href="trajectoryJsonlUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-trajectory.jsonl`"
+                >
+                  ↓ {{ $tr('Download .jsonl', '下载 .jsonl') }}
+                </a>
+                <span v-if="!isPublic" class="transcript-empty">
+                  {{ $tr('Publish the simulation to enable the trajectory export.', '发布模拟以启用轨迹数据导出。') }}
+                </span>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('CSV URL (paste into pandas.read_csv())', 'CSV URL(粘贴至 pandas.read_csv())') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('trajectoryCsv')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'trajectoryCsv' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ trajectoryCsvUrl || '—' }}</code></pre>
+              </div>
+
+              <p class="trajectory-quickstart">
+                <code>pd.read_csv("{{ trajectoryCsvUrl || 'https://your-host/api/simulation/&lt;id&gt;/trajectory.csv' }}")</code>
+              </p>
+            </div>
+
             <!-- Verified-prediction annotation — lets operators turn a
                  published simulation into a "called it" record on the
                  /verified gallery page. Only meaningful once the run is
@@ -465,6 +522,8 @@ import {
   getShareLandingUrl,
   getTranscriptMarkdownUrl,
   getTranscriptJsonUrl,
+  getTrajectoryCsvUrl,
+  getTrajectoryJsonlUrl,
   getFeedUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
@@ -581,6 +640,16 @@ const transcriptJsonUrl = computed(() => {
   return getTranscriptJsonUrl(props.simulationId, origin.value)
 })
 
+const trajectoryCsvUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getTrajectoryCsvUrl(props.simulationId, origin.value)
+})
+
+const trajectoryJsonlUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getTrajectoryJsonlUrl(props.simulationId, origin.value)
+})
+
 // Public-gallery syndication URLs — independent of `simulationId` (the
 // feed lists everyone's published runs), but kept on the embed dialog
 // so an operator who just toggled their sim public can subscribe to the
@@ -644,6 +713,7 @@ const copy = async (which) => {
   else if (which === 'card') text = shareCardUrl.value
   else if (which === 'replay') text = replayGifUrl.value
   else if (which === 'transcriptMd') text = transcriptMarkdownUrl.value
+  else if (which === 'trajectoryCsv') text = trajectoryCsvUrl.value
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -1379,6 +1449,28 @@ watch(isPublic, () => {
 
 .transcript-snippet {
   margin: 0;
+}
+
+.trajectory-section {
+  margin-top: 14px;
+}
+
+.trajectory-quickstart {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #555;
+  background: #f5f5f5;
+  border: 1px solid rgba(10, 10, 10, 0.08);
+  border-radius: 6px;
+  padding: 8px 10px;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+.trajectory-quickstart code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: #2a2a2a;
 }
 
 .outcome-section {

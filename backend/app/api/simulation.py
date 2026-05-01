@@ -5116,6 +5116,99 @@ def get_transcript_json(simulation_id: str):
     return _serve_transcript(simulation_id, "json")
 
 
+def _serve_trajectory(simulation_id: str, fmt: str):
+    """Shared body for the trajectory.csv / trajectory.jsonl routes.
+
+    Both endpoints share the same publish gate, the same row assembly
+    (``trajectory_export.build_rows``), and only diverge in the encoding
+    step. Extracted so the two route handlers stay one-line wrappers —
+    the decorator presence is what the OpenAPI drift test scans for,
+    but the actual logic lives here.
+    """
+    from ..services import trajectory_export
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        rows = trajectory_export.build_rows(sim_dir)
+
+        if fmt == "jsonl":
+            payload = trajectory_export.render_jsonl(rows)
+            mimetype = "application/jsonl; charset=utf-8"
+            filename = f"miroshark-{simulation_id[:12]}-trajectory.jsonl"
+        else:
+            payload = trajectory_export.render_csv(rows)
+            mimetype = "text/csv; charset=utf-8"
+            filename = f"miroshark-{simulation_id[:12]}-trajectory.csv"
+
+        response = Response(payload, mimetype=mimetype)
+        # Short cache — the trajectory grows by one row per round on a
+        # live run; 60s matches transcript + embed-summary so an
+        # analyst polling for completion sees fresh data quickly while
+        # bot crawlers don't hammer disk reads.
+        response.headers["Cache-Control"] = "public, max-age=60"
+        # ``attachment`` so a click from the embed dialog triggers a
+        # save-as without an explicit ``download`` attribute on the
+        # anchor — analysts paste the URL into ``pandas.read_csv()``,
+        # they don't render the bytes in-tab.
+        response.headers["Content-Disposition"] = (
+            f'attachment; filename="{filename}"'
+        )
+        return response
+
+    except Exception as e:
+        logger.error(f"trajectory: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/trajectory.csv', methods=['GET'])
+def get_trajectory_csv(simulation_id: str):
+    """Per-round belief trajectory as RFC 4180 CSV.
+
+    One row per recorded round with the bullish/neutral/bearish split
+    (using the same ±0.2 stance threshold as the gallery, share card,
+    replay GIF, transcript, webhook, and feed surfaces), participating
+    agents, post + engagement counts, and the overall quality health.
+    Intended for ``pandas.read_csv()`` / Excel / Tableau / R / Observable
+    consumers — the analyst's default toolkit. Same publish gate as the
+    transcript and share card.
+    """
+    return _serve_trajectory(simulation_id, "csv")
+
+
+@simulation_bp.route('/<simulation_id>/trajectory.jsonl', methods=['GET'])
+def get_trajectory_jsonl(simulation_id: str):
+    """Same per-round belief trajectory as ``trajectory.csv`` but as
+    newline-delimited JSON.
+
+    One JSON object per line — the format ``pandas.read_json(lines=True)``,
+    DuckDB ``read_json_auto``, and most stream-processing pipelines
+    consume natively without a separate CSV-to-DataFrame conversion.
+    Intended for SDK / pipeline consumers that need the same numbers
+    the CSV carries but in a structured shape.
+    """
+    return _serve_trajectory(simulation_id, "jsonl")
+
+
 # ============== Public Gallery ==============
 
 

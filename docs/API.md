@@ -85,10 +85,39 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 |---|---|---|
 | `POST` | `/api/simulation/<id>/publish` | Toggle `is_public` |
 | `GET` | `/api/simulation/<id>/embed-summary` | Embed payload (public sims only) |
+| `GET` | `/api/simulation/<id>/share-card.png` | 1200×630 OG image (auto-unfurls) |
+| `GET` | `/api/simulation/<id>/replay.gif` | Animated belief-bar replay |
+| `GET` | `/api/simulation/<id>/transcript.md` | Markdown transcript (Notion / Obsidian / Substack) |
+| `GET` | `/api/simulation/<id>/transcript.json` | Structured JSON transcript (SDKs / LLM-as-judge) |
+| `GET` | `/api/simulation/<id>/trajectory.csv` | Per-round belief CSV (`pandas.read_csv()` / Excel / Tableau / R) |
+| `GET` | `/api/simulation/<id>/trajectory.jsonl` | Per-round belief JSONL (DuckDB / pipelines) |
 | `POST` | `/api/simulation/<id>/article` | Generate a Substack-style write-up |
 | `GET` | `/api/simulation/<id>/export` | Full JSON export |
 | `GET` | `/api/simulation/list` | List simulations |
 | `GET` | `/api/simulation/history` | Simulation history / diffs |
+
+### Analyst quickstart
+
+Pull a simulation's per-round belief trajectory straight into Pandas:
+
+```python
+import pandas as pd
+df = pd.read_csv("https://your-host/api/simulation/<id>/trajectory.csv")
+print(df.describe())
+df[["round", "bullish_pct", "bearish_pct"]].plot(x="round")
+```
+
+Or via DuckDB / JSONL for streaming pipelines:
+
+```python
+import duckdb
+duckdb.sql("""
+  SELECT round, bullish_pct
+  FROM read_json_auto('https://your-host/api/simulation/<id>/trajectory.jsonl')
+""").df()
+```
+
+The CSV column order is locked: `round, round_timestamp, bullish_pct, neutral_pct, bearish_pct, participating_agents, total_posts, total_engagements, quality_health, participation_rate`. The bullish / neutral / bearish percentages use the same ±0.2 stance threshold as the gallery, share card, transcript, webhook, and feed surfaces, so the numbers in the DataFrame match what every other surface reports for the same round.
 
 ## Report Agent
 

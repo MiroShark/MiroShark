@@ -148,6 +148,17 @@ Two endpoints, same payload, different encoding:
 
 Both endpoints share the share-card publish gate (`is_public=true`). Per-agent stance labels use the same ±0.2 threshold as every other surface — a "bullish" agent on the gallery is the same agent's tag in the transcript. The Embed dialog exposes a "Download .md" + "Download .json" pair beneath the replay-GIF row.
 
+## Belief Trajectory Export (CSV / JSONL)
+
+The fifth surface alongside the share card (preview), replay GIF (motion), transcript Markdown (prose), and transcript JSON (SDKs). The previous four cover the *qualitative* read of a simulation; trajectory CSV / JSONL covers the *quantitative* one — the row-per-round table a quant researcher pastes into a notebook to compute variance, autocorrelation, or compare across replicates.
+
+Two endpoints, same row schema, different serialization:
+
+- `GET /api/simulation/<id>/trajectory.csv` — RFC 4180 CSV, one row per recorded round. Locked column order: `round, round_timestamp, bullish_pct, neutral_pct, bearish_pct, participating_agents, total_posts, total_engagements, quality_health, participation_rate`. `pandas.read_csv("…/trajectory.csv")`, Excel "Get Data → From Web", Tableau Web Data Connector, R `read.csv()`, and Observable `d3.csv()` consume it natively. The CSV header row is emitted even for empty trajectories so downstream consumers don't have to special-case zero-row files.
+- `GET /api/simulation/<id>/trajectory.jsonl` — JSON Lines (newline-delimited JSON), one object per line with the same field shape as the CSV row. The format `pandas.read_json(lines=True)`, DuckDB `read_json_auto`, and stream-processing pipelines (Kafka, Beam, Materialize) consume natively without a CSV-to-DataFrame conversion. Empty input yields zero bytes — well-formed JSONL has no header concept.
+
+Same publish gate as the share card and transcript (`is_public=true`). The bullish / neutral / bearish percentages use the same ±0.2 stance threshold as every other surface, so a number in the CSV matches what the gallery, share card, replay GIF, transcript, webhook, and feed report for the same round. The Embed dialog exposes a "Download .csv" + "Download .jsonl" pair beneath the transcript row, plus a copyable CSV URL and a `pd.read_csv("<url>")` quickstart snippet.
+
 ## Public Gallery Feeds (RSS / Atom)
 
 The same cards `/explore` renders, served as a syndication feed so researchers and tooling already on Feedly / Readwise / Inoreader / NetNewsWire / Obsidian RSS subscribe in their existing toolchain — no login, no MiroShark account. Every newly published simulation lands in their reader the same way an AI newsletter or Substack post does.

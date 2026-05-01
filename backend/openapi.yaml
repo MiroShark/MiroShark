@@ -1217,6 +1217,70 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/trajectory.csv:
+    get:
+      tags: [Publish & Embed]
+      summary: Per-round belief trajectory as RFC 4180 CSV.
+      description: |
+        One row per recorded round with the bullish / neutral / bearish
+        split (using the same ±0.2 stance threshold as the gallery,
+        share card, replay GIF, transcript, webhook, and feed surfaces),
+        participating agents, post + engagement counts, and the overall
+        quality health. Intended for `pandas.read_csv()` / Excel /
+        Tableau / R / Observable — the analyst's default toolkit.
+
+        Pairs with `share-card.png` (preview), `replay.gif` (motion),
+        and `transcript.{md,json}` (prose) as the **fifth** export
+        surface — the previous four cover the qualitative read of a
+        simulation; this one covers the quantitative one.
+
+        Same publish gate as the transcript. The CSV header row is
+        emitted even when the trajectory is empty so downstream
+        consumers don't have to special-case zero-row files.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "CSV with `Content-Type: text/csv; charset=utf-8` + `Cache-Control: public, max-age=60`."
+          content:
+            text/csv:
+              schema:
+                type: string
+                description: |
+                  RFC 4180 CSV. Column order is locked to:
+                  `round,round_timestamp,bullish_pct,neutral_pct,bearish_pct,participating_agents,total_posts,total_engagements,quality_health,participation_rate`.
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/{simulation_id}/trajectory.jsonl:
+    get:
+      tags: [Publish & Embed]
+      summary: Per-round belief trajectory as newline-delimited JSON.
+      description: |
+        Same row shape as `trajectory.csv` but as JSON Lines — one
+        object per line. The format `pandas.read_json(lines=True)`,
+        DuckDB `read_json_auto`, and most stream-processing pipelines
+        consume natively without a separate CSV-to-DataFrame
+        conversion.
+
+        Same publish gate as the CSV form. Empty trajectories yield
+        zero bytes (no rows, no header — JSONL has no header concept)
+        so a curl into a file produces an empty but well-formed JSONL
+        document.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "JSONL with `Content-Type: application/jsonl; charset=utf-8` + `Cache-Control: public, max-age=60`."
+          content:
+            application/jsonl:
+              schema:
+                type: string
+                description: |
+                  One `SimulationTrajectoryRow` JSON object per line.
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /share/{simulation_id}:
     get:
       tags: [Publish & Embed]
@@ -2323,6 +2387,49 @@ components:
         submitted_at:
           type: string
           format: date-time
+
+    SimulationTrajectoryRow:
+      type: object
+      description: |
+        One row of the per-round belief trajectory export. The CSV
+        endpoint emits a fixed column order; the JSONL endpoint emits
+        the same fields per object, one object per line. The bullish /
+        neutral / bearish percentages use the same ±0.2 stance
+        threshold as every other surface so the numbers in this row
+        match what the gallery + share card report for the same round.
+      properties:
+        round:
+          type: integer
+          description: Zero- or one-indexed round number, per the runner.
+        round_timestamp:
+          type: string
+          description: ISO-8601 timestamp the snapshot was committed (may be empty for older runs).
+        bullish_pct:
+          type: number
+          description: Percentage of agents whose mean position > +0.2 this round.
+        neutral_pct:
+          type: number
+          description: Percentage of agents whose mean position is in [-0.2, +0.2].
+        bearish_pct:
+          type: number
+          description: Percentage of agents whose mean position < -0.2 this round.
+        participating_agents:
+          type: integer
+          description: Distinct agents that posted in this round (falls back to active_agent_count on rounds with no viral_posts).
+        total_posts:
+          type: integer
+          description: Posts created during the round.
+        total_engagements:
+          type: integer
+          description: Likes + dislikes + replies recorded during the round.
+        quality_health:
+          type: string
+          description: Overall run health (`excellent` / `good` / `degraded` / `poor`); repeated on every row.
+        participation_rate:
+          oneOf:
+            - { type: number }
+            - { type: string }
+          description: Overall participation rate ∈ [0,1] from quality.json; empty string when the run has not produced quality.json yet.
 
     SettingsUpdate:
       type: object

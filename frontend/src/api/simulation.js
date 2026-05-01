@@ -473,6 +473,41 @@ export const getTranscriptJsonUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the per-round belief trajectory CSV
+ * export. One row per recorded round with bullish / neutral / bearish
+ * percent (same ±0.2 stance threshold as every other surface),
+ * participating agents, post + engagement counts, and quality health.
+ *
+ * Intended for `pandas.read_csv()` / Excel / Tableau / R / Observable
+ * — the analyst's default toolkit. Same publish gate as the share
+ * card and transcript.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getTrajectoryCsvUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/trajectory.csv`
+}
+
+/**
+ * Build the absolute URL of the per-round belief trajectory JSONL
+ * (newline-delimited JSON) export — same row shape as the CSV form
+ * but as one JSON object per line. The format `pandas.read_json(lines=true)`,
+ * DuckDB `read_json_auto`, and stream-processing pipelines consume
+ * natively without a CSV-to-DataFrame conversion.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getTrajectoryJsonlUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/trajectory.jsonl`
+}
+
+/**
  * Build the absolute URL of the public share landing page for a
  * simulation. The page exposes Open Graph + Twitter Card meta tags so
  * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls
