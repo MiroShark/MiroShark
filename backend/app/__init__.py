@@ -79,7 +79,7 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp
+    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
@@ -99,6 +99,9 @@ def create_app(config_class=Config):
     # share_bp serves the public OG-tag landing page at /share/<sim_id>
     # (no prefix — keeps the social share URL short).
     app.register_blueprint(share_bp)
+    # watch_bp serves the live spectator-watch page at /watch/<sim_id>
+    # — same no-prefix policy so the URL stays a clean broadcast link.
+    app.register_blueprint(watch_bp)
     
     # Health check
     @app.route('/health')

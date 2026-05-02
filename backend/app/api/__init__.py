@@ -28,3 +28,7 @@ from . import feed  # noqa: E402, F401
 # URL stays clean — see api/share.py.
 from .share import share_bp  # noqa: E402, F401
 
+# watch_bp is mounted at the root (no /api prefix) so /watch/<sim_id>
+# stays a clean shareable URL — see api/watch.py.
+from .watch import watch_bp  # noqa: E402, F401
+

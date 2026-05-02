@@ -102,6 +102,10 @@ _BLUEPRINT_PREFIXES = {
     "feed_bp":           "/api",
     # share_bp is mounted at the root with no prefix — see app/__init__.py.
     "share_bp":          "",
+    # watch_bp also mounts at the root for the same reason — the
+    # spectator-watch URL ``/watch/<sim_id>`` is a user-facing share
+    # link, not an API call.
+    "watch_bp":          "",
 }
 
 

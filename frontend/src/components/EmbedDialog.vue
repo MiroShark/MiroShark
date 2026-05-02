@@ -157,6 +157,53 @@
               </a>
             </div>
 
+            <!-- Live spectator-watch link — distinct format from the
+                 finished-result card above. The /watch/<id> URL is the
+                 "tweet a sim mid-run" share: a minimal full-viewport
+                 broadcast page that auto-unfurls as a 1200×630 image
+                 card and updates the belief bar / round counter every
+                 15 s while the simulation runs. -->
+            <div class="watch-section">
+              <div class="watch-head">
+                <span class="watch-icon">📡</span>
+                <div class="watch-head-body">
+                  <div class="watch-title">{{ $tr('Watch live (broadcast page)', '实时观看(直播页面)') }}</div>
+                  <div class="watch-sub">
+                    {{ $tr('A minimal full-viewport page built for live spectating — the belief bar, round counter, and progress bar update every 15 s while the simulation runs. Auto-unfurls as a card on Twitter / X, Discord, Slack, LinkedIn. Different format from the finished-result share above; tweet this URL mid-run to broadcast as it happens.', '专为实时观看打造的极简全屏页面 — 信念条、轮次计数器和进度条在模拟运行时每 15 秒更新一次。在 Twitter / X、Discord、Slack、LinkedIn 上自动展开为卡片。与上方的完成结果分享不同;在运行过程中发推此 URL 即可实时广播。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="watch-actions">
+                <a
+                  v-if="isPublic && watchUrl"
+                  class="watch-open-btn"
+                  :href="watchUrl"
+                  target="_blank"
+                  rel="noopener"
+                >
+                  👀 {{ $tr('Open watch page ↗', '打开观看页面 ↗') }}
+                </a>
+                <span v-if="!isPublic" class="watch-empty">
+                  {{ $tr('Publish the simulation to enable the live watch page.', '发布模拟以启用实时观看页面。') }}
+                </span>
+              </div>
+
+              <div class="snippet-block watch-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Watch URL (auto-unfurls with card on tweet)', '观看 URL(发推时随卡片自动展开)') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('watch')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'watch' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ watchUrl || '—' }}</code></pre>
+              </div>
+            </div>
+
             <!-- Animated belief replay — same 1200×630 frame as the share
                  card but one frame per round, so X / Discord / Slack
                  auto-play the belief drift inline. -->
@@ -520,6 +567,7 @@ import {
   getShareCardUrl,
   getReplayGifUrl,
   getShareLandingUrl,
+  getWatchUrl,
   getTranscriptMarkdownUrl,
   getTranscriptJsonUrl,
   getTrajectoryCsvUrl,
@@ -620,6 +668,11 @@ const shareLandingUrl = computed(() => {
   return getShareLandingUrl(props.simulationId, origin.value)
 })
 
+const watchUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getWatchUrl(props.simulationId, origin.value)
+})
+
 const replayGifUrl = computed(() => {
   if (!props.simulationId || !origin.value) return ''
   // Same cache-bust token as the share card so re-opens after a state
@@ -712,6 +765,7 @@ const copy = async (which) => {
   else if (which === 'share') text = shareLandingUrl.value
   else if (which === 'card') text = shareCardUrl.value
   else if (which === 'replay') text = replayGifUrl.value
+  else if (which === 'watch') text = watchUrl.value
   else if (which === 'transcriptMd') text = transcriptMarkdownUrl.value
   else if (which === 'trajectoryCsv') text = trajectoryCsvUrl.value
   if (!text) return
@@ -1471,6 +1525,88 @@ watch(isPublic, () => {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
   color: #2a2a2a;
+}
+
+/* Live watch page — distinct visual treatment (warm orange tint)
+   to signal the broadcast/live framing vs. the finished-result
+   share card above. Reuses the structural rules from the transcript
+   section so the dialog feels consistent. */
+.watch-section {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, rgba(234, 88, 12, 0.05) 0%, rgba(234, 88, 12, 0.02) 100%);
+  border: 1px solid rgba(234, 88, 12, 0.18);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.watch-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.watch-icon {
+  font-size: 18px;
+  line-height: 1;
+  padding-top: 2px;
+}
+
+.watch-head-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.watch-title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0a0a0a;
+  margin-bottom: 4px;
+}
+
+.watch-sub {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #4a4a4a;
+}
+
+.watch-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.watch-open-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #ea580c;
+  color: #ffffff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.watch-open-btn:hover { background: #c2410c; }
+
+.watch-empty {
+  font-size: 12px;
+  color: #6b6b6b;
+  font-style: italic;
+}
+
+.watch-snippet {
+  margin: 0;
 }
 
 .outcome-section {

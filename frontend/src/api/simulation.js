@@ -524,6 +524,31 @@ export const getShareLandingUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the live spectator-watch page for a
+ * simulation. Loads as a minimal full-viewport broadcast view —
+ * a vanilla-JS poller updates the belief bar and round counter every
+ * 15 s by hitting the existing `/api/simulation/<id>/embed-summary`
+ * and `/api/simulation/<id>/run-status` REST endpoints. Once the
+ * runner reaches a terminal state the polling stops and "View full
+ * simulation →" / "Fork this scenario →" CTAs are revealed.
+ *
+ * Auto-unfurls as a 1200×630 image card when pasted into Twitter/X,
+ * Discord, Slack, LinkedIn, iMessage — same OG / Twitter-card meta
+ * tags as `/share/<id>`. Distinct from the share landing page in
+ * that the watch URL is intended as a *live* broadcast link
+ * (operators tweet it mid-run), where `/share/<id>` redirects
+ * straight into the SPA simulation view.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getWatchUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/watch/${simulationId}`
+}
+
+/**
  * Build the absolute URL of the public-gallery syndication feed.
  *
  * Atom 1.0 by default — the format browsers auto-discover and modern

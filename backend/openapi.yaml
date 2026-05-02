@@ -1300,6 +1300,47 @@ paths:
               schema: { type: string }
         "400": { $ref: "#/components/responses/BadRequest" }
 
+  /watch/{simulation_id}:
+    get:
+      tags: [Publish & Embed]
+      summary: Live spectator-watch page — minimal full-viewport broadcast view.
+      description: |
+        Mounted at the **root** (no `/api` prefix) so the URL stays a
+        clean "watch live →" link. The body carries Open Graph +
+        Twitter card meta tags so the URL unfurls as a 1200×630 image
+        when pasted into Twitter/X, Discord, Slack, LinkedIn, iMessage,
+        etc. — same auto-unfurl behaviour as `/share/{simulation_id}`,
+        but the surface is purpose-built for *in-progress* simulations
+        rather than finished ones.
+
+        The page is fully self-contained server-side HTML — no SPA
+        build dependency. A vanilla-JS poller updates the belief bar,
+        round counter, and progress bar every 15 s by hitting the
+        existing `/api/simulation/{simulation_id}/embed-summary` and
+        `/api/simulation/{simulation_id}/run-status` REST endpoints.
+        Once the runner reaches a terminal state (`completed` /
+        `failed` / `stopped`) polling stops and the "View full
+        simulation →" + "Fork this scenario →" CTAs are revealed.
+
+        No auth — but the underlying live endpoints honour
+        `is_public`, so a private simulation only renders the bare
+        broadcast frame (no scenario, no live numbers). Honors
+        `X-Forwarded-Proto` / `X-Forwarded-Host`.
+
+        Seventh thin renderer over the same on-disk `sim_dir/` folder
+        alongside the share card (PNG), replay GIF, transcript
+        (Markdown + JSON), public-gallery feeds (Atom + RSS), and
+        trajectory export (CSV + JSONL).
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: HTML page.
+          content:
+            text/html:
+              schema: { type: string }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
   /api/simulation/public:
     get:
       tags: [Publish & Embed]

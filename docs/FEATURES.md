@@ -178,6 +178,21 @@ Each entry carries the scenario as the title (truncated with an ellipsis past 10
 
 The Embed dialog has a "Follow the gallery via RSS" callout with one-click subscribe links for the Atom feed, the RSS 2.0 feed, and the verified-only Atom feed. The /explore header has a "📡 Subscribe via RSS" chip that mirrors the active filter (verified-only when the filter is on).
 
+## Live Watch Page (Spectator Broadcast)
+
+The seventh thin renderer over the same on-disk `sim_dir/` folder. The previous six (gallery card, share card, replay GIF, transcript, RSS / Atom feed, trajectory CSV / JSONL) all surface a *finished* simulation; the watch page surfaces a *live* one — the format MiroShark was missing for "tweet a sim mid-run" sharing.
+
+`GET /watch/<simulation_id>` returns a self-contained server-rendered HTML page built for live spectating: a minimal full-viewport view with a belief bar, round counter, agent count, quality health, progress bar, and a vanilla-JS poller that updates the DOM in place every 15 s by hitting the existing `/api/simulation/<id>/embed-summary` and `/api/simulation/<id>/run-status` REST endpoints. Once the runner reaches a terminal state (`completed` / `failed` / `stopped`) polling stops and the "View full simulation →" + "Fork this scenario →" CTAs are revealed.
+
+- **OG / Twitter unfurl:** the body carries `og:type`, `og:title`, `og:description`, `og:image` (1200×630 share-card PNG), `twitter:card=summary_large_image`, etc. — same auto-unfurl behaviour as `/share/<id>`. The `og:description` becomes "Round N/M · Bullish X% · Neutral Y% · Bearish Z% — watch live." for in-flight runs, falls back to the bare scenario for idle runs, and to a generic string when nothing is published yet.
+- **Self-contained:** no SPA build dependency. The poller is vanilla JS, the styles are inline. Works on a stripped-down deployment, behind a restrictive CSP that allows only `img-src 'self'`, and even with JS disabled (the SSR HTML still shows a meaningful frame).
+- **Publish gate:** the underlying live endpoints honour `is_public`, so a private simulation only renders the bare broadcast frame (no scenario, no live numbers). The fact a private sim *exists* with that id never leaks through the page chrome.
+- **Stance threshold parity:** the bootstrap blob exposes the ±0.2 threshold the page uses for the bullish / neutral / bearish split — same threshold as every other surface, so a spectator who sees the share card on Twitter and clicks through to `/watch/<id>` doesn't see the numbers shift mid-flow.
+- **Caching:** `Cache-Control: public, max-age=60` — short enough to keep the unfurl reasonably fresh after a newly-published run, long enough to absorb crawler load.
+- **Implementation:** `app/services/watch_renderer.py` (pure stdlib `html` + `json`) + `app/api/watch.py` (Flask blueprint mounted at the root, no `/api` prefix, mirroring `share_bp`). Zero new dependencies.
+
+The Embed dialog has a "Watch live (broadcast page)" callout — distinct from the share-card section above — with an "Open watch page ↗" button and a copyable URL. The callout is publish-gated to make the affordance match the underlying behaviour.
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.
