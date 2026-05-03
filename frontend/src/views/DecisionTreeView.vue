@@ -11,6 +11,18 @@
         @click="goToMap"
       >Map view 🗺️</button>
       <button
+        type="button"
+        class="story-btn"
+        :disabled="!tree || augmentingBigPicture || augmentingStoryDepth || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
+        @click="augmentBigPicture"
+      >{{ augmentingBigPicture ? 'Adding story…' : 'Add big-picture story 🌏' }}</button>
+      <button
+        type="button"
+        class="depth-btn"
+        :disabled="!tree || augmentingBigPicture || augmentingStoryDepth || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
+        @click="augmentStoryDepth"
+      >{{ augmentingStoryDepth ? 'Adding depth…' : 'Add story depth 🔎' }}</button>
+      <button
         v-if="!autoGrowing"
         type="button"
         class="auto-grow-btn"
@@ -68,6 +80,18 @@
         :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
         @click="compileForesight"
       >{{ compilingForesight ? 'Compiling…' : (foresight ? 'View foresight 📄' : 'Compile foresight 📄') }}</button>
+      <button
+        type="button"
+        class="infographic-btn"
+        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing || planningInfographics"
+        @click="planInfographics"
+      >{{ planningInfographics ? 'Planning…' : (infographicPlan ? 'View infographics 🎨' : 'Create infographics 🎨') }}</button>
+      <button
+        type="button"
+        class="education-btn"
+        :disabled="!tree || planningEducation || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
+        @click="planEducation"
+      >{{ planningEducation ? 'Planning education…' : (educationPlan ? 'View education plan 🧭' : 'Education plan 🧭') }}</button>
     </header>
 
     <div v-if="researchingAll" class="research-progress-banner" role="status" aria-live="polite">
@@ -112,6 +136,7 @@
 
     <main class="tree-body">
       <div v-if="error" class="error">{{ error }}</div>
+      <div v-if="statusMessage" class="status-message">{{ statusMessage }}</div>
       <div v-if="loading && !tree" class="loading">Loading tree…</div>
 
       <TreeNode
@@ -126,26 +151,86 @@
       />
     </main>
 
-    <div v-if="foresightOpen" class="foresight-overlay" @click.self="foresightOpen = false">
-      <div class="foresight-modal">
-        <header class="foresight-header">
-          <h2>Foresight document</h2>
-          <button type="button" class="close" @click="foresightOpen = false">×</button>
-        </header>
-        <div class="foresight-body" v-html="renderedForesight"></div>
-        <footer class="foresight-footer">
-          <button type="button" class="secondary" @click="copyForesight">Copy markdown</button>
-          <button type="button" class="secondary" @click="downloadForesight">Download .md</button>
-          <button
-            type="button"
-            class="primary"
-            :disabled="compilingForesight"
-            @click="regenerateForesight"
-          >{{ compilingForesight ? 'Regenerating…' : 'Regenerate' }}</button>
-          <button type="button" class="secondary" @click="foresightOpen = false">Close</button>
-        </footer>
-      </div>
-    </div>
+    <ForesightModal
+      v-if="foresightOpen"
+      :rendered-foresight="renderedForesight"
+      :compiling="compilingForesight"
+      @close="foresightOpen = false"
+      @copy="copyForesight"
+      @download="downloadForesight"
+      @regenerate="regenerateForesight"
+    />
+
+    <EducationPlanModal
+      v-if="educationOpen"
+      :education-plan="educationPlan"
+      :education-infographic-plan="educationInfographicPlan"
+      :planning="planningEducation"
+      @close="educationOpen = false"
+      @copy-json="copyEducationJson"
+      @download-json="downloadEducationJson"
+      @regenerate="planEducation(true)"
+    />
+
+    <InfographicTimelineModal
+      v-if="infographicOpen"
+      :infographic-plan="infographicPlan"
+      :infographic-accounting="infographicAccounting"
+      :infographic-format="infographicFormat"
+      :timeline-rows="timelineRows"
+      :selected-index="selectedInfographicIndex"
+      :selected-slide="selectedInfographicSlide"
+      :planning-narration="planningNarration"
+      :narration-script="narrationScript"
+      :rendering-narration="renderingNarration"
+      :generating-all-slide-clips="generatingAllSlideClips"
+      :selected-narration-beat="selectedNarrationBeat"
+      :current-slide-audio-render="currentSlideAudioRender"
+      :clip-generation-progress="clipGenerationProgress"
+      :clip-generation-error="clipGenerationError"
+      :rendering-infographic="renderingInfographic"
+      :batch-rendering-infographics="batchRenderingInfographics"
+      :next-unrendered-slides="nextUnrenderedSlides"
+      :batch-render-progress="batchRenderProgress"
+      :batch-render-error="batchRenderError"
+      :current-infographic-render="currentInfographicRender"
+      :planning-infographics="planningInfographics"
+      :has-infographic-render="hasInfographicRender"
+      :narration-beat-for="narrationBeatFor"
+      @close="infographicOpen = false"
+      @set-format="setInfographicFormat"
+      @select-slide="selectedInfographicIndex = $event"
+      @plan-narration="planNarration"
+      @render-narration-audio="renderNarrationAudio"
+      @generate-all-slide-clips="generateAllSlideClips"
+      @copy-narration-script="copyNarrationScript"
+      @render-selected-infographic="renderSelectedInfographic"
+      @render-next-infographics="renderNextInfographics"
+      @copy-infographic-prompt="copyInfographicPrompt"
+      @copy-infographic-json="copyInfographicJson"
+      @download-infographic-json="downloadInfographicJson"
+      @regenerate-infographics="regenerateInfographics"
+      @open-timeline-player="openTimelinePlayer"
+    />
+
+    <TimelinePlayerModal
+      v-if="timelinePlayerOpen"
+      ref="timelinePlayerRef"
+      :player-index="playerIndex"
+      :slide-count="infographicPlan?.sequence?.length || 0"
+      :aspect-ratio="infographicPlan?.aspect_ratio || '16:9'"
+      :player-slide="playerSlide"
+      :player-render="playerRender"
+      :player-beat="playerBeat"
+      :player-audio="playerAudio"
+      :player-playing="playerPlaying"
+      v-model:auto-advance="playerAutoAdvance"
+      @close="closeTimelinePlayer"
+      @previous="previousPlayerSlide"
+      @next="nextPlayerSlide"
+      @play="playCurrentSlide"
+      @audio-ended="onPlayerAudioEnded"
+    />
   </div>
 </template>
 
@@ -153,8 +238,12 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TreeNode from '../components/TreeNode.vue'
+import ForesightModal from '../components/ForesightModal.vue'
+import EducationPlanModal from '../components/education/EducationPlanModal.vue'
+import InfographicTimelineModal from '../components/infographics/InfographicTimelineModal.vue'
+import TimelinePlayerModal from '../components/infographics/TimelinePlayerModal.vue'
+import { getSession } from '../api/seedChat.js'
 import {
-  getSession,
   postTreeInit,
   postTreeExpand,
   postTreeResearch,
@@ -162,7 +251,19 @@ import {
   postTreeSynthesize,
   postCompileForesight,
   postTreeScore,
-} from '../api/seedChat.js'
+  postTreeAugmentBigPicture,
+  postTreeAugmentStoryDepth,
+} from '../api/decisionTree.js'
+import {
+  postInfographicPlan,
+  postRenderInfographic,
+  getInfographicAccounting,
+} from '../api/infographics.js'
+import {
+  postInfographicNarrationPlan,
+  postRenderInfographicAudio,
+} from '../api/narration.js'
+import { postEducationPlan } from '../api/education.js'
 import { marked } from 'marked'
 
 const route = useRoute()
@@ -172,6 +273,7 @@ const sessionId = route.params.sessionId
 const tree = ref(null)
 const loading = ref(true)
 const error = ref('')
+const statusMessage = ref('')
 
 // Per-node loading flags: { [nodeId]: { expand?: bool, research?: bool } }
 const busyMap = reactive({})
@@ -188,6 +290,8 @@ const scoringAll = ref(false)
 const scoreStopRequested = ref(false)
 const scoreProgress = ref({ current: 0, total: 0, label: '' })
 
+const augmentingBigPicture = ref(false)
+const augmentingStoryDepth = ref(false)
 const autoGrowing = ref(false)
 const autoGrowStopRequested = ref(false)
 const autoGrowProgress = ref({ phase: '', current: 0, total: 0, label: '' })
@@ -195,6 +299,109 @@ const autoGrowProgress = ref({ phase: '', current: 0, total: 0, label: '' })
 const foresight = ref('')
 const foresightOpen = ref(false)
 const compilingForesight = ref(false)
+const educationPlan = ref(null)
+const educationInfographicPlan = ref(null)
+const educationOpen = ref(false)
+const planningEducation = ref(false)
+const infographicPlan = ref(null)
+const infographicOpen = ref(false)
+const planningInfographics = ref(false)
+const selectedInfographicIndex = ref(0)
+const infographicRenders = ref({})
+const renderingInfographic = ref(false)
+const batchRenderingInfographics = ref(false)
+const batchRenderProgress = ref({ current: 0, total: 0, label: '' })
+const batchRenderError = ref('')
+const infographicFormat = ref('landscape')
+const infographicAccounting = ref(null)
+const narrationScript = ref(null)
+const audioRender = ref(null)
+const slideAudioRenders = ref({})
+const planningNarration = ref(false)
+const renderingNarration = ref(false)
+const timelinePlayerOpen = ref(false)
+const playerIndex = ref(0)
+const playerPlaying = ref(false)
+const playerAutoAdvance = ref(true)
+const timelinePlayerRef = ref(null)
+const generatingAllSlideClips = ref(false)
+const clipGenerationProgress = ref({ current: 0, total: 0, label: '' })
+const clipGenerationError = ref('')
+
+const selectedInfographicSlide = computed(() =>
+  infographicPlan.value?.sequence?.[selectedInfographicIndex.value] || null
+)
+
+function slideKeyForIndex(index) {
+  const slide = infographicPlan.value?.sequence?.[index]
+  return slide?.slide_id || String(index)
+}
+
+function renderForIndex(index) {
+  const key = slideKeyForIndex(index)
+  const stable = infographicRenders.value?.[key]
+  if (stable) return stable
+  const legacy = infographicRenders.value?.[String(index)]
+  if (!legacy) return null
+  if (legacy.slide_id && legacy.slide_id !== key) return null
+  return legacy
+}
+
+function audioForIndex(index) {
+  const key = slideKeyForIndex(index)
+  const stable = slideAudioRenders.value?.[key]
+  if (stable) return stable
+  const legacy = slideAudioRenders.value?.[String(index)]
+  if (!legacy) return null
+  if (legacy.slide_id && legacy.slide_id !== key) return null
+  return legacy
+}
+
+function hasInfographicRender(index) {
+  return !!renderForIndex(index)
+}
+
+const currentInfographicRender = computed(() =>
+  renderForIndex(selectedInfographicIndex.value)
+)
+
+const selectedNarrationBeat = computed(() => narrationBeatFor(selectedInfographicIndex.value))
+const currentSlideAudioRender = computed(() => audioForIndex(selectedInfographicIndex.value))
+const nextUnrenderedSlides = computed(() => {
+  const sequence = infographicPlan.value?.sequence || []
+  return sequence
+    .map((slide, index) => ({ slide, index, key: slide.slide_id || String(index) }))
+    .filter(row => !renderForIndex(row.index))
+    .slice(0, Math.max(0, Math.min(5, infographicAccounting.value?.openai_remaining_today ?? 5)))
+})
+
+function narrationBeatFor(index) {
+  const key = slideKeyForIndex(index)
+  return narrationScript.value?.slides?.find((beat) => beat.slide_id === key || beat.slide_index === index) || null
+}
+
+const timelineRows = computed(() =>
+  (infographicPlan.value?.sequence || []).map((slide, index) => ({
+    slide,
+    index,
+    slideKey: slide.slide_id || String(index),
+    ...timelineDepthFor(slide),
+  }))
+)
+
+function timelineDepthFor(slide) {
+  return {
+    depth: Number.isInteger(slide?.depth) ? slide.depth : 0,
+    chapter: slide?.chapter || 'Story beat',
+    parent: slide?.parent || '',
+    parentSlideIndex: Number.isInteger(slide?.parent_slide_index) ? slide.parent_slide_index : null,
+  }
+}
+
+const playerSlide = computed(() => infographicPlan.value?.sequence?.[playerIndex.value] || null)
+const playerRender = computed(() => renderForIndex(playerIndex.value))
+const playerAudio = computed(() => audioForIndex(playerIndex.value))
+const playerBeat = computed(() => narrationBeatFor(playerIndex.value))
 
 const renderedForesight = computed(() =>
   foresight.value ? marked.parse(foresight.value) : ''
@@ -226,9 +433,14 @@ function goToMap() {
   router.push({ name: 'DecisionTreeMap', params: { sessionId } })
 }
 
+function shouldOpenInfographicsOnLoad() {
+  return route.query.infographics !== '0'
+}
+
 async function loadTree() {
   loading.value = true
   error.value = ''
+  statusMessage.value = ''
   try {
     const session = await getSession(sessionId)
     if (session?.tree) {
@@ -239,6 +451,24 @@ async function loadTree() {
     }
     if (session?.foresight) {
       foresight.value = session.foresight
+    }
+    if (session?.education_plan) educationPlan.value = session.education_plan
+    if (session?.education_infographic_plan) educationInfographicPlan.value = session.education_infographic_plan
+    if (session?.infographic_plan) {
+      infographicPlan.value = session.infographic_plan
+      infographicOpen.value = shouldOpenInfographicsOnLoad()
+    }
+    if (session?.infographic_renders) {
+      infographicRenders.value = session.infographic_renders
+    }
+    if (session?.narration_script) {
+      narrationScript.value = session.narration_script
+    }
+    if (session?.audio_renders?.narration) {
+      audioRender.value = session.audio_renders.narration
+    }
+    if (session?.audio_renders?.slides) {
+      slideAudioRenders.value = session.audio_renders.slides
     }
   } catch (err) {
     error.value = err?.response?.data?.error || err.message
@@ -428,8 +658,53 @@ async function scoreAll() {
   scoreProgress.value = { current: 0, total: 0, label: '' }
 }
 
+async function augmentStoryDepth() {
+  if (!tree.value || augmentingStoryDepth.value) return
+  augmentingStoryDepth.value = true
+  error.value = ''
+  try {
+    const data = await postTreeAugmentStoryDepth({ session_id: sessionId })
+    if (data?.tree) tree.value = data.tree
+    infographicPlan.value = null
+    infographicRenders.value = {}
+    narrationScript.value = null
+    audioRender.value = null
+    slideAudioRenders.value = {}
+    if (data?.added === 0) {
+      statusMessage.value = 'Story-depth nodes are already present. Next step: research/synthesize those nodes, then regenerate the infographic timeline.'
+    } else {
+      statusMessage.value = `Added ${data.added} story-depth nodes. Regenerate the infographic timeline after research/synthesis.`
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    augmentingStoryDepth.value = false
+  }
+}
+
 function stopScoreAll() {
   scoreStopRequested.value = true
+}
+
+async function augmentBigPicture() {
+  if (!tree.value || augmentingBigPicture.value) return
+  augmentingBigPicture.value = true
+  error.value = ''
+  try {
+    const data = await postTreeAugmentBigPicture({ session_id: sessionId })
+    if (data?.tree) tree.value = data.tree
+    infographicPlan.value = null
+    infographicRenders.value = {}
+    narrationScript.value = null
+    audioRender.value = null
+    if (data?.added === 0) {
+      error.value = 'Big-picture story nodes are already present.'
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    augmentingBigPicture.value = false
+  }
 }
 
 async function autoGrowAndAnalyse() {
@@ -604,6 +879,377 @@ function downloadForesight() {
   URL.revokeObjectURL(url)
 }
 
+
+async function planEducation(force = false) {
+  if (planningEducation.value) return
+  if (educationPlan.value && !force) {
+    educationOpen.value = true
+    return
+  }
+  planningEducation.value = true
+  error.value = ''
+  try {
+    const data = await postEducationPlan({
+      session_id: sessionId,
+      format: infographicFormat.value || 'tiktok',
+    })
+    if (data?.education_plan) educationPlan.value = data.education_plan
+    if (data?.infographic_plan) educationInfographicPlan.value = data.infographic_plan
+    educationOpen.value = true
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    planningEducation.value = false
+  }
+}
+
+
+async function planInfographics() {
+  if (!tree.value || planningInfographics.value) return
+  if (infographicPlan.value && !infographicOpen.value) {
+    infographicOpen.value = true
+    router.replace({ name: 'DecisionTree', params: { sessionId }, query: { ...route.query, infographics: '1' } })
+    return
+  }
+  await regenerateInfographics()
+}
+
+async function regenerateInfographics() {
+  if (!tree.value || planningInfographics.value) return
+  planningInfographics.value = true
+  error.value = ''
+  statusMessage.value = ''
+  try {
+    const data = await postInfographicPlan({ session_id: sessionId })
+    if (data?.infographic_plan) {
+      infographicPlan.value = data.infographic_plan
+      infographicRenders.value = {}
+      narrationScript.value = null
+      audioRender.value = null
+      slideAudioRenders.value = {}
+      await refreshInfographicAccounting()
+      selectedInfographicIndex.value = 0
+      infographicOpen.value = true
+      router.replace({ name: 'DecisionTree', params: { sessionId }, query: { ...route.query, infographics: '1' } })
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    planningInfographics.value = false
+  }
+}
+
+async function refreshInfographicAccounting() {
+  try {
+    const data = await getInfographicAccounting(sessionId)
+    if (data?.render_accounting) infographicAccounting.value = data.render_accounting
+  } catch {
+    // Non-critical; rendering endpoint still enforces limits server-side.
+  }
+}
+
+function setInfographicFormat(format) {
+  if (infographicFormat.value === format) return
+  infographicFormat.value = format
+  infographicPlan.value = null
+  infographicRenders.value = {}
+  narrationScript.value = null
+  audioRender.value = null
+  slideAudioRenders.value = {}
+  regenerateInfographics()
+}
+
+async function renderSelectedInfographic() {
+  if (!infographicPlan.value || renderingInfographic.value || batchRenderingInfographics.value) return
+  renderingInfographic.value = true
+  error.value = ''
+  batchRenderError.value = ''
+  try {
+    const data = await renderInfographicAtIndex(selectedInfographicIndex.value)
+    if (data?.render) {
+      storeInfographicRender(selectedInfographicIndex.value, data)
+      if (data.render_accounting) infographicAccounting.value = data.render_accounting
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    renderingInfographic.value = false
+  }
+}
+
+async function renderInfographicAtIndex(index) {
+  return postRenderInfographic({
+    session_id: sessionId,
+    slide_index: index,
+    slide_id: slideKeyForIndex(index),
+    provider: 'openai',
+    render_mode: 'strict',
+    model: 'gpt-image-2',
+    aspect_ratio: infographicPlan.value?.aspect_ratio || (infographicFormat.value === 'tiktok' ? '9:16' : '16:9'),
+    image_size: '1K',
+  })
+}
+
+function storeInfographicRender(index, data) {
+  if (!data?.render) return
+  infographicRenders.value = {
+    ...infographicRenders.value,
+    [data.slide_id || data.render.slide_id || slideKeyForIndex(index)]: data.render,
+  }
+}
+
+async function renderNextInfographics() {
+  if (!infographicPlan.value || batchRenderingInfographics.value || renderingInfographic.value) return
+  const targets = nextUnrenderedSlides.value
+  if (!targets.length) return
+  batchRenderingInfographics.value = true
+  batchRenderError.value = ''
+  error.value = ''
+  batchRenderProgress.value = { current: 0, total: targets.length, label: 'Starting…' }
+  try {
+    for (let i = 0; i < targets.length; i += 1) {
+      const target = targets[i]
+      batchRenderProgress.value = { current: i + 1, total: targets.length, label: `Rendering slide ${target.index + 1}: ${target.slide.title}` }
+      try {
+        const data = await renderInfographicAtIndex(target.index)
+        storeInfographicRender(target.index, data)
+        if (data?.render_accounting) infographicAccounting.value = data.render_accounting
+      } catch (err) {
+        const msg = _clipErrorMessage(err)
+        batchRenderError.value = `Stopped at slide ${target.index + 1}: ${msg}`
+        break
+      }
+    }
+  } finally {
+    batchRenderingInfographics.value = false
+  }
+}
+
+
+function openTimelinePlayer() {
+  if (!infographicPlan.value?.sequence?.length) return
+  playerIndex.value = selectedInfographicIndex.value || 0
+  playerPlaying.value = false
+  timelinePlayerOpen.value = true
+}
+
+function closeTimelinePlayer() {
+  if (timelinePlayerRef.value?.audioRef) timelinePlayerRef.value.audioRef.pause()
+  playerPlaying.value = false
+  timelinePlayerOpen.value = false
+}
+
+function previousPlayerSlide() {
+  if (playerIndex.value <= 0) return
+  playerIndex.value -= 1
+  playerPlaying.value = false
+}
+
+function nextPlayerSlide() {
+  const total = infographicPlan.value?.sequence?.length || 0
+  if (playerIndex.value >= total - 1) return
+  playerIndex.value += 1
+  playerPlaying.value = false
+}
+
+async function playCurrentSlide() {
+  const audio = timelinePlayerRef.value?.audioRef
+  if (!audio || !playerAudio.value) return
+  try {
+    audio.currentTime = 0
+    await audio.play()
+    playerPlaying.value = true
+  } catch {
+    error.value = 'Audio playback was blocked by the browser. Press play on the audio control.'
+  }
+}
+
+function onPlayerAudioEnded() {
+  playerPlaying.value = false
+  if (playerAutoAdvance.value) {
+    const total = infographicPlan.value?.sequence?.length || 0
+    if (playerIndex.value < total - 1) {
+      playerIndex.value += 1
+      setTimeout(() => playCurrentSlide(), 150)
+    }
+  }
+}
+
+async function planNarration() {
+  if (!infographicPlan.value || planningNarration.value) return
+  planningNarration.value = true
+  error.value = ''
+  clipGenerationError.value = ''
+  try {
+    const data = await postInfographicNarrationPlan({
+      session_id: sessionId,
+      format: infographicFormat.value,
+      target_seconds: infographicFormat.value === 'tiktok' ? 75 : 90,
+    })
+    if (data?.narration_script) {
+      narrationScript.value = data.narration_script
+      audioRender.value = null
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    planningNarration.value = false
+  }
+}
+
+async function renderNarrationAudio() {
+  if (!infographicPlan.value || !narrationScript.value || renderingNarration.value) return
+  renderingNarration.value = true
+  error.value = ''
+  clipGenerationError.value = ''
+  try {
+    const data = await postRenderInfographicAudio({
+      session_id: sessionId,
+      format: infographicFormat.value,
+      slide_index: selectedInfographicIndex.value,
+      slide_id: slideKeyForIndex(selectedInfographicIndex.value),
+    })
+    if (data?.narration_script) narrationScript.value = data.narration_script
+    if (data?.audio_render) {
+      slideAudioRenders.value = {
+        ...slideAudioRenders.value,
+        [data.audio_render.slide_id || slideKeyForIndex(selectedInfographicIndex.value)]: data.audio_render,
+      }
+    }
+  } catch (err) {
+    error.value = err?.response?.data?.error || err.message
+  } finally {
+    renderingNarration.value = false
+  }
+}
+
+function _clipErrorMessage(err) {
+  return err?.response?.data?.error || err.message || String(err)
+}
+
+async function generateAllSlideClips() {
+  if (!narrationScript.value?.slides?.length || generatingAllSlideClips.value) return
+  generatingAllSlideClips.value = true
+  clipGenerationError.value = ''
+  error.value = ''
+  const beats = narrationScript.value.slides
+  clipGenerationProgress.value = { current: 0, total: beats.length, label: 'Starting…' }
+  try {
+    for (let i = 0; i < beats.length; i += 1) {
+      const beat = beats[i]
+      const key = beat.slide_id || String(beat.slide_index)
+      if (slideAudioRenders.value?.[key]) {
+        clipGenerationProgress.value = { current: i + 1, total: beats.length, label: `Slide ${beat.slide_index + 1} already exists` }
+        continue
+      }
+      clipGenerationProgress.value = { current: i + 1, total: beats.length, label: `Generating slide ${beat.slide_index + 1}…` }
+      try {
+        const data = await postRenderInfographicAudio({
+          session_id: sessionId,
+          format: infographicFormat.value,
+          slide_index: beat.slide_index,
+          slide_id: beat.slide_id,
+          provider: 'local_piper',
+        })
+        if (data?.narration_script) narrationScript.value = data.narration_script
+        if (data?.audio_render) {
+          slideAudioRenders.value = {
+            ...slideAudioRenders.value,
+            [key]: data.audio_render,
+          }
+        }
+      } catch (err) {
+        const msg = _clipErrorMessage(err)
+        clipGenerationError.value = `Stopped at slide ${beat.slide_index + 1}: ${msg}`
+        break
+      }
+    }
+  } finally {
+    generatingAllSlideClips.value = false
+    const done = Object.keys(slideAudioRenders.value || {}).length
+    clipGenerationProgress.value = {
+      current: Math.min(done, beats.length),
+      total: beats.length,
+      label: clipGenerationError.value ? 'Paused — retry later' : 'Complete',
+    }
+  }
+}
+
+async function copyNarrationScript() {
+  if (!narrationScript.value?.full_voiceover) return
+  try {
+    await navigator.clipboard.writeText(narrationScript.value.full_voiceover)
+  } catch {
+    error.value = 'Copy failed — your browser blocked clipboard access.'
+  }
+}
+
+async function copyEducationJson() {
+  if (!educationPlan.value) return
+  try {
+    await navigator.clipboard.writeText(JSON.stringify({ education_plan: educationPlan.value, infographic_plan: educationInfographicPlan.value }, null, 2))
+  } catch {
+    error.value = 'Copy failed — your browser blocked clipboard access.'
+  }
+}
+
+function downloadEducationJson() {
+  if (!educationPlan.value) return
+  const date = new Date().toISOString().slice(0, 10)
+  const slug = (tree.value?.question || 'education-plan')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'education-plan'
+  const blob = new Blob([JSON.stringify({ education_plan: educationPlan.value, infographic_plan: educationInfographicPlan.value }, null, 2)], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `education-plan-${slug}-${date}.json`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
+
+async function copyInfographicPrompt() {
+  if (!selectedInfographicSlide.value?.image_prompt) return
+  try {
+    await navigator.clipboard.writeText(selectedInfographicSlide.value.image_prompt)
+  } catch {
+    error.value = 'Copy failed — your browser blocked clipboard access.'
+  }
+}
+
+async function copyInfographicJson() {
+  if (!infographicPlan.value) return
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(infographicPlan.value, null, 2))
+  } catch {
+    error.value = 'Copy failed — your browser blocked clipboard access.'
+  }
+}
+
+function downloadInfographicJson() {
+  if (!infographicPlan.value) return
+  const date = new Date().toISOString().slice(0, 10)
+  const slug = (tree.value?.question || 'infographics')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60) || 'infographics'
+  const blob = new Blob([JSON.stringify(infographicPlan.value, null, 2)], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `infographic-plan-${slug}-${date}.json`
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
+}
+
 async function onUpdateNode({ node_id, fields }) {
   try {
     const data = await postTreeUpdateNode({
@@ -656,6 +1302,15 @@ onMounted(loadTree)
   width: 100%;
   margin: 0 auto;
 }
+.status-message {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #315a72;
+  border-radius: 8px;
+  background: #0f2635;
+  color: #d7efff;
+}
+
 .error { color: #f87171; padding: 0.5rem; margin-bottom: 0.5rem; }
 .loading { color: #aaa; font-style: italic; }
 
@@ -755,82 +1410,7 @@ onMounted(loadTree)
 .foresight-btn:hover { background: #5a4a35; }
 .foresight-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.foresight-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-.foresight-modal {
-  width: min(900px, 90vw);
-  max-height: 85vh;
-  display: flex;
-  flex-direction: column;
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 6px;
-  overflow: hidden;
-}
-.foresight-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid #222;
-}
-.foresight-header h2 { margin: 0; font-size: 1rem; letter-spacing: 0.05em; }
-.foresight-header .close {
-  background: transparent;
-  color: #888;
-  border: 0;
-  font-size: 1.5rem;
-  cursor: pointer;
-  line-height: 1;
-}
-.foresight-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.25rem 1.5rem;
-  line-height: 1.55;
-}
-.foresight-body :deep(h1),
-.foresight-body :deep(h2),
-.foresight-body :deep(h3) { margin-top: 1.25em; }
-.foresight-body :deep(h1) { font-size: 1.4rem; color: #f5e8d6; }
-.foresight-body :deep(h2) {
-  font-size: 1.15rem;
-  color: #e5e5e5;
-  border-bottom: 1px solid #222;
-  padding-bottom: 0.25rem;
-}
-.foresight-body :deep(h3) { font-size: 1rem; color: #ddd; }
-.foresight-body :deep(p) { margin: 0.6em 0; }
-.foresight-body :deep(ul),
-.foresight-body :deep(ol) { padding-left: 1.5rem; }
-.foresight-body :deep(li) { margin: 0.25em 0; }
-.foresight-body :deep(strong) { color: #fff; }
-.foresight-body :deep(a) { color: #80b4ff; }
 
-.foresight-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  padding: 0.75rem 1.25rem;
-  border-top: 1px solid #222;
-}
-.foresight-footer button {
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  border: 1px solid #444;
-  font-family: inherit;
-}
-.foresight-footer .primary { background: #4ade80; color: #052e16; font-weight: bold; }
-.foresight-footer .secondary { background: #333; color: #ddd; }
-.foresight-footer button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .map-view-btn {
   background: #4a3a2a;
@@ -847,6 +1427,24 @@ onMounted(loadTree)
 .map-view-btn:hover { background: #5a4a35; }
 .map-view-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+.depth-btn,
+.story-btn {
+  background: #1f3a4a;
+  color: #d7efff;
+  border: 1px solid #315a72;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+.depth-btn:hover,
+.story-btn:hover { background: #29495d; }
+.depth-btn:disabled,
+.story-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .auto-grow-btn {
   background: #2a4a3a;
   color: #d6f5e0;
@@ -861,4 +1459,46 @@ onMounted(loadTree)
 }
 .auto-grow-btn:hover { background: #355945; }
 .auto-grow-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.infographic-btn {
+  background: #2d3f55;
+  color: #dbeafe;
+  border: 1px solid #426084;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+.infographic-btn:hover { background: #36506d; }
+.infographic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.foresight-footer .tiny,
+.tiny {
+  padding: 0.3rem 0.55rem;
+  font-size: 0.75rem;
+}
+
+
+
+@media (max-width: 900px) {
+  .topbar { flex-wrap: wrap; }
+  .topic { flex-basis: 100%; }
+  .infographic-body { grid-template-columns: 1fr; }
+  .slide-list { max-height: 220px; border-right: 0; border-bottom: 1px solid #1f2937; }
+}
+
+
+.education-btn {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid #315c7d;
+  border-radius: 999px;
+  background: #102a3d;
+  color: #d7efff;
+  cursor: pointer;
+}
+.education-btn:hover { background: #173a53; }
+.education-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>

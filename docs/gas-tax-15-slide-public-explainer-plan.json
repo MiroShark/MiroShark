@@ -1,0 +1,948 @@
+{
+  "schema_version": "infographic-plan/v1",
+  "planner": "gas_tax_public_explainer",
+  "topic": "Proposed 25% windfall gas tax on the resources sector in Australia",
+  "output_format": "tiktok",
+  "aspect_ratio": "9:16",
+  "style_preset": "clean hand-drawn sketchnote infographic on a warm white background; black marker outlines; simple doodle icons; chunky arrows connecting ideas; limited accent colors only (teal, orange, yellow); lots of whitespace; friendly educational tone; cleaner and less busy than a workshop whiteboard; no photorealism, no dense paragraphs, no tiny text",
+  "style_preprompt": "Visual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.",
+  "slide_count": 15,
+  "sequence": [
+    {
+      "slide_id": "public.hook",
+      "sequence_index": 0,
+      "slide_type": "public_hook",
+      "title": "Should gas companies pay more tax?",
+      "message": "This is not just a tax fight. It is a story about public resources, private profits, government services, and investment risk.",
+      "visual_layout": "Opening path: gas field icon to company profits, public budget, and a balanced trade-off scale.",
+      "facts": [
+        {
+          "text": "Gas is a public resource extracted by private firms",
+          "kind": "public_hook_fact"
+        },
+        {
+          "text": "The debate is about fair public return versus investment certainty",
+          "kind": "public_hook_fact"
+        },
+        {
+          "text": "Budget and debt context explain what extra revenue can and cannot solve",
+          "kind": "public_hook_fact"
+        }
+      ],
+      "labels": [
+        "Public resource",
+        "Private profit",
+        "Public budget",
+        "Trade-off"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Should gas companies pay more tax?\nMain message to communicate visually, not as a paragraph: This is not just a tax fight. It is a story about public resources, private profits…\nSuggested layout: Opening path: gas field icon to company profits, public budget, and a balanced trade-off scale.\nExact short labels to use where useful: Public resource, Private profit, Public budget, Trade-off\nFacts to convert into simple visual callouts:\n- Gas is a public resource extracted by private firms\n- The debate is about fair public return versus investment certainty\n- Budget and debt context explain what extra revenue can and cannot solve\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Opening",
+      "depth": 0,
+      "parent": "",
+      "parent_slide_id": "",
+      "parent_slide_index": null,
+      "depends_on": [
+        "fact:public_hook_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [
+          "opening.overview"
+        ],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "public.surface.claim",
+      "sequence_index": 1,
+      "slide_type": "public_surface_claim",
+      "title": "Two slogans hide the real question",
+      "message": "The public hears two simple claims: gas companies should pay more, and new taxes will scare investment. Both claims need context.",
+      "visual_layout": "Two megaphones facing each other: one says 'fair share', the other says 'investment risk'. Put a question mark between them.",
+      "facts": [
+        {
+          "text": "Supporters frame the issue as a fair-share question",
+          "kind": "public_surface_claim_fact"
+        },
+        {
+          "text": "Opponents frame the issue as an investment-risk question",
+          "kind": "public_surface_claim_fact"
+        },
+        {
+          "text": "The useful test is what is true, missing, argued over and design-dependent",
+          "kind": "public_surface_claim_fact"
+        }
+      ],
+      "labels": [
+        "Fair share",
+        "Investment risk",
+        "What is missing?"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Two slogans hide the real question\nMain message to communicate visually, not as a paragraph: The public hears two simple claims: gas companies should pay more, and new taxes will scare…\nSuggested layout: Two megaphones facing each other: one says 'fair share', the other says 'investment risk'. Put a question mark between them.\nExact short labels to use where useful: Fair share, Investment risk, What is missing?\nFacts to convert into simple visual callouts:\n- Supporters frame the issue as a fair-share question\n- Opponents frame the issue as an investment-risk question\n- The useful test is what is true, missing, argued over and design-dependent\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Opening",
+      "depth": 0,
+      "parent": "public_hook",
+      "parent_slide_id": "public.hook",
+      "parent_slide_index": 0,
+      "depends_on": [
+        "public.hook",
+        "fact:public_surface_claim_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "public.resource.rent",
+      "sequence_index": 2,
+      "slide_type": "public_resource_rent",
+      "title": "What is being taxed?",
+      "message": "A resource-rent tax targets extra profits from publicly owned natural resources, not ordinary wages or normal business costs.",
+      "visual_layout": "Layer diagram: public underground gas resource, extraction company, normal costs and returns, then a highlighted 'resource rent' slice.",
+      "facts": [
+        {
+          "text": "Resource rent means returns above normal costs and normal profit",
+          "kind": "public_resource_rent_fact"
+        },
+        {
+          "text": "The public-owner argument is that citizens should capture a fair share of that rent",
+          "kind": "public_resource_rent_fact"
+        },
+        {
+          "text": "The design problem is separating rent from ordinary investment returns",
+          "kind": "public_resource_rent_fact"
+        }
+      ],
+      "labels": [
+        "Public gas",
+        "Normal costs",
+        "Normal profit",
+        "Resource rent"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: What is being taxed?\nMain message to communicate visually, not as a paragraph: A resource-rent tax targets extra profits from publicly owned natural resources, not ordinary…\nSuggested layout: Layer diagram: public underground gas resource, extraction company, normal costs and returns, then a highlighted 'resource rent' slice.\nExact short labels to use where useful: Public gas, Normal costs, Normal profit, Resource rent\nFacts to convert into simple visual callouts:\n- Resource rent means returns above normal costs and normal profit\n- The public-owner argument is that citizens should capture a fair share of that rent\n- The design problem is separating rent from ordinary investment returns\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Gas tax basics",
+      "depth": 0,
+      "parent": "public_surface_claim",
+      "parent_slide_id": "public.surface.claim",
+      "parent_slide_index": 1,
+      "depends_on": [
+        "public.surface.claim",
+        "fact:public_resource_rent_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "money.tax_revenue_numbers",
+      "sequence_index": 3,
+      "slide_type": "tax_revenue_numbers",
+      "title": "What tax does Canberra actually collect?",
+      "message": "Most Commonwealth tax money comes from workers and companies. Gas-specific PRRT is tiny beside income tax.",
+      "visual_layout": "Accurate simple pie chart using the supplied dollar amounts. Make income tax and company tax visibly largest; PRRT is a tiny sliver.",
+      "facts": [
+        {
+          "text": "People's income tax: $338b in 2024-25 cash receipts",
+          "kind": "revenue_number"
+        },
+        {
+          "text": "Company tax: $139b",
+          "kind": "revenue_number"
+        },
+        {
+          "text": "GST: $90b",
+          "kind": "revenue_number"
+        },
+        {
+          "text": "Fuel, tobacco, alcohol and customs duties: $43b",
+          "kind": "revenue_number"
+        },
+        {
+          "text": "Superannuation fund taxes: $26b",
+          "kind": "revenue_number"
+        },
+        {
+          "text": "Petroleum Resource Rent Tax: $1.4b",
+          "kind": "revenue_number"
+        }
+      ],
+      "labels": [
+        "Income tax $338b",
+        "Company tax $139b",
+        "GST $90b",
+        "Duties $43b",
+        "PRRT $1.4b"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: What tax does Canberra actually collect?\nMain message to communicate visually, not as a paragraph: Most Commonwealth tax money comes from workers and companies. Gas-specific PRRT is tiny beside…\nSuggested layout: Accurate simple pie chart using the supplied dollar amounts. Make income tax and company tax visibly largest; PRRT is a tiny sliver.\nExact short labels to use where useful: Income tax $338b, Company tax $139b, GST $90b, Duties $43b, PRRT $1.4b\nFacts to convert into simple visual callouts:\n- People's income tax: $338b in 2024-25 cash receipts\n- Company tax: $139b\n- GST: $90b\n- Fuel, tobacco, alcohol and customs duties: $43b\n- Superannuation fund taxes: $26b\n- Petroleum Resource Rent Tax: $1.4b\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "",
+      "depth": 0,
+      "parent": "public_resource_rent",
+      "parent_slide_id": "public.resource.rent",
+      "parent_slide_index": 2,
+      "depends_on": [
+        "public.resource.rent",
+        "fact:revenue_number"
+      ],
+      "template_id": "",
+      "render_contract": {}
+    },
+    {
+      "slide_id": "money.spending_numbers",
+      "sequence_index": 4,
+      "slide_type": "spending_numbers",
+      "title": "Where does the money go?",
+      "message": "Use dollars first. The reference point is the cash: about $786b total, with welfare, health, education, defence, and other purposes the big buckets.",
+      "visual_layout": "Accurate simple pie chart using the supplied dollar amounts. Put dollar labels bigger than percentages; no unlabeled slices.",
+      "facts": [
+        {
+          "text": "Total Commonwealth expenses: $785.7b in 2025-26",
+          "kind": "spending_number"
+        },
+        {
+          "text": "Social security and welfare: $291b, 37% of expenses",
+          "kind": "spending_number"
+        },
+        {
+          "text": "Health: $125b, 15.9%",
+          "kind": "spending_number"
+        },
+        {
+          "text": "Education: $54b, 6.9%",
+          "kind": "spending_number"
+        },
+        {
+          "text": "Defence: $51b, 6.6%",
+          "kind": "spending_number"
+        },
+        {
+          "text": "Other purposes: $150b, 19.1%",
+          "kind": "spending_number"
+        }
+      ],
+      "labels": [
+        "Total $786b",
+        "Welfare $291b",
+        "Health $125b",
+        "Education $54b",
+        "Defence $51b",
+        "Other $233b"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Where does the money go?\nMain message to communicate visually, not as a paragraph: Use dollars first. The reference point is the cash: about $786b total, with welfare, health…\nSuggested layout: Accurate simple pie chart using the supplied dollar amounts. Put dollar labels bigger than percentages; no unlabeled slices.\nExact short labels to use where useful: Total $786b, Welfare $291b, Health $125b, Education $54b, Defence $51b, Other $233b\nFacts to convert into simple visual callouts:\n- Total Commonwealth expenses: $785.7b in 2025-26\n- Social security and welfare: $291b, 37% of expenses\n- Health: $125b, 15.9%\n- Education: $54b, 6.9%\n- Defence: $51b, 6.6%\n- Other purposes: $150b, 19.1%\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "",
+      "depth": 0,
+      "parent": "tax_revenue_numbers",
+      "parent_slide_id": "money.tax_revenue_numbers",
+      "parent_slide_index": 3,
+      "depends_on": [
+        "money.tax_revenue_numbers",
+        "fact:spending_number"
+      ],
+      "template_id": "",
+      "render_contract": {}
+    },
+    {
+      "slide_id": "money.tax_per_person",
+      "sequence_index": 5,
+      "slide_type": "tax_per_person",
+      "title": "Is each person being taxed more?",
+      "message": "Yes in nominal per-person terms: tax collected per resident more than doubled. But this average includes company tax, GST and other taxes, not just personal income tax.",
+      "visual_layout": "Two-step comparison: population bar grows modestly from 21.0m to 27.6m, while tax-per-resident bar grows much faster from $10.4k to $23.8k. Add a caution label: average across all taxes.",
+      "facts": [
+        {
+          "text": "Australia's population rose from 21.0m at 30 June 2007 to 27.6m at 30 June 2025: about 31% more people",
+          "kind": "tax_per_person",
+          "normalization": {
+            "schema_version": "normalization-comparison/v1",
+            "label": "Australian Government taxation receipts",
+            "start": {
+              "nominal_total": 217.866,
+              "population": 21.0172,
+              "per_capita": 10.366081114515731
+            },
+            "end": {
+              "nominal_total": 657.844,
+              "population": 27.614411,
+              "per_capita": 23.82248891710926
+            },
+            "changes": {
+              "absolute_change": 439.97800000000007,
+              "nominal_growth_rate": 2.019489043724124,
+              "nominal_ratio": 3.019489043724124,
+              "population_growth_rate": 0.31389580914679416,
+              "population_ratio": 1.313895809146794,
+              "per_capita_change": 13.45640780259353,
+              "per_capita_growth_rate": 1.2981190918668755,
+              "per_capita_ratio": 2.2981190918668757
+            },
+            "available_views": [
+              "nominal_total",
+              "per_capita",
+              "population_growth"
+            ],
+            "warnings": [
+              "CPI not supplied; real-dollar view unavailable",
+              "GDP denominator missing; share-of-GDP view unavailable"
+            ]
+          },
+          "source_facts": [
+            {
+              "fact_id": "tax_receipts_2006_07",
+              "label": "Australian Government taxation receipts",
+              "value": 217.866,
+              "unit": "AUD_billion",
+              "reference_period": "2006-07",
+              "source_name": "Final Budget Outcome 2006-07",
+              "source_url": "https://archive.budget.gov.au/2006-07/fbo/html/index.htm",
+              "source_type": "official_budget",
+              "notes": "Used as the baseline tax receipts figure for per-resident normalization."
+            },
+            {
+              "fact_id": "tax_receipts_2024_25",
+              "label": "Australian Government taxation receipts",
+              "value": 657.844,
+              "unit": "AUD_billion",
+              "reference_period": "2024-25",
+              "source_name": "Budget Paper No. 1 2025-26",
+              "source_url": "https://budget.gov.au/content/bp1/index.htm",
+              "source_type": "official_budget",
+              "notes": "Estimated/current-year taxation receipts used in the gas-tax pilot."
+            },
+            {
+              "fact_id": "population_2007",
+              "label": "Australia resident population",
+              "value": 21.0172,
+              "unit": "million_people",
+              "reference_period": "30 June 2007",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            },
+            {
+              "fact_id": "population_2025",
+              "label": "Australia resident population",
+              "value": 27.614411,
+              "unit": "million_people",
+              "reference_period": "30 June 2025",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "text": "Australian Government taxation receipts rose from $217.9b in 2006-07 to $657.8b in 2024-25",
+          "kind": "tax_per_person",
+          "source_facts": [
+            {
+              "fact_id": "tax_receipts_2006_07",
+              "label": "Australian Government taxation receipts",
+              "value": 217.866,
+              "unit": "AUD_billion",
+              "reference_period": "2006-07",
+              "source_name": "Final Budget Outcome 2006-07",
+              "source_url": "https://archive.budget.gov.au/2006-07/fbo/html/index.htm",
+              "source_type": "official_budget",
+              "notes": "Used as the baseline tax receipts figure for per-resident normalization."
+            },
+            {
+              "fact_id": "tax_receipts_2024_25",
+              "label": "Australian Government taxation receipts",
+              "value": 657.844,
+              "unit": "AUD_billion",
+              "reference_period": "2024-25",
+              "source_name": "Budget Paper No. 1 2025-26",
+              "source_url": "https://budget.gov.au/content/bp1/index.htm",
+              "source_type": "official_budget",
+              "notes": "Estimated/current-year taxation receipts used in the gas-tax pilot."
+            },
+            {
+              "fact_id": "population_2007",
+              "label": "Australia resident population",
+              "value": 21.0172,
+              "unit": "million_people",
+              "reference_period": "30 June 2007",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            },
+            {
+              "fact_id": "population_2025",
+              "label": "Australia resident population",
+              "value": 27.614411,
+              "unit": "million_people",
+              "reference_period": "30 June 2025",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "text": "Taxation receipts per resident rose from about $10,400 to about $23,800 per person",
+          "kind": "tax_per_person",
+          "source_facts": [
+            {
+              "fact_id": "tax_receipts_2006_07",
+              "label": "Australian Government taxation receipts",
+              "value": 217.866,
+              "unit": "AUD_billion",
+              "reference_period": "2006-07",
+              "source_name": "Final Budget Outcome 2006-07",
+              "source_url": "https://archive.budget.gov.au/2006-07/fbo/html/index.htm",
+              "source_type": "official_budget",
+              "notes": "Used as the baseline tax receipts figure for per-resident normalization."
+            },
+            {
+              "fact_id": "tax_receipts_2024_25",
+              "label": "Australian Government taxation receipts",
+              "value": 657.844,
+              "unit": "AUD_billion",
+              "reference_period": "2024-25",
+              "source_name": "Budget Paper No. 1 2025-26",
+              "source_url": "https://budget.gov.au/content/bp1/index.htm",
+              "source_type": "official_budget",
+              "notes": "Estimated/current-year taxation receipts used in the gas-tax pilot."
+            },
+            {
+              "fact_id": "population_2007",
+              "label": "Australia resident population",
+              "value": 21.0172,
+              "unit": "million_people",
+              "reference_period": "30 June 2007",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            },
+            {
+              "fact_id": "population_2025",
+              "label": "Australia resident population",
+              "value": 27.614411,
+              "unit": "million_people",
+              "reference_period": "30 June 2025",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "text": "That is about $13,500 more tax collected per resident in nominal dollars, or roughly 2.3 times the 2006-07 level",
+          "kind": "tax_per_person",
+          "source_facts": [
+            {
+              "fact_id": "tax_receipts_2006_07",
+              "label": "Australian Government taxation receipts",
+              "value": 217.866,
+              "unit": "AUD_billion",
+              "reference_period": "2006-07",
+              "source_name": "Final Budget Outcome 2006-07",
+              "source_url": "https://archive.budget.gov.au/2006-07/fbo/html/index.htm",
+              "source_type": "official_budget",
+              "notes": "Used as the baseline tax receipts figure for per-resident normalization."
+            },
+            {
+              "fact_id": "tax_receipts_2024_25",
+              "label": "Australian Government taxation receipts",
+              "value": 657.844,
+              "unit": "AUD_billion",
+              "reference_period": "2024-25",
+              "source_name": "Budget Paper No. 1 2025-26",
+              "source_url": "https://budget.gov.au/content/bp1/index.htm",
+              "source_type": "official_budget",
+              "notes": "Estimated/current-year taxation receipts used in the gas-tax pilot."
+            },
+            {
+              "fact_id": "population_2007",
+              "label": "Australia resident population",
+              "value": 21.0172,
+              "unit": "million_people",
+              "reference_period": "30 June 2007",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            },
+            {
+              "fact_id": "population_2025",
+              "label": "Australia resident population",
+              "value": 27.614411,
+              "unit": "million_people",
+              "reference_period": "30 June 2025",
+              "source_name": "Australian Bureau of Statistics, National/state population",
+              "source_url": "https://www.abs.gov.au/statistics/people/population/national-state-and-territory-population",
+              "source_type": "official_statistics",
+              "notes": ""
+            }
+          ]
+        },
+        {
+          "text": "This does not prove every person paid that personally; it averages company tax, GST, income tax and other taxes across the population",
+          "kind": "tax_per_person"
+        },
+        {
+          "text": "The fair question is: how much is population growth, how much is inflation/wage growth, and how much is heavier tax take?",
+          "kind": "tax_per_person"
+        }
+      ],
+      "labels": [
+        "People +31%",
+        "Tax/person $10.4k→$23.8k",
+        "2.3× nominal",
+        "Not just income tax"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Is each person being taxed more?\nMain message to communicate visually, not as a paragraph: Yes in nominal per-person terms: tax collected per resident more than doubled. But this…\nSuggested layout: Two-step comparison: population bar grows modestly from 21.0m to 27.6m, while tax-per-resident bar grows much faster from $10.4k to $23.8k. Add a caution label: average across all taxes.\nExact short labels to use where useful: People +31%, Tax/person $10.4k→$23.8k, 2.3× nominal, Not just income tax\nFacts to convert into simple visual callouts:\n- Australia's population rose from 21.0m at 30 June 2007 to 27.6m at 30 June 2025: about 31% more people\n- Australian Government taxation receipts rose from $217.9b in 2006-07 to $657.8b in 2024-25\n- Taxation receipts per resident rose from about $10,400 to about $23,800 per person\n- That is about $13,500 more tax collected per resident in nominal dollars, or roughly 2.3 times the 2006-07…\n- This does not prove every person paid that personally; it averages company tax, GST, income tax and other…\n- The fair question is: how much is population growth, how much is inflation/wage growth, and how much is…\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "",
+      "depth": 0,
+      "parent": "spending_numbers",
+      "parent_slide_id": "money.spending_numbers",
+      "parent_slide_index": 4,
+      "depends_on": [
+        "money.spending_numbers",
+        "fact:tax_per_person"
+      ],
+      "template_id": "",
+      "render_contract": {}
+    },
+    {
+      "slide_id": "money.extra_sources",
+      "sequence_index": 6,
+      "slide_type": "extra_money_sources",
+      "title": "Where does the extra money come from?",
+      "message": "The bigger spending total is mostly paid for by a much bigger tax base: workers, companies, GST and super funds. Any remaining gap becomes deficit and debt.",
+      "visual_layout": "Flow diagram: left side shows 2006 receipts; right side shows 2024-25 receipts. Use thick arrows for workers' income tax, company tax, GST, super, and a small debt-gap arrow.",
+      "facts": [
+        {
+          "text": "Total cash receipts rose from $236.7b in 2006-07 to $717.0b in 2024-25: about $480b more coming in each year",
+          "kind": "receipt_growth"
+        },
+        {
+          "text": "Individuals and other withholding tax rose from $115.8b to $338.3b: about $222.5b more",
+          "kind": "receipt_growth"
+        },
+        {
+          "text": "Company tax rose from $57.1b to $138.8b: about $81.7b more",
+          "kind": "receipt_growth"
+        },
+        {
+          "text": "GST receipts rose from $39.6b in 2006-07 to $90.3b in 2024-25: about $50.8b more",
+          "kind": "receipt_growth"
+        },
+        {
+          "text": "Superannuation fund taxes rose from $8.2b to $25.7b: about $17.5b more",
+          "kind": "receipt_growth"
+        },
+        {
+          "text": "When spending is still higher than receipts, the rest is financed by deficits and debt",
+          "kind": "receipt_growth"
+        }
+      ],
+      "labels": [
+        "Receipts +$480b",
+        "Workers +$222b",
+        "Companies +$82b",
+        "GST +$51b",
+        "Gap = debt"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Where does the extra money come from?\nMain message to communicate visually, not as a paragraph: The bigger spending total is mostly paid for by a much bigger tax base: workers, companies…\nSuggested layout: Flow diagram: left side shows 2006 receipts; right side shows 2024-25 receipts. Use thick arrows for workers' income tax, company tax, GST, super, and a small debt-gap arrow.\nExact short labels to use where useful: Receipts +$480b, Workers +$222b, Companies +$82b, GST +$51b, Gap = debt\nFacts to convert into simple visual callouts:\n- Total cash receipts rose from $236.7b in 2006-07 to $717.0b in 2024-25: about $480b more coming in each year\n- Individuals and other withholding tax rose from $115.8b to $338.3b: about $222.5b more\n- Company tax rose from $57.1b to $138.8b: about $81.7b more\n- GST receipts rose from $39.6b in 2006-07 to $90.3b in 2024-25: about $50.8b more\n- Superannuation fund taxes rose from $8.2b to $25.7b: about $17.5b more\n- When spending is still higher than receipts, the rest is financed by deficits and debt\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "",
+      "depth": 0,
+      "parent": "tax_per_person",
+      "parent_slide_id": "money.tax_per_person",
+      "parent_slide_index": 5,
+      "depends_on": [
+        "money.tax_per_person",
+        "fact:receipt_growth"
+      ],
+      "template_id": "",
+      "render_contract": {}
+    },
+    {
+      "slide_id": "money.tax_pressure_reasons",
+      "sequence_index": 7,
+      "slide_type": "tax_pressure_reasons",
+      "title": "Why can tax per person rise?",
+      "message": "Governments can collect more per person without announcing a new tax: inflation, wage growth, bracket creep, bigger profits, service costs and debt repair all push…",
+      "visual_layout": "Simple cause-and-effect board. Centre: 'more tax per person'. Around it: inflation, wages, bracket creep, more services, debt interest, budget repair. Add a final check: compare percentages, not just dollars.",
+      "facts": [
+        {
+          "text": "Inflation raises prices and nominal wages, so the same tax rates collect more dollars even before real living standards improve",
+          "kind": "tax_pressure"
+        },
+        {
+          "text": "Wage growth can push people into higher average tax rates in a progressive income tax system: the Parliamentary Budget Office calls this bracket creep",
+          "kind": "tax_pressure"
+        },
+        {
+          "text": "More people and more workers broaden the tax base, but per-person tax can still rise if incomes, prices and profits rise faster than population",
+          "kind": "tax_pressure"
+        },
+        {
+          "text": "Government can justify higher revenue by pointing to higher service costs: health, aged care, NDIS, defence, infrastructure and debt interest",
+          "kind": "tax_pressure"
+        },
+        {
+          "text": "Budget repair is another reason: governments may let bracket creep raise revenue, then later return some through tax cuts",
+          "kind": "tax_pressure"
+        },
+        {
+          "text": "The honest test is percentage burden, not just dollars: tax-to-income, tax-to-GDP, tax-to-budget and real per-person comparisons",
+          "kind": "tax_pressure"
+        }
+      ],
+      "labels": [
+        "Inflation",
+        "Wages",
+        "Bracket creep",
+        "Service costs",
+        "Debt repair",
+        "Check % burden"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Why can tax per person rise?\nMain message to communicate visually, not as a paragraph: Governments can collect more per person without announcing a new tax: inflation, wage growth…\nSuggested layout: Simple cause-and-effect board. Centre: 'more tax per person'. Around it: inflation, wages, bracket creep, more services, debt interest, budget repair. Add a final check: compare percentages, not just dollars.\nExact short labels to use where useful: Inflation, Wages, Bracket creep, Service costs, Debt repair, Check % burden\nFacts to convert into simple visual callouts:\n- Inflation raises prices and nominal wages, so the same tax rates collect more dollars even before real living…\n- Wage growth can push people into higher average tax rates in a progressive income tax system: the…\n- More people and more workers broaden the tax base, but per-person tax can still rise if incomes, prices and…\n- Government can justify higher revenue by pointing to higher service costs: health, aged care, NDIS, defence…\n- Budget repair is another reason: governments may let bracket creep raise revenue, then later return some…\n- The honest test is percentage burden, not just dollars: tax-to-income, tax-to-GDP, tax-to-budget and real…\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "",
+      "depth": 0,
+      "parent": "extra_money_sources",
+      "parent_slide_id": "money.extra_sources",
+      "parent_slide_index": 6,
+      "depends_on": [
+        "money.extra_sources",
+        "fact:tax_pressure"
+      ],
+      "template_id": "",
+      "render_contract": {}
+    },
+    {
+      "slide_id": "debt.why_not_paid_down",
+      "sequence_index": 8,
+      "slide_type": "debt_why_not_paid_down",
+      "title": "Why is debt not being paid down?",
+      "message": "More tax money does not automatically reduce debt. If spending promises, service costs and interest absorb the revenue, debt only falls when governments run sustained…",
+      "visual_layout": "Leaky bucket visual: extra tax flows in at the top, then big holes drain to welfare, health, NDIS, states, defence, interest and new promises. Only leftover surplus flows to debt repayment.",
+      "facts": [
+        {
+          "text": "The key debt test is not whether revenue rises; it is whether revenue is bigger than spending and interest after every year’s promises",
+          "kind": "debt_repair"
+        },
+        {
+          "text": "2025-26 expenses are estimated at $785.7b, while 2024-25 total receipts were about $717.0b: the annual budget is still very tight",
+          "kind": "debt_repair"
+        },
+        {
+          "text": "Large fixed programs keep absorbing revenue: welfare $291b, health $125b, states GST support $101b, NDIS $52b and aged care $41b",
+          "kind": "debt_repair"
+        },
+        {
+          "text": "Debt interest itself is now a major bill: debt management is about $28.4b in 2025-26",
+          "kind": "debt_repair"
+        },
+        {
+          "text": "Surpluses in 2022-23 and 2023-24 helped, but they were not large enough to erase the accumulated debt stock",
+          "kind": "debt_repair"
+        },
+        {
+          "text": "Politically, paying debt down means running sustained surpluses: higher taxes, lower services, slower benefit growth, or selling assets",
+          "kind": "debt_repair"
+        }
+      ],
+      "labels": [
+        "More revenue",
+        "Big services",
+        "Interest bill",
+        "New promises",
+        "Surplus pays debt"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Why is debt not being paid down?\nMain message to communicate visually, not as a paragraph: More tax money does not automatically reduce debt. If spending promises, service costs and…\nSuggested layout: Leaky bucket visual: extra tax flows in at the top, then big holes drain to welfare, health, NDIS, states, defence, interest and new promises. Only leftover surplus flows to debt repayment.\nExact short labels to use where useful: More revenue, Big services, Interest bill, New promises, Surplus pays debt\nFacts to convert into simple visual callouts:\n- The key debt test is not whether revenue rises; it is whether revenue is bigger than spending and interest…\n- 2025-26 expenses are estimated at $785.7b, while 2024-25 total receipts were about $717.0b: the annual budget…\n- Large fixed programs keep absorbing revenue: welfare $291b, health $125b, states GST support $101b, NDIS $52b…\n- Debt interest itself is now a major bill: debt management is about $28.4b in 2025-26\n- Surpluses in 2022-23 and 2023-24 helped, but they were not large enough to erase the accumulated debt stock\n- Politically, paying debt down means running sustained surpluses: higher taxes, lower services, slower benefit…\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "",
+      "depth": 0,
+      "parent": "tax_pressure_reasons",
+      "parent_slide_id": "money.tax_pressure_reasons",
+      "parent_slide_index": 7,
+      "depends_on": [
+        "money.tax_pressure_reasons",
+        "fact:debt_repair"
+      ],
+      "template_id": "",
+      "render_contract": {}
+    },
+    {
+      "slide_id": "public.gas.tax.fit",
+      "sequence_index": 9,
+      "slide_type": "public_gas_tax_fit",
+      "title": "Where does a gas tax fit?",
+      "message": "A gas tax is one possible revenue source. It may help, but it is not the whole budget or debt solution.",
+      "visual_layout": "Decision fork for debt repair: grow, spend less, tax more, mix. Put gas tax as one branch under 'tax more'.",
+      "facts": [
+        {
+          "text": "Debt repair choices are grow faster, spend less, tax more, or mix them",
+          "kind": "public_gas_tax_fit_fact"
+        },
+        {
+          "text": "Gas tax enters as one revenue branch, not the whole solution",
+          "kind": "public_gas_tax_fit_fact"
+        },
+        {
+          "text": "Revenue use matters: services, cost-of-living relief, debt repair or future fund",
+          "kind": "public_gas_tax_fit_fact"
+        }
+      ],
+      "labels": [
+        "Grow",
+        "Spend less",
+        "Tax more",
+        "Gas tax branch",
+        "Use matters"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: Where does a gas tax fit?\nMain message to communicate visually, not as a paragraph: A gas tax is one possible revenue source. It may help, but it is not the whole budget or debt…\nSuggested layout: Decision fork for debt repair: grow, spend less, tax more, mix. Put gas tax as one branch under 'tax more'.\nExact short labels to use where useful: Grow, Spend less, Tax more, Gas tax branch, Use matters\nFacts to convert into simple visual callouts:\n- Debt repair choices are grow faster, spend less, tax more, or mix them\n- Gas tax enters as one revenue branch, not the whole solution\n- Revenue use matters: services, cost-of-living relief, debt repair or future fund\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Budget context",
+      "depth": 0,
+      "parent": "debt_why_not_paid_down",
+      "parent_slide_id": "debt.why_not_paid_down",
+      "parent_slide_index": 8,
+      "depends_on": [
+        "debt.why_not_paid_down",
+        "fact:public_gas_tax_fit_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [
+          "debt.unwind_options"
+        ],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "public.case.for",
+      "sequence_index": 10,
+      "slide_type": "public_case_for",
+      "title": "The strongest case for taxing more",
+      "message": "Supporters argue Australia should capture more value from public resources and use it for services, debt repair, or future generations.",
+      "visual_layout": "Public resource flows to a fair-return box, then branches to citizens, services, debt repair and future fund.",
+      "facts": [
+        {
+          "text": "The pro-tax case is that public resources should deliver a fair public return",
+          "kind": "public_case_for_fact"
+        },
+        {
+          "text": "Supporters often point to resource-rent principles and international examples",
+          "kind": "public_case_for_fact"
+        },
+        {
+          "text": "The public benefit should be stated clearly, not left vague",
+          "kind": "public_case_for_fact"
+        }
+      ],
+      "labels": [
+        "Fair return",
+        "Services",
+        "Debt repair",
+        "Future fund"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: The strongest case for taxing more\nMain message to communicate visually, not as a paragraph: Supporters argue Australia should capture more value from public resources and use it for…\nSuggested layout: Public resource flows to a fair-return box, then branches to citizens, services, debt repair and future fund.\nExact short labels to use where useful: Fair return, Services, Debt repair, Future fund\nFacts to convert into simple visual callouts:\n- The pro-tax case is that public resources should deliver a fair public return\n- Supporters often point to resource-rent principles and international examples\n- The public benefit should be stated clearly, not left vague\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Case for",
+      "depth": 0,
+      "parent": "public_gas_tax_fit",
+      "parent_slide_id": "public.gas.tax.fit",
+      "parent_slide_index": 9,
+      "depends_on": [
+        "public.gas.tax.fit",
+        "fact:public_case_for_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [
+          "claims.supporters_case",
+          "precedents.success_cases"
+        ],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "public.case.against",
+      "sequence_index": 11,
+      "slide_type": "public_case_against",
+      "title": "The strongest case against taxing more",
+      "message": "Opponents warn that sudden or poorly designed taxes can reduce investment, supply, jobs, or trust in policy rules.",
+      "visual_layout": "Tax shock arrow leading to investor concern, then supply, jobs and policy-trust warning icons.",
+      "facts": [
+        {
+          "text": "The anti-tax case is strongest when focused on design risk, not blanket opposition",
+          "kind": "public_case_against_fact"
+        },
+        {
+          "text": "Bad timing or unstable rules can raise investment and supply concerns",
+          "kind": "public_case_against_fact"
+        },
+        {
+          "text": "The question is which risks are evidenced, exaggerated or manageable",
+          "kind": "public_case_against_fact"
+        }
+      ],
+      "labels": [
+        "Design risk",
+        "Investment concern",
+        "Supply warning",
+        "Policy trust"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: The strongest case against taxing more\nMain message to communicate visually, not as a paragraph: Opponents warn that sudden or poorly designed taxes can reduce investment, supply, jobs, or…\nSuggested layout: Tax shock arrow leading to investor concern, then supply, jobs and policy-trust warning icons.\nExact short labels to use where useful: Design risk, Investment concern, Supply warning, Policy trust\nFacts to convert into simple visual callouts:\n- The anti-tax case is strongest when focused on design risk, not blanket opposition\n- Bad timing or unstable rules can raise investment and supply concerns\n- The question is which risks are evidenced, exaggerated or manageable\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Case against",
+      "depth": 0,
+      "parent": "public_case_for",
+      "parent_slide_id": "public.case.for",
+      "parent_slide_index": 10,
+      "depends_on": [
+        "public.case.for",
+        "fact:public_case_against_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [
+          "claims.opponents_case",
+          "precedents.backfire_cases"
+        ],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "public.design.questions",
+      "sequence_index": 12,
+      "slide_type": "public_design_questions",
+      "title": "The debate is really design",
+      "message": "Once you get past slogans, the practical questions are rate, base, deductions, transition, price triggers, revenue use and transparency.",
+      "visual_layout": "Checklist card titled 'Good tax design?' with seven ticks and a small warning icon for rushed design.",
+      "facts": [
+        {
+          "text": "Important design choices include rate, tax base, deductions and transition rules",
+          "kind": "public_design_questions_fact"
+        },
+        {
+          "text": "A price trigger can target extra profits more narrowly than a broad permanent change",
+          "kind": "public_design_questions_fact"
+        },
+        {
+          "text": "Public trust improves when revenue use and evidence are transparent",
+          "kind": "public_design_questions_fact"
+        }
+      ],
+      "labels": [
+        "Rate",
+        "Base",
+        "Deductions",
+        "Transition",
+        "Revenue use"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: The debate is really design\nMain message to communicate visually, not as a paragraph: Once you get past slogans, the practical questions are rate, base, deductions, transition…\nSuggested layout: Checklist card titled 'Good tax design?' with seven ticks and a small warning icon for rushed design.\nExact short labels to use where useful: Rate, Base, Deductions, Transition, Revenue use\nFacts to convert into simple visual callouts:\n- Important design choices include rate, tax base, deductions and transition rules\n- A price trigger can target extra profits more narrowly than a broad permanent change\n- Public trust improves when revenue use and evidence are transparent\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Policy design",
+      "depth": 0,
+      "parent": "public_case_against",
+      "parent_slide_id": "public.case.against",
+      "parent_slide_index": 11,
+      "depends_on": [
+        "public.case.against",
+        "fact:public_design_questions_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "public.omissions",
+      "sequence_index": 13,
+      "slide_type": "public_omissions",
+      "title": "What each side leaves out",
+      "message": "Industry often downplays public ownership and resource rent. Tax advocates can understate investment risk and design complexity.",
+      "visual_layout": "Two-column card: 'industry may omit' and 'tax advocates may omit', with a fair-explanation bridge below.",
+      "facts": [
+        {
+          "text": "Industry messages may omit public ownership and rent-capture arguments",
+          "kind": "public_omissions_fact"
+        },
+        {
+          "text": "Tax-advocacy messages may omit investment, supply and design risks",
+          "kind": "public_omissions_fact"
+        },
+        {
+          "text": "A fair explanation should steelman both sides before concluding",
+          "kind": "public_omissions_fact"
+        }
+      ],
+      "labels": [
+        "Industry omits",
+        "Advocates omit",
+        "Steelman both"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: What each side leaves out\nMain message to communicate visually, not as a paragraph: Industry often downplays public ownership and resource rent. Tax advocates can understate…\nSuggested layout: Two-column card: 'industry may omit' and 'tax advocates may omit', with a fair-explanation bridge below.\nExact short labels to use where useful: Industry omits, Advocates omit, Steelman both\nFacts to convert into simple visual callouts:\n- Industry messages may omit public ownership and rent-capture arguments\n- Tax-advocacy messages may omit investment, supply and design risks\n- A fair explanation should steelman both sides before concluding\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "How to think",
+      "depth": 0,
+      "parent": "public_design_questions",
+      "parent_slide_id": "public.design.questions",
+      "parent_slide_index": 12,
+      "depends_on": [
+        "public.design.questions",
+        "fact:public_omissions_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [
+          "evidence.confidence_map",
+          "stakeholders.map"
+        ],
+        "publication_role": "public_explainer"
+      }
+    },
+    {
+      "slide_id": "public.honest.answer",
+      "sequence_index": 14,
+      "slide_type": "public_honest_answer",
+      "title": "The honest answer",
+      "message": "More tax can be justified if it is evidence-based, stable, targeted at rents, transparent, and paired with a clear public benefit.",
+      "visual_layout": "Balanced bridge between 'fair public return' and 'investment certainty', with a middle path labelled 'good design'.",
+      "facts": [
+        {
+          "text": "The honest question is not simply tax or no tax",
+          "kind": "public_honest_answer_fact"
+        },
+        {
+          "text": "Better question: what design gives Australians fair return without avoidable harm?",
+          "kind": "public_honest_answer_fact"
+        },
+        {
+          "text": "Clear public benefit and stable rules are central to legitimacy",
+          "kind": "public_honest_answer_fact"
+        }
+      ],
+      "labels": [
+        "Fair return",
+        "Good design",
+        "Investment certainty"
+      ],
+      "image_prompt": "Create one simple educational infographic slide.\nFormat: vertical 9:16 TikTok/Reels/Shorts card. One idea only. Big central drawing. Very few words.\nVisual style guide: Make this look like a clean explanatory sketchnote/whiteboard infographic, inspired by hand-drawn learning maps but more minimal and polished. Use a white or warm off-white background, black ink line art, simple icons, arrows, containers, and 2-3 accent colors. Prioritize fast comprehension over decoration. Use short labels only: max 6 words per label, max 2-3 major text blocks, no paragraph-sized text, no tiny captions, no realistic photos, no logos, no fake source names. If a fact is long, convert it into a short plain-English label. The slide should feel like an educational explainer a person could understand in 5 seconds.\nTitle text: The honest answer\nMain message to communicate visually, not as a paragraph: More tax can be justified if it is evidence-based, stable, targeted at rents, transparent, and…\nSuggested layout: Balanced bridge between 'fair public return' and 'investment certainty', with a middle path labelled 'good design'.\nExact short labels to use where useful: Fair return, Good design, Investment certainty\nFacts to convert into simple visual callouts:\n- The honest question is not simply tax or no tax\n- Better question: what design gives Australians fair return without avoidable harm?\n- Clear public benefit and stable rules are central to legitimacy\nComposition rules: make the hierarchy obvious; use arrows to show flow; use icons for people, money, risk, evidence, and trade-offs; keep all text large; leave generous whitespace; do not create a giant text block; do not invent numbers, sources, logos, or quotes. For vertical TikTok format, use no more than 14 total words on the image. For number slides, use only the largest 4-5 labels plus percentages or dollar amounts.",
+      "chapter": "Conclusion",
+      "depth": 0,
+      "parent": "public_omissions",
+      "parent_slide_id": "public.omissions",
+      "parent_slide_index": 13,
+      "depends_on": [
+        "public.omissions",
+        "fact:public_honest_answer_fact"
+      ],
+      "template_id": "",
+      "render_contract": {
+        "source_slide_ids": [
+          "conclusion.recommendation"
+        ],
+        "publication_role": "public_explainer"
+      }
+    }
+  ]
+}

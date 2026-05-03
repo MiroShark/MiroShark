@@ -863,3 +863,442 @@ def test_tree_score_404_when_node_missing(client):
 def test_tree_score_400_when_required_missing(client):
     response = client.post("/api/seed-chat/tree/score", json={})
     assert response.status_code == 400
+
+
+def test_tree_infographics_plan_returns_and_persists(client):
+    session = _tree_session_fixture()
+    session["tree"] = {
+        "id": "root",
+        "type": "central",
+        "question": "Should Australia tax gas more?",
+        "summary": "Debate summary.",
+        "evidence": [],
+        "children": [
+            {
+                "id": "branch-1",
+                "type": "downstream",
+                "question": "25% windfall tax",
+                "summary": "Tax option summary.",
+                "evidence": [],
+                "children": [],
+            }
+        ],
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/plan",
+            json={"session_id": "tree-1"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    plan = body["infographic_plan"]
+    assert plan["schema_version"] == "infographic-plan/v1"
+    assert plan["slide_count"] == len(plan["sequence"])
+    assert plan["sequence"][0]["image_prompt"]
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["infographic_plan"]["schema_version"] == "infographic-plan/v1"
+
+
+def test_tree_infographics_plan_400_when_tree_not_initialised(client):
+    session = _tree_session_fixture()
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/plan",
+            json={"session_id": "tree-1"},
+        )
+    assert response.status_code == 400
+
+
+def test_tree_infographics_plan_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/tree/infographics/plan", json={})
+    assert response.status_code == 400
+
+
+def test_tree_infographics_render_returns_image_metadata(client):
+    session = _tree_session_fixture()
+    session["tree"] = {
+        "id": "root",
+        "type": "central",
+        "question": "Should Australia tax gas more?",
+        "summary": "Debate summary.",
+        "evidence": [],
+        "children": [],
+    }
+    fake_render = {
+        "filename": "slide-01.png",
+        "mime_type": "image/png",
+        "bytes": 123,
+        "model": "gemini-3.1-flash-image-preview",
+        "aspect_ratio": "16:9",
+        "image_size": "1K",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.render_infographic_slide", return_value=fake_render):
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/render",
+            json={"session_id": "tree-1", "slide_index": 0},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["render"]["url"].endswith("/slide-01.png")
+    assert body["render"]["slide_index"] == 0
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["infographic_renders"]["0"]["filename"] == "slide-01.png"
+
+
+def test_tree_infographics_render_400_when_slide_index_bad(client):
+    session = _tree_session_fixture()
+    session["tree"] = {"id": "root", "type": "central", "question": "Q", "children": []}
+    session["infographic_plan"] = {"sequence": []}
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/render",
+            json={"session_id": "tree-1", "slide_index": 99},
+        )
+    assert response.status_code == 400
+
+
+def test_tree_augment_big_picture_adds_nodes_and_clears_infographic_plan(client):
+    session = _tree_session_fixture()
+    session["tree"] = {
+        "id": "root",
+        "type": "central",
+        "question": "Should Australia tax gas more?",
+        "user_notes": "",
+        "evidence": [],
+        "children": [],
+    }
+    session["infographic_plan"] = {"old": True}
+    session["infographic_renders"] = {"0": {"url": "old"}}
+
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/augment-big-picture",
+            json={"session_id": "tree-1"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["added"] >= 8
+    questions = [c["question"] for c in body["tree"]["children"]]
+    assert "Where does government tax money come from?" in questions
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert "infographic_plan" not in saved
+    assert "infographic_renders" not in saved
+
+
+def test_tree_augment_big_picture_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/tree/augment-big-picture", json={})
+    assert response.status_code == 400
+
+
+def test_tree_infographics_render_openai_provider(client):
+    session = _tree_session_fixture()
+    session["tree"] = {
+        "id": "root",
+        "type": "central",
+        "question": "Should Australia tax gas more?",
+        "summary": "Debate summary.",
+        "evidence": [],
+        "children": [],
+    }
+    fake_render = {
+        "filename": "slide-01.png",
+        "mime_type": "image/png",
+        "bytes": 456,
+        "model": "gpt-image-2",
+        "provider": "openai",
+        "aspect_ratio": "9:16",
+        "size": "1024x1536",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.render_openai_infographic_slide", return_value=fake_render) as mock_render:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/render",
+            json={"session_id": "tree-1", "slide_index": 0, "provider": "openai", "aspect_ratio": "9:16"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["render"]["provider"] == "openai"
+    mock_render.assert_called_once()
+
+
+def test_tree_infographics_render_strict_reference_mode(client, tmp_path):
+    session = _tree_session_fixture()
+    session["tree"] = {"id": "root", "type": "central", "question": "Q", "children": []}
+    session["infographic_plan"] = {
+        "output_format": "tiktok",
+        "aspect_ratio": "9:16",
+        "sequence": [{
+            "slide_type": "spending_breakdown_welfare",
+            "title": "Breakdown: welfare",
+            "template_id": "SPENDING_BREAKDOWN",
+            "render_contract": {
+                "map_to_reference_blocks": {
+                    "left_category_label": "Welfare",
+                    "left_category_value": "$291b",
+                    "middle_bucket_1": {"label": "Seniors", "value": "$65b"},
+                    "middle_bucket_2": {"label": "NDIS", "value": "$52b"},
+                    "middle_bucket_3": {"label": "Aged care", "value": "$41b"},
+                    "middle_bucket_4": {"label": "Why it grows", "value": "ageing"},
+                    "right_benefits": ["income security"],
+                    "right_negatives": ["cost growth"],
+                    "bottom_debt_marker": "Why it grows: ageing",
+                }
+            },
+        }],
+    }
+    reference_dir = tmp_path / "tree-1"
+    reference_dir.mkdir(parents=True)
+    (reference_dir / "reference-three-tile-polished.png").write_bytes(b"ref")
+    fake_render = {
+        "filename": "strict-breakdown-slide-01.png",
+        "mime_type": "image/png",
+        "bytes": 456,
+        "model": "gpt-image-2",
+        "provider": "openai-strict-reference-edit",
+        "aspect_ratio": "9:16",
+        "size": "1024x1536",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat._INFOGRAPHICS_DIR", tmp_path), \
+         patch("app.api.seed_chat.render_openai_infographic_slide_edit", return_value=fake_render) as mock_render:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/render",
+            json={"session_id": "tree-1", "slide_index": 0, "provider": "openai", "render_mode": "strict", "aspect_ratio": "9:16"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["render"]["provider"] == "openai-strict-reference-edit"
+    assert body["render"]["filename"] == "strict-breakdown-slide-01.png"
+    mock_render.assert_called_once()
+    assert mock_render.call_args.kwargs["reference_image"].name == "reference-three-tile-polished.png"
+
+
+def test_tree_infographics_accounting_endpoint(client):
+    session = _tree_session_fixture()
+    session["render_accounting"] = {
+        "total": {"openai": 2},
+        "daily": {},
+        "events": [],
+    }
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.get("/api/seed-chat/tree/infographics/accounting?session_id=tree-1")
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["render_accounting"]["total"]["openai"] == 2
+
+
+def test_tree_infographics_accounting_400_when_session_id_missing(client):
+    response = client.get("/api/seed-chat/tree/infographics/accounting")
+    assert response.status_code == 400
+
+
+def test_tree_infographics_narration_plan_returns_and_persists(client):
+    session = _tree_session_fixture()
+    session["tree"] = {"id": "root", "type": "central", "question": "Q", "children": []}
+    fake_script = {
+        "schema_version": "narration-script/v1",
+        "slides": [],
+        "full_voiceover": "Hello narration",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.plan_narration", return_value=fake_script) as mock_plan:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/narration/plan",
+            json={"session_id": "tree-1", "format": "tiktok", "target_seconds": 60},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["narration_script"] == fake_script
+    mock_plan.assert_called_once()
+    assert mock_plan.call_args.kwargs["target_seconds"] == 60
+    saved = mock_store.save.call_args.args[0]
+    assert saved["narration_script"]["schema_version"] == "narration-script/v1"
+
+
+def test_tree_infographics_audio_render_uses_omnivoice_and_persists(client):
+    session = _tree_session_fixture()
+    session["tree"] = {"id": "root", "type": "central", "question": "Q", "children": []}
+    session["infographic_plan"] = {"output_format": "landscape", "sequence": []}
+    session["narration_script"] = {"full_voiceover": "Hello narration"}
+    fake_render = {
+        "filename": "narration.wav",
+        "provider": "omnivoice_hf_space",
+        "bytes": 789,
+        "status": "ok",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.render_piper_audio", return_value=fake_render) as mock_render:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/audio/render",
+            json={"session_id": "tree-1"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["audio_render"]["url"].endswith("/narration.wav")
+    mock_render.assert_called_once()
+    assert mock_render.call_args.args[0] == "Hello narration"
+    saved = mock_store.save.call_args.args[0]
+    assert saved["audio_renders"]["narration"]["provider"] == "omnivoice_hf_space"
+
+
+def test_tree_infographics_audio_render_400_without_session_id(client):
+    response = client.post("/api/seed-chat/tree/infographics/audio/render", json={})
+    assert response.status_code == 400
+
+
+def test_tree_augment_story_depth_adds_nodes_and_clears_generated_media(client):
+    session = _tree_session_fixture()
+    session["tree"] = {
+        "id": "root",
+        "type": "central",
+        "question": "Should Australia tax gas more?",
+        "user_notes": "",
+        "evidence": [],
+        "children": [],
+    }
+    session["infographic_plan"] = {"old": True}
+    session["infographic_renders"] = {"0": {"url": "old"}}
+    session["narration_script"] = {"full_voiceover": "old"}
+    session["audio_renders"] = {"narration": {"url": "old"}}
+
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/augment-story-depth",
+            json={"session_id": "tree-1"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["added"] >= 8
+    questions = [c["question"] for c in body["tree"]["children"]]
+    assert "What misinformation or misleading claims commonly appear in resource-tax debates?" in questions
+    saved = mock_store.save.call_args.args[0]
+    assert "infographic_plan" not in saved
+    assert "infographic_renders" not in saved
+    assert "narration_script" not in saved
+    assert "audio_renders" not in saved
+
+
+def test_tree_augment_story_depth_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/tree/augment-story-depth", json={})
+    assert response.status_code == 400
+
+
+def test_tree_infographics_audio_render_can_render_single_slide_clip(client):
+    session = _tree_session_fixture()
+    session["tree"] = {"id": "root", "type": "central", "question": "Q", "children": []}
+    session["infographic_plan"] = {"output_format": "landscape", "sequence": []}
+    session["narration_script"] = {
+        "full_voiceover": "Full narration",
+        "slides": [
+            {"slide_index": 0, "voiceover": "Slide one clip"},
+            {"slide_index": 1, "voiceover": "Slide two clip"},
+        ],
+    }
+    fake_render = {
+        "filename": "audio-slide-02.wav",
+        "provider": "omnivoice_hf_space",
+        "bytes": 321,
+        "status": "ok",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store, \
+         patch("app.api.seed_chat.render_piper_audio", return_value=fake_render) as mock_render:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/audio/render",
+            json={"session_id": "tree-1", "slide_index": 1},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["audio_render"]["slide_index"] == 1
+    assert body["audio_render"]["url"].endswith("/audio-slide-02.wav")
+    assert mock_render.call_args.args[0] == "Slide two clip"
+    saved = mock_store.save.call_args.args[0]
+    assert saved["audio_renders"]["slides"]["1"]["bytes"] == 321
+
+
+def test_tree_infographics_audio_render_can_use_omnivoice_provider(client):
+    session = _tree_session_fixture()
+    session["tree"] = {"id": "root", "type": "central", "question": "Q", "children": []}
+    session["infographic_plan"] = {"output_format": "landscape", "sequence": []}
+    session["narration_script"] = {"full_voiceover": "Hello narration"}
+    fake_render = {
+        "filename": "narration.wav",
+        "provider": "omnivoice_hf_space",
+        "bytes": 789,
+        "status": "ok",
+    }
+
+    with patch("app.api.seed_chat._store") as mock_store,          patch("app.api.seed_chat.render_omnivoice_audio", return_value=fake_render) as mock_render:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/tree/infographics/audio/render",
+            json={"session_id": "tree-1", "provider": "omnivoice"},
+        )
+
+    assert response.status_code == 200
+    mock_render.assert_called_once()
+    assert response.get_json()["audio_render"]["provider"] == "omnivoice_hf_space"
+
+
+def test_education_plan_returns_generic_infographic_plan(client):
+    session = _tree_session_fixture()
+    session["seed_state"]["contested_claims"] = ["They collect more tax every year but never pay down debt"]
+
+    with patch("app.api.seed_chat._store") as mock_store:
+        mock_store.load.return_value = session
+        response = client.post(
+            "/api/seed-chat/education/plan",
+            json={"session_id": "tree-1", "format": "tiktok"},
+        )
+
+    assert response.status_code == 200
+    body = response.get_json()
+    assert body["education_plan"]["schema_version"] == "education-plan/v1"
+    assert body["infographic_plan"]["planner"] == "generic_education"
+    assert body["infographic_plan"]["aspect_ratio"] == "9:16"
+    assert body["infographic_plan"]["sequence"][0]["slide_id"] == "education.surface_claim"
+    normalization = body["education_plan"]["normalizations"][0]
+    assert normalization["normalization_id"] == "australia_tax_per_resident_2006_2025"
+    assert normalization["comparison"]["start"]["per_capita"] == pytest.approx(10.366, abs=0.001)
+    assert normalization["comparison"]["end"]["per_capita"] == pytest.approx(23.822, abs=0.001)
+    assert "source_facts" in normalization
+    mock_store.save.assert_called_once()
+    saved = mock_store.save.call_args.args[0]
+    assert saved["education_plan"]["schema_version"] == "education-plan/v1"
+
+
+def test_education_plan_400_when_session_id_missing(client):
+    response = client.post("/api/seed-chat/education/plan", json={})
+    assert response.status_code == 400

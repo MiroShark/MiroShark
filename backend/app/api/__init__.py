@@ -15,4 +15,8 @@ from . import simulation  # noqa: E402, F401
 from . import report  # noqa: E402, F401
 from . import decision_lab  # noqa: E402, F401
 from . import seed_chat  # noqa: E402, F401
+from . import decision_tree_public  # noqa: E402, F401
+from . import education  # noqa: E402, F401
+from . import infographics  # noqa: E402, F401
+from . import narration  # noqa: E402, F401
 

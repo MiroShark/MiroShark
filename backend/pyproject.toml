@@ -30,6 +30,8 @@ dependencies = [
     "python-dotenv>=1.0.0",
     "pydantic>=2.0.0",
     "duckduckgo-search>=8.1.1",
+    "gradio-client>=1.13.0",
+    "piper-tts>=1.4.2",
 ]
 
 [project.optional-dependencies]

@@ -34,8 +34,11 @@ def test_initialise_tree_seeds_upstream_downstream_analogy_and_free():
     types = [c["type"] for c in tree["children"]]
     assert "upstream" in types
     assert "analogy" in types
-    assert types.count("downstream") == 2
-    assert types.count("free") == 1
+    assert types.count("downstream") >= 2
+    assert types.count("free") >= 1
+    questions = [c["question"] for c in tree["children"]]
+    assert "Where does government tax money come from?" in questions
+    assert "Why might the current government avoid this tax?" in questions
 
 
 def test_find_node_returns_node_by_id():
@@ -159,3 +162,33 @@ def test_set_scores_returns_false_for_unknown_id():
     from app.services.decision_tree import initialise_tree, set_scores
     tree = initialise_tree(_seed_for_tests())
     assert set_scores(tree, "no-id", {}) is False
+
+
+def test_add_big_picture_nodes_appends_missing_only():
+    from app.services.decision_tree import initialise_tree, add_big_picture_nodes
+
+    tree = initialise_tree(_seed_for_tests())
+    original_count = len(tree["children"])
+    # initialise_tree already includes the big-picture scaffold
+    assert add_big_picture_nodes(tree) == 0
+    assert len(tree["children"]) == original_count
+
+    target_question = "Where does government tax money come from?"
+    tree["children"] = [c for c in tree["children"] if c["question"] != target_question]
+    assert add_big_picture_nodes(tree) == 1
+    assert any(c["question"] == target_question for c in tree["children"])
+
+
+def test_add_story_depth_nodes_appends_deeper_research_scaffold():
+    from app.services.decision_tree import initialise_tree, add_story_depth_nodes
+
+    tree = initialise_tree(_seed_for_tests())
+    original_count = len(tree["children"])
+    added = add_story_depth_nodes(tree)
+
+    assert added == 8
+    assert len(tree["children"]) == original_count + 8
+    questions = [c["question"] for c in tree["children"]]
+    assert "How have gas and mining companies influenced public debate or campaigns?" in questions
+    assert "How has Australian government debt changed since 2006, and who was in power?" in questions
+    assert add_story_depth_nodes(tree) == 0

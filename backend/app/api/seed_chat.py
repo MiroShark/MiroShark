@@ -1,7 +1,5 @@
 """Seed-chat API routes."""
 
-from pathlib import Path
-
 from flask import jsonify, request
 
 from . import seed_chat_bp
@@ -18,19 +16,32 @@ from ..services.decision_tree import (
     propose_subquestions,
     set_summary,
     set_scores,
+    add_big_picture_nodes,
+    add_story_depth_nodes,
 )
 from ..services.tree_synthesizer import synthesise_node
 from ..services.node_scorer import score_node
 from ..services.foresight_compiler import compile_foresight
-from ..storage.session_store import SessionStore
+from ..services.narration_planner import plan_narration
+from ..services.omnivoice_renderer import OmniVoiceRenderError, render_omnivoice_audio
+from ..services.piper_renderer import PiperConfigError, PiperRenderError, render_piper_audio
+from ..services.nano_banana_renderer import (
+    NanoBananaConfigError,
+    NanoBananaRenderError,
+    render_infographic_slide,
+)
+from ..services.openai_image_renderer import (
+    OpenAIImageConfigError,
+    OpenAIImageRenderError,
+    render_openai_infographic_slide,
+    render_openai_infographic_slide_edit,
+)
 from ..utils.logger import get_logger
 
 logger = get_logger("miroshark.api.seed_chat")
 
-# Sessions persist as JSON files at <backend>/sessions/.
-# `__file__` is backend/app/api/seed_chat.py — go up 3 levels to reach backend/.
-_SESSIONS_DIR = Path(__file__).resolve().parents[2] / "sessions"
-_store = SessionStore(base_dir=_SESSIONS_DIR)
+# Legacy route modules still honor tests/tools that patch these symbols on app.api.seed_chat.
+from .seed_chat_common import _INFOGRAPHICS_DIR, store as _store
 
 
 @seed_chat_bp.route("/turn", methods=["POST"])
@@ -341,251 +352,3 @@ def ad_scripts():
     })
 
 
-@seed_chat_bp.route("/tree/init", methods=["POST"])
-def tree_init():
-    payload = request.get_json(silent=True) or {}
-    session_id = payload.get("session_id")
-    if not session_id:
-        return jsonify({"error": "session_id required"}), 400
-
-    session = _store.load(session_id)
-    if session is None:
-        return jsonify({"error": "session_not_found"}), 404
-
-    seed_state = session.get("seed_state") or {}
-    if not (seed_state.get("topic") or "").strip():
-        return jsonify({"error": "session has no topic"}), 400
-
-    tree = initialise_tree(seed_state)
-    session["tree"] = tree
-    _store.save(session)
-    return jsonify({"session_id": session_id, "tree": tree})
-
-
-@seed_chat_bp.route("/tree/expand", methods=["POST"])
-def tree_expand():
-    payload = request.get_json(silent=True) or {}
-    session_id = payload.get("session_id")
-    node_id = payload.get("node_id")
-    if not session_id or not node_id:
-        return jsonify({"error": "session_id and node_id required"}), 400
-
-    session = _store.load(session_id)
-    if session is None:
-        return jsonify({"error": "session_not_found"}), 404
-
-    tree = session.get("tree")
-    if not tree:
-        return jsonify({"error": "tree not initialised"}), 400
-
-    parent = find_node(tree, node_id)
-    if parent is None:
-        return jsonify({"error": "node_not_found"}), 404
-
-    try:
-        children = propose_subquestions(parent, session.get("seed_state") or {})
-    except RuntimeError as exc:
-        logger.error("tree expand failed: %s", exc)
-        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
-
-    attach_children(tree, node_id, children)
-    session["tree"] = tree
-    _store.save(session)
-    return jsonify({"session_id": session_id, "tree": tree, "added": len(children)})
-
-
-@seed_chat_bp.route("/tree/research", methods=["POST"])
-def tree_research():
-    payload = request.get_json(silent=True) or {}
-    session_id = payload.get("session_id")
-    node_id = payload.get("node_id")
-    if not session_id or not node_id:
-        return jsonify({"error": "session_id and node_id required"}), 400
-
-    session = _store.load(session_id)
-    if session is None:
-        return jsonify({"error": "session_not_found"}), 404
-
-    tree = session.get("tree")
-    if not tree:
-        return jsonify({"error": "tree not initialised"}), 400
-
-    node = find_node(tree, node_id)
-    if node is None:
-        return jsonify({"error": "node_not_found"}), 404
-
-    seed_state = session.get("seed_state") or {}
-    topic = (seed_state.get("topic") or "").strip()
-    question = (node.get("question") or "").strip()
-    if not topic or not question:
-        return jsonify({"error": "topic and question required for research"}), 400
-
-    intent = (
-        f"Investigate this question, looking for evidence both supporting "
-        f"and refuting common framings: {question}"
-    )
-    try:
-        report = research_with_intent(topic=topic, intent=intent, max_sources=5)
-    except RuntimeError as exc:
-        logger.error("tree research failed: %s", exc)
-        return jsonify({"error": f"research_failed: {exc}"}), 503
-
-    new_sources = [
-        {
-            "url": r.url,
-            "title": r.title,
-            "snippet": r.snippet,
-            "text": r.text,
-            "text_length": len(r.text),
-            "score": r.score,
-            "fetch_error": r.fetch_error,
-        }
-        for r in report.results
-    ]
-    attach_evidence(tree, node_id, new_sources)
-    session["tree"] = tree
-    _store.save(session)
-
-    response_node = find_node(tree, node_id) or node
-    response_evidence = [
-        {k: v for k, v in s.items() if k != "text"}
-        for s in (response_node.get("evidence") or [])
-    ]
-    return jsonify({
-        "session_id": session_id,
-        "node_id": node_id,
-        "evidence": response_evidence,
-    })
-
-
-@seed_chat_bp.route("/tree/update-node", methods=["POST"])
-def tree_update():
-    payload = request.get_json(silent=True) or {}
-    session_id = payload.get("session_id")
-    node_id = payload.get("node_id")
-    fields = payload.get("fields") or {}
-    if not session_id or not node_id:
-        return jsonify({"error": "session_id and node_id required"}), 400
-    if not isinstance(fields, dict) or not fields:
-        return jsonify({"error": "fields object required"}), 400
-
-    session = _store.load(session_id)
-    if session is None:
-        return jsonify({"error": "session_not_found"}), 404
-
-    tree = session.get("tree")
-    if not tree:
-        return jsonify({"error": "tree not initialised"}), 400
-
-    ok = tree_update_node(tree, node_id, fields)
-    if not ok:
-        return jsonify({"error": "node_not_found"}), 404
-
-    session["tree"] = tree
-    _store.save(session)
-    return jsonify({"session_id": session_id, "tree": tree})
-
-
-@seed_chat_bp.route("/tree/synthesize", methods=["POST"])
-def tree_synthesize():
-    payload = request.get_json(silent=True) or {}
-    session_id = payload.get("session_id")
-    node_id = payload.get("node_id")
-    if not session_id or not node_id:
-        return jsonify({"error": "session_id and node_id required"}), 400
-
-    session = _store.load(session_id)
-    if session is None:
-        return jsonify({"error": "session_not_found"}), 404
-
-    tree = session.get("tree")
-    if not tree:
-        return jsonify({"error": "tree not initialised"}), 400
-
-    node = find_node(tree, node_id)
-    if node is None:
-        return jsonify({"error": "node_not_found"}), 404
-
-    try:
-        summary = synthesise_node(node)
-    except RuntimeError as exc:
-        logger.error("tree synthesis failed: %s", exc)
-        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
-
-    set_summary(tree, node_id, summary)
-    session["tree"] = tree
-    _store.save(session)
-
-    return jsonify({
-        "session_id": session_id,
-        "node_id": node_id,
-        "summary": summary,
-    })
-
-
-@seed_chat_bp.route("/tree/compile-foresight", methods=["POST"])
-def tree_compile_foresight():
-    payload = request.get_json(silent=True) or {}
-    session_id = payload.get("session_id")
-    if not session_id:
-        return jsonify({"error": "session_id required"}), 400
-
-    session = _store.load(session_id)
-    if session is None:
-        return jsonify({"error": "session_not_found"}), 404
-
-    tree = session.get("tree")
-    if not tree:
-        return jsonify({"error": "tree not initialised"}), 400
-
-    seed_state = session.get("seed_state") or {}
-    try:
-        foresight = compile_foresight(seed_state, tree)
-    except RuntimeError as exc:
-        logger.error("foresight compile failed: %s", exc)
-        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
-
-    session["foresight"] = foresight
-    _store.save(session)
-
-    return jsonify({
-        "session_id": session_id,
-        "foresight": foresight,
-    })
-
-
-@seed_chat_bp.route("/tree/score", methods=["POST"])
-def tree_score():
-    payload = request.get_json(silent=True) or {}
-    session_id = payload.get("session_id")
-    node_id = payload.get("node_id")
-    if not session_id or not node_id:
-        return jsonify({"error": "session_id and node_id required"}), 400
-
-    session = _store.load(session_id)
-    if session is None:
-        return jsonify({"error": "session_not_found"}), 404
-
-    tree = session.get("tree")
-    if not tree:
-        return jsonify({"error": "tree not initialised"}), 400
-
-    node = find_node(tree, node_id)
-    if node is None:
-        return jsonify({"error": "node_not_found"}), 404
-
-    try:
-        scores = score_node(node)
-    except RuntimeError as exc:
-        logger.error("node scoring failed: %s", exc)
-        return jsonify({"error": f"claude_unavailable: {exc}"}), 503
-
-    set_scores(tree, node_id, scores)
-    session["tree"] = tree
-    _store.save(session)
-
-    return jsonify({
-        "session_id": session_id,
-        "node_id": node_id,
-        "scores": scores,
-    })

@@ -16,6 +16,28 @@ logger = get_logger("miroshark.decision_tree")
 
 NODE_TYPES = ("central", "upstream", "downstream", "analogy", "free")
 
+BIG_PICTURE_SEEDS = [
+    ("Where does government tax money come from?", "upstream"),
+    ("How do federal, state, and local taxes fit together?", "upstream"),
+    ("How much does government spend on welfare, health, defence, and services?", "downstream"),
+    ("How much extra money could this policy realistically raise?", "downstream"),
+    ("Who pays now, and who would pay more under this idea?", "downstream"),
+    ("Why might the current government avoid this tax?", "free"),
+    ("What political risks would leaders face if they supported it?", "free"),
+    ("What simple story would help a non-expert understand the trade-off?", "free"),
+]
+
+STORY_DEPTH_SEEDS = [
+    ("Which countries tried higher resource or windfall taxes, and where did it work?", "analogy"),
+    ("Where did resource or windfall tax reforms backfire, and why?", "analogy"),
+    ("What happened in Australia’s RSPT and MRRT fights?", "analogy"),
+    ("How have gas and mining companies influenced public debate or campaigns?", "free"),
+    ("What misinformation or misleading claims commonly appear in resource-tax debates?", "free"),
+    ("How has Australian government debt changed since 2006, and who was in power?", "upstream"),
+    ("How do gas royalties, PRRT, company tax, and export profits fit together?", "upstream"),
+    ("What would a fair compromise design look like?", "downstream"),
+]
+
 
 EXPAND_PROMPTS = {
     "central": (
@@ -101,6 +123,12 @@ def initialise_tree(seed_state: Dict) -> Dict:
     )
     root["children"].append(analogy)
 
+    existing_questions = {c.get("question") for c in root["children"]}
+    for question, node_type in BIG_PICTURE_SEEDS:
+        if question not in existing_questions:
+            root["children"].append(_new_node(question=question, node_type=node_type))
+            existing_questions.add(question)
+
     for claim in seed_state.get("contested_claims") or []:
         text = (claim or "").strip()
         if not text:
@@ -113,6 +141,35 @@ def initialise_tree(seed_state: Dict) -> Dict:
 
     return root
 
+
+
+def add_big_picture_nodes(tree: Dict) -> int:
+    """Append missing big-picture context nodes to an existing tree.
+
+    Returns the number of nodes added. This lets older sessions gain the
+    broader tax/spending/political-story scaffold without reinitialising and
+    losing existing research.
+    """
+    existing_questions = {c.get("question") for c in tree.get("children") or []}
+    added = 0
+    for question, node_type in BIG_PICTURE_SEEDS:
+        if question not in existing_questions:
+            tree.setdefault("children", []).append(_new_node(question=question, node_type=node_type))
+            existing_questions.add(question)
+            added += 1
+    return added
+
+
+def add_story_depth_nodes(tree: Dict) -> int:
+    """Append missing deeper story nodes for richer research-to-media arcs."""
+    existing_questions = {c.get("question") for c in tree.get("children") or []}
+    added = 0
+    for question, node_type in STORY_DEPTH_SEEDS:
+        if question not in existing_questions:
+            tree.setdefault("children", []).append(_new_node(question=question, node_type=node_type))
+            existing_questions.add(question)
+            added += 1
+    return added
 
 def find_node(tree: Dict, node_id: str) -> Optional[Dict]:
     """Locate a node by id (depth-first). Returns the node dict or None."""
@@ -222,7 +279,8 @@ def propose_subquestions(
 
     children = []
     child_type = node_type if node_type in ("upstream", "downstream", "analogy") else "free"
-    for q in raw_questions[:5]:
+    limit = 8 if node_type == "central" else 5
+    for q in raw_questions[:limit]:
         text = str(q).strip() if q is not None else ""
         if not text:
             continue

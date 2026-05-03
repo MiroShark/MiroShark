@@ -14,6 +14,7 @@ backend/.venv/
 backend/logs/
 backend/uploads/
 backend/sessions/
+backend/generated/
 
 # IDE
 .vscode/
@@ -29,3 +30,4 @@ frontend/dist/
 # Legacy webapp copy
 webapp/
 backend/webapp/
+backend/models/
