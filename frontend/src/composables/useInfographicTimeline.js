@@ -40,7 +40,7 @@ export function useInfographicTimeline({ sessionId, route, router, tree, error }
   )
 
   function shouldOpenInfographicsOnLoad() {
-    return route.query.infographics !== '0'
+    return route.query.infographics === '1'
   }
 
   function loadInfographicState(session) {

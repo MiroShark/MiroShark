@@ -5,18 +5,20 @@
       <div class="brand">DECISION MAP</div>
       <div class="topic">{{ tree?.question || 'Loading…' }}</div>
       <button class="back-btn" type="button" :disabled="!tree" @click="expandAll">Show all topics</button>
-      <button class="back-btn" type="button" :disabled="!tree" @click="collapseToBranches">Viewpoints only</button>
+      <button class="back-btn" type="button" :disabled="!tree" @click="collapseToGroups">Topic groups</button>
+      <button class="back-btn" type="button" :disabled="!tree" @click="collapseToBranches()">Viewpoints only</button>
       <button class="back-btn" type="button" :disabled="!tree" @click="resetView">Fit view</button>
       <button class="back-btn" type="button" @click="goChat">Back to chat</button>
     </header>
 
     <div class="map-help" v-if="tree">
-      <span>Learning map: each viewpoint opens into plain-English topics, pros/cons, evidence checks, and examples.</span>
-      <span>Drag to pan · scroll/pinch to zoom · click cards for detail · click node circles to collapse/expand.</span>
-      <span class="legend-item upstream"><i></i>Context</span>
-      <span class="legend-item downstream"><i></i>Downstream</span>
-      <span class="legend-item analogy"><i></i>Analogy</span>
-      <span class="legend-item central"><i></i>Central</span>
+      <span>Blueprint map: columns move from the core question → viewpoints → colour-coded learning sections → topic cards.</span>
+      <span>Drag to pan · scroll/pinch to zoom 2.5%–1200% · click cards for detail · click ± circles to collapse sections.</span>
+      <span class="legend-item central"><i></i>Case for / benefit</span>
+      <span class="legend-item downstream"><i></i>Trade-off / risk</span>
+      <span class="legend-item free"><i></i>Evidence check</span>
+      <span class="legend-item analogy"><i></i>Example</span>
+      <span class="legend-item upstream"><i></i>Affected people</span>
     </div>
 
     <div v-if="error" class="error">{{ error }}</div>
@@ -85,15 +87,20 @@ const TYPE_COLORS = {
   upstream: '#60a5fa',
   downstream: '#f59e0b',
   analogy: '#c084fc',
-  free: '#9ca3af',
+  free: '#94a3b8',
+  viewpoint: '#38bdf8',
+  issue: '#f8fafc',
 }
 const TYPE_TINTS = {
   central: '#0d2719',
   upstream: '#0d1c2f',
   downstream: '#2d210b',
   analogy: '#251535',
-  free: '#181818',
+  free: '#151c23',
+  viewpoint: '#082637',
+  issue: '#171b21',
 }
+const DEPTH_LABELS = ['CORE QUESTION', 'VIEWPOINTS', 'LEARNING SECTIONS', 'TOPIC CARDS']
 
 function typeIcon(type) {
   switch (type) {
@@ -114,7 +121,17 @@ function originalNode(node) {
 }
 
 function displayType(node) {
+  if (node?.displayKind === 'issue') return 'issue'
+  if (node?.displayKind === 'viewpoint') return 'viewpoint'
   return node?.type || node?.original?.type || 'free'
+}
+
+function blueprintColor(node) {
+  return TYPE_COLORS[displayType(node)] || TYPE_COLORS.free
+}
+
+function blueprintTint(node) {
+  return TYPE_TINTS[displayType(node)] || TYPE_TINTS.free
 }
 
 function displayLabel(node) {
@@ -201,15 +218,26 @@ function expandAll() {
   drawTree(true)
 }
 
-function collapseToBranches() {
+function collapseToGroups() {
   if (!tree.value) return
   const displayTree = buildEducationTree(tree.value)
   const next = new Set()
-  walkTree(displayTree, (node, depth) => {
-    if (depth >= 1 && hasChildren(node)) next.add(nodeId(node))
+  walkTree(displayTree, (node) => {
+    if (node.displayKind === 'group' && hasChildren(node)) next.add(nodeId(node))
   })
   collapsedIds.value = next
   drawTree(true)
+}
+
+function collapseToBranches(fitMode = true) {
+  if (!tree.value) return
+  const displayTree = buildEducationTree(tree.value)
+  const next = new Set()
+  walkTree(displayTree, (node) => {
+    if (node.displayKind === 'viewpoint' && hasChildren(node)) next.add(nodeId(node))
+  })
+  collapsedIds.value = next
+  drawTree(fitMode)
 }
 
 function walkTree(node, fn, depth = 0) {
@@ -329,9 +357,9 @@ async function loadTree() {
     const session = await getSession(sessionId)
     if (session?.tree) {
       tree.value = session.tree
-      selectedNode.value = session.tree
+      selectedNode.value = null
       await nextTick()
-      expandAll()
+      collapseToBranches('focus')
     } else {
       error.value = 'No tree on this session yet. Open list view first to initialise it.'
     }
@@ -364,10 +392,28 @@ function drawTree(fit = false) {
     .attr('height', 28)
     .attr('patternUnits', 'userSpaceOnUse')
     .append('path')
-    .attr('d', 'M 28 0 L 0 0 0 28')
+    .attr('d', 'M 28 0 L 0 0 28 0 M 0 14 L 28 14 M 14 0 L 14 28')
     .attr('fill', 'none')
     .attr('stroke', '#1a2730')
-    .attr('stroke-width', 0.7)
+    .attr('stroke-width', 0.55)
+
+  const glow = defs.append('filter')
+    .attr('id', 'blueprint-glow')
+    .attr('x', '-40%')
+    .attr('y', '-40%')
+    .attr('width', '180%')
+    .attr('height', '180%')
+  glow.append('feGaussianBlur').attr('stdDeviation', 2.4).attr('result', 'blur')
+  glow.append('feColorMatrix')
+    .attr('in', 'blur')
+    .attr('type', 'matrix')
+    .attr('values', '0 0 0 0 0.35 0 0 0 0 0.75 0 0 0 0 1 0 0 0 0.45 0')
+    .attr('result', 'glow')
+  glow.append('feMerge')
+    .selectAll('feMergeNode')
+    .data(['glow', 'SourceGraphic'])
+    .join('feMergeNode')
+    .attr('in', d => d)
 
   svg.append('rect')
     .attr('width', width)
@@ -378,7 +424,7 @@ function drawTree(fit = false) {
   zoomRoot = svg.append('g').attr('class', 'zoom-root')
 
   zoomBehaviour = d3.zoom()
-    .scaleExtent([0.06, 8])
+    .scaleExtent([0.025, 12])
     .on('zoom', (event) => {
       zoomRoot.attr('transform', event.transform)
     })
@@ -411,11 +457,15 @@ function drawTree(fit = false) {
     .attr('opacity', 0.86)
 
   drawDepthLanes(zoomRoot, nodes, ext)
+  drawSectionBands(zoomRoot, nodes)
   drawLinks(zoomRoot, links)
   drawNodes(zoomRoot, nodes)
 
   lastFitTransform = fitTransform(width, height, boardX, boardY, boardW, boardH)
-  svg.call(zoomBehaviour.transform, fit ? lastFitTransform : priorTransform)
+  const nextTransform = fit === 'focus'
+    ? openingFocusTransform(width, height, nodes)
+    : (fit ? lastFitTransform : priorTransform)
+  svg.call(zoomBehaviour.transform, nextTransform)
 }
 
 function getLayoutExtents(nodes) {
@@ -432,8 +482,28 @@ function getLayoutExtents(nodes) {
 }
 
 function fitTransform(width, height, x, y, w, h) {
-  const scale = Math.max(0.06, Math.min(2.2, 0.9 / Math.max(w / width, h / height)))
+  const scale = Math.max(0.025, Math.min(2.8, 0.9 / Math.max(w / width, h / height)))
   const tx = (width - w * scale) / 2 - x * scale
+  const ty = (height - h * scale) / 2 - y * scale
+  return d3.zoomIdentity.translate(tx, ty).scale(scale)
+}
+
+function openingFocusTransform(width, height, nodes) {
+  const root = nodes.find(d => d.depth === 0)
+  if (!root) return lastFitTransform
+
+  const nearbyViewpoints = nodes
+    .filter(d => d.depth === 1)
+    .sort((a, b) => Math.abs(a.x - root.x) - Math.abs(b.x - root.x))
+    .slice(0, 5)
+  const focusNodes = [root, ...nearbyViewpoints]
+  const ext = getLayoutExtents(focusNodes)
+  const x = ext.xMin - NODE_WIDTH / 2 - 120
+  const y = ext.yMin - NODE_HEIGHT / 2 - 130
+  const w = ext.xMax - ext.xMin + NODE_WIDTH + 520
+  const h = ext.yMax - ext.yMin + NODE_HEIGHT + 260
+  const scale = Math.max(0.65, Math.min(1.1, 0.86 / Math.max(w / width, h / height)))
+  const tx = width * 0.36 - (x + w * 0.34) * scale
   const ty = (height - h * scale) / 2 - y * scale
   return d3.zoomIdentity.translate(tx, ty).scale(scale)
 }
@@ -445,7 +515,7 @@ function drawDepthLanes(g, nodes, ext) {
     const depthNodes = nodes.filter(n => n.depth === depth)
     const sample = depthNodes[0]
     const x = sample.y - NODE_WIDTH / 2 - 28
-    const color = TYPE_COLORS[displayType(sample.data)] || '#3a3a3a'
+    const color = blueprintColor(sample.data)
     lane.append('rect')
       .attr('x', x)
       .attr('y', ext.yMin - NODE_HEIGHT / 2 - 55)
@@ -463,7 +533,36 @@ function drawDepthLanes(g, nodes, ext) {
       .attr('fill', '#6f7d86')
       .attr('font-size', 10)
       .attr('letter-spacing', '0.12em')
-      .text(depth === 0 ? 'QUESTION' : `LEVEL ${depth}`)
+      .text(DEPTH_LABELS[depth] || `LEVEL ${depth}`)
+  })
+}
+
+function drawSectionBands(g, nodes) {
+  const groupsByParent = new Map()
+  nodes.filter(d => d.depth >= 2).forEach(d => {
+    const parentKey = nodeId(d.parent?.data, `depth-${d.depth}`)
+    if (!groupsByParent.has(parentKey)) groupsByParent.set(parentKey, [])
+    groupsByParent.get(parentKey).push(d)
+  })
+
+  const bands = g.append('g').attr('class', 'section-bands')
+  groupsByParent.forEach(groupNodes => {
+    if (!groupNodes.length) return
+    const xs = groupNodes.map(n => n.y)
+    const ys = groupNodes.map(n => n.x)
+    const color = blueprintColor(groupNodes[0].parent?.data || groupNodes[0].data)
+    bands.append('rect')
+      .attr('x', Math.min(...xs) - NODE_WIDTH / 2 - 22)
+      .attr('y', Math.min(...ys) - NODE_HEIGHT / 2 - 18)
+      .attr('width', Math.max(...xs) - Math.min(...xs) + NODE_WIDTH + 44)
+      .attr('height', Math.max(...ys) - Math.min(...ys) + NODE_HEIGHT + 36)
+      .attr('rx', 18)
+      .attr('fill', color)
+      .attr('opacity', 0.035)
+      .attr('stroke', color)
+      .attr('stroke-opacity', 0.16)
+      .attr('stroke-width', 1)
+      .attr('stroke-dasharray', '7 7')
   })
 }
 
@@ -481,9 +580,9 @@ function drawLinks(g, links) {
       const midX = (sourceX + targetX) / 2
       return `M ${sourceX} ${sourceY} C ${midX} ${sourceY}, ${midX} ${targetY}, ${targetX} ${targetY}`
     })
-    .attr('stroke', d => TYPE_COLORS[d.target.data.type] || '#3a3a3a')
-    .attr('stroke-width', 1.6)
-    .attr('stroke-opacity', 0.42)
+    .attr('stroke', d => blueprintColor(d.target.data))
+    .attr('stroke-width', d => d.target.data.displayKind === 'viewpoint' ? 2.4 : 1.6)
+    .attr('stroke-opacity', d => d.target.data.displayKind === 'topic' ? 0.36 : 0.52)
 }
 
 function drawNodes(g, nodes) {
@@ -498,11 +597,11 @@ function drawNodes(g, nodes) {
     .attr('width', NODE_WIDTH)
     .attr('height', NODE_HEIGHT)
     .attr('rx', 10)
-    .attr('fill', d => TYPE_TINTS[displayType(d.data)] || TYPE_TINTS.free)
-    .attr('stroke', d => TYPE_COLORS[displayType(d.data)] || TYPE_COLORS.free)
+    .attr('fill', d => blueprintTint(d.data))
+    .attr('stroke', d => blueprintColor(d.data))
     .attr('stroke-width', d => originalNode(d.data) === selectedNode.value ? 3 : 1.5)
     .attr('stroke-dasharray', d => d.data.displayKind === 'group' ? '5 4' : null)
-    .attr('filter', 'drop-shadow(0 8px 16px rgba(0,0,0,.28))')
+    .attr('filter', d => d.data.displayKind === 'viewpoint' || d.data.displayKind === 'group' ? 'url(#blueprint-glow)' : 'drop-shadow(0 8px 16px rgba(0,0,0,.28))')
     .style('cursor', 'pointer')
     .on('click', (event, d) => {
       event.stopPropagation()
@@ -514,7 +613,7 @@ function drawNodes(g, nodes) {
     .attr('width', 6)
     .attr('height', NODE_HEIGHT)
     .attr('rx', 3)
-    .attr('fill', d => TYPE_COLORS[displayType(d.data)] || TYPE_COLORS.free)
+    .attr('fill', d => blueprintColor(d.data))
     .attr('opacity', 0.95)
 
   node.append('circle')
@@ -522,8 +621,8 @@ function drawNodes(g, nodes) {
     .attr('cx', NODE_WIDTH - 18)
     .attr('cy', 18)
     .attr('r', 10)
-    .attr('fill', d => hasChildren(d.data) ? '#0a0a0a' : '#1e1e1e')
-    .attr('stroke', d => hasChildren(d.data) ? (TYPE_COLORS[displayType(d.data)] || TYPE_COLORS.free) : '#333')
+    .attr('fill', d => hasChildren(d.data) ? '#071017' : '#1e1e1e')
+    .attr('stroke', d => hasChildren(d.data) ? blueprintColor(d.data) : '#333')
     .attr('stroke-width', 1.2)
     .style('cursor', d => hasChildren(d.data) ? 'pointer' : 'default')
     .on('click', (event, d) => {
@@ -654,7 +753,7 @@ onMounted(() => {
   loadTree()
   nextTick(() => {
     if (!svgEl.value?.parentElement) return
-    resizeObserver = new ResizeObserver(() => drawTree(true))
+    resizeObserver = new ResizeObserver(() => drawTree(false))
     resizeObserver.observe(svgEl.value.parentElement)
   })
 })
@@ -665,7 +764,7 @@ onBeforeUnmount(() => {
 
 watch(tree, async () => {
   await nextTick()
-  drawTree(true)
+  drawTree(false)
 })
 </script>
 
@@ -718,6 +817,7 @@ watch(tree, async () => {
 .legend-item.downstream i { background: #f59e0b; }
 .legend-item.analogy i { background: #c084fc; }
 .legend-item.central i { background: #4ade80; }
+.legend-item.free i { background: #94a3b8; }
 .error { color: #f87171; padding: 0.5rem 1.25rem; }
 .loading { color: #aaa; font-style: italic; padding: 0.5rem 1.25rem; }
 
