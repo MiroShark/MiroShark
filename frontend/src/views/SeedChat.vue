@@ -51,6 +51,12 @@
               @click="adScriptsOpen = true"
             >View ad scripts</button>
             <button
+              v-if="brief"
+              type="button"
+              class="view-tree"
+              @click="openDecisionTree"
+            >Open tree 🧭</button>
+            <button
               type="button"
               class="launch"
               :disabled="!readyToLaunch || loading"
@@ -382,7 +388,7 @@ async function launch() {
       return
     }
     brief.value = data.brief_markdown
-    briefOpen.value = true
+      briefOpen.value = true
     await refreshSessions()
   } catch (err) {
     const status = err?.response?.status
@@ -653,6 +659,7 @@ onMounted(async () => {
 .actions button:disabled { opacity: 0.4; cursor: not-allowed; }
 .actions button[type="submit"] { margin-right: auto; }
 .actions .view-brief { background: #2a2a4a; color: #ddd; }
+.actions .view-tree { background: #213a4a; color: #d7efff; }
 .actions .launch { background: #4ade80; color: #052e16; font-weight: bold; }
 .actions .launch:disabled { background: #1a3a1a; color: #555; }
 
