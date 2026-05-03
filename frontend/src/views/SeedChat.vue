@@ -19,6 +19,25 @@
     <main class="body">
       <section class="chat-pane">
         <div class="messages" ref="messagesEl">
+          <section v-if="showFlowGuide" class="flow-guide" aria-label="Seed chat workflow">
+            <p class="eyebrow">Guided investigation pipeline</p>
+            <h1>Start with a debate. Leave with a brief, scripts, and a decision map.</h1>
+            <div class="flow-steps">
+              <div v-for="step in flowSteps" :key="step.label" class="flow-step">
+                <span class="step-icon">{{ step.icon }}</span>
+                <strong>{{ step.label }}</strong>
+                <small>{{ step.text }}</small>
+              </div>
+            </div>
+            <div class="prompt-chips">
+              <button
+                v-for="prompt in starterPrompts"
+                :key="prompt"
+                type="button"
+                @click="useStarterPrompt(prompt)"
+              >{{ prompt }}</button>
+            </div>
+          </section>
           <div v-for="(m, i) in messages" :key="i" :class="['msg', m.role]">
             <div class="msg-content">{{ m.content }}</div>
           </div>
@@ -240,6 +259,21 @@ const regenerating = ref(false)
 
 const renderedBrief = computed(() => brief.value ? marked.parse(brief.value) : '')
 const renderedAdScripts = computed(() => adScripts.value ? marked.parse(adScripts.value) : '')
+const showFlowGuide = computed(() => !activeSessionId.value && messages.value.length === 1 && !draft.value.trim())
+
+const flowSteps = [
+  { icon: '💬', label: 'Chat', text: 'Describe the question and desired output.' },
+  { icon: '📄', label: 'Brief', text: 'Launch a sourced pros/cons brief.' },
+  { icon: '📣', label: 'Scripts', text: 'Distil messaging into balanced ad scripts.' },
+  { icon: '🌳', label: 'Tree', text: 'Grow, research, score, and synthesize claims.' },
+  { icon: '🗺️', label: 'Map', text: 'Explore the decision landscape visually.' },
+]
+
+const starterPrompts = [
+  'Investigate a proposed gas windfall tax',
+  'Compare policy options for housing affordability',
+  'Map the strongest arguments for and against a public decision',
+]
 
 const hasFetchedSources = computed(() => {
   const results = researchReport.value?.results
@@ -349,6 +383,10 @@ async function sendText(text) {
     await scrollMessagesToEnd()
   }
   return succeeded
+}
+
+function useStarterPrompt(prompt) {
+  draft.value = prompt
 }
 
 async function sendMessage() {
@@ -616,6 +654,56 @@ onMounted(async () => {
   overflow-y: auto;
   padding: 1rem 1.5rem;
 }
+.flow-guide {
+  margin: 0.25rem 0 1rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid #22313a;
+  border-radius: 12px;
+  background: radial-gradient(circle at top left, rgba(74, 222, 128, 0.1), transparent 34%), #101417;
+}
+.flow-guide .eyebrow {
+  margin: 0 0 0.35rem;
+  color: #80b4ff;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.flow-guide h1 {
+  margin: 0 0 0.85rem;
+  max-width: 760px;
+  color: #f5e8d6;
+  font-size: clamp(1.25rem, 2.2vw, 2rem);
+  line-height: 1.18;
+}
+.flow-steps {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(110px, 1fr));
+  gap: 0.55rem;
+}
+.flow-step {
+  border: 1px solid #263942;
+  border-radius: 9px;
+  padding: 0.65rem;
+  background: rgba(8, 16, 22, 0.72);
+}
+.step-icon { display: block; font-size: 1.1rem; margin-bottom: 0.25rem; }
+.flow-step strong { display: block; color: #fff; font-size: 0.88rem; }
+.flow-step small { display: block; margin-top: 0.25rem; color: #9aa7b0; line-height: 1.35; }
+.prompt-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.prompt-chips button {
+  border: 1px solid #315a72;
+  border-radius: 999px;
+  background: #102a3d;
+  color: #d7efff;
+  padding: 0.42rem 0.75rem;
+  cursor: pointer;
+}
+.prompt-chips button:hover { background: #173a53; }
 .msg {
   margin: 0.75rem 0;
   display: flex;
