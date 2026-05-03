@@ -142,13 +142,29 @@ def page_to_offset(page: Any, limit: int) -> int:
 # ── Card-level inspectors ─────────────────────────────────────────────────
 
 
+#: Minimum percentage-point gap between the top and runner-up stance
+#: required to call a card "dominant" in that direction. Mirrors the
+#: ±0.2 stance threshold the share card / replay GIF / transcript /
+#: webhook / feed / trajectory CSV all share — a card whose top stance
+#: doesn't clear the runner-up by this margin is treated as a near-tie
+#: (no dominant stance) and falls out of any ``consensus=...`` filter.
+DOMINANCE_THRESHOLD = 0.2
+
+
 def dominant_stance(card: dict) -> Optional[str]:
     """Return ``"bullish" | "neutral" | "bearish"`` for the card, or
     ``None`` when no consensus is computable yet (in-progress sims, empty
-    trajectory).
+    trajectory) **or** when the top stance fails to clear the runner-up
+    by at least ``DOMINANCE_THRESHOLD`` percentage points.
 
-    A tie picks the lexically-first label so the result is deterministic
-    when two stances post identical percentages.
+    The ±0.2 margin keeps the gallery's ``consensus=bullish`` filter
+    consistent with the share card, replay GIF, transcript, webhook,
+    and feed renderers — a 33.4 / 33.3 / 33.3 split has no dominant
+    stance on any of those surfaces, so it can't leak into a consensus
+    bucket here either.
+
+    An exact tie at the top (e.g. 40 / 40 / 20) is broken lexically so
+    the result stays deterministic across calls.
     """
     consensus = card.get("final_consensus") if isinstance(card, dict) else None
     if not isinstance(consensus, dict):
@@ -164,7 +180,15 @@ def dominant_stance(card: dict) -> Optional[str]:
 
     pcts.sort(key=lambda kv: (-kv[1], kv[0]))
     top_label, top_value = pcts[0]
+    _, runner_up_value = pcts[1]
     if top_value <= 0:
+        return None
+    # An exact tie at the top falls back to the lexical winner so the
+    # result is deterministic; a non-zero but sub-threshold lead is a
+    # near-tie and gets filtered out, matching how every other surface
+    # treats split consensus.
+    gap = top_value - runner_up_value
+    if gap > 0 and gap < DOMINANCE_THRESHOLD:
         return None
     return top_label
 
