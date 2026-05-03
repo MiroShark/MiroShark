@@ -1,138 +1,44 @@
 <template>
   <div class="tree-layout">
-    <header class="topbar">
-      <button class="back-btn" type="button" @click="goBack">← Back to chat</button>
-      <div class="brand">DECISION TREE</div>
-      <div class="topic">{{ tree?.question || 'Loading…' }}</div>
-      <button
-        type="button"
-        class="map-view-btn"
-        :disabled="!tree"
-        @click="goToMap"
-      >Map view 🗺️</button>
-      <button
-        type="button"
-        class="story-btn"
-        :disabled="!tree || augmentingBigPicture || augmentingStoryDepth || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
-        @click="augmentBigPicture"
-      >{{ augmentingBigPicture ? 'Adding story…' : 'Add big-picture story 🌏' }}</button>
-      <button
-        type="button"
-        class="depth-btn"
-        :disabled="!tree || augmentingBigPicture || augmentingStoryDepth || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
-        @click="augmentStoryDepth"
-      >{{ augmentingStoryDepth ? 'Adding depth…' : 'Add story depth 🔎' }}</button>
-      <button
-        v-if="!autoGrowing"
-        type="button"
-        class="auto-grow-btn"
-        :disabled="!tree || researchingAll || synthesizingAll || scoringAll || compilingForesight"
-        @click="autoGrowAndAnalyse"
-      >Auto-grow & analyse 🌳</button>
-      <button
-        v-else
-        type="button"
-        class="stop-btn"
-        @click="stopAutoGrow"
-      >Stop auto-grow</button>
-      <button
-        v-if="!researchingAll"
-        type="button"
-        class="research-all-btn"
-        :disabled="!tree || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
-        @click="researchAll"
-      >Research all 🔁</button>
-      <button
-        v-else
-        type="button"
-        class="stop-btn"
-        @click="stopResearchAll"
-      >Stop research</button>
-      <button
-        v-if="!synthesizingAll"
-        type="button"
-        class="synthesize-all-btn"
-        :disabled="!tree || researchingAll || compilingForesight || scoringAll || autoGrowing"
-        @click="synthesizeAll"
-      >Synthesize all ✨</button>
-      <button
-        v-else
-        type="button"
-        class="stop-btn"
-        @click="stopSynthesizeAll"
-      >Stop synth</button>
-      <button
-        v-if="!scoringAll"
-        type="button"
-        class="score-all-btn"
-        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || autoGrowing"
-        @click="scoreAll"
-      >Score all 🏷️</button>
-      <button
-        v-else
-        type="button"
-        class="stop-btn"
-        @click="stopScoreAll"
-      >Stop scoring</button>
-      <button
-        type="button"
-        class="foresight-btn"
-        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
-        @click="compileForesight"
-      >{{ compilingForesight ? 'Compiling…' : (foresight ? 'View foresight 📄' : 'Compile foresight 📄') }}</button>
-      <button
-        type="button"
-        class="infographic-btn"
-        :disabled="!tree || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing || planningInfographics"
-        @click="planInfographics"
-      >{{ planningInfographics ? 'Planning…' : (infographicPlan ? 'View infographics 🎨' : 'Create infographics 🎨') }}</button>
-      <button
-        type="button"
-        class="education-btn"
-        :disabled="!tree || planningEducation || researchingAll || synthesizingAll || compilingForesight || scoringAll || autoGrowing"
-        @click="planEducation"
-      >{{ planningEducation ? 'Planning education…' : (educationPlan ? 'View education plan 🧭' : 'Education plan 🧭') }}</button>
-    </header>
+    <DecisionTreeToolbar
+      :tree="tree"
+      :augmenting-big-picture="augmentingBigPicture"
+      :augmenting-story-depth="augmentingStoryDepth"
+      :researching-all="researchingAll"
+      :synthesizing-all="synthesizingAll"
+      :compiling-foresight="compilingForesight"
+      :scoring-all="scoringAll"
+      :auto-growing="autoGrowing"
+      :foresight="foresight"
+      :planning-infographics="planningInfographics"
+      :infographic-plan="infographicPlan"
+      :planning-education="planningEducation"
+      :education-plan="educationPlan"
+      @back="goBack"
+      @map="goToMap"
+      @augment-big-picture="augmentBigPicture"
+      @augment-story-depth="augmentStoryDepth"
+      @auto-grow="autoGrowAndAnalyse"
+      @stop-auto-grow="stopAutoGrow"
+      @research-all="researchAll"
+      @stop-research="stopResearchAll"
+      @synthesize-all="synthesizeAll"
+      @stop-synthesize="stopSynthesizeAll"
+      @score-all="scoreAll"
+      @stop-score="stopScoreAll"
+      @compile-foresight="compileForesight"
+      @plan-infographics="planInfographics"
+      @plan-education="planEducation"
+    />
 
-    <div v-if="researchingAll" class="research-progress-banner" role="status" aria-live="polite">
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="progress-text">
-        Researching node {{ researchProgress.current }} of {{ researchProgress.total }}:
-        <span class="progress-question">"{{ researchProgress.label }}"</span>
-      </span>
-    </div>
-
-    <div v-if="synthesizingAll" class="research-progress-banner" role="status" aria-live="polite">
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="progress-text">
-        Synthesizing node {{ synthProgress.current }} of {{ synthProgress.total }}:
-        <span class="progress-question">"{{ synthProgress.label }}"</span>
-      </span>
-    </div>
-
-    <div v-if="scoringAll" class="research-progress-banner" role="status" aria-live="polite">
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="progress-text">
-        Scoring node {{ scoreProgress.current }} of {{ scoreProgress.total }}:
-        <span class="progress-question">"{{ scoreProgress.label }}"</span>
-      </span>
-    </div>
-
-    <div v-if="autoGrowing" class="research-progress-banner" role="status" aria-live="polite">
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="spinner-dot"></span>
-      <span class="progress-text">
-        Auto-grow [{{ autoGrowProgress.phase }}] {{ autoGrowProgress.current }} of {{ autoGrowProgress.total }}:
-        <span class="progress-question">"{{ autoGrowProgress.label }}"</span>
-      </span>
-    </div>
+    <ProgressBanner v-if="researchingAll" label="Researching node" :progress="researchProgress" />
+    <ProgressBanner v-if="synthesizingAll" label="Synthesizing node" :progress="synthProgress" />
+    <ProgressBanner v-if="scoringAll" label="Scoring node" :progress="scoreProgress" />
+    <ProgressBanner
+      v-if="autoGrowing"
+      :label="`Auto-grow [${autoGrowProgress.phase}]`"
+      :progress="autoGrowProgress"
+    />
 
     <main class="tree-body">
       <div v-if="error" class="error">{{ error }}</div>
@@ -238,6 +144,8 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import TreeNode from '../components/TreeNode.vue'
+import DecisionTreeToolbar from '../components/decision-tree/DecisionTreeToolbar.vue'
+import ProgressBanner from '../components/decision-tree/ProgressBanner.vue'
 import ForesightModal from '../components/ForesightModal.vue'
 import EducationPlanModal from '../components/education/EducationPlanModal.vue'
 import InfographicTimelineModal from '../components/infographics/InfographicTimelineModal.vue'
@@ -413,26 +321,6 @@ onMounted(loadTree)
   display: flex;
   flex-direction: column;
 }
-.topbar {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1.25rem;
-  border-bottom: 1px solid #222;
-}
-.back-btn {
-  background: transparent;
-  border: 1px solid #333;
-  color: #ddd;
-  padding: 0.35rem 0.7rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-}
-.back-btn:hover { background: #1a1a1a; }
-.brand { font-weight: bold; letter-spacing: 0.15em; }
-.topic { color: #aaa; font-size: 0.9rem; flex: 1; }
 .tree-body {
   flex: 1;
   padding: 1.25rem;
@@ -452,168 +340,6 @@ onMounted(loadTree)
 .error { color: #f87171; padding: 0.5rem; margin-bottom: 0.5rem; }
 .loading { color: #aaa; font-style: italic; }
 
-.research-all-btn,
-.stop-btn {
-  background: #2a4a2a;
-  color: #d6f5d6;
-  border: 1px solid #3a6a3a;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-}
-.research-all-btn:hover { background: #335933; }
-.research-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.stop-btn {
-  background: #4a2a2a;
-  color: #f5d6d6;
-  border-color: #6a3a3a;
-}
-.stop-btn:hover { background: #593333; }
-
-.research-progress-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.6rem 1.25rem;
-  background: #1a2a3a;
-  border-bottom: 1px solid #2a4a6a;
-  color: #b8d6f5;
-  font-size: 0.85rem;
-}
-.research-progress-banner .spinner-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #80b4ff;
-  animation: progressPulse 1.4s infinite ease-in-out both;
-}
-.research-progress-banner .spinner-dot:nth-child(1) { animation-delay: -0.32s; }
-.research-progress-banner .spinner-dot:nth-child(2) { animation-delay: -0.16s; }
-@keyframes progressPulse {
-  0%, 80%, 100% { opacity: 0.2; }
-  40% { opacity: 1; }
-}
-.progress-text { margin-left: 0.5rem; }
-.progress-question {
-  font-style: italic;
-  color: #aaa;
-  margin-left: 0.25rem;
-}
-.synthesize-all-btn {
-  background: #2a2a4a;
-  color: #d6d6f5;
-  border: 1px solid #3a3a6a;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-.synthesize-all-btn:hover { background: #353559; }
-.synthesize-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.score-all-btn {
-  background: #4a3a4a;
-  color: #f5d6f5;
-  border: 1px solid #6a5a6a;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-.score-all-btn:hover { background: #5a4655; }
-.score-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.foresight-btn {
-  background: #4a3a2a;
-  color: #f5e8d6;
-  border: 1px solid #6a5a3a;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-.foresight-btn:hover { background: #5a4a35; }
-.foresight-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-
-
-.map-view-btn {
-  background: #4a3a2a;
-  color: #f5e8d6;
-  border: 1px solid #6a5a3a;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-.map-view-btn:hover { background: #5a4a35; }
-.map-view-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.depth-btn,
-.story-btn {
-  background: #1f3a4a;
-  color: #d7efff;
-  border: 1px solid #315a72;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-.depth-btn:hover,
-.story-btn:hover { background: #29495d; }
-.depth-btn:disabled,
-.story-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.auto-grow-btn {
-  background: #2a4a3a;
-  color: #d6f5e0;
-  border: 1px solid #3a6a4a;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-.auto-grow-btn:hover { background: #355945; }
-.auto-grow-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.infographic-btn {
-  background: #2d3f55;
-  color: #dbeafe;
-  border: 1px solid #426084;
-  padding: 0.4rem 0.8rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 0.85rem;
-  font-weight: 500;
-  margin-left: 0.5rem;
-}
-.infographic-btn:hover { background: #36506d; }
-.infographic-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
-.foresight-footer .tiny,
 .tiny {
   padding: 0.3rem 0.55rem;
   font-size: 0.75rem;
@@ -622,21 +348,7 @@ onMounted(loadTree)
 
 
 @media (max-width: 900px) {
-  .topbar { flex-wrap: wrap; }
-  .topic { flex-basis: 100%; }
   .infographic-body { grid-template-columns: 1fr; }
   .slide-list { max-height: 220px; border-right: 0; border-bottom: 1px solid #1f2937; }
 }
-
-
-.education-btn {
-  padding: 0.55rem 0.9rem;
-  border: 1px solid #315c7d;
-  border-radius: 999px;
-  background: #102a3d;
-  color: #d7efff;
-  cursor: pointer;
-}
-.education-btn:hover { background: #173a53; }
-.education-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
