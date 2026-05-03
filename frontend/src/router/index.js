@@ -1,14 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import SeedChat from '../views/SeedChat.vue'
-import HomeLegacy from '../views/HomeLegacy.vue'
-import Process from '../views/MainView.vue'
-import SimulationView from '../views/SimulationView.vue'
-import SimulationRunView from '../views/SimulationRunView.vue'
-import ReportView from '../views/ReportView.vue'
-import InteractionView from '../views/InteractionView.vue'
-import DecisionLabView from '../views/DecisionLabView.vue'
-import DecisionTreeView from '../views/DecisionTreeView.vue'
-import DecisionTreeMapView from '../views/DecisionTreeMapView.vue'
+
+const SeedChat = () => import('../views/SeedChat.vue')
+const HomeLegacy = () => import('../views/HomeLegacy.vue')
+const Process = () => import('../views/MainView.vue')
+const SimulationView = () => import('../views/SimulationView.vue')
+const SimulationRunView = () => import('../views/SimulationRunView.vue')
+const ReportView = () => import('../views/ReportView.vue')
+const InteractionView = () => import('../views/InteractionView.vue')
+const DecisionLabView = () => import('../views/DecisionLabView.vue')
+const DecisionTreeView = () => import('../views/DecisionTreeView.vue')
+const DecisionTreeMapView = () => import('../views/DecisionTreeMapView.vue')
 
 const routes = [
   { path: '/', name: 'SeedChat', component: SeedChat },
