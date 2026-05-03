@@ -150,7 +150,9 @@ def _build_initial_state(
 
     return {
         "simulation_id": simulation_id,
-        "scenario": (summary.get("scenario") or "").strip(),
+        "scenario": _truncate(
+            (summary.get("scenario") or "").strip(), _SCENARIO_HEADER_MAX_LEN
+        ),
         "is_public": bool(summary.get("is_public")),
         "status": (summary.get("status") or "idle"),
         "runner_status": (summary.get("runner_status") or "idle"),
@@ -239,6 +241,12 @@ a:hover { text-decoration: underline; }
   70%  { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
   100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
 }
+@media (prefers-reduced-motion: reduce) {
+  .live-badge .dot { animation: none; }
+  .belief-bar { transition: none; }
+  .progress-fill { transition: none; }
+  .cta-row a { transition: none; }
+}
 .scenario {
   font-size: 22px;
   line-height: 1.35;
@@ -268,7 +276,7 @@ a:hover { text-decoration: underline; }
   gap: 14px;
   backdrop-filter: blur(10px);
 }
-.belief-bars {
+.belief-track {
   display: flex;
   height: 18px;
   border-radius: 999px;
@@ -630,24 +638,49 @@ def _broadcast_js() -> str:
     has_belief: (bootstrap.bullish + bootstrap.neutral + bootstrap.bearish) > 0,
   });
 
+  function isHidden() {
+    // Skip work when the tab is backgrounded — saves the user's battery
+    // and the API's quota. The 'visibilitychange' listener below kicks
+    // a fresh poll the moment the tab is foregrounded again.
+    return (typeof document !== 'undefined') &&
+      ((document.visibilityState && document.visibilityState !== 'visible') || document.hidden === true);
+  }
+
   var startedAt = Date.now();
+  var pendingTimer = null;
+  function schedule(delay) {
+    if (pendingTimer) clearTimeout(pendingTimer);
+    pendingTimer = setTimeout(loop, delay);
+  }
   function loop() {
+    pendingTimer = null;
     if (Date.now() - startedAt > ABSOLUTE_TIMEOUT_MS) return;
+    if (isHidden()) {
+      // Re-check shortly; the visibilitychange handler will also
+      // wake us as soon as the tab is foregrounded.
+      schedule(POLL_MS);
+      return;
+    }
     refresh().then(function (snapshot) {
       if (snapshot && TERMINAL[snapshot.runner_status]) {
         // One trailing refresh after a brief delay to catch the final
         // belief snapshot the runner writes after status flips.
-        setTimeout(refresh, 4000);
+        setTimeout(function () { if (!isHidden()) refresh(); }, 4000);
         return;
       }
       var delay = (snapshot && snapshot.runner_status === 'failed') ? FAILED_BACKOFF_MS : POLL_MS;
-      setTimeout(loop, delay);
+      schedule(delay);
     }, function () {
-      setTimeout(loop, POLL_MS);
+      schedule(POLL_MS);
+    });
+  }
+  if (typeof document !== 'undefined' && document.addEventListener) {
+    document.addEventListener('visibilitychange', function () {
+      if (!isHidden()) schedule(0);
     });
   }
   // Stagger the first poll so the page paints before the network call.
-  setTimeout(loop, 1500);
+  schedule(1500);
 })();
 """
 
@@ -829,7 +862,7 @@ def render_watch_html(
         "</span>\n"
         "  </div>\n"
         "  <section class=\"belief-card\">\n"
-        "    <div class=\"belief-bars\">\n"
+        "    <div class=\"belief-track\">\n"
         f"      <div id=\"bar-bullish\" class=\"belief-bar bullish\" style=\"width:{bull_w}\"></div>\n"
         f"      <div id=\"bar-neutral\" class=\"belief-bar neutral\" style=\"width:{neu_w}\"></div>\n"
         f"      <div id=\"bar-bearish\" class=\"belief-bar bearish\" style=\"width:{bear_w}\"></div>\n"
