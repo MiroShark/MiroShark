@@ -95,6 +95,28 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/export` | Full JSON export |
 | `GET` | `/api/simulation/list` | List simulations |
 | `GET` | `/api/simulation/history` | Simulation history / diffs |
+| `GET` | `/api/simulation/public` | Filterable, paginated public gallery feed |
+
+### Gallery search & filtering
+
+`GET /api/simulation/public` supports keyword + dominant-stance + quality-tier + outcome-label + sort filters so an analyst can pull "every excellent-quality bearish call about Aave" as one URL:
+
+```text
+GET /api/simulation/public?q=aave&consensus=bearish&quality=excellent&sort=rounds&page=1
+```
+
+| Query param | Values | Notes |
+|---|---|---|
+| `q` | free text, ≤200 chars | Case-insensitive substring match against the scenario. |
+| `consensus` | `bullish` / `neutral` / `bearish` | Dominant final-round stance using the same ±0.2 threshold the share card / replay GIF / transcript / webhook / feed all use. |
+| `quality` | `excellent` / `good` / `fair` / `poor` | Compared case-insensitively against the first word of `quality_health`. |
+| `outcome` | `correct` / `incorrect` / `partial` | Implies `verified=1` (verified-only). |
+| `sort` | `date` / `rounds` / `agents` | `date` (default — newest first), `rounds` (highest current_round first), or `agents` (largest population first). |
+| `verified` | truthy (`1`/`true`/`yes`) | Restrict to simulations with a recorded outcome annotation — the `/verified` hall. |
+| `limit` / `offset` | `[1, 100]` / `≥0` | Pagination knobs. `total` reflects the **filtered** count. |
+| `page` | `≥1` | 1-based alternative to `offset`. Wins over `offset` when both are supplied. |
+
+Filters compose with logical AND. Empty / unknown values are no-ops, so `?consensus=` returns the unfiltered listing and `?sort=popularity` falls back to `sort=date` rather than 400-ing.
 
 ### Analyst quickstart
 

@@ -23,6 +23,7 @@ from ..services.wonderwall_profile_generator import WonderwallProfileGenerator
 from ..services.simulation_manager import SimulationManager, SimulationStatus
 from ..services.simulation_config_generator import SimulationConfigGenerator
 from ..services.simulation_runner import SimulationRunner, RunnerStatus
+from ..services import gallery_filters
 from ..utils.logger import get_logger
 from ..models.project import ProjectManager
 
@@ -5385,78 +5386,97 @@ def list_public_simulations():
     Query parameters:
         limit: max items to return (default 50, clamped to [1, 100])
         offset: pagination offset (default 0)
+        page: 1-based page number — alternative to ``offset``. When both
+            are supplied, ``page`` wins. ``page=1`` is offset 0.
         verified: when truthy ("1", "true", "yes"), filter to simulations
             with a recorded outcome annotation (see
             ``POST /api/simulation/<id>/outcome``).
+        q: case-insensitive substring match against the scenario text.
+            Trimmed and capped at 200 chars. Empty / missing is a no-op.
+        consensus: ``bullish`` / ``neutral`` / ``bearish`` — restrict to
+            cards whose dominant final consensus matches the chosen
+            stance. Computed against the same ±0.2 stance threshold used
+            by the share card, replay GIF, transcript, webhook, and feed
+            renderers, so a "bullish" filter here matches what those
+            surfaces label as bullish for the same simulation.
+        quality: ``excellent`` / ``good`` / ``fair`` / ``poor`` — restrict
+            to cards whose ``quality_health`` first word matches the tier
+            (case-insensitive).
+        outcome: ``correct`` / ``incorrect`` / ``partial`` — restrict to
+            verified simulations whose recorded outcome label matches.
+            Implies ``verified=1``.
+        sort: ``date`` (default, newest first), ``rounds`` (highest
+            current_round first), or ``agents`` (largest population
+            first). Unknown values fall back to ``date``.
 
     Response shape::
 
         {
           "success": true,
-          "data": [
-            {
-              "simulation_id": "sim_xxx",
-              "scenario": "Will the ECB cut rates in June?",
-              "status": "completed",
-              "runner_status": "completed",
-              "current_round": 20,
-              "total_rounds": 20,
-              "agent_count": 248,
-              "quality_health": "Excellent",
-              "final_consensus": {"bullish": 62.0, "neutral": 13.0, "bearish": 25.0},
-              "resolution_outcome": "YES",
-              "created_at": "2026-04-22T10:12:34",
-              "parent_simulation_id": null,
-              "share_card_url": "/api/simulation/sim_xxx/share-card.png",
-              "share_landing_url": "/share/sim_xxx"
-            },
-            ...
-          ],
+          "data": [ ... gallery cards ... ],
           "count": 17,
           "total": 17,
           "limit": 50,
           "offset": 0,
-          "has_more": false
+          "page": 1,
+          "has_more": false,
+          "verified_only": false,
+          "q": "",
+          "consensus": null,
+          "quality": null,
+          "outcome": null,
+          "sort": "date"
         }
 
     ``count`` is the size of the current page; ``total`` is the count of
-    all public simulations. An empty ``data`` array is normal — the
-    caller should render the "No public simulations yet" empty state.
+    public simulations matching the active filter set (so a
+    "12 remaining" hint can be derived as ``total - offset - count``).
+    An empty ``data`` array is normal — the caller should render the
+    appropriate empty state ("No public simulations yet" vs. "No
+    simulations match your filters").
     """
     try:
-        limit = request.args.get('limit', 50, type=int)
-        offset = request.args.get('offset', 0, type=int)
-        limit = max(1, min(100, int(limit or 50)))
-        offset = max(0, int(offset or 0))
+        limit = gallery_filters.normalise_limit(request.args.get('limit'))
+
+        raw_page = request.args.get('page')
+        if raw_page is not None and str(raw_page).strip() != "":
+            # ``page`` is the friendlier 1-based knob the gallery UI uses;
+            # it wins over ``offset`` when both are supplied so a
+            # ``?page=2`` URL is bookmarkable without also having to
+            # carry ``?offset=...``.
+            offset = gallery_filters.page_to_offset(raw_page, limit)
+        else:
+            offset = gallery_filters.normalise_offset(request.args.get('offset'))
+
+        q = gallery_filters.normalise_query(request.args.get('q'))
+        consensus = gallery_filters.normalise_consensus(request.args.get('consensus'))
+        quality = gallery_filters.normalise_quality(request.args.get('quality'))
+        outcome = gallery_filters.normalise_outcome(request.args.get('outcome'))
+        sort_key = gallery_filters.normalise_sort(request.args.get('sort'))
 
         verified_raw = (request.args.get('verified') or "").strip().lower()
         verified_only = verified_raw in ("1", "true", "yes", "on")
+        # An ``outcome=...`` filter is, by definition, a verified-only
+        # subset — surface that in the response envelope so clients
+        # rendering the "Verified only" chip stay in sync.
+        if outcome is not None:
+            verified_only = True
 
         manager = SimulationManager()
         all_sims = manager.list_simulations()
-
         public_sims = [s for s in all_sims if bool(getattr(s, "is_public", False))]
-        public_sims.sort(key=lambda s: s.created_at or "", reverse=True)
 
-        if verified_only:
-            # Filter on disk before paginating so ``total`` reflects the
-            # filtered set — otherwise the "X remaining" hint and
-            # ``has_more`` flag would lie about how much is left.
-            verified_sims = []
-            for s in public_sims:
-                sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, s.simulation_id)
-                if _read_outcome_file(sim_dir) is not None:
-                    verified_sims.append(s)
-            public_sims = verified_sims
-
-        total = len(public_sims)
-        page = public_sims[offset:offset + limit]
-
-        items = []
-        for state in page:
+        # Build cards for every public sim before filtering — keyword and
+        # consensus filters need fields (scenario, final_consensus,
+        # outcome) that only exist on the assembled card, not on the raw
+        # SimulationState. The reads are cheap (a handful of small JSON
+        # files per sim) and the response is cached for 30s, so a busy
+        # gallery amortises the work.
+        all_cards: list[dict] = []
+        for state in public_sims:
             sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, state.simulation_id)
             try:
-                items.append(_build_gallery_card_payload(state, sim_dir))
+                all_cards.append(_build_gallery_card_payload(state, sim_dir))
             except Exception as exc:
                 # One bad artifact shouldn't tank the whole gallery.
                 logger.warning(
@@ -5464,15 +5484,35 @@ def list_public_simulations():
                 )
                 continue
 
+        page_items, total = gallery_filters.select_filtered_cards(
+            all_cards,
+            q=q,
+            consensus=consensus,
+            quality=quality,
+            outcome=outcome,
+            verified_only=verified_only,
+            sort=sort_key,
+            limit=limit,
+            offset=offset,
+        )
+
+        page_num = (offset // limit) + 1 if limit > 0 else 1
+
         response = jsonify({
             "success": True,
-            "data": items,
-            "count": len(items),
+            "data": page_items,
+            "count": len(page_items),
             "total": total,
             "limit": limit,
             "offset": offset,
-            "has_more": offset + len(items) < total,
+            "page": page_num,
+            "has_more": offset + len(page_items) < total,
             "verified_only": verified_only,
+            "q": q,
+            "consensus": consensus,
+            "quality": quality,
+            "outcome": outcome,
+            "sort": sort_key,
         })
         # Short cache so newly-published simulations show up quickly while
         # still absorbing repeat hits from bots/social unfurlers.

@@ -89,6 +89,28 @@
 | `GET` | `/api/simulation/<id>/export` | 完整 JSON 导出 |
 | `GET` | `/api/simulation/list` | 列出模拟 |
 | `GET` | `/api/simulation/history` | 模拟历史 / 差异 |
+| `GET` | `/api/simulation/public` | 可筛选、分页的公开图库列表 |
+
+### 图库搜索与筛选
+
+`GET /api/simulation/public` 支持关键词 + 主导立场 + 质量等级 + 结果标签 + 排序筛选,可让分析师通过单个 URL 拉取「关于 Aave 的每一次优秀质量看跌预言」:
+
+```text
+GET /api/simulation/public?q=aave&consensus=bearish&quality=excellent&sort=rounds&page=1
+```
+
+| 查询参数 | 取值 | 说明 |
+|---|---|---|
+| `q` | 自由文本,≤200 字符 | 不区分大小写的情景文本子串匹配。 |
+| `consensus` | `bullish` / `neutral` / `bearish` | 使用与分享卡片 / 回放 GIF / 转录 / Webhook / 订阅源相同的 ±0.2 阈值计算的最终轮主导立场。 |
+| `quality` | `excellent` / `good` / `fair` / `poor` | 与 `quality_health` 首词进行不区分大小写比较。 |
+| `outcome` | `correct` / `incorrect` / `partial` | 隐含 `verified=1`(仅已验证)。 |
+| `sort` | `date` / `rounds` / `agents` | `date`(默认 — 最新优先)、`rounds`(当前轮次最多优先)或 `agents`(种群最大优先)。 |
+| `verified` | 真值(`1`/`true`/`yes`) | 限制为已记录结果注释的模拟 — 即 `/verified` 展厅。 |
+| `limit` / `offset` | `[1, 100]` / `≥0` | 分页参数。`total` 反映**已筛选**的计数。 |
+| `page` | `≥1` | `offset` 的 1 起编号替代值。两者同时出现时 `page` 优先。 |
+
+筛选条件以逻辑与组合。空值 / 未知值均为无操作:`?consensus=` 返回未筛选列表;`?sort=popularity` 回退至 `sort=date` 而非 400 报错。
 
 ## 报告智能体
 

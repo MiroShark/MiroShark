@@ -691,13 +691,31 @@ export const suggestScenarios = (data) => {
  *   }
  *
  * An empty `data` array is normal (render the empty state).
- * @param {Object} options - { limit?: number, offset?: number, verifiedOnly?: boolean }
+ * @param {Object} options - {
+ *   limit?: number, offset?: number, page?: number,
+ *   verifiedOnly?: boolean,
+ *   q?: string,
+ *   consensus?: 'bullish'|'neutral'|'bearish',
+ *   quality?: 'excellent'|'good'|'fair'|'poor',
+ *   outcome?: 'correct'|'incorrect'|'partial',
+ *   sort?: 'date'|'rounds'|'agents',
+ * }
  */
 export const getPublicSimulations = (options = {}) => {
   const params = {}
   if (Number.isFinite(options.limit)) params.limit = options.limit
   if (Number.isFinite(options.offset)) params.offset = options.offset
+  if (Number.isFinite(options.page)) params.page = options.page
   if (options.verifiedOnly) params.verified = '1'
+  // Filter knobs added in the gallery search/filter PR. The backend
+  // normalises (case + allowed values) so the frontend forwards
+  // whatever the user typed without re-validating — single source of
+  // truth on the API side.
+  if (options.q) params.q = options.q
+  if (options.consensus) params.consensus = options.consensus
+  if (options.quality) params.quality = options.quality
+  if (options.outcome) params.outcome = options.outcome
+  if (options.sort) params.sort = options.sort
   return service.get('/api/simulation/public', { params, timeout: 15000 })
 }
 

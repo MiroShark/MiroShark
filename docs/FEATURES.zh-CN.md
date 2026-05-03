@@ -148,6 +148,25 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 两个端点共享分享卡的发布控制(`is_public=true`)。每个智能体的立场标签使用与其他界面一致的 ±0.2 阈值 — 画廊上的"看涨"智能体在轨迹里也会打同样的 tag。嵌入对话框在回放 GIF 那行下方暴露"下载 .md" + "下载 .json"组合。
 
+## 图库搜索与筛选
+
+`/explore` 是公开研究界面 — 每一次发布的 MiroShark 模拟,都以卡片网格浏览。当语料库突破几十条后,反向时间序列的滚动列表就不再是工具,因此图库现在自带索引:卡片之上有一个关键词搜索框、一组共识筛选芯片、一组质量筛选芯片以及一个排序下拉。激活的筛选集合保存在 URL 参数中(`?q=…&consensus=bearish&quality=excellent&sort=rounds`),因此任意筛选视图都可作为书签分享 — "每一次关于 Aave 的优秀质量看跌预言"成了一个可发推文的 URL。
+
+- **`q`** — 不区分大小写的情景文本子串匹配。已修剪;上限 200 字符。
+- **`consensus`** — `bullish` / `neutral` / `bearish`。基于与分享卡 / 回放 GIF / 转录 / Webhook / 订阅源一致的 ±0.2 阈值的最终轮主导立场进行筛选,与那些界面在同一模拟上报告的内容保持一致。
+- **`quality`** — `excellent` / `good` / `fair` / `poor`。与 `quality_health` 首词进行不区分大小写比较。
+- **`outcome`** — `correct` / `incorrect` / `partial`。隐含 `verified=1`(仅已验证)。
+- **`sort`** — `date`(默认 — 最新优先)、`rounds`(当前轮次最多优先)或 `agents`(种群最大优先)。
+- **`page`** — 1 起编号的页号;`offset` 的替代值。`page=1` 即偏移 0。两者组合方式一致:`total` 反映**已筛选**的计数(而非语料库大小),所以"加载更多""剩余 X 个"提示和 `has_more` 标志在当前筛选集合内保持准确。
+
+`/verified` 路由保留 `verifiedOnly: true` 模式,并与所有筛选条件兼容 — `/verified?q=aave&consensus=bullish` 是有效的。通过头部芯片在「已验证」与「Explore」之间切换时,会跨越路由切换沿用激活的查询字符串,用户不会因切换「已验证」而丢失搜索。
+
+- **接口:** `GET /api/simulation/public?q=…&consensus=bullish&quality=excellent&sort=rounds&page=2`
+- **与 verified 组合:** `GET /api/simulation/public?verified=1&consensus=bearish` 返回每一次有结果记录的看跌预言。
+- **实现:** 公共端点已组装的图库卡片之上的纯标准库内存内筛选。零新依赖。端点保持 30 秒缓存,因此繁忙的图库会在多次筛选请求间摊销每次模拟的卡片构建。
+
+筛选激活后会出现「📊 重置」按钮;空状态(「没有模拟符合你的筛选条件」)指回同一个重置入口,而不是回到本不适用的「暂无公开模拟」消息。
+
 ## 公开画廊订阅(RSS / Atom)
 
 `/explore` 渲染的同一批卡片,以聚合订阅的形式提供出来,让已经在用 Feedly / Readwise / Inoreader / NetNewsWire / Obsidian RSS 的研究者和工具,可以在他们已有的工具链里订阅 — 无需登录,无需 MiroShark 账户。每个新发布的模拟,以与 AI 通讯或 Substack 文章相同的方式落入他们的阅读器。

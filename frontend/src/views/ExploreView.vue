@@ -38,6 +38,99 @@
             {{ $tr("Every card is a real MiroShark run someone published. Open one to see the full belief drift, agent network, and prediction outcome — or fork it in one click and run your own variant with the same agent population.", '每张卡片都是有人发布的真实 MiroShark 运行。打开任一张可查看完整的信念漂移、智能体网络与预测结果 — 或一键派生,使用同一组智能体运行你自己的变体。') }}
           </template>
         </p>
+
+        <!-- ── Search + filter bar ────────────────────────────────────
+             Search and filter state lives in URL params (q, consensus,
+             quality, sort) so a filtered view is bookmarkable and
+             shareable — "every excellent-quality bearish call about
+             Aave" becomes a URL you can tweet. -->
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <span class="search-icon">⌕</span>
+            <input
+              v-model="searchInput"
+              type="search"
+              class="search-input"
+              :placeholder="$tr('Search scenarios…', '搜索情景…')"
+              :aria-label="$tr('Search scenarios', '搜索情景')"
+              autocomplete="off"
+              @input="onSearchInput"
+            />
+            <button
+              v-if="searchInput"
+              type="button"
+              class="search-clear"
+              :title="$tr('Clear search', '清除搜索')"
+              @click="clearSearch"
+            >×</button>
+          </div>
+
+          <div class="chip-group" role="tablist" :aria-label="$tr('Consensus filter', '共识筛选')">
+            <span class="chip-group-label">{{ $tr('Consensus', '共识') }}</span>
+            <button
+              v-for="opt in consensusOptions"
+              :key="opt.value || 'any'"
+              class="chip"
+              :class="{ 'chip-active': consensus === opt.value }"
+              :aria-pressed="consensus === opt.value"
+              @click="setConsensus(opt.value)"
+              :disabled="loading"
+            >
+              <span v-if="opt.glyph" class="chip-glyph" :class="opt.glyphClass">{{ opt.glyph }}</span>
+              {{ opt.label() }}
+            </button>
+          </div>
+
+          <div class="chip-group" role="tablist" :aria-label="$tr('Quality filter', '质量筛选')">
+            <span class="chip-group-label">{{ $tr('Quality', '质量') }}</span>
+            <button
+              v-for="opt in qualityOptions"
+              :key="opt.value || 'any'"
+              class="chip"
+              :class="{ 'chip-active': quality === opt.value }"
+              :aria-pressed="quality === opt.value"
+              @click="setQuality(opt.value)"
+              :disabled="loading"
+            >
+              {{ opt.label() }}
+            </button>
+          </div>
+
+          <div class="sort-wrap">
+            <label class="sort-label" for="explore-sort">{{ $tr('Sort', '排序') }}</label>
+            <select
+              id="explore-sort"
+              v-model="sortKey"
+              class="sort-select"
+              @change="onSortChange"
+              :disabled="loading"
+            >
+              <option value="date">{{ $tr('Newest first', '最新优先') }}</option>
+              <option value="rounds">{{ $tr('Most rounds', '轮次最多') }}</option>
+              <option value="agents">{{ $tr('Most agents', '智能体最多') }}</option>
+            </select>
+          </div>
+
+          <button
+            v-if="filtersActive"
+            type="button"
+            class="reset-btn"
+            @click="resetFilters"
+            :disabled="loading"
+            :title="$tr('Clear all filters', '清除所有筛选')"
+          >
+            ↻ {{ $tr('Reset', '重置') }}
+          </button>
+        </div>
+
+        <p v-if="filtersActive && !loading" class="result-count">
+          <template v-if="total === 0">
+            {{ $tr('No simulations match the current filters.', '没有模拟符合当前筛选条件。') }}
+          </template>
+          <template v-else>
+            {{ total }} {{ total === 1 ? $tr('result', '个结果') : $tr('results', '个结果') }}
+          </template>
+        </p>
         <div class="stats-row">
           <span class="stat-chip">
             <span class="stat-num">{{ loading ? '…' : total }}</span>
@@ -112,12 +205,23 @@
 
       <!-- Empty -->
       <div v-else-if="items.length === 0" class="gallery-empty">
-        <div class="empty-icon">{{ verifiedFilter ? '📍' : '◇' }}</div>
+        <div class="empty-icon">{{ filtersActive ? '⌕' : (verifiedFilter ? '📍' : '◇') }}</div>
         <div class="empty-title">
-          {{ verifiedFilter ? $tr('No verified predictions yet.', '暂无已验证的预言。') : $tr('No public simulations yet.', '暂无公开模拟。') }}
+          <template v-if="filtersActive">
+            {{ $tr('No simulations match your filters.', '没有模拟符合你的筛选条件。') }}
+          </template>
+          <template v-else-if="verifiedFilter">
+            {{ $tr('No verified predictions yet.', '暂无已验证的预言。') }}
+          </template>
+          <template v-else>
+            {{ $tr('No public simulations yet.', '暂无公开模拟。') }}
+          </template>
         </div>
         <div class="empty-msg">
-          <template v-if="verifiedFilter">
+          <template v-if="filtersActive">
+            {{ $tr('Try widening the search — clear the keyword, switch the consensus chip back to All, or reset every filter at once.', '尝试放宽搜索 — 清空关键词、将共识切回「全部」,或一次性重置所有筛选。') }}
+          </template>
+          <template v-else-if="verifiedFilter">
             {{ $tr("Once an operator marks a public simulation's real-world outcome from the Embed dialog, it shows up here. In the meantime, browse every published run on", '当运营者从嵌入对话框中标记公开模拟的真实结果后,它会出现在这里。在此期间,可在以下位置浏览所有已发布的运行') }}
             <router-link to="/explore" class="inline-link">/explore</router-link>.
           </template>
@@ -125,7 +229,16 @@
             {{ $tr(`Yours could be first. Run a simulation, click the share icon on the result page, toggle "Public" — it'll appear here within 30 seconds.`, '你的可能是第一个。运行一次模拟,在结果页点击分享图标,切换为「公开」 — 它会在 30 秒内出现在这里。') }}
           </template>
         </div>
+        <button
+          v-if="filtersActive"
+          type="button"
+          class="empty-cta empty-cta-button"
+          @click="resetFilters"
+        >
+          {{ $tr('Reset filters →', '重置筛选 →') }}
+        </button>
         <router-link
+          v-else
           :to="verifiedFilter ? '/explore' : '/'"
           class="empty-cta"
         >
@@ -306,7 +419,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import {
   getPublicSimulations,
   forkSimulation,
@@ -324,6 +437,7 @@ const props = defineProps({
 })
 
 const router = useRouter()
+const route = useRoute()
 
 const items = ref([])
 const total = ref(0)
@@ -335,6 +449,117 @@ const error = ref('')
 const forkingId = ref('')
 const forkErrors = ref({})
 const verifiedFilter = ref(props.verifiedOnly)
+
+// Filter state — initialised from the URL on mount so a deep link to
+// `/explore?q=aave&consensus=bearish&quality=excellent&sort=rounds` boots
+// directly into the filtered view. Backend normalises the values, so we
+// just forward whatever's in the URL.
+const ALLOWED_CONSENSUS = new Set(['bullish', 'neutral', 'bearish'])
+const ALLOWED_QUALITY = new Set(['excellent', 'good', 'fair', 'poor'])
+const ALLOWED_SORT = new Set(['date', 'rounds', 'agents'])
+
+const _readEnumParam = (val, allowed) => {
+  if (!val) return ''
+  const s = String(val).trim().toLowerCase()
+  return allowed.has(s) ? s : ''
+}
+const _readQueryParam = (val) => {
+  if (val === undefined || val === null) return ''
+  const s = String(val).trim()
+  return s.length > 200 ? s.slice(0, 200) : s
+}
+
+const searchInput = ref(_readQueryParam(route.query.q))
+const queryDebounced = ref(searchInput.value)
+const consensus = ref(_readEnumParam(route.query.consensus, ALLOWED_CONSENSUS))
+const quality = ref(_readEnumParam(route.query.quality, ALLOWED_QUALITY))
+const sortKey = ref(_readEnumParam(route.query.sort, ALLOWED_SORT) || 'date')
+
+const consensusOptions = [
+  { value: '', label: () => tr('All', '全部') },
+  { value: 'bullish', glyph: '▲', glyphClass: 'glyph-bullish', label: () => tr('Bullish', '看涨') },
+  { value: 'neutral', glyph: '●', glyphClass: 'glyph-neutral', label: () => tr('Neutral', '中立') },
+  { value: 'bearish', glyph: '▼', glyphClass: 'glyph-bearish', label: () => tr('Bearish', '看跌') },
+]
+
+const qualityOptions = [
+  { value: '', label: () => tr('All', '全部') },
+  { value: 'excellent', label: () => tr('Excellent', '优秀') },
+  { value: 'good', label: () => tr('Good', '良好') },
+  { value: 'fair', label: () => tr('Fair', '一般') },
+  { value: 'poor', label: () => tr('Poor', '较差') },
+]
+
+const filtersActive = computed(
+  () =>
+    !!queryDebounced.value ||
+    !!consensus.value ||
+    !!quality.value ||
+    sortKey.value !== 'date',
+)
+
+let _searchDebounceTimer = null
+const onSearchInput = () => {
+  // Debounce the network call so each keystroke doesn't paint the
+  // gallery — but keep the input responsive to keep the typed value in
+  // the URL the moment the user stops typing.
+  if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer)
+  _searchDebounceTimer = setTimeout(() => {
+    queryDebounced.value = searchInput.value.trim()
+    syncQueryToRoute()
+    refresh()
+  }, 300)
+}
+
+const clearSearch = () => {
+  searchInput.value = ''
+  if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer)
+  queryDebounced.value = ''
+  syncQueryToRoute()
+  refresh()
+}
+
+const setConsensus = (value) => {
+  if (consensus.value === value) return
+  consensus.value = value
+  syncQueryToRoute()
+  refresh()
+}
+
+const setQuality = (value) => {
+  if (quality.value === value) return
+  quality.value = value
+  syncQueryToRoute()
+  refresh()
+}
+
+const onSortChange = () => {
+  syncQueryToRoute()
+  refresh()
+}
+
+const resetFilters = () => {
+  searchInput.value = ''
+  queryDebounced.value = ''
+  consensus.value = ''
+  quality.value = ''
+  sortKey.value = 'date'
+  if (_searchDebounceTimer) clearTimeout(_searchDebounceTimer)
+  syncQueryToRoute()
+  refresh()
+}
+
+// Mirror the active filter set to the URL so the page is shareable. We
+// use `router.replace` (not `push`) so the back button doesn't pile up
+// every keystroke.
+const syncQueryToRoute = () => {
+  const next = {}
+  if (queryDebounced.value) next.q = queryDebounced.value
+  if (consensus.value) next.consensus = consensus.value
+  if (quality.value) next.quality = quality.value
+  if (sortKey.value && sortKey.value !== 'date') next.sort = sortKey.value
+  router.replace({ name: route.name, query: next }).catch(() => {})
+}
 
 const feedUrl = computed(() =>
   getFeedUrl({ format: 'atom', verified: verifiedFilter.value }),
@@ -465,6 +690,10 @@ const loadPage = async (offset = 0) => {
     limit,
     offset,
     verifiedOnly: verifiedFilter.value,
+    q: queryDebounced.value || undefined,
+    consensus: consensus.value || undefined,
+    quality: quality.value || undefined,
+    sort: sortKey.value || undefined,
   })
   if (!res?.success) {
     throw new Error(res?.error || tr('Request failed', '请求失败'))
@@ -479,13 +708,13 @@ const loadPage = async (offset = 0) => {
 const toggleVerifiedFilter = () => {
   verifiedFilter.value = !verifiedFilter.value
   // Keep the URL in lockstep with the filter so the page is shareable —
-  // /verified for the curated hall, /explore for everything.
-  if (verifiedFilter.value) {
-    if (router.currentRoute.value.path !== '/verified') {
-      router.replace({ name: 'Verified' })
-    }
-  } else if (router.currentRoute.value.path !== '/explore') {
-    router.replace({ name: 'Explore' })
+  // /verified for the curated hall, /explore for everything. Preserve
+  // the active search/filter query string across the route swap so the
+  // user doesn't lose their search when toggling Verified.
+  const targetName = verifiedFilter.value ? 'Verified' : 'Explore'
+  if (router.currentRoute.value.name !== targetName) {
+    const carry = { ...route.query }
+    router.replace({ name: targetName, query: carry }).catch(() => {})
   }
   refresh()
 }
@@ -1222,11 +1451,244 @@ a.pill-verified:hover {
 
 .footer-text { white-space: nowrap; }
 
+/* ── Search + filter bar ── */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  margin-top: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--color-gray);
+  border: var(--border-light);
+}
+
+.search-wrap {
+  flex: 1 1 280px;
+  position: relative;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: rgba(10, 10, 10, 0.5);
+  pointer-events: none;
+}
+
+.search-input {
+  flex: 1;
+  width: 100%;
+  padding: 10px 36px 10px 36px;
+  background: var(--color-white);
+  border: var(--border-light);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--foreground);
+  letter-spacing: 0.3px;
+  transition: var(--transition-fast);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--color-orange);
+  background: var(--color-white);
+}
+
+.search-input::-webkit-search-decoration,
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  width: 22px;
+  height: 22px;
+  background: rgba(10, 10, 10, 0.08);
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 1;
+  color: rgba(10, 10, 10, 0.6);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.search-clear:hover {
+  background: var(--color-orange);
+  color: var(--color-white);
+}
+
+.chip-group {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.chip-group-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.45);
+  margin-right: 4px;
+  font-weight: 600;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 11px;
+  background: var(--color-white);
+  border: var(--border-light);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.65);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-weight: 600;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.chip-active {
+  background: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-white);
+}
+
+.chip-active:hover:not(:disabled) {
+  background: var(--color-orange);
+  border-color: var(--color-orange);
+  color: var(--color-white);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chip-glyph {
+  font-family: sans-serif;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.glyph-bullish { color: #2a8545; }
+.glyph-bearish { color: #c52d2d; }
+.glyph-neutral { color: rgba(10, 10, 10, 0.55); }
+
+.chip-active .chip-glyph {
+  color: var(--color-white);
+}
+
+.sort-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sort-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.45);
+  font-weight: 600;
+}
+
+.sort-select {
+  padding: 5px 24px 5px 10px;
+  background: var(--color-white);
+  border: var(--border-light);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  color: rgba(10, 10, 10, 0.75);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 4l3 3 3-3' fill='none' stroke='rgba(10,10,10,0.5)' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  font-weight: 600;
+}
+
+.sort-select:hover:not(:disabled) {
+  border-color: var(--color-orange);
+}
+
+.sort-select:focus {
+  outline: none;
+  border-color: var(--color-orange);
+}
+
+.sort-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.reset-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px dashed rgba(10, 10, 10, 0.25);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(10, 10, 10, 0.6);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  font-weight: 600;
+}
+
+.reset-btn:hover:not(:disabled) {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+  border-style: solid;
+}
+
+.reset-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.result-count {
+  margin-top: var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.4px;
+  color: rgba(10, 10, 10, 0.6);
+}
+
+.empty-cta-button {
+  border: none;
+  cursor: pointer;
+}
+
 /* ── Responsive ── */
 @media (max-width: 720px) {
   .page-title { font-size: 36px; }
   .page-subtitle { font-size: 15px; }
   .main-content { padding: var(--space-xl) var(--space-md); }
   .gallery-grid { grid-template-columns: 1fr; }
+  .filter-bar { padding: var(--space-sm); gap: var(--space-sm); }
+  .search-wrap { flex: 1 1 100%; min-width: 0; }
+  .chip-group { flex: 1 1 100%; }
+  .sort-wrap { flex: 1 1 auto; }
 }
 </style>

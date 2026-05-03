@@ -159,6 +159,25 @@ Two endpoints, same row schema, different serialization:
 
 Same publish gate as the share card and transcript (`is_public=true`). The bullish / neutral / bearish percentages use the same ±0.2 stance threshold as every other surface, so a number in the CSV matches what the gallery, share card, replay GIF, transcript, webhook, and feed report for the same round. The Embed dialog exposes a "Download .csv" + "Download .jsonl" pair beneath the transcript row, plus a copyable CSV URL and a `pd.read_csv("<url>")` quickstart snippet.
 
+## Gallery Search & Filtering
+
+`/explore` is the public research surface — every published MiroShark simulation, browsable as a card grid. Once the corpus grew past a few dozen entries the reverse-chronological scroll stopped being a tool, so the gallery now indexes itself: a keyword search box, a consensus filter chip group, a quality filter chip group, and a sort dropdown sit above the cards. The active filter set lives in URL params (`?q=…&consensus=bearish&quality=excellent&sort=rounds`), so any filtered view is bookmarkable and shareable — "every excellent-quality bearish call about Aave" is a URL you can tweet.
+
+- **`q`** — case-insensitive substring match against the scenario text. Trimmed; capped at 200 chars.
+- **`consensus`** — `bullish` / `neutral` / `bearish`. Filters by the dominant final-round stance using the same ±0.2 threshold the share card, replay GIF, transcript, webhook, and feed renderers all use, so a "bullish" filter here matches what those surfaces report for the same simulation.
+- **`quality`** — `excellent` / `good` / `fair` / `poor`. Compared case-insensitively against the first word of `quality_health`.
+- **`outcome`** — `correct` / `incorrect` / `partial`. Implies `verified=1` (verified-only).
+- **`sort`** — `date` (default — newest first), `rounds` (highest current_round first), or `agents` (largest population first).
+- **`page`** — 1-based page number; alternative to `offset`. `page=1` is offset 0. The two compose the same way: `total` reflects the **filtered** count (not the corpus size), so the load-more "X remaining" hint and `has_more` flag stay accurate inside the active filter set.
+
+The `/verified` route preserves the `verifiedOnly: true` mode and stays compatible with every filter — `/verified?q=aave&consensus=bullish` works. Toggling Verified ↔ Explore via the header chip carries the active query string across the route swap so the user doesn't lose their search.
+
+- **Endpoint:** `GET /api/simulation/public?q=…&consensus=bullish&quality=excellent&sort=rounds&page=2`
+- **Compose with verified:** `GET /api/simulation/public?verified=1&consensus=bearish` returns every bearish call that has a recorded outcome.
+- **Implementation:** pure stdlib in-memory filter over the gallery cards already assembled by the public endpoint. Zero new dependencies. The endpoint stays cached for 30 s, so a busy gallery amortises the per-sim card build over many filtered requests.
+
+A "📊 Reset" button appears once any filter is active; the empty state ("No simulations match your filters") points back at the same reset rather than dead-ending on a "no public sims yet" message that wouldn't apply.
+
 ## Public Gallery Feeds (RSS / Atom)
 
 The same cards `/explore` renders, served as a syndication feed so researchers and tooling already on Feedly / Readwise / Inoreader / NetNewsWire / Obsidian RSS subscribe in their existing toolchain — no login, no MiroShark account. Every newly published simulation lands in their reader the same way an AI newsletter or Substack post does.

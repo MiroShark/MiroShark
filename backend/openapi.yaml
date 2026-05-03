@@ -1303,7 +1303,27 @@ paths:
   /api/simulation/public:
     get:
       tags: [Publish & Embed]
-      summary: Paginated gallery feed of public simulations.
+      summary: Filterable, paginated gallery feed of public simulations.
+      description: |
+        Discovery layer for the `/explore` and `/verified` views. Returns
+        the same gallery card payload that the share card, replay GIF,
+        transcript, RSS feed, and trajectory exports all share — same
+        ±0.2 stance threshold, same on-disk `sim_dir/` substrate.
+
+        Optional filters compose with logical AND:
+
+        * `q` — case-insensitive substring match against the scenario.
+        * `consensus` — `bullish` / `neutral` / `bearish`. Filters by the
+          dominant final-round stance using the same ±0.2 threshold the
+          share card / replay GIF / transcript / webhook / feed all use.
+        * `quality` — `excellent` / `good` / `fair` / `poor`. Compared
+          against the first word of the simulation's `quality_health`.
+        * `outcome` — `correct` / `incorrect` / `partial`. Implies
+          `verified=1`.
+
+        `total` reflects the filtered count (not the full corpus), so the
+        client can render an accurate "X remaining" hint and `has_more`
+        flag for the active filter set.
       parameters:
         - in: query
           name: limit
@@ -1312,12 +1332,59 @@ paths:
           name: offset
           schema: { type: integer, minimum: 0, default: 0 }
         - in: query
+          name: page
+          description: |
+            1-based page number — alternative to `offset`. Wins over
+            `offset` when both are supplied. `page=1` is offset 0.
+          schema: { type: integer, minimum: 1 }
+        - in: query
           name: verified
           description: |
             Truthy values (`1`, `true`, `yes`, `on`) restrict the listing to
             simulations with a recorded outcome annotation — i.e. the
             "Verified Prediction" hall.
           schema: { type: string }
+        - in: query
+          name: q
+          description: |
+            Case-insensitive substring match against the scenario text.
+            Trimmed and capped at 200 characters.
+          schema: { type: string, maxLength: 200 }
+        - in: query
+          name: consensus
+          description: |
+            Filter to cards whose dominant final consensus matches the
+            chosen stance (using the same ±0.2 threshold as every other
+            surface).
+          schema:
+            type: string
+            enum: [bullish, neutral, bearish]
+        - in: query
+          name: quality
+          description: |
+            Filter to cards whose `quality_health` first word matches the
+            requested tier (case-insensitive).
+          schema:
+            type: string
+            enum: [excellent, good, fair, poor]
+        - in: query
+          name: outcome
+          description: |
+            Filter to verified simulations whose recorded outcome label
+            matches. Implies `verified=1`.
+          schema:
+            type: string
+            enum: [correct, incorrect, partial]
+        - in: query
+          name: sort
+          description: |
+            `date` (default — newest first), `rounds` (highest
+            `current_round` first), or `agents` (largest population
+            first).
+          schema:
+            type: string
+            enum: [date, rounds, agents]
+            default: date
       responses:
         "200":
           description: Gallery cards.
@@ -1335,8 +1402,25 @@ paths:
                       total: { type: integer }
                       limit: { type: integer }
                       offset: { type: integer }
+                      page: { type: integer }
                       has_more: { type: boolean }
                       verified_only: { type: boolean }
+                      q: { type: string }
+                      consensus:
+                        type: string
+                        nullable: true
+                        enum: [bullish, neutral, bearish, null]
+                      quality:
+                        type: string
+                        nullable: true
+                        enum: [excellent, good, fair, poor, null]
+                      outcome:
+                        type: string
+                        nullable: true
+                        enum: [correct, incorrect, partial, null]
+                      sort:
+                        type: string
+                        enum: [date, rounds, agents]
 
   # ────────────────────────────────────────────────────────────────────
   # Export
