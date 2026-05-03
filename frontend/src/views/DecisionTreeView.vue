@@ -249,13 +249,12 @@ import {
   postTreeResearch,
   postTreeUpdateNode,
   postTreeSynthesize,
-  postCompileForesight,
   postTreeScore,
   postTreeAugmentBigPicture,
   postTreeAugmentStoryDepth,
 } from '../api/decisionTree.js'
 import { useEducationPlan } from '../composables/useEducationPlan.js'
-import { marked } from 'marked'
+import { useForesightDocument } from '../composables/useForesightDocument.js'
 import { useInfographicTimeline } from '../composables/useInfographicTimeline.js'
 
 const route = useRoute()
@@ -288,9 +287,6 @@ const autoGrowing = ref(false)
 const autoGrowStopRequested = ref(false)
 const autoGrowProgress = ref({ phase: '', current: 0, total: 0, label: '' })
 
-const foresight = ref('')
-const foresightOpen = ref(false)
-const compilingForesight = ref(false)
 const {
   infographicPlan,
   infographicOpen,
@@ -358,9 +354,18 @@ const {
   downloadEducationJson,
 } = useEducationPlan({ sessionId, tree, infographicFormat, error })
 
-const renderedForesight = computed(() =>
-  foresight.value ? marked.parse(foresight.value) : ''
-)
+const {
+  foresight,
+  foresightOpen,
+  compilingForesight,
+  renderedForesight,
+  loadForesightState,
+  compileForesight,
+  regenerateForesight,
+  copyForesight,
+  downloadForesight,
+} = useForesightDocument({ sessionId, tree, error })
+
 
 function setBusy(nodeId, action, value) {
   if (!busyMap[nodeId]) busyMap[nodeId] = {}
@@ -401,9 +406,7 @@ async function loadTree() {
       const data = await postTreeInit({ session_id: sessionId })
       tree.value = data.tree
     }
-    if (session?.foresight) {
-      foresight.value = session.foresight
-    }
+    loadForesightState(session)
     loadEducationState(session)
     loadInfographicState(session)
   } catch (err) {
@@ -741,73 +744,6 @@ async function autoGrowAndAnalyse() {
 function stopAutoGrow() {
   autoGrowStopRequested.value = true
 }
-
-async function compileForesight() {
-  if (!tree.value || compilingForesight.value) return
-  // If we already have a foresight doc, just open the modal
-  if (foresight.value && !foresightOpen.value) {
-    foresightOpen.value = true
-    return
-  }
-  compilingForesight.value = true
-  error.value = ''
-  try {
-    const data = await postCompileForesight({ session_id: sessionId })
-    if (data?.foresight) {
-      foresight.value = data.foresight
-      foresightOpen.value = true
-    }
-  } catch (err) {
-    error.value = err?.response?.data?.error || err.message
-  } finally {
-    compilingForesight.value = false
-  }
-}
-
-async function regenerateForesight() {
-  // Force recompile even if foresight exists
-  if (compilingForesight.value) return
-  compilingForesight.value = true
-  error.value = ''
-  try {
-    const data = await postCompileForesight({ session_id: sessionId })
-    if (data?.foresight) {
-      foresight.value = data.foresight
-    }
-  } catch (err) {
-    error.value = err?.response?.data?.error || err.message
-  } finally {
-    compilingForesight.value = false
-  }
-}
-
-async function copyForesight() {
-  try {
-    await navigator.clipboard.writeText(foresight.value)
-  } catch {
-    error.value = 'Copy failed — your browser blocked clipboard access.'
-  }
-}
-
-function downloadForesight() {
-  if (!foresight.value) return
-  const date = new Date().toISOString().slice(0, 10)
-  const slug = (tree.value?.question || 'foresight')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || 'foresight'
-  const blob = new Blob([foresight.value], { type: 'text/markdown;charset=utf-8' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = `foresight-${slug}-${date}.md`
-  document.body.appendChild(a)
-  a.click()
-  document.body.removeChild(a)
-  URL.revokeObjectURL(url)
-}
-
 
 async function onUpdateNode({ node_id, fields }) {
   try {
