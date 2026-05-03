@@ -85,6 +85,7 @@
         <footer class="brief-footer">
           <button type="button" class="secondary" @click="copyAdScripts">Copy markdown</button>
           <button type="button" class="secondary" @click="downloadAdScripts">Download .md</button>
+          <button type="button" class="secondary tree-link" @click="openDecisionTree">Open Decision Tree ▶</button>
           <button
             type="button"
             class="primary"
@@ -503,6 +504,8 @@ function openDecisionTree() {
     error.value = 'No active session.'
     return
   }
+  briefOpen.value = false
+  adScriptsOpen.value = false
   router.push({ name: 'DecisionTree', params: { sessionId: activeSessionId.value } })
 }
 
@@ -645,6 +648,7 @@ onMounted(async () => {
 .actions {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 0.5rem;
 }
@@ -828,6 +832,7 @@ onMounted(async () => {
 .brief-footer {
   display: flex;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border-top: 1px solid #222;
@@ -841,4 +846,5 @@ onMounted(async () => {
 }
 .brief-footer .primary { background: #4ade80; color: #052e16; font-weight: bold; }
 .brief-footer .secondary { background: #333; color: #ddd; }
+.brief-footer .tree-link { background: #213a4a; color: #d7efff; }
 </style>
