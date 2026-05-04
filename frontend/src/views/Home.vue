@@ -405,6 +405,9 @@ const prefillBannerKind = ref('text') // 'text' | 'url' | 'ask' | 'mixed'
 // Toast for the "Share as link" copy button — same UX pattern as the embed
 // dialog's "Copy" toast (resets to default label after a beat).
 const shareLinkCopiedAt = ref(0)
+// Bumped after the toast window expires so the time-windowed `shareLinkCopied`
+// computed re-evaluates (it depends on Date.now(), which isn't reactive).
+const shareLinkCopiedTick = ref(0)
 const shareLinkError = ref('')
 
 // In-flight state for the ?template=<slug> auto-launch path. We hide the
@@ -827,6 +830,8 @@ const buildLiveShareUrl = () => {
 }
 
 const shareLinkCopied = computed(() => {
+  // Touch the tick ref so the computed re-runs when the toast window expires.
+  void shareLinkCopiedTick.value
   return shareLinkCopiedAt.value > 0 && Date.now() - shareLinkCopiedAt.value < 2200
 })
 
@@ -838,8 +843,8 @@ const copyScenarioShareLink = async () => {
     await navigator.clipboard.writeText(url)
     shareLinkCopiedAt.value = Date.now()
     setTimeout(() => {
-      // Force re-eval of the computed once the toast window expires.
-      shareLinkCopiedAt.value = shareLinkCopiedAt.value
+      // Re-evaluate `shareLinkCopied` once the toast window expires.
+      shareLinkCopiedTick.value++
     }, 2300)
   } catch (err) {
     shareLinkError.value =
