@@ -19,6 +19,20 @@
 
     <SettingsPanel :open="settingsOpen" @close="settingsOpen = false" />
 
+    <!-- Template auto-launch indicator — visible only while resolving a
+         ?template=<slug> link. The redirect to /process/new fires the
+         moment the API responds, so this is a brief 0.3–1.5 s strip; we
+         stay on the home page for slow network so the user has feedback
+         instead of an apparently-frozen click. -->
+    <div v-if="templateAutoLaunching" class="prefill-template-loading">
+      <span class="prefill-template-loading-dot">◇</span>
+      <span>{{ $tr('Loading template — redirecting…', '正在加载模板 — 即将跳转…') }}</span>
+    </div>
+    <div v-if="templateAutoLaunchError" class="prefill-template-error">
+      <span>⚠ {{ templateAutoLaunchError }}</span>
+      <button class="prefill-template-error-close" @click="templateAutoLaunchError = ''">×</button>
+    </div>
+
     <!-- Document preview modal (URL fetches + Ask-mode generations) -->
     <Teleport to="body">
       <div v-if="previewDoc" class="doc-preview-overlay" @click.self="previewDoc = null">
@@ -125,6 +139,20 @@
 
         <!-- Right Column: Interactive Console -->
         <div class="right-panel">
+          <!-- Pre-fill banner — shown when a ?scenario= / ?url= / ?ask= link
+               populated the form on mount. Sits above the console so it's
+               obvious which fields were touched without obscuring the form
+               itself. Dismissible — once seen, get out of the way. -->
+          <div v-if="prefillBannerVisible" class="prefill-banner" role="status">
+            <span class="prefill-banner-icon">🔗</span>
+            <span class="prefill-banner-text">{{ prefillBannerCopy }}</span>
+            <button
+              class="prefill-banner-close"
+              :title="$tr('Dismiss', '关闭')"
+              @click="dismissPrefillBanner"
+            >×</button>
+          </div>
+
           <div class="console-box">
             <!-- Upload Area -->
             <div class="console-section">
@@ -291,6 +319,28 @@
                 ></textarea>
                 <div class="model-badge">{{ $tr('Engine: MiroShark-V1.0', '引擎:MiroShark-V1.0') }}</div>
               </div>
+
+              <!-- Share-as-link — copy a URL that drops a reader into this
+                   exact pre-filled form. Visible once there's something
+                   worth sharing (scenario text, fetched URL doc, or ask
+                   question). The un-run-scenario counterpart to the
+                   "Fork this scenario" button on /watch and /share. -->
+              <div v-if="canShareScenarioLink" class="share-scenario-row">
+                <button
+                  class="share-scenario-btn"
+                  :class="{ copied: shareLinkCopied }"
+                  :title="$tr('Copy a URL that drops a reader into this pre-filled form', '复制可让读者直接进入此预填表单的链接')"
+                  @click="copyScenarioShareLink"
+                >
+                  <span class="share-scenario-icon">🔗</span>
+                  <span v-if="shareLinkCopied">{{ '✓ ' + $tr('Link copied', '链接已复制') }}</span>
+                  <span v-else>{{ $tr('Share as link', '分享为链接') }}</span>
+                </button>
+                <span class="share-scenario-hint">
+                  {{ $tr('Tweet this URL to invite anyone to run the same setup.', '发推此 URL,即可邀请他人运行相同设置。') }}
+                </span>
+              </div>
+              <div v-if="shareLinkError" class="share-scenario-error">{{ shareLinkError }}</div>
             </div>
 
             <!-- Start Button -->
@@ -320,8 +370,8 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import HistoryDatabase from '../components/HistoryDatabase.vue'
 import TemplateGallery from '../components/TemplateGallery.vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
@@ -330,12 +380,39 @@ import TrendingTopics from '../components/TrendingTopics.vue'
 import LocaleToggle from '../components/LocaleToggle.vue'
 import { fetchUrl } from '../api/graph'
 import { askMode } from '../api/simulation'
+import { getTemplate } from '../api/templates'
+import { setPendingTemplate } from '../store/pendingUpload'
+import {
+  readPrefilledParams,
+  hasAnyPrefill,
+  buildScenarioShareUrl,
+  PREFILL_LIMITS,
+} from '../utils/urlParams'
 import { tr } from '../i18n'
 
 const settingsOpen = ref(false)
 const previewDoc = ref(null)
 
 const router = useRouter()
+const route = useRoute()
+
+// Pre-fill banner — shown when ?scenario= / ?url= / ?ask= dropped the user
+// here from a tweet or blog post and at least one field was populated. Stays
+// dismissible because seasoned operators don't need the affordance once
+// they've seen the form.
+const prefillBannerVisible = ref(false)
+const prefillBannerKind = ref('text') // 'text' | 'url' | 'ask' | 'mixed'
+
+// Toast for the "Share as link" copy button — same UX pattern as the embed
+// dialog's "Copy" toast (resets to default label after a beat).
+const shareLinkCopiedAt = ref(0)
+const shareLinkError = ref('')
+
+// In-flight state for the ?template=<slug> auto-launch path. We hide the
+// page chrome while resolving so a slow API call doesn't render the empty
+// console for half a second before redirecting to /process/new.
+const templateAutoLaunching = ref(false)
+const templateAutoLaunchError = ref('')
 
 // Form data
 const formData = ref({
@@ -608,6 +685,170 @@ const startSimulation = () => {
     })
   })
 }
+
+// ── Pre-filled scenario links ───────────────────────────────────────────
+// `/?scenario=...&url=...&ask=...` drops the reader directly into a
+// pre-configured New Sim form. `/?template=<slug>` is the auto-launch
+// equivalent for one of the preset templates (matches what clicking the
+// gallery launch button does).
+
+const dismissPrefillBanner = () => {
+  prefillBannerVisible.value = false
+}
+
+const prefillBannerCopy = computed(() => {
+  switch (prefillBannerKind.value) {
+    case 'url':
+      return tr(
+        'Document pre-filled from a shared link — review the scenario below before launching.',
+        '已通过分享链接预填文档 — 启动前请检查下方情景设置。',
+      )
+    case 'ask':
+      return tr(
+        'Question pre-filled from a shared link — click Research to synthesize the briefing, or edit the question first.',
+        '已通过分享链接预填问题 — 点击「研究」合成简报,或先修改问题。',
+      )
+    case 'mixed':
+      return tr(
+        'Scenario, document, and question pre-filled from a shared link — review the form below before launching.',
+        '情景、文档与问题均已通过分享链接预填 — 启动前请检查下方表单。',
+      )
+    default:
+      return tr(
+        'Scenario pre-filled from a shared link — review the form below before launching.',
+        '已通过分享链接预填情景 — 启动前请检查下方表单。',
+      )
+  }
+})
+
+const autoLaunchTemplate = async (slug) => {
+  templateAutoLaunching.value = true
+  templateAutoLaunchError.value = ''
+  try {
+    const res = await getTemplate(slug)
+    if (!res?.success || !res.data) {
+      templateAutoLaunchError.value = tr(
+        `Couldn't load that template. The link may be stale.`,
+        '无法加载该模板。链接可能已失效。',
+      )
+      return
+    }
+    const full = res.data
+    setPendingTemplate(
+      full.simulation_requirement,
+      full.seed_document,
+      full.name,
+    )
+    router.push({ name: 'Process', params: { projectId: 'new' } })
+  } catch (err) {
+    templateAutoLaunchError.value =
+      err?.response?.data?.error ||
+      err?.message ||
+      tr(
+        `Couldn't load that template. The link may be stale.`,
+        '无法加载该模板。链接可能已失效。',
+      )
+  } finally {
+    templateAutoLaunching.value = false
+  }
+}
+
+const applyPrefilledParams = async () => {
+  const params = readPrefilledParams(route.query || {})
+  if (!hasAnyPrefill(params)) return
+
+  // Strip the params off the URL so a refresh / back-button doesn't replay
+  // the pre-fill (and so a copy-paste of the address bar after editing the
+  // form is the user's edited state, not the original shared link).
+  router.replace({ path: '/', query: {} })
+
+  if (params.template) {
+    autoLaunchTemplate(params.template)
+    return
+  }
+
+  let touched = []
+  if (params.scenario && !formData.value.simulationRequirement) {
+    formData.value.simulationRequirement = params.scenario
+    touched.push('scenario')
+  }
+  if (params.ask && !askQuestion.value) {
+    askQuestion.value = params.ask
+    touched.push('ask')
+  }
+  if (params.url) {
+    const dup = urlDocs.value.some((d) => d.url === params.url)
+    if (!dup) {
+      urlInput.value = params.url
+      // Wait for the next tick so the input change is observed before fetch
+      // — keeps the network call colocated with the visible input value if
+      // the user opens devtools to debug a slow fetch.
+      await nextTick()
+      fetchUrlDoc()
+      touched.push('url')
+    }
+  }
+
+  if (touched.length === 0) return
+
+  if (touched.length >= 2) prefillBannerKind.value = 'mixed'
+  else if (touched[0] === 'url') prefillBannerKind.value = 'url'
+  else if (touched[0] === 'ask') prefillBannerKind.value = 'ask'
+  else prefillBannerKind.value = 'text'
+  prefillBannerVisible.value = true
+}
+
+onMounted(() => {
+  applyPrefilledParams()
+})
+
+// Construct a `?scenario=...&url=...&ask=...` URL from the live form state
+// and copy it to the clipboard. Visible whenever there's enough content to
+// produce a meaningful share link — the un-run-scenario counterpart to the
+// "Fork this scenario" button on /watch and /share pages.
+const canShareScenarioLink = computed(() => {
+  return Boolean(
+    formData.value.simulationRequirement.trim() ||
+      urlDocs.value.length > 0 ||
+      askQuestion.value.trim(),
+  )
+})
+
+const buildLiveShareUrl = () => {
+  // Only the first fetched URL doc travels with the link — multi-doc setups
+  // are advanced and rare; copy-paste the additional URLs separately.
+  const firstHttpDoc = urlDocs.value.find(
+    (d) => typeof d.url === 'string' && /^https?:\/\//i.test(d.url),
+  )
+  return buildScenarioShareUrl({
+    scenario: formData.value.simulationRequirement,
+    url: firstHttpDoc ? firstHttpDoc.url : '',
+    ask: askQuestion.value,
+  })
+}
+
+const shareLinkCopied = computed(() => {
+  return shareLinkCopiedAt.value > 0 && Date.now() - shareLinkCopiedAt.value < 2200
+})
+
+const copyScenarioShareLink = async () => {
+  shareLinkError.value = ''
+  if (!canShareScenarioLink.value) return
+  const url = buildLiveShareUrl()
+  try {
+    await navigator.clipboard.writeText(url)
+    shareLinkCopiedAt.value = Date.now()
+    setTimeout(() => {
+      // Force re-eval of the computed once the toast window expires.
+      shareLinkCopiedAt.value = shareLinkCopiedAt.value
+    }, 2300)
+  } catch (err) {
+    shareLinkError.value =
+      err?.message || tr('Copy failed — long-press the link to copy manually.', '复制失败 — 长按链接手动复制。')
+  }
+}
+
+const _PREFILL_LIMITS_HINT = PREFILL_LIMITS
 </script>
 
 <style scoped>
@@ -1466,9 +1707,148 @@ const startSimulation = () => {
   background: #FAFAFA;
 }
 
+/* ── Pre-fill banner (?scenario / ?url / ?ask) ── */
+.prefill-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin-bottom: var(--space-sm);
+  background: rgba(255, 107, 26, 0.08);
+  border-left: 3px solid var(--color-orange);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+.prefill-banner-icon {
+  font-size: 14px;
+  line-height: 1.4;
+  flex-shrink: 0;
+}
+
+.prefill-banner-text {
+  flex: 1;
+}
+
+.prefill-banner-close {
+  background: none;
+  border: none;
+  color: rgba(10, 10, 10, 0.4);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.prefill-banner-close:hover {
+  color: var(--color-orange);
+}
+
+/* ── Template auto-launch indicators (?template=<slug>) ── */
+.prefill-template-loading,
+.prefill-template-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.5px;
+  background: var(--color-black);
+  color: var(--color-white);
+}
+
+.prefill-template-loading-dot {
+  color: var(--color-orange);
+  animation: blink 1s step-end infinite;
+}
+
+.prefill-template-error {
+  background: rgba(239, 68, 68, 0.12);
+  color: var(--color-red);
+  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
+  justify-content: space-between;
+}
+
+.prefill-template-error-close {
+  background: none;
+  border: none;
+  color: rgba(239, 68, 68, 0.6);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 var(--space-xs);
+}
+
+.prefill-template-error-close:hover {
+  color: var(--color-red);
+}
+
+/* ── Share scenario as link ── */
+.share-scenario-row {
+  margin-top: var(--space-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.share-scenario-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid rgba(10, 10, 10, 0.18);
+  padding: 6px var(--space-sm);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.share-scenario-btn:hover {
+  border-color: var(--color-orange);
+  color: var(--color-orange);
+}
+
+.share-scenario-btn.copied {
+  border-color: var(--color-green);
+  color: var(--color-green);
+}
+
+.share-scenario-icon {
+  font-size: 13px;
+  line-height: 1;
+}
+
+.share-scenario-hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: rgba(10, 10, 10, 0.4);
+  line-height: 1.4;
+}
+
+.share-scenario-error {
+  margin-top: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--color-red);
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .dashboard-section { flex-direction: column; }
   .main-title { font-size: 34px; }
+}
+
+@media (max-width: 640px) {
+  .share-scenario-row { gap: var(--space-xs); }
+  .share-scenario-hint { display: none; }
 }
 </style>

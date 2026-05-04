@@ -82,15 +82,26 @@
           <span>{{ $tr('Use live oracle data', '使用实时 oracle 数据') }}</span>
         </label>
 
-        <button
-          class="launch-btn"
-          :disabled="launchingId === template.id"
-          @click.stop="launchTemplate(template)"
-        >
-          <span v-if="launchingId === template.id">{{ $tr('Loading...', '加载中...') }}</span>
-          <span v-else-if="oracleOptIn[template.id] && capabilities.oracle_seed_enabled">{{ $tr('Launch (live) →', '启动(实时)→') }}</span>
-          <span v-else>{{ $tr('Launch →', '启动 →') }}</span>
-        </button>
+        <div class="card-actions">
+          <button
+            class="launch-btn"
+            :disabled="launchingId === template.id"
+            @click.stop="launchTemplate(template)"
+          >
+            <span v-if="launchingId === template.id">{{ $tr('Loading...', '加载中...') }}</span>
+            <span v-else-if="oracleOptIn[template.id] && capabilities.oracle_seed_enabled">{{ $tr('Launch (live) →', '启动(实时)→') }}</span>
+            <span v-else>{{ $tr('Launch →', '启动 →') }}</span>
+          </button>
+          <button
+            class="copy-link-btn"
+            :class="{ copied: copiedLinkId === template.id }"
+            :title="$tr('Copy a shareable link that auto-launches this template', '复制可自动启动此模板的分享链接')"
+            @click.stop="copyTemplateLink(template)"
+          >
+            <span v-if="copiedLinkId === template.id">✓</span>
+            <span v-else>🔗</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -101,6 +112,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { listTemplates, getTemplate, getTemplateCapabilities } from '../api/templates'
 import { setPendingTemplate } from '../store/pendingUpload'
+import { buildTemplateShareUrl } from '../utils/urlParams'
 
 const router = useRouter()
 
@@ -108,6 +120,7 @@ const templates = ref([])
 const loading = ref(true)
 const selectedId = ref(null)
 const launchingId = ref(null)
+const copiedLinkId = ref(null)
 const capabilities = ref({ oracle_seed_enabled: false, mcp_agent_tools_enabled: false })
 const oracleOptIn = reactive({})  // templateId → bool (opt-in per card)
 
@@ -158,6 +171,20 @@ onMounted(async () => {
 
 const selectTemplate = (template) => {
   selectedId.value = selectedId.value === template.id ? null : template.id
+}
+
+const copyTemplateLink = async (template) => {
+  if (!template?.id) return
+  const url = buildTemplateShareUrl(template.id)
+  try {
+    await navigator.clipboard.writeText(url)
+    copiedLinkId.value = template.id
+    setTimeout(() => {
+      if (copiedLinkId.value === template.id) copiedLinkId.value = null
+    }, 1800)
+  } catch (e) {
+    console.warn('Copy failed:', e)
+  }
 }
 
 const launchTemplate = async (template) => {
@@ -359,8 +386,14 @@ const launchTemplate = async (template) => {
   cursor: not-allowed;
 }
 
+.card-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
 .launch-btn {
-  width: 100%;
+  flex: 1;
   padding: 10px;
   background: #000;
   color: #fff;
@@ -380,6 +413,31 @@ const launchTemplate = async (template) => {
 .launch-btn:disabled {
   background: #CCC;
   cursor: not-allowed;
+}
+
+.copy-link-btn {
+  flex-shrink: 0;
+  width: 38px;
+  background: transparent;
+  color: #666;
+  border: 1px solid #E5E5E5;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.copy-link-btn:hover {
+  border-color: #FF4500;
+  color: #FF4500;
+}
+
+.copy-link-btn.copied {
+  border-color: #43C165;
+  color: #43C165;
 }
 
 @media (max-width: 1024px) {

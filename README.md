@@ -78,6 +78,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Smart Setup** | Drop in a doc → three auto-generated Bull / Bear / Neutral scenarios in ~2s |
 | **What's Trending** | Pick a live news item from RSS feeds; pre-fills the scenario in one click |
 | **Just Ask** | Type a question with no document — MiroShark researches and writes the seed briefing |
+| **Shareable Scenario Links** | Drop a `?scenario=...&url=...` URL into a tweet or blog post — readers land on the New Sim form already pre-filled. `?template=<slug>` auto-launches one of the preset templates. The un-run-scenario counterpart to "Fork this scenario" on `/watch` and `/share` |
 | **Counterfactual Branching** | Fork a running simulation with an injected event ("what if the CEO resigns in round 24?") |
 | **Director Mode** | Inject breaking news into the *current* timeline without forking |
 | **Preset Templates** | 6 benchmarked scenarios: crypto launch, corporate crisis, political debate, product announcement, campus controversy, historical what-if |
@@ -207,6 +208,7 @@ cp .env.example .env
 | **智能配置** | 投入文档 → 约 2 秒生成三套自动情景(看涨/看跌/中立) |
 | **热门追踪** | 从 RSS 中挑选实时新闻,一键预填情景 |
 | **直接提问** | 不用文档,直接打字提问 — MiroShark 自行调研并撰写种子简报 |
+| **可分享情景链接** | 在推文或博客文章中放入 `?scenario=...&url=...` 链接 — 读者一打开就会看到已预填的「新建模拟」表单。`?template=<slug>` 可自动启动任一预设模板。这是 `/watch` 与 `/share` 上「派生此情景」的「未运行情景」对应版本 |
 | **反事实分支** | 在运行中的模拟里派生分支并注入事件(「如果 24 轮时 CEO 辞职会怎样?」) |
 | **导演模式** | 在当前时间线中投入突发新闻,无需派生分支 |
 | **预设模板** | 6 套基准情景:加密代币发布、企业危机、政治辩论、产品发布、校园风波、历史假设 |

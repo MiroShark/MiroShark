@@ -26,6 +26,27 @@ No document and no specific article in mind? Type a question on the Home screen 
 
 - **Endpoint:** `POST /api/simulation/ask`
 
+## Shareable Scenario Links
+
+Every other share surface (`/share/<id>`, `/watch/<id>`, replay GIF, transcript, RSS, trajectory CSV, gallery search) points readers at a *finished* simulation. Shareable Scenario Links cover the other half — the *un-run* scenario. Drop a URL into a tweet, blog post, or Discord message and the reader lands on the New Sim form with the scenario already pre-filled, one click away from launching their own run with the exact same setup.
+
+The URL accepts four optional query parameters, each independently:
+
+| Param | Effect | Cap |
+|---|---|---|
+| `scenario` | Pre-fills the Simulation Prompt textarea | 500 chars |
+| `url` | Auto-fetches into the URL Import list (must be `http://` or `https://`) | 2000 chars |
+| `ask` | Pre-fills the Just Ask question field — does *not* auto-run (avoids surprise LLM cost) | 300 chars |
+| `template` | Auto-launches the named preset template (skips the home page entirely) | slug only |
+
+Any combination works. `?scenario=Simulate%20a%20stablecoin%20depeg&url=https://example.com/incident-report` pre-fills the prompt *and* fetches the article in the same flow. `?template=corporate_crisis` skips straight to the template launch path. When pre-fill happens, a dismissible orange-edged banner sits above the console so the operator knows the form was populated by a shared link before they hit Launch.
+
+Inputs are sanitised on read — HTML / `javascript:` URIs / control characters are stripped, length caps prevent megabyte payloads, and `url=` is rejected unless it starts with `http://` or `https://`. Once the form is populated, the URL params are stripped via `router.replace` so a refresh doesn't replay the pre-fill and a copy-paste of the address bar reflects the user's edited state, not the original shared link.
+
+The reverse direction lives in two places. On the home page, a discreet **🔗 Share as link** button beneath the Simulation Prompt textarea constructs a `?scenario=...&url=...&ask=...` URL from the current form state and copies it to the clipboard — the un-run-scenario counterpart to the **Fork this scenario** button on the live watch / share-card pages. On every preset template card a small **🔗** icon next to the Launch button copies a `?template=<slug>` URL — Aaron's "try this sim" tweets gain a one-click CTA that drops the reader directly into the named template's launch flow.
+
+Pure frontend; no backend changes. Sanitization lives in `frontend/src/utils/urlParams.js` (DOMPurify-backed) and is reused by both the read path on `/` and the write path on the home page + template gallery.
+
 ## Counterfactual Branching
 
 Run a simulation, pause to inspect, then ask: "what if the CEO resigns in round 24?" — click **⤷ Branch** in the simulation workspace, enter a trigger round and a breaking-news injection, and MiroShark forks the simulation with the parent's full agent population. When the runner reaches the trigger round, the injection is promoted to a director event and prepended to every agent's observation prompt as a BREAKING block. Compare the branch against the original via the existing **Compare** view.
