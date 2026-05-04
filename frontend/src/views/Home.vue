@@ -386,7 +386,6 @@ import {
   readPrefilledParams,
   hasAnyPrefill,
   buildScenarioShareUrl,
-  PREFILL_LIMITS,
 } from '../utils/urlParams'
 import { tr } from '../i18n'
 
@@ -848,7 +847,6 @@ const copyScenarioShareLink = async () => {
   }
 }
 
-const _PREFILL_LIMITS_HINT = PREFILL_LIMITS
 </script>
 
 <style scoped>
