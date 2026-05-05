@@ -1281,6 +1281,79 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/thread.txt:
+    get:
+      tags: [Publish & Embed]
+      summary: Twitter / X tweet thread for a published simulation.
+      description: |
+        Auto-formatted tweet thread that copy-pastes 1:1 into X — one
+        intro tweet (scenario + scale + consensus label), one tweet per
+        belief inflection point (rounds where the dominant stance
+        crossed the ±0.2 threshold in either direction), and one
+        closing tweet (final verdict + quality + watch + share URLs).
+        Each tweet ≤280 characters; tweets are separated by `---`
+        on their own line so an operator can scan visually and copy
+        individual tweets.
+
+        Pairs with `share-card.png` (preview), `replay.gif` (motion),
+        `transcript.md` / `transcript.json` (prose), and
+        `trajectory.csv` / `trajectory.jsonl` (data) as the **sixth**
+        share format. The previous five surfaces target visual / motion
+        / prose / data; this one is the short-form text channel that
+        X/Twitter speaks natively.
+
+        Inflection-point detection uses the same ±0.2 stance threshold
+        every other surface uses, with a small hysteresis (the dominant
+        stance must lead the runner-up by ≥0.2pp) so a near-tie round
+        doesn't generate a "stance shifted to neutral" tweet for every
+        round of a balanced run. Threads longer than `MAX_THREAD_TWEETS`
+        (15) are truncated to the first 3 + last 3 inflections with a
+        single bridge line — the `truncated` flag in the JSON form
+        signals this happened.
+
+        Same publish gate as the share card and transcript. Honors
+        `X-Forwarded-Proto` / `X-Forwarded-Host` for the watch + share
+        URLs in the close tweet.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "Plain-text thread with `Content-Type: text/plain; charset=utf-8` + `Cache-Control: public, max-age=300`."
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: |
+                  Tweets separated by a `---` line. Each tweet ≤280
+                  characters. Trailing newline included.
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/simulation/{simulation_id}/thread.json:
+    get:
+      tags: [Publish & Embed]
+      summary: Same tweet thread as `thread.txt` but as structured JSON.
+      description: |
+        Returns the structured thread payload — `tweets`, `total`,
+        `inflections_recorded`, `truncated` — so a programmatic consumer
+        (Twitter scheduling tool, Notion dashboard, downstream LLM
+        pipeline) can iterate the tweets without splitting the plain
+        form on the `---` separator.
+
+        Same publish gate, same threshold, and same truncation rules
+        as `thread.txt`.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "Pretty-printed JSON with `Content-Type: application/json; charset=utf-8` + `Cache-Control: public, max-age=300`."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationThread"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /share/{simulation_id}:
     get:
       tags: [Publish & Embed]
@@ -2555,6 +2628,44 @@ components:
             - { type: number }
             - { type: string }
           description: Overall participation rate ∈ [0,1] from quality.json; empty string when the run has not produced quality.json yet.
+
+    SimulationThread:
+      type: object
+      description: |
+        Structured tweet-thread payload returned by `thread.json`. The
+        plain-text form (`thread.txt`) is the same `tweets` array joined
+        with `---` separators — consumers that need per-tweet metadata
+        (truncation flag, total inflections in the underlying run)
+        should consume the JSON form.
+      required: [tweets, total, inflections_recorded, truncated]
+      properties:
+        tweets:
+          type: array
+          description: |
+            Ordered list of tweets, each ≤280 characters. The first
+            tweet is the intro (scenario + scale + consensus label),
+            the last tweet is the close (final verdict + watch URL +
+            share URL); the body in between is one tweet per belief
+            inflection point (or, when truncated, the first 3 + a
+            single bridge tweet + the last 3).
+          items:
+            type: string
+            maxLength: 280
+        total:
+          type: integer
+          description: Total number of tweets in the thread (intro + body + close).
+        inflections_recorded:
+          type: integer
+          description: |
+            Total number of belief inflections detected in the
+            underlying run. May exceed the body-tweet count when the
+            thread was truncated.
+        truncated:
+          type: boolean
+          description: |
+            True when `inflections_recorded` exceeded the per-thread
+            body budget and a bridge tweet was inserted between the
+            head and tail inflections.
 
     SettingsUpdate:
       type: object

@@ -508,6 +508,46 @@ export const getTrajectoryJsonlUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the auto-generated Twitter / X tweet
+ * thread for a finished simulation. Plain-text form — one intro
+ * tweet, one tweet per belief inflection point (rounds where the
+ * dominant stance crossed the ±0.2 threshold), and one closing
+ * tweet with the watch + share URLs. Tweets are separated by
+ * `---` on its own line so an operator can copy individual ones.
+ *
+ * Pairs with the share card (preview), replay GIF (motion),
+ * transcript (prose), and trajectory CSV/JSONL (data) as the
+ * sixth share format — the short-form text channel X/Twitter
+ * speaks natively.
+ *
+ * Same publish gate as the share card and transcript.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getThreadTxtUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/thread.txt`
+}
+
+/**
+ * Build the absolute URL of the JSON form of the same tweet thread
+ * as `thread.txt`. Returns the structured payload — `tweets`,
+ * `total`, `inflections_recorded`, `truncated` — so a programmatic
+ * consumer (Twitter scheduling tool, Notion dashboard) can iterate
+ * tweets without splitting on the `---` separator.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getThreadJsonUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/thread.json`
+}
+
+/**
  * Build the absolute URL of the public share landing page for a
  * simulation. The page exposes Open Graph + Twitter Card meta tags so
  * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls

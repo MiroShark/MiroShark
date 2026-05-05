@@ -91,6 +91,8 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/transcript.json` | Structured JSON transcript (SDKs / LLM-as-judge) |
 | `GET` | `/api/simulation/<id>/trajectory.csv` | Per-round belief CSV (`pandas.read_csv()` / Excel / Tableau / R) |
 | `GET` | `/api/simulation/<id>/trajectory.jsonl` | Per-round belief JSONL (DuckDB / pipelines) |
+| `GET` | `/api/simulation/<id>/thread.txt` | Auto-formatted X / Twitter tweet thread (one tweet per belief inflection point, ≤280 chars each) |
+| `GET` | `/api/simulation/<id>/thread.json` | Same tweet thread as `thread.txt` but as `{tweets, total, inflections_recorded, truncated}` for programmatic consumers |
 | `GET` | `/share/<id>` | Public OG-tag landing page (auto-redirects to SPA) |
 | `GET` | `/watch/<id>` | Live spectator-watch page — minimal full-viewport broadcast view, polls every 15 s, OG / Twitter-card unfurl |
 | `POST` | `/api/simulation/<id>/article` | Generate a Substack-style write-up |

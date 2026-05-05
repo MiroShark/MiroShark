@@ -233,6 +233,27 @@ The seventh thin renderer over the same on-disk `sim_dir/` folder. The previous 
 
 The Embed dialog has a "Watch live (broadcast page)" callout — distinct from the share-card section above — with an "Open watch page ↗" button and a copyable URL. The callout is publish-gated to make the affordance match the underlying behaviour.
 
+## Tweet Thread Export (X / Twitter)
+
+The sixth share format alongside the share card (visual), replay GIF (motion), transcript (prose), trajectory CSV/JSONL (data), and watch page (live). The previous five surfaces handle long-form, structured, or live formats; this one is the **short-form text channel** that X / Twitter speaks natively — the format Aaron's primary distribution channel uses.
+
+Two endpoints, same payload, different serialization:
+
+- `GET /api/simulation/<id>/thread.txt` — plain-text tweet thread, one tweet per block separated by `---` on its own line. Each tweet ≤280 characters. Paste-and-go for the X compose box, or upload to a thread scheduler (Typefully, Hypefury, Tweet Hunter, Twittascope) that splits on `---`.
+- `GET /api/simulation/<id>/thread.json` — same payload as `{tweets: [string], total: int, inflections_recorded: int, truncated: bool}`. Programmatic consumers iterate `tweets` directly without splitting on the separator.
+
+Thread structure:
+
+1. **Intro tweet** — scenario summary (truncated past ~200 chars with an ellipsis) + scale (`N rounds · M agents`) + final consensus label (`Consensus: Bullish` / `Neutral` / `Bearish` / `split`) + thread numbering `1/`.
+2. **Body** — one tweet per **belief inflection point** (rounds where the dominant stance crossed the ±0.2 threshold *and* led the runner-up by ≥0.2pp; flat / no-dominant rounds are skipped as noise). Format: `"Round N: stance shifted to <label>"` + a stance-line `"↑ Bullish X% · → Neutral Y% · ↓ Bearish Z%"`.
+3. **Close tweet** — `Final: <label> consensus` + the same stance line + `Quality: <health>` + `Watch the replay: <watch_url>` + `Run this scenario: <share_url>`.
+
+Threads with more than `MAX_THREAD_TWEETS - 2 = 13` body tweets are truncated to the first 3 + last 3 inflections with a single bridge line (`… N more flips between here and the close …`); the JSON form's `truncated: true` flag signals when this happened. Same publish gate as the share card (`is_public=true`); same ±0.2 stance threshold as every other surface; honours `X-Forwarded-Proto` / `X-Forwarded-Host` for the watch + share URLs in the close tweet.
+
+The Embed dialog has a "🧵 Tweet thread" section beneath the trajectory row: a "Copy full thread" button (joins the per-tweet array with `\n---\n` so a single paste produces a valid X thread), download links for both the `.txt` and `.json` forms, and an inline list of tweets with per-tweet copy buttons + character counters so an operator can pick individual tweets to post.
+
+Implementation: `app/services/thread_formatter.py` (pure stdlib `json` + `os`, ~430 LoC) + `_serve_thread()` shared body in `app/api/simulation.py` mirroring the `_serve_transcript` / `_serve_trajectory` pattern. Zero new dependencies.
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

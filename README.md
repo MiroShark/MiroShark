@@ -90,6 +90,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Animated Belief Replay** | 1200×630 GIF — one frame per round, belief bars sliding to each round's distribution. Discord and Slack auto-play GIFs from the direct URL |
 | **Transcript Export** | Per-round agent posts + stance labels as Markdown (YAML front matter for Notion / Obsidian / Substack) or structured JSON (for SDKs and LLM-as-judge pipelines) |
 | **Trajectory Export** | One row per round as RFC 4180 CSV or JSONL — `pandas.read_csv("…/trajectory.csv")` lands ready for Pandas / Excel / Tableau / R / Observable. Same ±0.2 stance threshold as every other surface |
+| **Tweet Thread Export** | `GET /api/simulation/<id>/thread.txt` — auto-formatted X / Twitter thread, intro tweet + one tweet per belief inflection point + close tweet (with watch + share URLs). Each tweet ≤280 chars; copy individual tweets or the whole thread. Pairs with the share card / replay GIF / transcript / trajectory / watch page as the sixth share format |
 | **Live Watch Page** | `/watch/<sim_id>` — minimal full-viewport broadcast page with a vanilla-JS poller that refreshes the belief bar, round counter, and progress bar every 15 s while the simulation runs. Auto-unfurls as a 1200×630 image card when tweeted; the "tweet a sim mid-run" format alongside the finished-result share card |
 | **Public Gallery** | `/explore` browses every published simulation as a card grid — preview the share card, consensus split, and quality health; click to open or one-click fork |
 | **Gallery Search & Filter** | Keyword search + bullish/neutral/bearish + excellent/good/fair/poor + sort by date/rounds/agents on `/explore` and `/verified`. URL-encoded so `?q=aave&consensus=bearish` is bookmarkable. Same ±0.2 stance threshold as every other surface |
@@ -219,6 +220,7 @@ cp .env.example .env
 | **社交分享卡片** | 1200×630 PNG,自动展开情景、状态、质量与信念分布,适配 Twitter/X、Discord、Slack、LinkedIn |
 | **信念回放动图** | 1200×630 GIF,每轮一帧,信念条动态滑向各轮分布。Discord 与 Slack 在直接 URL 上自动播放 |
 | **转录导出** | 每轮智能体发帖与立场标签,导出为 Markdown(YAML 头,适配 Notion / Obsidian / Substack)或结构化 JSON(适配 SDK 与 LLM 评审管线) |
+| **推文串导出** | `GET /api/simulation/<id>/thread.txt` — 自动生成 X / Twitter 推文串:介绍推文 + 每个信念转折点(主导立场翻转的轮次)一条推文 + 末尾推文(附观看与分享 URL)。每条推文 ≤280 字符,可单条复制或整串复制。与分享卡片 / 回放 GIF / 转录 / 轨迹 / 实时观看页一同构成第六种分享形式 |
 | **公开图库** | `/explore` 以卡片网格浏览所有公开模拟 — 预览分享卡、共识分布与质量指标;一键打开或派生 |
 | **图库搜索与筛选** | 在 `/explore` 与 `/verified` 上提供关键词搜索 + 看涨/中立/看跌 + 优秀/良好/一般/较差 + 按日期/轮次/智能体数量排序。URL 编码后 `?q=aave&consensus=bearish` 可作为书签分享。与其他所有表面共享同一 ±0.2 立场阈值 |
 | **已验证预言** | 为公开模拟标注真实结果(命中 / 部分 / 失误 + 链接)。`/verified` 是命中预言专属展厅 |

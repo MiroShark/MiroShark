@@ -85,6 +85,8 @@
 |---|---|---|
 | `POST` | `/api/simulation/<id>/publish` | 切换 `is_public` |
 | `GET` | `/api/simulation/<id>/embed-summary` | 嵌入载荷(仅公开模拟) |
+| `GET` | `/api/simulation/<id>/thread.txt` | 自动生成的 X / Twitter 推文串(每个信念转折点一条推文,每条 ≤280 字符) |
+| `GET` | `/api/simulation/<id>/thread.json` | 同样的推文串内容,以 `{tweets, total, inflections_recorded, truncated}` 形式返回,供程序消费 |
 | `POST` | `/api/simulation/<id>/article` | 生成 Substack 风格的报道 |
 | `GET` | `/api/simulation/<id>/export` | 完整 JSON 导出 |
 | `GET` | `/api/simulation/list` | 列出模拟 |

@@ -5210,6 +5210,133 @@ def get_trajectory_jsonl(simulation_id: str):
     return _serve_trajectory(simulation_id, "jsonl")
 
 
+def _resolve_share_base_url() -> str:
+    """Same proxy-aware base URL the share / watch routes use.
+
+    Honours ``X-Forwarded-Proto`` + ``X-Forwarded-Host`` for deployments
+    behind a TLS-terminating reverse proxy, then falls back to the
+    Flask ``request.host_url``. Returns a value with no trailing slash
+    so a caller can append ``/share/<id>`` cleanly.
+    """
+    forwarded_host = request.headers.get("X-Forwarded-Host")
+    if forwarded_host:
+        forwarded_proto = request.headers.get("X-Forwarded-Proto")
+        proto = forwarded_proto or ("https" if request.is_secure else "http")
+        return f"{proto}://{forwarded_host}"
+    return request.host_url.rstrip("/")
+
+
+def _serve_thread(simulation_id: str, fmt: str):
+    """Shared body for the thread.txt / thread.json routes.
+
+    Both endpoints share the same publish gate, the same data assembly
+    (``thread_formatter.build_thread``), and only diverge in the
+    encoding step — same pattern as ``_serve_transcript`` and
+    ``_serve_trajectory``. The decorator presence is what the OpenAPI
+    drift test scans for, but the actual logic lives here.
+    """
+    from ..services import thread_formatter
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        base = _resolve_share_base_url()
+        watch_url = f"{base}/watch/{simulation_id}"
+        share_url = f"{base}/share/{simulation_id}"
+        thread = thread_formatter.build_thread(
+            sim_dir=sim_dir,
+            summary=summary,
+            watch_url=watch_url,
+            share_url=share_url,
+        )
+
+        if fmt == "json":
+            payload = thread_formatter.render_thread_json(thread)
+            mimetype = "application/json; charset=utf-8"
+            filename = f"miroshark-{simulation_id[:12]}-thread.json"
+        else:
+            payload = thread_formatter.render_thread_txt(thread)
+            mimetype = "text/plain; charset=utf-8"
+            filename = f"miroshark-{simulation_id[:12]}-thread.txt"
+
+        response = Response(payload, mimetype=mimetype)
+        # Short cache — the thread can change as new rounds land on a
+        # live run; 5 minutes balances freshness with crawler hammer
+        # protection. Slightly longer than the 60s used by transcript /
+        # trajectory because the thread is the *summary view* — small
+        # cadence changes don't shift the inflection list as often as
+        # they shift the per-round CSV.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        # Inline so a click renders in-tab; the EmbedDialog "Copy thread"
+        # button reads the body via fetch() rather than triggering a
+        # save-as. Operators who want a downloaded file can use the
+        # explicit ``download`` attribute on the dialog's anchor.
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="{filename}"'
+        )
+        return response
+
+    except Exception as e:
+        logger.error(f"thread: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
+@simulation_bp.route('/<simulation_id>/thread.txt', methods=['GET'])
+def get_thread_txt(simulation_id: str):
+    """Twitter / X tweet thread for a published simulation, as plain text.
+
+    One intro tweet (scenario + consensus), one tweet per belief
+    inflection point (rounds where the dominant stance crossed the
+    ±0.2 threshold), and a closing tweet (final verdict + quality +
+    watch + share URLs). Each tweet ≤280 characters; tweets separated
+    by ``---`` so the operator can copy individual ones or paste the
+    full block.
+
+    Pairs with ``share-card.png`` (preview), ``replay.gif`` (motion),
+    ``transcript.md`` / ``transcript.json`` (prose), and
+    ``trajectory.csv`` / ``trajectory.jsonl`` (data) as the sixth
+    share format — the short-form text channel Aaron's primary
+    distribution surface (X/Twitter) speaks natively.
+
+    Same publish gate as the share card and transcript.
+    """
+    return _serve_thread(simulation_id, "txt")
+
+
+@simulation_bp.route('/<simulation_id>/thread.json', methods=['GET'])
+def get_thread_json(simulation_id: str):
+    """Same tweet thread as ``thread.txt`` but as a structured JSON
+    payload.
+
+    Returns ``{tweets: [...], total: N, inflections_recorded: M,
+    truncated: bool}`` so a programmatic consumer (a Twitter scheduling
+    tool, a Notion dashboard, etc.) can iterate the tweets without
+    splitting the plain-text form on the ``---`` separator.
+
+    Same publish gate as ``thread.txt``.
+    """
+    return _serve_thread(simulation_id, "json")
+
+
 # ============== Public Gallery ==============
 
 

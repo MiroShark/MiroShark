@@ -378,6 +378,96 @@
               </p>
             </div>
 
+            <!-- Twitter / X tweet thread — pairs with the share card
+                 (visual), replay GIF (motion), transcript (prose), and
+                 trajectory CSV (data) as the sixth share format. The
+                 short-form text channel X/Twitter speaks natively. -->
+            <div class="transcript-section thread-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">🧵</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Tweet thread (X / Twitter)', '推文串(X / Twitter)') }}
+                    <span v-if="threadTotal" class="thread-count-badge">{{ threadTotal }}</span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Auto-formatted thread — intro tweet, one tweet per belief inflection point (when the dominant stance flips), and a closing tweet with the watch + share URLs. Each tweet ≤280 characters; copy the whole thread or individual tweets.', '自动生成的推文串 — 介绍推文、每个信念转折点一条推文(主导立场翻转时)、末尾推文附带观看 + 分享 URL。每条推文 ≤280 字符;可复制整串或单条推文。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="transcript-actions">
+                <button
+                  class="transcript-download-btn"
+                  :disabled="!isPublic || threadLoading || !threadTweets.length"
+                  @click="copy('threadFull')"
+                >
+                  <span v-if="threadLoading">{{ $tr('Loading…', '加载中…') }}</span>
+                  <span v-else-if="copied === 'threadFull'">✓ {{ $tr('Copied', '已复制') }}</span>
+                  <span v-else>📋 {{ $tr('Copy full thread', '复制整串') }}</span>
+                </button>
+                <a
+                  v-if="isPublic && threadTxtUrl"
+                  class="transcript-download-btn transcript-download-btn-secondary"
+                  :href="threadTxtUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-thread.txt`"
+                >
+                  ↓ {{ $tr('Download .txt', '下载 .txt') }}
+                </a>
+                <a
+                  v-if="isPublic && threadJsonUrl"
+                  class="transcript-download-btn transcript-download-btn-secondary"
+                  :href="threadJsonUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-thread.json`"
+                >
+                  ↓ .json
+                </a>
+                <span v-if="!isPublic" class="transcript-empty">
+                  {{ $tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。') }}
+                </span>
+              </div>
+
+              <div v-if="isPublic && threadError" class="transcript-empty thread-error">
+                {{ threadError }}
+              </div>
+
+              <div v-if="isPublic && threadTweets.length" class="thread-tweets-list">
+                <div
+                  v-for="(tweet, idx) in threadTweets"
+                  :key="`thread-tweet-${idx}`"
+                  class="thread-tweet"
+                >
+                  <button
+                    class="thread-tweet-copy"
+                    @click="copyOneTweet(idx)"
+                    :title="$tr('Copy this tweet', '复制此推文')"
+                  >
+                    {{ copied === `threadOne-${idx}` ? '✓' : '⧉' }}
+                  </button>
+                  <span class="thread-tweet-num">{{ idx + 1 }} / {{ threadTweets.length }}</span>
+                  <pre class="thread-tweet-body">{{ tweet }}</pre>
+                  <span class="thread-tweet-len">{{ tweet.length }}/280</span>
+                </div>
+                <p v-if="threadTruncated" class="thread-truncated-note">
+                  {{ $tr('Thread shortened — many inflections were folded into a single bridge tweet to keep the thread under 15 tweets.', '推文串已缩短 — 多个转折点被合并为一条桥接推文,以使整串保持在 15 条以内。') }}
+                </p>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Thread .txt URL (paste into a tweet scheduler)', '推文串 .txt URL(粘贴至推文排程工具)') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('threadTxt')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'threadTxt' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ threadTxtUrl || '—' }}</code></pre>
+              </div>
+            </div>
+
             <!-- Verified-prediction annotation — lets operators turn a
                  published simulation into a "called it" record on the
                  /verified gallery page. Only meaningful once the run is
@@ -572,6 +662,8 @@ import {
   getTranscriptJsonUrl,
   getTrajectoryCsvUrl,
   getTrajectoryJsonlUrl,
+  getThreadTxtUrl,
+  getThreadJsonUrl,
   getFeedUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
@@ -703,6 +795,93 @@ const trajectoryJsonlUrl = computed(() => {
   return getTrajectoryJsonlUrl(props.simulationId, origin.value)
 })
 
+const threadTxtUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getThreadTxtUrl(props.simulationId, origin.value)
+})
+
+const threadJsonUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getThreadJsonUrl(props.simulationId, origin.value)
+})
+
+// ── Tweet thread state ──────────────────────────────────────────────────
+// We fetch the structured (JSON) form on first reveal so per-tweet copy
+// buttons have the exact text without re-splitting the .txt body — the
+// .txt URL is still exposed in the snippet block for users who want to
+// paste it into a Twitter scheduling tool.
+const threadTweets = ref([])
+const threadTotal = ref(0)
+const threadTruncated = ref(false)
+const threadLoading = ref(false)
+const threadError = ref('')
+
+const loadThread = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    threadTweets.value = []
+    threadTotal.value = 0
+    threadTruncated.value = false
+    return
+  }
+  threadLoading.value = true
+  threadError.value = ''
+  try {
+    const url = threadJsonUrl.value
+    if (!url) return
+    const res = await fetch(url, { credentials: 'omit', cache: 'no-store' })
+    if (!res.ok) {
+      threadError.value =
+        res.status === 403
+          ? tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。')
+          : `${tr('Could not load thread', '无法加载推文串')} (HTTP ${res.status})`
+      threadTweets.value = []
+      threadTotal.value = 0
+      threadTruncated.value = false
+      return
+    }
+    const data = await res.json()
+    threadTweets.value = Array.isArray(data?.tweets) ? data.tweets : []
+    threadTotal.value = Number(data?.total || threadTweets.value.length)
+    threadTruncated.value = !!data?.truncated
+  } catch (err) {
+    threadError.value =
+      err?.message || tr('Could not load thread', '无法加载推文串')
+    threadTweets.value = []
+    threadTotal.value = 0
+    threadTruncated.value = false
+  } finally {
+    threadLoading.value = false
+  }
+}
+
+const _writeClipboard = async (text) => {
+  if (!text) return false
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (err) {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    document.body.appendChild(ta)
+    ta.select()
+    try { document.execCommand('copy') } catch (_) { /* noop */ }
+    document.body.removeChild(ta)
+    return true
+  }
+}
+
+const copyOneTweet = async (idx) => {
+  const tweet = threadTweets.value[idx]
+  if (!tweet) return
+  const ok = await _writeClipboard(tweet)
+  if (!ok) return
+  const key = `threadOne-${idx}`
+  copied.value = key
+  setTimeout(() => {
+    if (copied.value === key) copied.value = ''
+  }, 1800)
+}
+
 // Public-gallery syndication URLs — independent of `simulationId` (the
 // feed lists everyone's published runs), but kept on the embed dialog
 // so an operator who just toggled their sim public can subscribe to the
@@ -768,6 +947,14 @@ const copy = async (which) => {
   else if (which === 'watch') text = watchUrl.value
   else if (which === 'transcriptMd') text = transcriptMarkdownUrl.value
   else if (which === 'trajectoryCsv') text = trajectoryCsvUrl.value
+  else if (which === 'threadTxt') text = threadTxtUrl.value
+  else if (which === 'threadFull') {
+    // The full thread copy joins the per-tweet array with the same
+    // ``\n---\n`` separator the .txt endpoint emits. Doing the join
+    // here (rather than fetching the .txt body) lets the operator
+    // paste-and-edit immediately without a network round-trip.
+    text = threadTweets.value.length ? threadTweets.value.join('\n---\n') : ''
+  }
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -892,12 +1079,19 @@ watch(() => props.open, async (val) => {
   // state the simulation is in right now (resolution may have landed
   // since the dialog was last opened).
   shareCardCacheBust.value = Date.now()
+  // Pull the tweet thread alongside the share-card preview — same publish
+  // gate, so a private sim resolves cleanly to the empty state without
+  // an extra round-trip on every dialog open.
+  loadThread()
 })
 
 // When the operator toggles public on, the share-card endpoint flips from
 // 403 → 200. Bust the cache so the <img> retries instead of staying broken.
 watch(isPublic, () => {
   shareCardCacheBust.value = Date.now()
+  // Re-fetch the thread when the publish flag flips — going public means
+  // the gate now passes, so the previously-403 fetch should retry.
+  loadThread()
 })
 </script>
 
@@ -1525,6 +1719,112 @@ watch(isPublic, () => {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 12px;
   color: #2a2a2a;
+}
+
+/* Tweet thread — short-form text companion to the transcript / share
+   card / replay GIF / trajectory CSV / watch page. Carries a small
+   tweet-count badge so an operator can scan how long the thread is
+   without scrolling, and a per-tweet character counter so paste-and-
+   add-emoji edits don't blow the 280-char limit. */
+.thread-section {
+  margin-top: 14px;
+}
+
+.thread-count-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  background: rgba(10, 10, 10, 0.08);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #2a2a2a;
+  vertical-align: middle;
+  text-transform: none;
+}
+
+.thread-error {
+  color: #b91c1c;
+  font-style: normal;
+}
+
+.thread-tweets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px 2px 2px 2px;
+}
+
+.thread-tweet {
+  position: relative;
+  padding: 10px 12px 10px 44px;
+  background: #ffffff;
+  border: 1px solid rgba(10, 10, 10, 0.1);
+  border-radius: 8px;
+}
+
+.thread-tweet-num {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #6b6b6b;
+}
+
+.thread-tweet-copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(10, 10, 10, 0.12);
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #2a2a2a;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.thread-tweet-copy:hover {
+  background: rgba(10, 10, 10, 0.04);
+  border-color: rgba(10, 10, 10, 0.24);
+}
+
+.thread-tweet-body {
+  margin: 0;
+  padding: 0;
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  color: #0a0a0a;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.thread-tweet-len {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: #8a8a8a;
+  letter-spacing: 0.02em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.thread-truncated-note {
+  margin: 6px 2px 0;
+  font-size: 11px;
+  color: #6b6b6b;
+  font-style: italic;
 }
 
 /* Live watch page — distinct visual treatment (warm orange tint)

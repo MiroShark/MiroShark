@@ -169,6 +169,27 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 两个端点共享分享卡的发布控制(`is_public=true`)。每个智能体的立场标签使用与其他界面一致的 ±0.2 阈值 — 画廊上的"看涨"智能体在轨迹里也会打同样的 tag。嵌入对话框在回放 GIF 那行下方暴露"下载 .md" + "下载 .json"组合。
 
+## 推文串导出(X / Twitter)
+
+继分享卡(视觉)、回放 GIF(动态)、转录(长文本)、轨迹 CSV/JSONL(数据)、实时观看页(直播)之后的第六种分享形式。前五种界面覆盖长篇、结构化或实时格式,这一个则是 X / Twitter 原生使用的**短文本通道** — 也是 Aaron 主要分发渠道所采用的格式。
+
+两个端点,同一份载荷,不同序列化:
+
+- `GET /api/simulation/<id>/thread.txt` — 纯文本推文串,每条推文一段,中间用单独一行 `---` 分隔,每条 ≤280 字符。可直接复制粘贴到 X 撰写框,或上传到按 `---` 分隔的推文排程器(Typefully、Hypefury、Tweet Hunter、Twittascope)。
+- `GET /api/simulation/<id>/thread.json` — 同样的内容以 `{tweets: [string], total: int, inflections_recorded: int, truncated: bool}` 返回。程序消费者可直接遍历 `tweets`,无需按分隔符拆分。
+
+推文串结构:
+
+1. **介绍推文** — 情景摘要(超过约 200 字符以省略号截断)+ 规模(`N rounds · M agents`)+ 最终共识标签(`Consensus: Bullish` / `Neutral` / `Bearish` / `split`)+ 串号 `1/`。
+2. **正文** — 每个**信念转折点**(主导立场跨越 ±0.2 阈值并领先次位 ≥0.2pp 的轮次;持平 / 无主导的轮次作为噪音被跳过)对应一条推文。格式:`"Round N: stance shifted to <label>"` + 立场行 `"↑ Bullish X% · → Neutral Y% · ↓ Bearish Z%"`。
+3. **结尾推文** — `Final: <label> consensus` + 同一立场行 + `Quality: <health>` + `Watch the replay: <watch_url>` + `Run this scenario: <share_url>`。
+
+正文转折点超过 `MAX_THREAD_TWEETS - 2 = 13` 条时,会被截断为前 3 + 后 3 个转折点,加一条桥接行(`… N more flips between here and the close …`);JSON 形式的 `truncated: true` 会标记此情况发生。与分享卡一致的发布控制(`is_public=true`);与其他界面一致的 ±0.2 立场阈值;结尾推文的 watch + share URL 遵循 `X-Forwarded-Proto` / `X-Forwarded-Host`。
+
+嵌入对话框在轨迹那行下方有「🧵 推文串」区块:一个「复制整串」按钮(用 `\n---\n` 拼接每条推文,一次粘贴即可生成有效的 X 推文串)、`.txt` 与 `.json` 两种形式的下载链接,以及一个内联的推文列表(每条推文都有独立的复制按钮和字符计数器),让运维者挑选要发布的单条推文。
+
+实现:`app/services/thread_formatter.py`(纯标准库 `json` + `os`,~430 行)+ `app/api/simulation.py` 中的 `_serve_thread()` 共享函数体,镜像 `_serve_transcript` / `_serve_trajectory` 模式。零新增依赖。
+
 ## 图库搜索与筛选
 
 `/explore` 是公开研究界面 — 每一次发布的 MiroShark 模拟,都以卡片网格浏览。当语料库突破几十条后,反向时间序列的滚动列表就不再是工具,因此图库现在自带索引:卡片之上有一个关键词搜索框、一组共识筛选芯片、一组质量筛选芯片以及一个排序下拉。激活的筛选集合保存在 URL 参数中(`?q=…&consensus=bearish&quality=excellent&sort=rounds`),因此任意筛选视图都可作为书签分享 — "每一次关于 Aave 的优秀质量看跌预言"成了一个可发推文的 URL。
