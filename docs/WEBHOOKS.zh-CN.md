@@ -105,6 +105,8 @@ PUBLIC_BASE_URL=https://miroshark.app           # optional, see below
 - **进程内去重** — runner 会通过两条路径检测完成(进程退出码 + 各平台的 `simulation_end` 事件)。两者都会调进 webhook 服务;每个 `(sim_id, status)` 只有第一次会真的发出。
 - **只送 `completed` 与 `failed`** — 暂停 / 恢复 / running 事件*不*下发。
 - **2xx 即成功** — 其他都会被记录为投递失败,但永远不会抛出。
+- **投递日志** — 每次投递尝试(自动触发*或*手动重发)都会在 `<sim_dir>/webhook-log.jsonl` 追加一行 JSON,包含时间戳、掩码 URL、HTTP 状态码、延迟和触发标签。磁盘上限 50 行;`GET /api/simulation/<id>/webhook-log`(需管理员 token)返回最近 10 条记录(从新到旧)以及全程 `total_attempts` 计数器。
+- **手动重试** — `POST /api/simulation/<id>/webhook-retry`(需管理员 token)重发已经处于终止状态的模拟的完成 webhook。原投递偶发 5xx、URL 当时配错、消费集成当时宕机时有用。重发载荷带 `retry: true`,下游消费者可据此对重放去重。重发会绕过自动触发使用的进程内 `(sim_id, status)` 去重门(那道门只防止 runner 的两条终止代码路径自动双发;运维者显式重试理应总能通过)。未配置 webhook URL 时返回 400,模拟尚未到达终止状态时返回 409。
 
 ---
 

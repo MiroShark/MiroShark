@@ -828,6 +828,40 @@ export const submitSimulationOutcome = (simulationId, data) => {
 }
 
 /**
+ * Fetch the recent webhook delivery attempts for a simulation.
+ *
+ * Reads `<sim_dir>/webhook-log.jsonl` server-side and returns the
+ * newest 10 entries plus the all-time `total_attempts` count. Useful
+ * for the EmbedDialog "Delivery history" panel — operators can verify
+ * that the outbound webhook fired, what the downstream endpoint
+ * returned, and how long the round trip took.
+ *
+ * Admin-token gated server-side. The SPA does not attach the token —
+ * deployments behind a reverse proxy that adds the bearer header
+ * automatically work; localhost dev installs without a configured
+ * token will see a 503 and the panel renders a "configure first" hint.
+ *
+ * @param {string} simulationId
+ */
+export const getWebhookLog = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/webhook-log`)
+}
+
+/**
+ * Re-fire the completion webhook for an already-finished simulation.
+ *
+ * Intended for the "Retry delivery" button in the EmbedDialog
+ * Delivery history panel. The retry payload carries an extra
+ * `retry: true` so downstream consumers can dedupe or surface replays.
+ *
+ * @param {string} simulationId
+ * @param {Object} [data] - { status?: 'completed' | 'failed' }
+ */
+export const retryWebhookDelivery = (simulationId, data = {}) => {
+  return service.post(`/api/simulation/${simulationId}/webhook-retry`, data)
+}
+
+/**
  * List all Polymarket prediction markets for a simulation.
  * @param {string} simulationId
  */

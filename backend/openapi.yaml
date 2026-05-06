@@ -1796,6 +1796,117 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
 
+  /api/simulation/{simulation_id}/webhook-log:
+    get:
+      tags: [Publish & Embed]
+      summary: Recent webhook delivery attempts for a simulation.
+      description: |
+        Returns the last 10 entries from `<sim_dir>/webhook-log.jsonl`
+        newest-first plus the all-time `total_attempts` counter.
+
+        Each line is one attempt by the outbound completion webhook
+        (PR #46) — auto-fired at simulation end, or manually replayed
+        via `POST /webhook-retry`. Operators use this surface to
+        verify the webhook fired, see HTTP status / latency, and decide
+        whether to retry. The dispatcher truncates the on-disk log to
+        the last 50 attempts; `total_attempts` keeps climbing past
+        that bound.
+
+        URLs are masked (`scheme://host/***`) before persisting so the
+        Slack / Discord secret in the path never round-trips through
+        the read endpoint.
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Delivery log slice.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data: { $ref: "#/components/schemas/WebhookDeliveryLog" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
+
+  /api/simulation/{simulation_id}/webhook-retry:
+    post:
+      tags: [Publish & Embed]
+      summary: Re-fire the completion webhook for a finished simulation.
+      description: |
+        Manually replays the outbound completion webhook for a sim
+        already in a terminal state. Useful when the original delivery
+        hit a transient 5xx, the URL was misconfigured at the time, or
+        the consuming integration was down.
+
+        The retry payload carries an extra top-level `retry: true` so
+        downstream consumers can dedupe / handle replays differently.
+        The replay appends a new entry to `webhook-log.jsonl` with
+        `trigger: "retry"` so a subsequent log read can tell automatic
+        and operator-fired deliveries apart.
+
+        Bypasses the per-process `(sim_id, status)` dedup gate the
+        auto-fire path uses — that gate exists only to prevent the
+        runner's two terminal code paths from double-firing
+        automatically; an explicit retry should always go through.
+
+        Returns 400 when no webhook URL is configured (set
+        `WEBHOOK_URL` in Settings or as an env var first), 409 when
+        the simulation has not reached a terminal state.
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [completed, failed]
+                  description: |
+                    Optional. Defaults to the simulation's current
+                    runner status when omitted; pass explicitly to
+                    replay either side of a recent state transition.
+            example:
+              status: completed
+      responses:
+        "200":
+          description: Retry queued — the delivery happens in a daemon thread.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [queued, sim_id, status]
+                        properties:
+                          queued: { type: boolean, enum: [true] }
+                          attempt_will_be:
+                            type: integer
+                            description: Optimistic next attempt number — the actual log entry is written after the POST returns.
+                          sim_id: { type: string }
+                          status: { type: string, enum: [completed, failed] }
+                          url_masked: { type: string }
+        "400":
+          description: No webhook URL configured (or unsupported status passed).
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409":
+          description: Simulation has not reached a terminal state yet.
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
+
   # ────────────────────────────────────────────────────────────────────
   # Report Agent
   # ────────────────────────────────────────────────────────────────────
@@ -2624,6 +2735,78 @@ components:
         submitted_at:
           type: string
           format: date-time
+
+    WebhookDeliveryEntry:
+      type: object
+      description: |
+        One row of the per-simulation webhook delivery log. Written by
+        the dispatcher after each POST attempt completes — successful
+        or otherwise. Failure rows carry the upstream message in
+        `error`; success rows have `error: null`.
+      required: [attempt, timestamp, ok, url_masked, trigger]
+      properties:
+        attempt:
+          type: integer
+          description: Monotonically increasing 1-based counter; survives log truncation.
+        timestamp:
+          type: string
+          format: date-time
+          description: UTC ISO-8601 timestamp of when the dispatch completed.
+        url_masked:
+          type: string
+          description: |
+            `scheme://host/***` mask of the configured webhook URL —
+            the path of a Slack / Discord webhook URL is the secret
+            and is never echoed to disk or to the API consumer.
+        event:
+          type: string
+          description: The `event` field from the dispatched payload (e.g. `simulation.completed`).
+        status:
+          type: string
+          enum: [completed, failed]
+          description: Terminal status the simulation reached when this delivery fired.
+        status_code:
+          oneOf:
+            - { type: integer }
+            - { type: "null" }
+          description: HTTP status returned by the downstream endpoint, or `null` for network errors / timeouts.
+        ok:
+          type: boolean
+          description: True for a 2xx response; false for any other outcome.
+        latency_ms:
+          type: integer
+          description: Wall-clock time of the HTTP call, in milliseconds.
+        error:
+          oneOf:
+            - { type: string }
+            - { type: "null" }
+          description: Human-readable upstream error string on failure; `null` on success.
+        trigger:
+          type: string
+          enum: [auto, retry]
+          description: |
+            `auto` for the runner-fired path (simulation completion),
+            `retry` for an operator-driven replay via `/webhook-retry`.
+
+    WebhookDeliveryLog:
+      type: object
+      description: |
+        Recent webhook delivery attempts for one simulation. Returned
+        from `GET /webhook-log` — newest-first slice plus the all-time
+        attempt counter and the on-disk retention bound.
+      required: [entries, total_attempts, max_retained]
+      properties:
+        entries:
+          type: array
+          description: Last `WEBHOOK_LOG_RETURN_LIMIT` entries, newest first.
+          items:
+            $ref: "#/components/schemas/WebhookDeliveryEntry"
+        total_attempts:
+          type: integer
+          description: All-time attempt counter — keeps climbing past the on-disk truncation bound.
+        max_retained:
+          type: integer
+          description: Maximum number of entries the dispatcher persists on disk before rolling oldest off.
 
     SimulationTrajectoryRow:
       type: object

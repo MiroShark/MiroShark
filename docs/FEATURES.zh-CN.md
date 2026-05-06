@@ -253,6 +253,31 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 嵌入对话框有一条"通过 RSS 关注画廊"的提示,带 Atom 订阅、RSS 2.0 订阅、仅已验证 Atom 订阅的一键订阅链接。/explore 头部有一个"📡 通过 RSS 订阅"芯片,会镜像当前激活过滤(开启已验证过滤时也会跟随)。
 
+## Webhook 投递日志
+
+每一次 Webhook 投递尝试(在 **设置 → 集成 → Webhook** 中配置,详见 [WEBHOOKS.zh-CN.md](WEBHOOKS.zh-CN.md))都会在 `<sim_dir>/webhook-log.jsonl` 追加一行 JSON。每行记录:
+
+- **`attempt`** — 1 起单调递增计数器(磁盘截断到 50 行后仍持续递增)。
+- **`timestamp`** — 投递完成的 UTC ISO-8601 时间。
+- **`url_masked`** — `scheme://host/***`。Slack / Discord webhook URL 路径中的密钥**绝不**写入磁盘。
+- **`event`** / **`status`** — 投递载荷的 `event` 字段(`simulation.completed` / `simulation.failed`)与运行到达的终止状态。
+- **`status_code`** — 下游端点返回的 HTTP 状态码,对网络错误 / 超时为 `null`(便于把真实 5xx 与 TCP 重置区分开)。
+- **`ok`** — 2xx 响应为 `true`,其他情况为 `false`。
+- **`latency_ms`** — HTTP 调用的实测耗时(毫秒)。
+- **`error`** — 失败时的可读上游错误字符串(例如 `HTTP 503`、`URL error: timeout`);成功时为 `null`。
+- **`trigger`** — runner 自动触发为 `auto`,运维者通过重试端点驱动为 `retry`。
+
+两个端点暴露日志:
+
+- **`GET /api/simulation/<id>/webhook-log`** — 需管理员 token。返回最近 10 条记录(从新到旧)+ 全程 `total_attempts` 计数器 + 磁盘留存上限(`max_retained: 50`)。运维者据此核对 webhook 是否触发、看 HTTP 状态 / 延迟,以及决定是否重试。
+- **`POST /api/simulation/<id>/webhook-retry`** — 需管理员 token。重发已经处于终止状态的模拟的完成 webhook(原投递偶发 5xx、URL 当时配错、消费集成当时宕机时有用)。重发载荷带 `retry: true`,下游消费者可据此对重放去重。绕过自动触发路径使用的进程内 `(sim_id, status)` 去重门(那道门只防止 runner 的两条终止代码路径自动双发;运维者显式重试理应总能通过)。未配置 webhook URL 时返回 400,模拟尚未到达终止状态时返回 409。
+
+嵌入对话框在 outcome 行下方有一个 **📡 Webhook 投递历史** 面板(需管理员 token,默认折叠以保持对话框紧凑,适配未配置 webhook 的用户)。每次投递渲染为状态 chip(✓ 绿色对应 2xx,✗ 红色对应 4xx/5xx,⏱ 琥珀色对应超时),含 HTTP 状态码、延迟、触发标签和时间戳。**刷新** 重新拉取日志;**重试投递** 重发 webhook 并在短暂延迟后刷新,以便新一次投递自动出现。
+
+调度器在 POST 返回(或超时)之后才写盘,所以投递路径仍是 fire-and-forget — 日志写入永远不会阻塞模拟 runner。日志写入采用读-改-重命名模式(通过 `os.replace` 原子化),日志永远不会因部分写入而损坏。URL 在序列化前就掩码,所以 Slack / Discord URL 中的密钥落盘那刻便已不存在。
+
+实现:`app/services/webhook_service.py` 中的辅助(`_record_delivery`、`_append_log_entry`、`read_webhook_log`、`retry_webhook_for_simulation`)+ `_start_dispatch_thread` 在自动触发与重试路径间共享。零新增依赖(纯标准库 `json` + `os` + `time` + `threading`)。磁盘上限 50 行;旧投递自动滚出,日志永不无界增长。
+
 ## 文章生成
 
 模拟结束后,点击 **Write Article**,MiroShark 会让 Smart 模型写一篇 400–600 字的 Substack 风格报道,基于真实发生的事件 — 关键发现、市场动态、信念变化和影响。文章会缓存到 `generated_article.json`,这样重新打开不会再消耗 token;传 `force_regenerate=true` 可以刷新。

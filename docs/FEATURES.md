@@ -279,6 +279,31 @@ Implementation:
 
 The Embed dialog has a "📊 Distribution" panel (collapsed by default, click the chevron to expand) — a sorted two-column table (surface · count, ranked by count desc), a `Total serves: N` row, and a `↻ Refresh` button. The panel is publish-gated; private sims see "Publish the simulation to see distribution stats." instead. Same publish gate as every other share surface (`is_public=true`).
 
+## Webhook Delivery Log
+
+Every dispatch attempt of the outbound completion webhook (the one configured in **Settings → Integrations → Webhook**, see [WEBHOOKS.md](WEBHOOKS.md)) appends a JSON line to `<sim_dir>/webhook-log.jsonl`. Each row records:
+
+- **`attempt`** — monotonically increasing 1-based counter (survives the on-disk truncation at 50 rows).
+- **`timestamp`** — UTC ISO-8601 of when the dispatch completed.
+- **`url_masked`** — `scheme://host/***`. The path of a Slack / Discord webhook URL is the secret and is *never* persisted to disk.
+- **`event`** / **`status`** — the `event` field from the dispatched payload (`simulation.completed` / `simulation.failed`) and the terminal status the run reached.
+- **`status_code`** — HTTP status returned by the downstream endpoint, or `null` for network errors / timeouts (so a real 5xx is distinguishable from a TCP reset).
+- **`ok`** — `true` for a 2xx response; `false` for any other outcome.
+- **`latency_ms`** — wall-clock time of the HTTP call in milliseconds.
+- **`error`** — human-readable upstream error string on failure (e.g. `HTTP 503`, `URL error: timeout`); `null` on success.
+- **`trigger`** — `auto` for the runner-fired path, `retry` for an operator-driven replay.
+
+Two endpoints surface the log:
+
+- **`GET /api/simulation/<id>/webhook-log`** — admin-token gated. Returns the last 10 entries newest-first plus the all-time `total_attempts` counter and the on-disk retention bound (`max_retained: 50`). Operators use this to verify the webhook fired, see the HTTP status / latency, and decide whether to retry.
+- **`POST /api/simulation/<id>/webhook-retry`** — admin-token gated. Re-fires the completion webhook for a sim already in a terminal state (useful when the original delivery hit a transient 5xx, the URL was misconfigured at the time, or the consuming integration was down). The retry payload carries `retry: true` so downstream consumers can dedupe replays. Bypasses the per-process `(sim_id, status)` dedup gate the auto-fire path uses (that gate exists only to prevent the runner's two terminal code paths from double-firing automatically; an explicit retry should always go through). Returns 400 when no webhook URL is configured, 409 when the simulation has not reached a terminal state.
+
+The Embed dialog has a **📡 Webhook delivery history** panel beneath the outcome row (admin-token gated, collapsed by default to keep the dialog compact for users who don't have a webhook configured). Each delivery renders as a status chip (✓ green for 2xx, ✗ red for 4xx/5xx, ⏱ amber for timeouts) with the HTTP code, latency, trigger label, and timestamp. **Refresh** re-pulls the log; **Retry delivery** re-fires the webhook and refreshes after a short delay so the new attempt shows up automatically.
+
+The dispatcher writes to disk only after the POST returns (or times out) so the dispatch path stays fire-and-forget — the log write never blocks the simulation runner. Log writes use a read-modify-rename pattern (atomic via `os.replace`) so the log can never be corrupted by a partial write. URL masking happens before serialization, so the secret in a Slack / Discord URL is gone the moment it lands on disk.
+
+Implementation: helpers in `app/services/webhook_service.py` (`_record_delivery`, `_append_log_entry`, `read_webhook_log`, `retry_webhook_for_simulation`) + `_start_dispatch_thread` shared between auto-fire and retry paths. Zero new dependencies (pure stdlib `json` + `os` + `time` + `threading`). Bounded to 50 lines on disk; older deliveries roll off so the log never grows unbounded.
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

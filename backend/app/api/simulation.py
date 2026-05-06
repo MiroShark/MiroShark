@@ -5415,6 +5415,174 @@ def get_surface_stats(simulation_id: str):
         }), 500
 
 
+# ============== Webhook Delivery Log ==============
+#
+# PR #46 shipped the outbound completion webhook. This pair of routes
+# closes the operational gap: every Zapier / Make / n8n / Slack /
+# Discord integration built on top of that webhook needs a way to ask
+# "did it fire? what did the endpoint return? how long did it take?".
+# Without a delivery log the operator finds out about a 5xx from their
+# downstream system only by reading server logs manually.
+#
+# Both routes are admin-token gated — these endpoints leak nothing
+# secret (the URL is masked, no payload bodies persist), but the retry
+# is a side-effect-producing mutation and the log itself can include
+# error strings from the downstream service that an operator wouldn't
+# want a public probe to fingerprint.
+
+
+@simulation_bp.route('/<simulation_id>/webhook-log', methods=['GET'])
+@require_admin_token
+def get_webhook_log(simulation_id: str):
+    """Return the recent webhook delivery attempts for a simulation.
+
+    Reads ``<sim_dir>/webhook-log.jsonl`` — one line per attempt,
+    bounded to the last ``WEBHOOK_LOG_MAX_LINES`` deliveries by the
+    dispatcher itself. The response slice is the last 10 entries
+    newest-first; ``total_attempts`` is the all-time monotonic counter
+    so the dialog can show "showing last 10 of N".
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
+    """
+    locale = get_locale(request)
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
+
+        from ..services.webhook_service import (
+            read_webhook_log,
+            WEBHOOK_LOG_RETURN_LIMIT,
+        )
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        data = read_webhook_log(sim_dir, limit=WEBHOOK_LOG_RETURN_LIMIT)
+        return jsonify({"success": True, "data": data})
+
+    except Exception as e:
+        logger.error(f"webhook-log: failed for {simulation_id}: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@simulation_bp.route('/<simulation_id>/webhook-retry', methods=['POST'])
+@require_admin_token
+def retry_webhook(simulation_id: str):
+    """Re-fire the completion webhook for an already-finished simulation.
+
+    Useful when the original delivery hit a transient 5xx, the operator
+    pointed the URL at the wrong endpoint, or the consuming integration
+    was down at the time. The resulting attempt appends a fresh entry
+    to the delivery log with ``trigger:"retry"`` so a future log read
+    can tell auto-fired vs operator-fired deliveries apart.
+
+    Body (optional): ``{"status": "completed" | "failed"}`` — defaults
+    to the simulation's current runner status. The retry payload
+    carries an extra top-level ``retry: true`` so downstream consumers
+    can dedupe / handle replays differently if they care.
+
+    Returns 400 when no webhook URL is configured (configure one in
+    Settings or via the ``WEBHOOK_URL`` env var first), 409 when the
+    simulation has not reached a terminal state.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
+    """
+    locale = get_locale(request)
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
+
+        from ..services.webhook_service import (
+            retry_webhook_for_simulation,
+            _resolve_webhook_url,
+        )
+
+        if not _resolve_webhook_url():
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "No webhook URL configured. Set WEBHOOK_URL in Settings "
+                    "or via the env var, then retry.",
+                    "未配置 webhook URL,请在设置或环境变量中设置 WEBHOOK_URL,然后重试。",
+                    locale,
+                ),
+            }), 400
+
+        run_state = SimulationRunner.get_run_state(simulation_id)
+        runner_status_str = ""
+        if run_state and hasattr(run_state, "runner_status"):
+            rs = run_state.runner_status
+            runner_status_str = (rs.value if hasattr(rs, "value") else str(rs)).lower()
+
+        body = request.get_json(silent=True) or {}
+        requested_status = (body.get("status") or "").strip().lower()
+        if requested_status:
+            if requested_status not in ("completed", "failed"):
+                return jsonify({
+                    "success": False,
+                    "error": _t(
+                        "status must be 'completed' or 'failed'",
+                        "status 必须为 'completed' 或 'failed'",
+                        locale,
+                    ),
+                }), 400
+            status = requested_status
+        else:
+            sim_status = (state.status.value if hasattr(state.status, "value") else str(state.status)).lower()
+            if runner_status_str in ("completed", "failed"):
+                status = runner_status_str
+            elif sim_status in ("completed", "failed"):
+                status = sim_status
+            else:
+                return jsonify({
+                    "success": False,
+                    "error": _t(
+                        "Simulation has not reached a terminal state yet "
+                        "(current: " + (runner_status_str or sim_status or "unknown") + "). "
+                        "Wait for completion or pass status explicitly.",
+                        "模拟尚未达到终止状态(当前:" + (runner_status_str or sim_status or "unknown") + "),请等待完成或显式传入 status。",
+                        locale,
+                    ),
+                }), 409
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        completed_at = getattr(run_state, "completed_at", None) if run_state else None
+        result = retry_webhook_for_simulation(
+            simulation_id,
+            status,
+            sim_dir=sim_dir,
+            state=run_state,
+            completed_at=completed_at,
+            base_url=_resolve_share_base_url(),
+        )
+
+        if not result.get("queued"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Could not queue retry: " + str(result.get("error", "unknown")),
+                    "无法排队重试:" + str(result.get("error", "unknown")),
+                    locale,
+                ),
+            }), 400
+
+        return jsonify({"success": True, "data": result})
+
+    except Exception as e:
+        logger.error(f"webhook-retry: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ============== Public Gallery ==============
 
 

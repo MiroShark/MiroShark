@@ -105,6 +105,8 @@ PUBLIC_BASE_URL=https://miroshark.app           # optional, see below
 - **Deduped per process** — the runner can detect completion via two paths (process exit code + per-platform `simulation_end` events). Both call into the webhook service; only the first fire per `(sim_id, status)` actually sends.
 - **`completed` and `failed` only** — pause / resume / running events are *not* delivered.
 - **2xx = success** — anything else is logged as a delivery failure but never raised.
+- **Delivery log** — every dispatch attempt (auto-fired *or* manually replayed) appends one JSON line to `<sim_dir>/webhook-log.jsonl` with timestamp, masked URL, HTTP status code, latency, and trigger label. Bounded to 50 rows on disk; `GET /api/simulation/<id>/webhook-log` (admin-token gated) returns the last 10 entries newest-first plus the all-time `total_attempts` counter.
+- **Manual retry** — `POST /api/simulation/<id>/webhook-retry` (admin-token gated) re-fires the completion webhook for a sim already in a terminal state. Useful when the original delivery hit a transient 5xx, the URL was misconfigured at the time, or the consuming integration was down. The retry payload carries an extra top-level `retry: true` so downstream consumers can dedupe replays. The replay bypasses the per-process `(sim_id, status)` dedup gate that auto-fires honour (that gate exists only to prevent the runner's two terminal code paths from double-firing automatically; an explicit retry should always go through). Returns 400 when no webhook URL is configured, 409 when the simulation has not reached a terminal state.
 
 ---
 

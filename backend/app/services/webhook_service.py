@@ -53,10 +53,11 @@ from __future__ import annotations
 import json
 import os
 import threading
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..utils.logger import get_logger
 
@@ -66,6 +67,20 @@ logger = get_logger('miroshark.webhook')
 WEBHOOK_USER_AGENT = "MiroShark-Webhook/1.0"
 WEBHOOK_TIMEOUT_SECONDS = 5.0
 WEBHOOK_MAX_SCENARIO_CHARS = 280
+
+# ---- Delivery log (per-simulation) -------------------------------------
+#
+# Every dispatch attempt — auto-fired from the runner OR manually
+# replayed from the ``/webhook-retry`` endpoint — appends one JSON line
+# to ``<sim_dir>/webhook-log.jsonl``. The log gives operators a feedback
+# loop they didn't have before PR #46 shipped: "did the webhook fire?",
+# "what status did the endpoint return?", "how long did it take?",
+# "should I retry?". A 50-line cap with read-modify-write trim keeps
+# disk usage bounded — operators can always retry past failures from a
+# clean state.
+WEBHOOK_LOG_FILENAME = "webhook-log.jsonl"
+WEBHOOK_LOG_MAX_LINES = 50
+WEBHOOK_LOG_RETURN_LIMIT = 10
 
 
 # Per-process dedup. The runner's exit-code path and the ``simulation_end``
@@ -115,6 +130,183 @@ def mask_url(url: str) -> str:
         return f"{parts.scheme}://{parts.netloc}/***"
     except Exception:
         return '***'
+
+
+def webhook_log_path(sim_dir: str) -> str:
+    """Absolute path to the per-sim webhook delivery log."""
+    return os.path.join(sim_dir, WEBHOOK_LOG_FILENAME)
+
+
+def _read_log_lines(sim_dir: str) -> List[str]:
+    """Return the raw, non-empty lines of the log (preserving order).
+
+    Never raises — a missing or unreadable log is treated as empty so
+    the dispatch path stays fire-and-forget.
+    """
+    path = webhook_log_path(sim_dir)
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return [line for line in f.readlines() if line.strip()]
+    except OSError:
+        return []
+
+
+def _parse_log_entries(lines: List[str]) -> List[Dict[str, Any]]:
+    """Parse JSONL lines, silently skipping anything malformed."""
+    entries: List[Dict[str, Any]] = []
+    for line in lines:
+        text = line.strip()
+        if not text:
+            continue
+        try:
+            obj = json.loads(text)
+        except Exception:
+            continue
+        if isinstance(obj, dict):
+            entries.append(obj)
+    return entries
+
+
+def _next_attempt_number(sim_dir: str) -> int:
+    """1-based attempt counter — picks ``max(attempt) + 1`` from disk.
+
+    Returns 1 when the log is missing or empty. Used so the GET endpoint
+    can show ``attempt #N`` on each delivery without callers needing to
+    pre-compute it.
+    """
+    entries = _parse_log_entries(_read_log_lines(sim_dir))
+    last = 0
+    for rec in entries:
+        attempt = rec.get('attempt')
+        if isinstance(attempt, int) and attempt > last:
+            last = attempt
+    return last + 1
+
+
+def _append_log_entry(sim_dir: str, entry: Dict[str, Any]) -> None:
+    """Append ``entry`` as a JSON line; trim to ``WEBHOOK_LOG_MAX_LINES``.
+
+    Never raises — log writes are best-effort. If the log already has
+    ``WEBHOOK_LOG_MAX_LINES`` rows, the oldest get dropped via a
+    read-modify-rename so the new entry always lands.
+    """
+    if not sim_dir:
+        return
+    try:
+        os.makedirs(sim_dir, exist_ok=True)
+    except OSError as exc:
+        logger.warning(f"webhook-log: could not ensure sim_dir for {sim_dir}: {exc}")
+        return
+
+    path = webhook_log_path(sim_dir)
+    try:
+        serialized = json.dumps(entry, ensure_ascii=False) + "\n"
+    except Exception as exc:
+        logger.warning(f"webhook-log: refusing unserializable entry for {sim_dir}: {exc}")
+        return
+
+    try:
+        existing = _read_log_lines(sim_dir)
+        if len(existing) >= WEBHOOK_LOG_MAX_LINES:
+            keep = existing[-(WEBHOOK_LOG_MAX_LINES - 1):]
+            tmp_path = path + ".tmp"
+            try:
+                with open(tmp_path, 'w', encoding='utf-8') as f:
+                    f.writelines(keep)
+                    f.write(serialized)
+                os.replace(tmp_path, path)
+            finally:
+                if os.path.exists(tmp_path):
+                    try:
+                        os.remove(tmp_path)
+                    except OSError:
+                        pass
+        else:
+            with open(path, 'a', encoding='utf-8') as f:
+                f.write(serialized)
+    except OSError as exc:
+        logger.warning(f"webhook-log: write failed for {sim_dir}: {exc}")
+
+
+def _parse_status_code_from_message(msg: Optional[str]) -> Optional[int]:
+    """Extract the integer HTTP status from an ``HTTP <N>`` message.
+
+    Returns ``None`` for network errors / serialization failures /
+    anything that isn't a numeric HTTP response — those cases land in
+    the log with ``status_code: null`` so consumers can distinguish
+    them from a real 5xx.
+    """
+    if not isinstance(msg, str):
+        return None
+    if msg.startswith("HTTP "):
+        try:
+            return int(msg.split(" ", 1)[1].strip())
+        except (ValueError, IndexError):
+            return None
+    return None
+
+
+def read_webhook_log(
+    sim_dir: str,
+    *,
+    limit: int = WEBHOOK_LOG_RETURN_LIMIT,
+) -> Dict[str, Any]:
+    """Public read API for ``GET /webhook-log``.
+
+    Returns the most recent ``limit`` entries newest-first plus the
+    total attempt count. ``max_retained`` is exposed so the EmbedDialog
+    can show "showing last N of M (max retained K)".
+    """
+    entries = _parse_log_entries(_read_log_lines(sim_dir))
+    total_attempts = 0
+    for rec in entries:
+        attempt = rec.get('attempt')
+        if isinstance(attempt, int) and attempt > total_attempts:
+            total_attempts = attempt
+    sliced = entries[-max(limit, 0):] if limit > 0 else entries
+    sliced.reverse()  # newest first
+    return {
+        "entries": sliced,
+        "total_attempts": total_attempts,
+        "max_retained": WEBHOOK_LOG_MAX_LINES,
+    }
+
+
+def _record_delivery(
+    *,
+    sim_dir: Optional[str],
+    url: str,
+    payload: Dict[str, Any],
+    ok: bool,
+    message: str,
+    latency_ms: int,
+    trigger: str,
+) -> None:
+    """Persist a single delivery attempt to ``webhook-log.jsonl``.
+
+    ``trigger`` is ``"auto"`` for the runner-fired path and ``"retry"``
+    for the manual replay endpoint — useful when an operator scans the
+    log to tell automatic vs manual deliveries apart.
+    """
+    if not sim_dir:
+        return
+    status_code = _parse_status_code_from_message(message)
+    error = None if ok else message
+    entry: Dict[str, Any] = {
+        "attempt": _next_attempt_number(sim_dir),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "url_masked": mask_url(url),
+        "event": payload.get("event"),
+        "status": payload.get("status"),
+        "status_code": status_code,
+        "ok": bool(ok),
+        "latency_ms": int(latency_ms) if latency_ms is not None else None,
+        "error": error,
+        "trigger": trigger,
+    }
+    _append_log_entry(sim_dir, entry)
 
 
 def validate_url(url: str) -> Optional[str]:
@@ -395,18 +587,140 @@ def fire_webhook_for_simulation(
         error=error,
     )
 
+    _start_dispatch_thread(
+        url=url,
+        payload=payload,
+        sim_dir=sim_dir,
+        trigger="auto",
+        thread_name=f'webhook-{simulation_id}',
+    )
+
+
+def _start_dispatch_thread(
+    *,
+    url: str,
+    payload: Dict[str, Any],
+    sim_dir: Optional[str],
+    trigger: str,
+    thread_name: str,
+) -> None:
+    """Launch the daemon thread that POSTs ``payload`` and records a log
+    entry on the way out.
+
+    Shared between the automatic ``fire_webhook_for_simulation`` path
+    and the manual ``retry_webhook_for_simulation`` path so the timing,
+    masking, and log shape stay identical.
+    """
+    sim_id = payload.get("sim_id", "")
+    status = payload.get("status", "")
+
     def _send() -> None:
+        started = time.monotonic()
         ok, msg = _post_json(url, payload, WEBHOOK_TIMEOUT_SECONDS)
+        latency_ms = int((time.monotonic() - started) * 1000)
+
+        masked = mask_url(url)
         if ok:
-            logger.info(f"Webhook fired for {simulation_id} ({status}) → {mask_url(url)} [{msg}]")
+            logger.info(
+                f"Webhook fired for {sim_id} ({status}) → {masked} "
+                f"[{msg} · {latency_ms}ms · {trigger}]"
+            )
         else:
-            logger.warning(f"Webhook delivery failed for {simulation_id} ({status}) → {mask_url(url)}: {msg}")
+            logger.warning(
+                f"Webhook delivery failed for {sim_id} ({status}) → {masked}: "
+                f"{msg} ({latency_ms}ms · {trigger})"
+            )
+
+        try:
+            _record_delivery(
+                sim_dir=sim_dir,
+                url=url,
+                payload=payload,
+                ok=ok,
+                message=msg,
+                latency_ms=latency_ms,
+                trigger=trigger,
+            )
+        except Exception as exc:
+            # Never let a logging failure take the dispatch thread down.
+            logger.warning(f"webhook-log: record_delivery failed for {sim_id}: {exc}")
 
     threading.Thread(
         target=_send,
         daemon=True,
-        name=f'webhook-{simulation_id}',
+        name=thread_name,
     ).start()
+
+
+def retry_webhook_for_simulation(
+    simulation_id: str,
+    status: str,
+    *,
+    sim_dir: Optional[str] = None,
+    state: Optional[Any] = None,
+    completed_at: Optional[str] = None,
+    error: Optional[str] = None,
+    base_url: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Manually re-dispatch the completion webhook for a finished sim.
+
+    Mirrors :func:`fire_webhook_for_simulation` but **bypasses the
+    per-process ``(sim_id, status)`` dedup set** — operators retry
+    precisely when the original auto-fire failed (or hit the wrong
+    endpoint), so blocking the second attempt would defeat the
+    purpose. Dedup exists only to prevent the runner's two terminal
+    code paths from double-firing automatically.
+
+    Returns ``{queued, attempt_will_be, sim_id, status, url_masked,
+    error?}``. Returns ``{queued: False}`` when no webhook URL is
+    configured — the caller should surface a clear "configure your
+    webhook URL first" error.
+    """
+    if status not in {"completed", "failed"}:
+        return {"queued": False, "error": f"unsupported status: {status}"}
+
+    url = _resolve_webhook_url()
+    if not url:
+        return {"queued": False, "error": "no webhook URL configured"}
+
+    if sim_dir is None:
+        try:
+            from ..config import Config
+            sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        except Exception:
+            sim_dir = simulation_id
+
+    if base_url is None:
+        base_url = _resolve_base_url()
+
+    payload = build_payload(
+        simulation_id,
+        status,
+        sim_dir,
+        state=state,
+        base_url=base_url,
+        completed_at=completed_at,
+        error=error,
+    )
+    payload["retry"] = True
+
+    attempt_will_be = _next_attempt_number(sim_dir)
+
+    _start_dispatch_thread(
+        url=url,
+        payload=payload,
+        sim_dir=sim_dir,
+        trigger="retry",
+        thread_name=f'webhook-retry-{simulation_id}',
+    )
+
+    return {
+        "queued": True,
+        "attempt_will_be": attempt_will_be,
+        "sim_id": simulation_id,
+        "status": status,
+        "url_masked": mask_url(url),
+    }
 
 
 def send_test_webhook(url: str, base_url: Optional[str] = None) -> Dict[str, Any]:
