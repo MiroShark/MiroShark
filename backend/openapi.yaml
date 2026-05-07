@@ -1354,6 +1354,45 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/surface-stats:
+    get:
+      tags: [Publish & Embed]
+      summary: Per-share-surface request counters for a published simulation.
+      description: |
+        Returns the number of times each share surface has served a
+        successful response for this simulation — share card PNG,
+        replay GIF, transcript (Markdown + JSON), trajectory
+        (CSV + JSONL), tweet thread (TXT + JSON), live watch page,
+        and Atom / RSS feeds — plus a synthetic `total` summing all
+        counters.
+
+        The **inbound** observability surface — pairs with the
+        outbound webhook delivery log so an operator running MiroShark
+        for a DeFi fund or research group can see which surfaces their
+        audience actually uses. Closes the inbound side of the
+        distribution loop opened by the webhook delivery log on the
+        outbound side.
+
+        Counter file lives at `<sim_dir>/surface-stats.json`. Bounded
+        in size (one small JSON object) and atomically updated via
+        tempfile + `os.replace`, so concurrent requests can never
+        corrupt the file. A corrupt file is silently reset to zeros
+        rather than 500ing the read.
+
+        Same publish gate as every other share surface — requires the
+        simulation to be public (`is_public=true`).
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Per-surface counters + total.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SimulationSurfaceStats"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /share/{simulation_id}:
     get:
       tags: [Publish & Embed]
@@ -2666,6 +2705,92 @@ components:
             True when `inflections_recorded` exceeded the per-thread
             body budget and a bridge tweet was inserted between the
             head and tail inflections.
+
+    SimulationSurfaceStats:
+      type: object
+      description: |
+        Envelope returned by `/api/simulation/{id}/surface-stats`. Each
+        named counter is the cumulative number of times that share
+        surface has served a successful response for the simulation.
+        Every key is always present (zero-defaulted), so a frontend
+        renders the table without special-casing missing fields.
+      required: [success, simulation_id, stats]
+      properties:
+        success:
+          type: boolean
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        stats:
+          type: object
+          required:
+            - share_card
+            - replay_gif
+            - transcript_md
+            - transcript_json
+            - trajectory_csv
+            - trajectory_jsonl
+            - thread_txt
+            - thread_json
+            - watch_page
+            - feed_atom
+            - feed_rss
+            - total
+          properties:
+            share_card:
+              type: integer
+              minimum: 0
+              description: Successful `share-card.png` serves.
+            replay_gif:
+              type: integer
+              minimum: 0
+              description: Successful `replay.gif` serves.
+            transcript_md:
+              type: integer
+              minimum: 0
+              description: Successful `transcript.md` serves.
+            transcript_json:
+              type: integer
+              minimum: 0
+              description: Successful `transcript.json` serves.
+            trajectory_csv:
+              type: integer
+              minimum: 0
+              description: Successful `trajectory.csv` serves.
+            trajectory_jsonl:
+              type: integer
+              minimum: 0
+              description: Successful `trajectory.jsonl` serves.
+            thread_txt:
+              type: integer
+              minimum: 0
+              description: Successful `thread.txt` serves.
+            thread_json:
+              type: integer
+              minimum: 0
+              description: Successful `thread.json` serves.
+            watch_page:
+              type: integer
+              minimum: 0
+              description: Successful `/watch/{id}` serves (public sims only).
+            feed_atom:
+              type: integer
+              minimum: 0
+              description: |
+                Number of times this simulation appeared in a served
+                Atom feed render (`/api/feed.atom`). Each feed render
+                increments every sim that landed in the rendered card
+                set, so this counter is best read as "syndicated to
+                Atom subscribers N times".
+            feed_rss:
+              type: integer
+              minimum: 0
+              description: |
+                Same semantics as `feed_atom` for the RSS 2.0 form.
+            total:
+              type: integer
+              minimum: 0
+              description: Sum of every per-surface counter above.
 
     SettingsUpdate:
       type: object

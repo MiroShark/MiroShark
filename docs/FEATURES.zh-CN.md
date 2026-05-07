@@ -190,6 +190,31 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 实现:`app/services/thread_formatter.py`(纯标准库 `json` + `os`,~430 行)+ `app/api/simulation.py` 中的 `_serve_thread()` 共享函数体,镜像 `_serve_transcript` / `_serve_trajectory` 模式。零新增依赖。
 
+## 分发统计(分享面使用分析)
+
+第一个**入站**可观测性界面,与出站 Webhook 投递日志相对应。每一次成功的分享面响应都会在磁盘上(`<sim_dir>/surface-stats.json`)递增一个计数器;`GET /api/simulation/<id>/surface-stats` 返回每个分享面的计数,让运维 MiroShark 的 DeFi 基金或研究小组,能看到他们的受众实际上使用的是哪一个面。
+
+跟踪的计数器(每个分享面一个):
+
+- `share_card` — `share-card.png` 服务次数
+- `replay_gif` — `replay.gif` 服务次数
+- `transcript_md` / `transcript_json` — `transcript.md` / `transcript.json` 服务次数
+- `trajectory_csv` / `trajectory_jsonl` — `trajectory.csv` / `trajectory.jsonl` 服务次数
+- `thread_txt` / `thread_json` — `thread.txt` / `thread.json` 服务次数
+- `watch_page` — `/watch/<id>` 服务次数(仅公开模拟)
+- `feed_atom` / `feed_rss` — 此模拟出现在已渲染的 Atom 或 RSS 订阅源中的次数
+
+以及一个合成的 `total` 字段汇总所有计数器。每个键都始终存在(零默认),因此前端无需为缺失字段做特殊处理。
+
+实现:
+
+- **原子写入。** 每次递增是一个通过 tempfile + `os.replace` 的读-改-写过程,确保两个并发请求不会把 JSON 截断为 `{` 而丢失全部历史计数。与 webhook 投递日志使用同一模式。
+- **有界。** 单个小型 JSON 对象 — 仅 `SURFACE_KEYS` 中的键被持久化;来自调用方的未知键会被静默丢弃,绝不会写入。
+- **fire-and-forget。** 递增永远不抛异常;损坏的计数器文件会被静默重置为零。即使分析层故障(只读挂载、磁盘满、暂存文件被杀毒锁定),服务路径也始终成功。
+- **仅标准库。** `json` + `os` + `tempfile`。零新增依赖。
+
+嵌入对话框有「📊 分发统计」面板(默认折叠,点击 ▾ 展开)— 一个有序的两列表(分享面 · 计数,按计数倒序排序),一个「总服务数:N」行,以及一个「↻ 刷新」按钮。该面板有发布门控;私有模拟会显示「发布模拟以查看分发统计。」。与每个其他分享面一样的发布门控(`is_public=true`)。
+
 ## 图库搜索与筛选
 
 `/explore` 是公开研究界面 — 每一次发布的 MiroShark 模拟,都以卡片网格浏览。当语料库突破几十条后,反向时间序列的滚动列表就不再是工具,因此图库现在自带索引:卡片之上有一个关键词搜索框、一组共识筛选芯片、一组质量筛选芯片以及一个排序下拉。激活的筛选集合保存在 URL 参数中(`?q=…&consensus=bearish&quality=excellent&sort=rounds`),因此任意筛选视图都可作为书签分享 — "每一次关于 Aave 的优秀质量看跌预言"成了一个可发推文的 URL。

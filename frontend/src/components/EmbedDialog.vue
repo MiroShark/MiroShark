@@ -468,6 +468,80 @@
               </div>
             </div>
 
+            <!-- Inbound observability — per-share-surface request
+                 counters. Pairs with the outbound webhook delivery log
+                 so an operator running MiroShark for a DeFi fund or
+                 research group has both directions of the distribution
+                 loop visible from the same dialog. Collapsed by default
+                 to keep the panel compact for users who only care about
+                 the share / publish / outcome flow. -->
+            <div class="transcript-section surface-stats-section">
+              <div class="transcript-head surface-stats-head" @click="toggleSurfaceStats">
+                <span class="transcript-icon">📊</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Distribution', '分发统计') }}
+                    <span v-if="isPublic && surfaceStatsTotal > 0" class="surface-stats-total-badge">
+                      {{ surfaceStatsTotal }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('How many times each share surface has been served — the inbound side of the distribution loop the webhook log tracks on the outbound side.', '每个分享面已被服务的次数 — 分发回路的入站侧,webhook 日志跟踪的是出站侧。') }}
+                  </div>
+                </div>
+                <button
+                  class="surface-stats-chevron"
+                  :class="{ 'surface-stats-chevron-open': surfaceStatsExpanded }"
+                  :aria-expanded="surfaceStatsExpanded"
+                  type="button"
+                >
+                  ▾
+                </button>
+              </div>
+
+              <div v-if="surfaceStatsExpanded" class="surface-stats-body">
+                <div v-if="!isPublic" class="transcript-empty">
+                  {{ $tr('Publish the simulation to see distribution stats.', '发布模拟以查看分发统计。') }}
+                </div>
+                <div v-else-if="surfaceStatsLoading" class="surface-stats-loading">
+                  {{ $tr('Loading distribution data…', '加载分发数据…') }}
+                </div>
+                <div v-else-if="surfaceStatsError" class="transcript-empty surface-stats-error">
+                  {{ surfaceStatsError }}
+                </div>
+                <div v-else-if="surfaceStatsAllZero" class="transcript-empty">
+                  {{ $tr('No surface serves recorded yet — share this simulation to see distribution data appear here.', '尚未记录任何分享面服务 — 分享此模拟即可在此查看分发数据。') }}
+                </div>
+                <div v-else class="surface-stats-table">
+                  <div
+                    v-for="row in surfaceStatsRows"
+                    :key="`stats-row-${row.key}`"
+                    class="surface-stats-row"
+                    :class="{ 'surface-stats-row-zero': row.count === 0 }"
+                  >
+                    <span class="surface-stats-label">{{ row.label }}</span>
+                    <span class="surface-stats-count">{{ row.count }}</span>
+                  </div>
+                  <div class="surface-stats-row surface-stats-row-total">
+                    <span class="surface-stats-label">{{ $tr('Total serves', '总服务数') }}</span>
+                    <span class="surface-stats-count">{{ surfaceStatsTotal }}</span>
+                  </div>
+                </div>
+
+                <div v-if="isPublic" class="surface-stats-actions">
+                  <button
+                    class="surface-stats-refresh"
+                    type="button"
+                    :disabled="surfaceStatsLoading"
+                    @click="loadSurfaceStats"
+                  >
+                    <span v-if="surfaceStatsLoading">{{ $tr('Refreshing…', '刷新中…') }}</span>
+                    <span v-else>↻ {{ $tr('Refresh', '刷新') }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Verified-prediction annotation — lets operators turn a
                  published simulation into a "called it" record on the
                  /verified gallery page. Only meaningful once the run is
@@ -664,6 +738,7 @@ import {
   getTrajectoryJsonlUrl,
   getThreadTxtUrl,
   getThreadJsonUrl,
+  getSurfaceStats,
   getFeedUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
@@ -851,6 +926,90 @@ const loadThread = async () => {
     threadTruncated.value = false
   } finally {
     threadLoading.value = false
+  }
+}
+
+// ── Surface-stats state ────────────────────────────────────────────────
+// The first inbound observability surface — pairs with the outbound
+// webhook delivery log. Counters live in `<sim_dir>/surface-stats.json`
+// and are incremented by every successful `_serve_X` handler. The
+// panel is collapsed by default to keep the dialog compact for users
+// who only care about the share / publish / outcome flow.
+const surfaceStatsExpanded = ref(false)
+const surfaceStatsLoading = ref(false)
+const surfaceStatsError = ref('')
+const surfaceStats = ref(null)
+
+const SURFACE_STAT_LABELS = [
+  { key: 'share_card', label: tr('Share card · PNG', '分享卡片 · PNG') },
+  { key: 'replay_gif', label: tr('Replay GIF', '回放 GIF') },
+  { key: 'transcript_md', label: tr('Transcript · Markdown', '记录 · Markdown') },
+  { key: 'transcript_json', label: tr('Transcript · JSON', '记录 · JSON') },
+  { key: 'trajectory_csv', label: tr('Trajectory · CSV', '轨迹 · CSV') },
+  { key: 'trajectory_jsonl', label: tr('Trajectory · JSONL', '轨迹 · JSONL') },
+  { key: 'thread_txt', label: tr('Tweet thread · TXT', '推文串 · TXT') },
+  { key: 'thread_json', label: tr('Tweet thread · JSON', '推文串 · JSON') },
+  { key: 'watch_page', label: tr('Watch page', '观看页面') },
+  { key: 'feed_atom', label: tr('Atom feed', 'Atom 源') },
+  { key: 'feed_rss', label: tr('RSS feed', 'RSS 源') },
+]
+
+const surfaceStatsRows = computed(() => {
+  const stats = surfaceStats.value || {}
+  return SURFACE_STAT_LABELS
+    .map((row) => ({ ...row, count: Number(stats[row.key] || 0) }))
+    .sort((a, b) => b.count - a.count)
+})
+
+const surfaceStatsTotal = computed(() => {
+  if (!surfaceStats.value) return 0
+  return Number(surfaceStats.value.total || 0)
+})
+
+const surfaceStatsAllZero = computed(() => {
+  if (!surfaceStats.value) return true
+  return surfaceStatsTotal.value === 0
+})
+
+const loadSurfaceStats = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    surfaceStats.value = null
+    return
+  }
+  surfaceStatsLoading.value = true
+  surfaceStatsError.value = ''
+  try {
+    const res = await getSurfaceStats(props.simulationId)
+    if (res?.success && res.stats) {
+      surfaceStats.value = res.stats
+    } else if (res?.data?.stats) {
+      surfaceStats.value = res.data.stats
+    } else {
+      surfaceStats.value = null
+      surfaceStatsError.value = res?.error
+        || tr('Could not load distribution stats.', '无法加载分发统计。')
+    }
+  } catch (err) {
+    if (err?.response?.status === 403) {
+      surfaceStatsError.value = tr(
+        'Publish the simulation to see distribution stats.',
+        '发布模拟以查看分发统计。',
+      )
+    } else {
+      surfaceStatsError.value = err?.response?.data?.error
+        || err?.message
+        || tr('Could not load distribution stats.', '无法加载分发统计。')
+    }
+    surfaceStats.value = null
+  } finally {
+    surfaceStatsLoading.value = false
+  }
+}
+
+const toggleSurfaceStats = () => {
+  surfaceStatsExpanded.value = !surfaceStatsExpanded.value
+  if (surfaceStatsExpanded.value && !surfaceStats.value) {
+    loadSurfaceStats()
   }
 }
 
@@ -1083,6 +1242,14 @@ watch(() => props.open, async (val) => {
   // gate, so a private sim resolves cleanly to the empty state without
   // an extra round-trip on every dialog open.
   loadThread()
+  // Reset surface-stats state on each open so a previously expanded
+  // panel doesn't show stale numbers from a different sim. The
+  // counters are only fetched on demand (when the operator expands
+  // the panel) so a viewer who only cares about the share flow
+  // doesn't pay the network round-trip.
+  surfaceStatsExpanded.value = false
+  surfaceStats.value = null
+  surfaceStatsError.value = ''
 })
 
 // When the operator toggles public on, the share-card endpoint flips from
@@ -1092,6 +1259,13 @@ watch(isPublic, () => {
   // Re-fetch the thread when the publish flag flips — going public means
   // the gate now passes, so the previously-403 fetch should retry.
   loadThread()
+  // Same publish-gate flip applies to the surface-stats panel — pull
+  // fresh counters if the user has the panel expanded.
+  if (surfaceStatsExpanded.value) {
+    loadSurfaceStats()
+  } else {
+    surfaceStats.value = null
+  }
 })
 </script>
 
@@ -1825,6 +1999,160 @@ watch(isPublic, () => {
   font-size: 11px;
   color: #6b6b6b;
   font-style: italic;
+}
+
+/* Surface usage analytics — pairs visually with the transcript /
+   trajectory / thread sections (same shell, same head shape) so the
+   dialog reads as one continuous Publish & Embed flow. The head is
+   the click target that toggles the body open / closed; body uses a
+   compact two-column grid (label / count) sorted by count desc so
+   the operator's most-used surface lands at the top of the table. */
+.surface-stats-section {
+  cursor: default;
+}
+
+.surface-stats-head {
+  cursor: pointer;
+  user-select: none;
+  align-items: center;
+}
+
+.surface-stats-head:hover .surface-stats-chevron {
+  color: #0a0a0a;
+}
+
+.surface-stats-total-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #0a0a0a;
+  background: #f4ecd8;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+
+.surface-stats-chevron {
+  border: 0;
+  background: transparent;
+  font-size: 16px;
+  line-height: 1;
+  color: #6b6b6b;
+  cursor: pointer;
+  padding: 4px 6px;
+  transition: transform 0.15s, color 0.15s;
+}
+
+.surface-stats-chevron-open {
+  transform: rotate(180deg);
+  color: #0a0a0a;
+}
+
+.surface-stats-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.surface-stats-loading {
+  font-size: 12px;
+  color: #6b6b6b;
+  font-style: italic;
+}
+
+.surface-stats-error {
+  color: #b91c1c;
+}
+
+.surface-stats-table {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  row-gap: 4px;
+  column-gap: 14px;
+  padding: 10px 12px;
+  background: #fafaf7;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.surface-stats-row {
+  display: contents;
+  color: #1a1a1a;
+}
+
+.surface-stats-row > .surface-stats-label {
+  padding: 3px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.surface-stats-row > .surface-stats-count {
+  padding: 3px 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.surface-stats-row-zero > .surface-stats-label,
+.surface-stats-row-zero > .surface-stats-count {
+  color: #9b9b9b;
+  font-weight: 400;
+}
+
+.surface-stats-row-total {
+  border-top: 1px solid #ececec;
+  margin-top: 2px;
+  padding-top: 2px;
+}
+
+.surface-stats-row-total > .surface-stats-label {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  font-size: 11px;
+}
+
+.surface-stats-row-total > .surface-stats-count {
+  font-weight: 700;
+}
+
+.surface-stats-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.surface-stats-refresh {
+  border: 1px solid #d4d4d4;
+  background: #ffffff;
+  color: #1a1a1a;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.surface-stats-refresh:hover:not(:disabled) {
+  background: #f4ecd8;
+  border-color: #c2a76b;
+}
+
+.surface-stats-refresh:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .surface-stats-table {
+    font-size: 11px;
+  }
 }
 
 /* Live watch page — distinct visual treatment (warm orange tint)

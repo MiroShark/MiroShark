@@ -254,6 +254,31 @@ The Embed dialog has a "🧵 Tweet thread" section beneath the trajectory row: a
 
 Implementation: `app/services/thread_formatter.py` (pure stdlib `json` + `os`, ~430 LoC) + `_serve_thread()` shared body in `app/api/simulation.py` mirroring the `_serve_transcript` / `_serve_trajectory` pattern. Zero new dependencies.
 
+## Surface Usage Analytics
+
+The first **inbound** observability surface, paired with the outbound webhook delivery log. Every successful share-surface response increments a counter on disk (`<sim_dir>/surface-stats.json`); `GET /api/simulation/<id>/surface-stats` returns the per-surface counts so an operator running MiroShark for a DeFi fund or research group can see which surfaces their audience actually uses.
+
+Counters tracked (one per share surface):
+
+- `share_card` — `share-card.png` serves
+- `replay_gif` — `replay.gif` serves
+- `transcript_md` / `transcript_json` — `transcript.md` / `transcript.json` serves
+- `trajectory_csv` / `trajectory_jsonl` — `trajectory.csv` / `trajectory.jsonl` serves
+- `thread_txt` / `thread_json` — `thread.txt` / `thread.json` serves
+- `watch_page` — `/watch/<id>` serves (public sims only)
+- `feed_atom` / `feed_rss` — number of times this simulation was syndicated to an Atom or RSS feed render
+
+Plus a synthetic `total` summing all counters. Every key is always present (zero-defaulted), so a frontend renders the table without special-casing missing fields.
+
+Implementation:
+
+- **Atomic writes.** Each increment is a read-modify-write through a tempfile + `os.replace`, so two concurrent requests can't truncate the JSON to `{` and lose every prior count. Same pattern the webhook delivery log uses.
+- **Bounded.** A single small JSON object — only the keys in `SURFACE_KEYS` are persisted; an unknown key from a rogue caller is silently dropped, never written.
+- **Fire-and-forget.** Increment never raises; a corrupt counter file is silently reset to zeros. The serve path always succeeds, even when the analytics layer is broken (read-only mount, full disk, antivirus lock on the staging file).
+- **Stdlib only.** `json` + `os` + `tempfile`. Zero new dependencies.
+
+The Embed dialog has a "📊 Distribution" panel (collapsed by default, click the chevron to expand) — a sorted two-column table (surface · count, ranked by count desc), a `Total serves: N` row, and a `↻ Refresh` button. The panel is publish-gated; private sims see "Publish the simulation to see distribution stats." instead. Same publish gate as every other share surface (`is_public=true`).
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

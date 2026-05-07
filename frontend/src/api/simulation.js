@@ -548,6 +548,29 @@ export const getThreadJsonUrl = (simulationId, origin) => {
 }
 
 /**
+ * Fetch per-share-surface request counters for a published
+ * simulation. Returns `{success, simulation_id, stats}` where `stats`
+ * is the per-surface counter dict — `share_card`, `replay_gif`,
+ * `transcript_md` / `transcript_json`, `trajectory_csv` /
+ * `trajectory_jsonl`, `thread_txt` / `thread_json`, `watch_page`,
+ * `feed_atom` / `feed_rss`, plus a synthetic `total`.
+ *
+ * The inbound observability surface — pairs with the outbound
+ * webhook delivery log so an operator running MiroShark for a DeFi
+ * fund or research group can see which surfaces their audience
+ * actually uses.
+ *
+ * Same publish gate as the share card / transcript / trajectory /
+ * thread endpoints. Returns 403 for unpublished simulations.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<{success: boolean, simulation_id: string, stats: object}>}
+ */
+export const getSurfaceStats = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/surface-stats`)
+}
+
+/**
  * Build the absolute URL of the public share landing page for a
  * simulation. The page exposes Open Graph + Twitter Card meta tags so
  * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls

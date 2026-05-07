@@ -4909,6 +4909,7 @@ def get_share_card(simulation_id: str):
     unfurler hits don't re-render.
     """
     from ..services import share_card as share_card_renderer
+    from ..services import surface_stats
     from flask import Response
 
     locale = get_locale(request)
@@ -4950,6 +4951,10 @@ def get_share_card(simulation_id: str):
         response.headers["Content-Disposition"] = (
             f'inline; filename="miroshark-{simulation_id[:12]}.png"'
         )
+        surface_stats.increment_surface_stat(
+            os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id),
+            "share_card",
+        )
         return response
 
     except Exception as e:
@@ -4974,6 +4979,7 @@ def get_replay_gif(simulation_id: str):
     Cached on disk by content hash so repeat hits don't re-render.
     """
     from ..services import replay_gif as replay_renderer
+    from ..services import surface_stats
     from flask import Response
 
     locale = get_locale(request)
@@ -5016,6 +5022,10 @@ def get_replay_gif(simulation_id: str):
         response.headers["Content-Disposition"] = (
             f'inline; filename="miroshark-{simulation_id[:12]}-replay.gif"'
         )
+        surface_stats.increment_surface_stat(
+            os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id),
+            "replay_gif",
+        )
         return response
 
     except Exception as e:
@@ -5036,6 +5046,7 @@ def _serve_transcript(simulation_id: str, fmt: str):
     scans for, but the actual logic lives here.
     """
     from ..services import transcript as transcript_renderer
+    from ..services import surface_stats
     from flask import Response
 
     locale = get_locale(request)
@@ -5062,10 +5073,12 @@ def _serve_transcript(simulation_id: str, fmt: str):
             payload = transcript_renderer.render_json_bytes(data)
             mimetype = "application/json; charset=utf-8"
             filename = f"miroshark-{simulation_id[:12]}-transcript.json"
+            surface_key = "transcript_json"
         else:
             payload = transcript_renderer.render_markdown_bytes(data)
             mimetype = "text/markdown; charset=utf-8"
             filename = f"miroshark-{simulation_id[:12]}-transcript.md"
+            surface_key = "transcript_md"
 
         response = Response(payload, mimetype=mimetype)
         # Short cache — the transcript can change every round on a
@@ -5078,6 +5091,7 @@ def _serve_transcript(simulation_id: str, fmt: str):
         response.headers["Content-Disposition"] = (
             f'inline; filename="{filename}"'
         )
+        surface_stats.increment_surface_stat(sim_dir, surface_key)
         return response
 
     except Exception as e:
@@ -5127,6 +5141,7 @@ def _serve_trajectory(simulation_id: str, fmt: str):
     but the actual logic lives here.
     """
     from ..services import trajectory_export
+    from ..services import surface_stats
     from flask import Response
 
     locale = get_locale(request)
@@ -5153,10 +5168,12 @@ def _serve_trajectory(simulation_id: str, fmt: str):
             payload = trajectory_export.render_jsonl(rows)
             mimetype = "application/jsonl; charset=utf-8"
             filename = f"miroshark-{simulation_id[:12]}-trajectory.jsonl"
+            surface_key = "trajectory_jsonl"
         else:
             payload = trajectory_export.render_csv(rows)
             mimetype = "text/csv; charset=utf-8"
             filename = f"miroshark-{simulation_id[:12]}-trajectory.csv"
+            surface_key = "trajectory_csv"
 
         response = Response(payload, mimetype=mimetype)
         # Short cache — the trajectory grows by one row per round on a
@@ -5171,6 +5188,7 @@ def _serve_trajectory(simulation_id: str, fmt: str):
         response.headers["Content-Disposition"] = (
             f'attachment; filename="{filename}"'
         )
+        surface_stats.increment_surface_stat(sim_dir, surface_key)
         return response
 
     except Exception as e:
@@ -5236,6 +5254,7 @@ def _serve_thread(simulation_id: str, fmt: str):
     drift test scans for, but the actual logic lives here.
     """
     from ..services import thread_formatter
+    from ..services import surface_stats
     from flask import Response
 
     locale = get_locale(request)
@@ -5270,10 +5289,12 @@ def _serve_thread(simulation_id: str, fmt: str):
             payload = thread_formatter.render_thread_json(thread)
             mimetype = "application/json; charset=utf-8"
             filename = f"miroshark-{simulation_id[:12]}-thread.json"
+            surface_key = "thread_json"
         else:
             payload = thread_formatter.render_thread_txt(thread)
             mimetype = "text/plain; charset=utf-8"
             filename = f"miroshark-{simulation_id[:12]}-thread.txt"
+            surface_key = "thread_txt"
 
         response = Response(payload, mimetype=mimetype)
         # Short cache — the thread can change as new rounds land on a
@@ -5290,6 +5311,7 @@ def _serve_thread(simulation_id: str, fmt: str):
         response.headers["Content-Disposition"] = (
             f'inline; filename="{filename}"'
         )
+        surface_stats.increment_surface_stat(sim_dir, surface_key)
         return response
 
     except Exception as e:
@@ -5335,6 +5357,62 @@ def get_thread_json(simulation_id: str):
     Same publish gate as ``thread.txt``.
     """
     return _serve_thread(simulation_id, "json")
+
+
+@simulation_bp.route('/<simulation_id>/surface-stats', methods=['GET'])
+def get_surface_stats(simulation_id: str):
+    """Per-share-surface request counters for a published simulation.
+
+    Returns the number of times each share surface has served a
+    successful response for this simulation — share card PNG, replay
+    GIF, transcript (Markdown + JSON), trajectory (CSV + JSONL), tweet
+    thread (TXT + JSON), live watch page, and Atom / RSS feeds. Plus a
+    synthetic ``total`` summing all counters.
+
+    The first **inbound** observability surface — pairs with the
+    outbound webhook delivery log (``/<id>/webhook-log``) so an operator
+    has both directions of the distribution loop visible from the
+    EmbedDialog.
+
+    Same publish gate as the share card / transcript / trajectory /
+    thread endpoints — the counter file lives inside the sim's
+    on-disk directory and is only meaningful for sims the operator has
+    chosen to surface publicly.
+    """
+    from ..services import surface_stats
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        stats = surface_stats.read_surface_stats(sim_dir)
+
+        return jsonify({
+            "success": True,
+            "simulation_id": simulation_id,
+            "stats": stats,
+        })
+
+    except Exception as e:
+        logger.error(f"surface-stats: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
 
 
 # ============== Public Gallery ==============

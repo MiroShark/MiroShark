@@ -33,6 +33,7 @@ from ..services.feed import (
     render_feed,
     select_public_cards,
 )
+from ..services import surface_stats
 from ..utils.i18n import get_locale
 from ..utils.logger import get_logger
 
@@ -116,6 +117,23 @@ def _serve_feed(fmt: str) -> Response:
     # simulation appears in subscribers' next poll without requiring a
     # cache bust, long enough to absorb aggressive aggregator polling.
     response.headers["Cache-Control"] = "public, max-age=300"
+
+    # Each sim that appears in this feed render gets +1 on its own
+    # ``feed_atom`` / ``feed_rss`` counter. The operator-facing question
+    # this answers is: "was my sim syndicated to RSS subscribers in the
+    # last poll cycle?" — which is the distribution signal that
+    # matters, not the global feed-fetch count.
+    surface_key = "feed_atom" if fmt == "atom" else "feed_rss"
+    for card in cards:
+        if not isinstance(card, dict):
+            continue
+        sim_id = card.get("simulation_id") or card.get("id")
+        if not sim_id:
+            continue
+        surface_stats.increment_surface_stat(
+            os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, str(sim_id)),
+            surface_key,
+        )
     return response
 
 

@@ -28,6 +28,7 @@ from flask import Blueprint, Response, request
 from ..services.simulation_manager import SimulationManager
 from ..services.simulation_runner import SimulationRunner
 from ..services import watch_renderer
+from ..services import surface_stats
 from ..utils.i18n import get_locale, t as _t
 from ..utils.validation import validate_simulation_id
 
@@ -258,4 +259,15 @@ def watch_landing(simulation_id: str):
     # initial unfurl reflects the running state shortly after publish,
     # while keeping crawler load bounded.
     response.headers["Cache-Control"] = "public, max-age=60"
+
+    # Only count public sims — the generic broadcast page rendered for
+    # private / missing sims should never write to a non-existent
+    # ``sim_dir``.
+    if summary is not None and summary.get("is_public"):
+        import os
+        from ..config import Config
+        surface_stats.increment_surface_stat(
+            os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id),
+            "watch_page",
+        )
     return response

@@ -104,6 +104,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Trace Interview** | See the full reasoning chain behind an agent's reply, not just the reply |
 | **Push Notifications** | Web-push alerts when long-running graph / sim / report jobs finish |
 | **Completion Webhook** | POST a JSON summary the moment a sim finishes — wires Slack, Discord, Zapier, Make, n8n, or any custom endpoint with one URL field |
+| **Surface Usage Analytics** | `GET /api/simulation/<id>/surface-stats` — per-share-surface request counters (share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS) with a synthetic `total`. Inbound observability for the distribution loop the webhook log tracks on the outbound side |
 
 Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 
@@ -233,6 +234,7 @@ cp .env.example .env
 | **轨迹访谈** | 查看智能体回复背后的完整推理链,而不止是回复本身 |
 | **推送通知** | 长耗时图谱 / 模拟 / 报告任务完成时的浏览器推送提醒 |
 | **完成 Webhook** | 模拟一结束即 POST 一份 JSON 摘要 — 一个 URL 字段即可连通 Slack、Discord、Zapier、Make、n8n 或任意自定义端点 |
+| **分发统计(分享面使用分析)** | `GET /api/simulation/<id>/surface-stats` — 每个分享面的请求计数器(分享卡 / 回放 GIF / 转录 / 轨迹 / 推文串 / 观看页 / Atom / RSS),以及合成的 `total`。Webhook 日志在出站侧跟踪分发回路,本面则负责入站可观测性 |
 
 每项功能详见 **[docs/FEATURES.zh-CN.md](docs/FEATURES.zh-CN.md)**。
 
