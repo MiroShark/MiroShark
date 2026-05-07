@@ -528,6 +528,10 @@
                   </div>
                 </div>
 
+                <div v-if="!surfaceStatsAllZero" class="surface-stats-caveat">
+                  {{ $tr('Counts origin hits only — CDN and browser caches are not counted, so true audience reach is higher.', '仅统计源服务器命中 — 不计入 CDN 与浏览器缓存,实际受众覆盖更高。') }}
+                </div>
+
                 <div v-if="isPublic" class="surface-stats-actions">
                   <button
                     class="surface-stats-refresh"
@@ -958,7 +962,7 @@ const surfaceStatsRows = computed(() => {
   const stats = surfaceStats.value || {}
   return SURFACE_STAT_LABELS
     .map((row) => ({ ...row, count: Number(stats[row.key] || 0) }))
-    .sort((a, b) => b.count - a.count)
+    .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key))
 })
 
 const surfaceStatsTotal = computed(() => {
@@ -2118,6 +2122,16 @@ watch(isPublic, () => {
 
 .surface-stats-row-total > .surface-stats-count {
   font-weight: 700;
+}
+
+.surface-stats-caveat {
+  margin-top: 8px;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #6b6b6b;
+  background: #f7f7f7;
+  border-radius: 4px;
 }
 
 .surface-stats-actions {
