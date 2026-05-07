@@ -91,6 +91,50 @@ _FIRED: set[Tuple[str, str]] = set()
 _FIRED_LOCK = threading.Lock()
 _FIRED_MAX = 4096
 
+# Serializes the read-modify-rename in `_append_log_entry`. Without it,
+# two concurrent dispatches (auto-fire racing a manual retry, or two
+# retries clicked back-to-back) both read `existing` and both
+# `os.replace`, silently dropping the loser's entry — exactly the
+# visibility failure this log is meant to surface.
+_LOG_WRITE_LOCK = threading.Lock()
+
+# Per-(sim_id) retry cooldown for the manual retry endpoint. Caps any
+# single sim to one queued retry per ``RETRY_COOLDOWN_SEC`` window so a
+# leaked admin token can't be weaponized as a low-volume amplifier
+# against the configured Slack/Discord/n8n endpoint.
+RETRY_COOLDOWN_SEC = 5.0
+_LAST_RETRY_AT: Dict[str, float] = {}
+_RETRY_LOCK = threading.Lock()
+
+
+def claim_retry_slot(simulation_id: str, now: Optional[float] = None) -> Optional[float]:
+    """Reserve a retry slot for ``simulation_id``.
+
+    Returns ``None`` if the call is allowed (caller may proceed); returns
+    the number of seconds remaining in the cooldown window if rate-limited.
+    """
+    import time
+    ts = now if now is not None else time.monotonic()
+    with _RETRY_LOCK:
+        last = _LAST_RETRY_AT.get(simulation_id, 0.0)
+        elapsed = ts - last
+        if elapsed < RETRY_COOLDOWN_SEC:
+            return RETRY_COOLDOWN_SEC - elapsed
+        _LAST_RETRY_AT[simulation_id] = ts
+        # Bound dict growth — drop one arbitrary expired entry per claim.
+        if len(_LAST_RETRY_AT) > 4096:
+            for sid, last_ts in list(_LAST_RETRY_AT.items()):
+                if ts - last_ts >= RETRY_COOLDOWN_SEC:
+                    _LAST_RETRY_AT.pop(sid, None)
+                    break
+        return None
+
+
+def reset_retry_cooldown_for_tests() -> None:
+    """Clear the per-sim retry cooldown table. Test-only convenience."""
+    with _RETRY_LOCK:
+        _LAST_RETRY_AT.clear()
+
 
 def _mark_fired(sim_id: str, status: str) -> bool:
     """Record (sim_id, status) and return True if this is the first time."""
@@ -207,27 +251,30 @@ def _append_log_entry(sim_dir: str, entry: Dict[str, Any]) -> None:
         logger.warning(f"webhook-log: refusing unserializable entry for {sim_dir}: {exc}")
         return
 
-    try:
-        existing = _read_log_lines(sim_dir)
-        if len(existing) >= WEBHOOK_LOG_MAX_LINES:
-            keep = existing[-(WEBHOOK_LOG_MAX_LINES - 1):]
-            tmp_path = path + ".tmp"
-            try:
-                with open(tmp_path, 'w', encoding='utf-8') as f:
-                    f.writelines(keep)
+    # Lock the read-modify-rename window so concurrent dispatches don't
+    # both read the same `existing` and clobber each other's entries.
+    with _LOG_WRITE_LOCK:
+        try:
+            existing = _read_log_lines(sim_dir)
+            if len(existing) >= WEBHOOK_LOG_MAX_LINES:
+                keep = existing[-(WEBHOOK_LOG_MAX_LINES - 1):]
+                tmp_path = path + ".tmp"
+                try:
+                    with open(tmp_path, 'w', encoding='utf-8') as f:
+                        f.writelines(keep)
+                        f.write(serialized)
+                    os.replace(tmp_path, path)
+                finally:
+                    if os.path.exists(tmp_path):
+                        try:
+                            os.remove(tmp_path)
+                        except OSError:
+                            pass
+            else:
+                with open(path, 'a', encoding='utf-8') as f:
                     f.write(serialized)
-                os.replace(tmp_path, path)
-            finally:
-                if os.path.exists(tmp_path):
-                    try:
-                        os.remove(tmp_path)
-                    except OSError:
-                        pass
-        else:
-            with open(path, 'a', encoding='utf-8') as f:
-                f.write(serialized)
-    except OSError as exc:
-        logger.warning(f"webhook-log: write failed for {sim_dir}: {exc}")
+        except OSError as exc:
+            logger.warning(f"webhook-log: write failed for {sim_dir}: {exc}")
 
 
 def _parse_status_code_from_message(msg: Optional[str]) -> Optional[int]:

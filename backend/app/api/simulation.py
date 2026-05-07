@@ -5446,6 +5446,7 @@ def get_webhook_log(simulation_id: str):
     """
     locale = get_locale(request)
     try:
+        validate_simulation_id(simulation_id)
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         if not state:
@@ -5493,6 +5494,7 @@ def retry_webhook(simulation_id: str):
     """
     locale = get_locale(request)
     try:
+        validate_simulation_id(simulation_id)
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
         if not state:
@@ -5505,7 +5507,23 @@ def retry_webhook(simulation_id: str):
         from ..services.webhook_service import (
             retry_webhook_for_simulation,
             _resolve_webhook_url,
+            claim_retry_slot,
+            RETRY_COOLDOWN_SEC,
         )
+
+        cooldown_remaining = claim_retry_slot(simulation_id)
+        if cooldown_remaining is not None:
+            wait_s = max(1, int(round(cooldown_remaining)))
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    f"Retry rate-limited — wait {wait_s}s before retrying this simulation again "
+                    f"(cooldown: {RETRY_COOLDOWN_SEC:g}s).",
+                    f"重试限速 — 请等待 {wait_s} 秒后再次重试该模拟(冷却时间:{RETRY_COOLDOWN_SEC:g} 秒)。",
+                    locale,
+                ),
+                "retry_after_seconds": wait_s,
+            }), 429
 
         if not _resolve_webhook_url():
             return jsonify({

@@ -378,3 +378,66 @@ def test_retry_rejects_unknown_status(tmp_path: Path):
         )
     assert result["queued"] is False
     assert "unsupported status" in (result.get("error") or "")
+
+
+def test_concurrent_appends_do_not_drop_entries(tmp_path: Path):
+    """Two threads writing concurrently must both land in the log.
+
+    Without the module-level write lock, both threads could read the
+    same `existing` lines, both rename their tmp file over the target,
+    and one entry would be silently lost — exactly the visibility gap
+    this log is supposed to close.
+    """
+    from app.services import webhook_service
+
+    N = 32
+    barrier = threading.Barrier(N)
+    errors: list[BaseException] = []
+
+    def write(i: int) -> None:
+        try:
+            barrier.wait(timeout=2.0)
+            webhook_service._append_log_entry(
+                str(tmp_path),
+                {"attempt": i, "trigger": "test", "status": "completed"},
+            )
+        except BaseException as exc:
+            errors.append(exc)
+
+    threads = [threading.Thread(target=write, args=(i,)) for i in range(N)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join(timeout=5.0)
+
+    assert not errors, f"thread errors: {errors!r}"
+    log = tmp_path / "webhook-log.jsonl"
+    assert log.exists()
+    lines = [ln for ln in log.read_text(encoding="utf-8").splitlines() if ln.strip()]
+    # All N writes must be persisted (or capped at WEBHOOK_LOG_MAX_LINES).
+    expected = min(N, webhook_service.WEBHOOK_LOG_MAX_LINES)
+    assert len(lines) == expected
+    parsed = [json.loads(ln) for ln in lines]
+    attempts = {e["attempt"] for e in parsed}
+    assert len(attempts) == expected, f"duplicates / drops: {attempts}"
+
+
+def test_retry_cooldown_rate_limits_per_simulation(tmp_path: Path):
+    """`claim_retry_slot` rejects a second call inside the cooldown window
+    for the same sim_id, but allows other sims through."""
+    from app.services import webhook_service
+
+    webhook_service.reset_retry_cooldown_for_tests()
+
+    # First claim succeeds.
+    assert webhook_service.claim_retry_slot("sim_a", now=100.0) is None
+    # Same sim, half a second later → blocked, returns remaining seconds.
+    remaining = webhook_service.claim_retry_slot("sim_a", now=100.5)
+    assert remaining is not None
+    assert 0.0 < remaining <= webhook_service.RETRY_COOLDOWN_SEC
+    # Different sim is unaffected.
+    assert webhook_service.claim_retry_slot("sim_b", now=100.5) is None
+    # After cooldown elapses, the original sim is allowed again.
+    assert webhook_service.claim_retry_slot(
+        "sim_a", now=100.0 + webhook_service.RETRY_COOLDOWN_SEC + 0.01
+    ) is None
