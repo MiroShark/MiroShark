@@ -546,6 +546,128 @@
               </div>
             </div>
 
+            <!-- Reproducibility config — citation primitive behind every
+                 other share surface. Six surfaces (transcript, trajectory,
+                 thread, watch, GIF, share card) make a finished sim
+                 citable; this one carries the *parameters* a second
+                 operator needs to re-run it. Lineage badge surfaces
+                 fork / counterfactual parentage (when present) so a
+                 reader knows "this run is a counterfactual branch of
+                 sim_X at round 12" without reading the diff. Collapsed
+                 by default to keep the dialog compact. -->
+            <div class="transcript-section repro-section">
+              <div class="transcript-head repro-head" @click="toggleRepro">
+                <span class="transcript-icon">🔬</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Reproducibility config', '可复现配置') }}
+                    <span
+                      v-if="reproLineageBadge"
+                      class="repro-lineage-badge"
+                      :title="reproLineageTitle"
+                    >
+                      {{ reproLineageBadge }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Every parameter another researcher needs to reproduce this exact run — scenario, agents, rounds, platforms, time-config, director events, fork lineage. Citation-friendly JSON.', '另一位研究者复现此运行所需的全部参数 — 情景、智能体、轮次、平台、时序配置、导演事件、派生谱系。便于引用的 JSON。') }}
+                  </div>
+                </div>
+                <button
+                  class="repro-chevron"
+                  :class="{ 'repro-chevron-open': reproExpanded }"
+                  :aria-expanded="reproExpanded"
+                  type="button"
+                >
+                  ▾
+                </button>
+              </div>
+
+              <div v-if="reproExpanded" class="repro-body">
+                <div v-if="!isPublic" class="transcript-empty">
+                  {{ $tr('Publish the simulation to expose the reproducibility config.', '发布模拟以公开可复现配置。') }}
+                </div>
+                <div v-else-if="reproLoading" class="repro-loading">
+                  {{ $tr('Loading reproduction blob…', '加载复现配置…') }}
+                </div>
+                <div v-else-if="reproError" class="transcript-empty repro-error">
+                  {{ reproError }}
+                </div>
+                <div v-else-if="reproBlob" class="repro-detail">
+                  <div class="repro-summary-grid">
+                    <div class="repro-summary-row">
+                      <span class="repro-summary-key">{{ $tr('Schema', 'Schema') }}</span>
+                      <span class="repro-summary-value">v{{ reproBlob.schema_version }}</span>
+                    </div>
+                    <div class="repro-summary-row">
+                      <span class="repro-summary-key">{{ $tr('Agents', '智能体数') }}</span>
+                      <span class="repro-summary-value">{{ reproBlob.agent_count }}</span>
+                    </div>
+                    <div class="repro-summary-row">
+                      <span class="repro-summary-key">{{ $tr('Rounds', '轮次') }}</span>
+                      <span class="repro-summary-value">{{ reproBlob.total_rounds }}</span>
+                    </div>
+                    <div class="repro-summary-row">
+                      <span class="repro-summary-key">{{ $tr('Platforms', '平台') }}</span>
+                      <span class="repro-summary-value">{{ reproPlatformsLabel }}</span>
+                    </div>
+                    <div v-if="reproDirectorEventCount > 0" class="repro-summary-row">
+                      <span class="repro-summary-key">{{ $tr('Director events', '导演事件') }}</span>
+                      <span class="repro-summary-value">{{ reproDirectorEventCount }}</span>
+                    </div>
+                    <div v-if="reproBlob.lineage && reproBlob.lineage.kind !== 'original'" class="repro-summary-row">
+                      <span class="repro-summary-key">{{ $tr('Lineage', '谱系') }}</span>
+                      <span class="repro-summary-value">{{ reproLineageDescription }}</span>
+                    </div>
+                  </div>
+
+                  <div class="repro-curl-block">
+                    <div class="repro-curl-head">
+                      <span class="repro-curl-label">{{ $tr('Reproduce via curl', '使用 curl 复现') }}</span>
+                      <button class="snippet-copy-btn" @click="copy('reproCurl')">
+                        {{ copied === 'reproCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy', '复制') }}
+                      </button>
+                    </div>
+                    <pre class="snippet-code"><code>{{ reproCurlSnippet }}</code></pre>
+                  </div>
+
+                  <div class="repro-note">
+                    {{ $tr('Anyone with this config has every parameter that shapes the run — same scenario, same agent count, same rounds, same platform mix. Identical exports of a finished sim are bytewise-identical, so the file hash is a stable citation key.', '获得此配置的任何人都拥有决定该运行的所有参数 — 相同情景、相同智能体数、相同轮次、相同平台组合。已完成模拟的多次导出在字节级别完全一致,因此文件哈希可作为稳定的引用键。') }}
+                  </div>
+                </div>
+
+                <div v-if="isPublic" class="repro-actions">
+                  <a
+                    v-if="reproDownloadUrl"
+                    class="repro-download"
+                    :href="reproDownloadUrl"
+                    :download="reproDownloadFilename"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    {{ $tr('Download reproduce.json', '下载 reproduce.json') }}
+                  </a>
+                  <button
+                    class="snippet-copy-btn repro-copy-url"
+                    type="button"
+                    @click="copy('reproUrl')"
+                    :disabled="!reproDownloadUrl"
+                  >
+                    {{ copied === 'reproUrl' ? '✓ ' + $tr('URL copied', '已复制 URL') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                  <button
+                    class="surface-stats-refresh repro-refresh"
+                    type="button"
+                    :disabled="reproLoading"
+                    @click="loadRepro"
+                  >
+                    <span v-if="reproLoading">{{ $tr('Refreshing…', '刷新中…') }}</span>
+                    <span v-else>↻ {{ $tr('Refresh', '刷新') }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Verified-prediction annotation — lets operators turn a
                  published simulation into a "called it" record on the
                  /verified gallery page. Only meaningful once the run is
@@ -833,6 +955,8 @@ import {
   getThreadTxtUrl,
   getThreadJsonUrl,
   getSurfaceStats,
+  getReproductionUrl,
+  getReproduction,
   getFeedUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
@@ -1109,6 +1233,163 @@ const toggleSurfaceStats = () => {
   }
 }
 
+// ── Reproducibility config state ───────────────────────────────────────
+// The citation primitive behind every other share surface. The blob
+// is a v1-schema JSON document carrying every parameter another
+// operator would need to re-run the same simulation (scenario, agent
+// count, rounds, platforms, time-config, director events, lineage).
+// Same publish gate as the other share surfaces. Collapsed by default
+// so a viewer who only cares about share / publish / outcome doesn't
+// pay the network round-trip on every dialog open.
+const reproExpanded = ref(false)
+const reproLoading = ref(false)
+const reproError = ref('')
+const reproBlob = ref(null)
+
+const reproDownloadUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getReproductionUrl(props.simulationId, origin.value)
+})
+
+const reproDownloadFilename = computed(() => {
+  if (!props.simulationId) return 'reproduce.json'
+  return `miroshark-${props.simulationId.slice(0, 12)}-reproduce.json`
+})
+
+const reproPlatformsLabel = computed(() => {
+  const p = reproBlob.value?.platforms
+  if (!p) return ''
+  const parts = []
+  if (p.twitter) parts.push(tr('Twitter', 'Twitter'))
+  if (p.reddit) parts.push(tr('Reddit', 'Reddit'))
+  if (p.polymarket) {
+    const count = Number(p.polymarket_market_count || 1)
+    parts.push(`${tr('Polymarket', 'Polymarket')} ×${count}`)
+  }
+  return parts.length
+    ? parts.join(' · ')
+    : tr('No platforms enabled', '未启用平台')
+})
+
+const reproDirectorEventCount = computed(() => {
+  const events = reproBlob.value?.director_events
+  return Array.isArray(events) ? events.length : 0
+})
+
+const reproLineageBadge = computed(() => {
+  const lineage = reproBlob.value?.lineage
+  if (!lineage) return ''
+  if (lineage.kind === 'fork') return tr('🪐 Forked', '🪐 派生')
+  if (lineage.kind === 'counterfactual') return tr('🔀 Counterfactual', '🔀 反事实')
+  return ''
+})
+
+const reproLineageDescription = computed(() => {
+  const lineage = reproBlob.value?.lineage
+  if (!lineage || lineage.kind === 'original') return ''
+  const parent = lineage.parent_simulation_id
+    ? lineage.parent_simulation_id.slice(0, 12)
+    : ''
+  if (lineage.kind === 'fork') {
+    return tr('Forked from ', '派生自 ') + parent
+  }
+  // Counterfactual — surface the trigger round and label so the
+  // reader sees "Counterfactual branch of sim_X at round 12 (ceo_resigns)"
+  // without opening the parent.
+  const cf = lineage.counterfactual || {}
+  const round = Number.isInteger(cf.trigger_round) ? cf.trigger_round : '?'
+  const label = cf.label
+    ? ` (${cf.label})`
+    : ''
+  return tr('Counterfactual of ', '反事实分支自 ')
+    + parent
+    + tr(' at round ', ' · 第 ')
+    + round
+    + tr('', ' 轮')
+    + label
+})
+
+const reproLineageTitle = computed(() => {
+  // Tooltip seen on hover — full parent ID, not the truncated 12-char
+  // version, so the operator can grab the canonical sim id for
+  // /share/<id> or /watch/<id>.
+  const lineage = reproBlob.value?.lineage
+  if (!lineage || lineage.kind === 'original') {
+    return tr(
+      'Original simulation — no parent run.',
+      '原始模拟 — 无父运行。',
+    )
+  }
+  const parent = lineage.parent_simulation_id || '?'
+  if (lineage.kind === 'fork') {
+    return tr('Fork of ', '派生自 ') + parent
+  }
+  return tr('Counterfactual branch of ', '反事实分支自 ') + parent
+})
+
+const reproCurlSnippet = computed(() => {
+  if (!reproDownloadUrl.value) return ''
+  // Plain curl that produces the same blob the Download button does —
+  // suitable for paper-appendix screenshots and Jupyter notebook
+  // quickstarts. ``-fsSL`` keeps the snippet quiet on success and
+  // forwards redirects (the production deploy may sit behind a CDN
+  // that issues a 308 to the canonical host).
+  return `curl -fsSL '${reproDownloadUrl.value}' -o reproduce.json`
+})
+
+const loadRepro = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    reproBlob.value = null
+    return
+  }
+  reproLoading.value = true
+  reproError.value = ''
+  try {
+    const res = await getReproduction(props.simulationId)
+    // The endpoint returns the blob directly (no {success, data}
+    // wrapper) — the axios client already unwraps the JSON body.
+    if (res && typeof res === 'object' && res.schema_version) {
+      reproBlob.value = res
+    } else if (res && res.data && typeof res.data === 'object') {
+      // Defensive — handle a future enveloping change without
+      // breaking the panel.
+      reproBlob.value = res.data
+    } else {
+      reproBlob.value = null
+      reproError.value = tr(
+        'Could not parse the reproduction config.',
+        '无法解析复现配置。',
+      )
+    }
+  } catch (err) {
+    if (err?.response?.status === 403) {
+      reproError.value = tr(
+        'Publish the simulation to expose the reproducibility config.',
+        '发布模拟以公开可复现配置。',
+      )
+    } else if (err?.response?.status === 404) {
+      reproError.value = tr(
+        'Simulation not found.',
+        '未找到模拟。',
+      )
+    } else {
+      reproError.value = err?.response?.data?.error
+        || err?.message
+        || tr('Could not load the reproduction config.', '无法加载复现配置。')
+    }
+    reproBlob.value = null
+  } finally {
+    reproLoading.value = false
+  }
+}
+
+const toggleRepro = () => {
+  reproExpanded.value = !reproExpanded.value
+  if (reproExpanded.value && !reproBlob.value && !reproError.value) {
+    loadRepro()
+  }
+}
+
 const _writeClipboard = async (text) => {
   if (!text) return false
   try {
@@ -1210,6 +1491,8 @@ const copy = async (which) => {
     // paste-and-edit immediately without a network round-trip.
     text = threadTweets.value.length ? threadTweets.value.join('\n---\n') : ''
   }
+  else if (which === 'reproUrl') text = reproDownloadUrl.value
+  else if (which === 'reproCurl') text = reproCurlSnippet.value
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -1519,6 +1802,11 @@ watch(() => props.open, async (val) => {
   surfaceStatsExpanded.value = false
   surfaceStats.value = null
   surfaceStatsError.value = ''
+  // Same reset for the reproducibility panel — collapsed on open,
+  // blob cleared so the next expand fetches fresh against this sim.
+  reproExpanded.value = false
+  reproBlob.value = null
+  reproError.value = ''
 })
 
 // When the operator toggles public on, the share-card endpoint flips from
@@ -1534,6 +1822,14 @@ watch(isPublic, () => {
     loadSurfaceStats()
   } else {
     surfaceStats.value = null
+  }
+  // Reproducibility panel follows the same flip semantics — visible
+  // and expanded means we re-fetch the now-200 blob; collapsed means
+  // we just clear the cached value so the next expand fetches fresh.
+  if (reproExpanded.value) {
+    loadRepro()
+  } else {
+    reproBlob.value = null
   }
 })
 </script>
@@ -2431,6 +2727,194 @@ watch(isPublic, () => {
 @media (max-width: 600px) {
   .surface-stats-table {
     font-size: 11px;
+  }
+}
+
+/* Reproducibility config — citation primitive behind every other
+   share surface. Visual treatment matches the surface-stats panel
+   (collapsed by default, chevron rotates on open) but adds a small
+   blueish lineage badge inline with the title when the sim was
+   forked or branched, plus a download / copy / refresh button row
+   so the operator can grab the JSON without reading the curl snippet
+   first. */
+.repro-section {
+  margin-top: 14px;
+}
+
+.repro-head {
+  cursor: pointer;
+  user-select: none;
+}
+
+.repro-lineage-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #4338ca;
+  vertical-align: middle;
+  text-transform: none;
+  cursor: help;
+}
+
+.repro-chevron {
+  align-self: center;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: #6b6b6b;
+  transition: transform 0.18s ease;
+  line-height: 1;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.repro-chevron-open {
+  transform: rotate(180deg);
+}
+
+.repro-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.repro-loading,
+.repro-error {
+  font-size: 12px;
+  color: #6b6b6b;
+  font-style: italic;
+}
+
+.repro-error {
+  color: #b91c1c;
+  font-style: normal;
+}
+
+.repro-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.repro-summary-grid {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16px;
+  row-gap: 6px;
+  font-size: 12px;
+  background: #fafafa;
+  border: 1px solid rgba(10, 10, 10, 0.08);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.repro-summary-row {
+  display: contents;
+}
+
+.repro-summary-key {
+  color: #6b6b6b;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.repro-summary-value {
+  color: #1a1a1a;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+
+.repro-curl-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.repro-curl-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.repro-curl-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #6b6b6b;
+}
+
+.repro-note {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #6b6b6b;
+  background: #f5f5f5;
+  border-left: 3px solid rgba(99, 102, 241, 0.4);
+  padding: 8px 10px;
+  border-radius: 4px;
+}
+
+.repro-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.repro-download {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 6px;
+  background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
+  color: #ffffff;
+  text-decoration: none;
+  border: 1px solid #1a1a1a;
+  transition: background 0.15s;
+}
+
+.repro-download:hover {
+  background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+}
+
+.repro-copy-url {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.repro-refresh {
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .repro-summary-grid {
+    grid-template-columns: 1fr;
+    row-gap: 2px;
+  }
+  .repro-summary-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .repro-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .repro-refresh {
+    margin-left: 0;
   }
 }
 

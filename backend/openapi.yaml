@@ -1393,6 +1393,50 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/reproduce.json:
+    get:
+      tags: [Publish & Embed]
+      summary: Machine-readable reproducibility config blob for a published simulation.
+      description: |
+        Returns a complete JSON document carrying every parameter
+        another operator would need to re-run the same simulation —
+        scenario text, agent count, total rounds, platform toggles
+        (twitter / reddit / polymarket + market count), the four
+        cadence knobs from `time_config` (minutes per round, total
+        hours, peak / off-peak windows), any operator-injected director
+        events, and a `lineage` block describing whether this
+        simulation is original, a plain fork of another sim, or a
+        counterfactual branch (with the parent simulation id and
+        injection metadata travelling along).
+
+        This is the **citation primitive** behind the existing share
+        surfaces. Six of the ten share surfaces (transcript, trajectory,
+        thread, watch, GIF, share card) make a finished simulation
+        citable — but until this endpoint shipped, none of them carried
+        the parameters needed to reproduce the run. PR #71's shareable
+        scenario URLs carry the scenario text and template slug; this
+        blob carries everything else, in a single pretty-printed file
+        suitable for a paper appendix or a thread screenshot.
+
+        Identical exports of the same finished simulation produce
+        bytewise-identical JSON (sorted keys + stable indent) — useful
+        for citation hashes. Cached for 5 minutes; the blob does not
+        change once the sim has reached a terminal state.
+
+        Same publish gate as every other share surface — requires the
+        simulation to be public (`is_public=true`).
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Reproducibility config blob.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReproductionConfig"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /share/{simulation_id}:
     get:
       tags: [Publish & Embed]
@@ -2974,6 +3018,211 @@ components:
               type: integer
               minimum: 0
               description: Sum of every per-surface counter above.
+
+    ReproductionConfig:
+      type: object
+      description: |
+        Citation primitive returned by
+        `/api/simulation/{id}/reproduce.json`. Every parameter another
+        operator would need to re-run the same simulation, in one
+        machine-readable document. Pretty-printed, sorted keys, stable
+        bytes — identical exports of the same finished simulation
+        produce identical files (citation-hash friendly).
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal.
+        v1-aware parsers should reject blobs whose `schema_version`
+        does not equal `"1"`.
+      required:
+        - schema_version
+        - exported_at
+        - simulation_id
+        - scenario
+        - agent_count
+        - total_rounds
+        - platforms
+        - time_config
+        - lineage
+        - director_events
+        - config_reasoning
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        exported_at:
+          type: string
+          format: date-time
+          description: |
+            UTC timestamp when the export was rendered (ISO-8601 with
+            trailing `Z`). Same shape as the webhook delivery log's
+            `timestamp` field.
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        scenario:
+          type: string
+          description: |
+            The simulation requirement / scenario text. Falls back to
+            the state-level `simulation_requirement` field for older
+            sims that wrote it onto state rather than into the
+            generated config.
+        agent_count:
+          type: integer
+          minimum: 0
+          description: |
+            Number of agent profiles generated for the run. Maps to
+            `state.profiles_count` and determines how many distinct
+            personas reasoned through the scenario.
+        total_rounds:
+          type: integer
+          minimum: 0
+          description: |
+            Total rounds the simulation ran (or is configured to run).
+            Prefers the runner's recorded total; falls back to
+            `time_config.total_simulation_hours * 60 /
+            time_config.minutes_per_round` when the runner hasn't
+            populated the field. May be `0` for sims that never
+            reached the prepared state.
+        platforms:
+          type: object
+          description: |
+            Platform toggles + the polymarket market-count knob — the
+            four boolean / integer parameters that together with the
+            scenario decide which channels the agents post to.
+          required:
+            - twitter
+            - reddit
+            - polymarket
+            - polymarket_market_count
+          properties:
+            twitter:
+              type: boolean
+              description: Whether the simulation enabled the Twitter platform.
+            reddit:
+              type: boolean
+              description: Whether the simulation enabled the Reddit platform.
+            polymarket:
+              type: boolean
+              description: Whether the simulation enabled prediction-market trading.
+            polymarket_market_count:
+              type: integer
+              minimum: 1
+              description: |
+                Number of distinct prediction markets generated when
+                `polymarket=true`. Defaults to `1`. Range `[1, 5]` is
+                enforced upstream by the prepare endpoint.
+        time_config:
+          type: object
+          description: |
+            The four cadence knobs that drive the simulation's
+            temporal envelope. May be empty when the sim never reached
+            a prepared state. Field set is intentionally narrow: the
+            full LLM-generated config includes per-agent posting
+            frequency + event schedules + platform tuning, but those
+            are derived from the entity graph rather than parameters
+            a researcher reproduces by hand.
+          properties:
+            minutes_per_round:
+              type: integer
+              minimum: 1
+              description: Wall-clock minutes the simulation pretends each round covers.
+            total_simulation_hours:
+              type: integer
+              minimum: 0
+              description: Total wall-clock hours the simulation pretends to span.
+            peak_hours:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 23
+              description: Hours of the day treated as high-activity windows.
+            off_peak_hours:
+              type: array
+              items:
+                type: integer
+                minimum: 0
+                maximum: 23
+              description: Hours of the day treated as low-activity windows.
+        lineage:
+          type: object
+          description: |
+            Description of how this simulation was created. Powers the
+            "🪐 Forked from X" / "🔀 Counterfactual branch of X at round
+            Y" badge on the EmbedDialog and (forthcoming) share / watch
+            pages.
+          required:
+            - parent_simulation_id
+            - kind
+            - counterfactual
+          properties:
+            parent_simulation_id:
+              type: string
+              nullable: true
+              description: |
+                Parent simulation id, or `null` for original sims. When
+                non-null, the parent's reproduction blob can be fetched
+                from the same endpoint to get the un-branched version.
+            kind:
+              type: string
+              enum: [original, fork, counterfactual]
+              description: |
+                Lineage discriminator. `original` ⇒ created via the
+                standard prepare flow. `fork` ⇒ created via
+                `POST /api/simulation/fork` (same agent population, new
+                sim id). `counterfactual` ⇒ created via
+                `POST /api/simulation/branch-counterfactual` (fork plus
+                an injection event scheduled at a specific round).
+            counterfactual:
+              type: object
+              nullable: true
+              description: |
+                Present only when `kind == "counterfactual"`. Carries
+                the trigger round + label + 140-char preview of the
+                injection text so the badge can render the headline
+                without a second fetch.
+              properties:
+                trigger_round:
+                  type: integer
+                  minimum: 0
+                  description: Round at which the injection fires.
+                label:
+                  type: string
+                  description: Operator-supplied or auto-generated branch label.
+                preview:
+                  type: string
+                  nullable: true
+                  description: Up to 140 chars of the injection text.
+        director_events:
+          type: array
+          nullable: true
+          description: |
+            Operator-injected scenario events (e.g. "Liquidity Crisis"
+            at round 15) that shaped the belief curve. `null` when no
+            events were injected — the common case. Each event carries
+            its `round`, `label`, and optional `description`.
+          items:
+            type: object
+            required: [round, label]
+            properties:
+              round:
+                type: integer
+                minimum: 0
+                description: Round at which the event fired.
+              label:
+                type: string
+                description: Short headline for the event.
+              description:
+                type: string
+                nullable: true
+                description: Longer description, or `null` when none was provided.
+        config_reasoning:
+          type: string
+          description: |
+            LLM-generated rationale for the chosen knobs, captured at
+            prepare time. Empty string for older sims that didn't
+            persist a rationale.
 
     SettingsUpdate:
       type: object

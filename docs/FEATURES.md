@@ -279,6 +279,36 @@ Implementation:
 
 The Embed dialog has a "📊 Distribution" panel (collapsed by default, click the chevron to expand) — a sorted two-column table (surface · count, ranked by count desc), a `Total serves: N` row, and a `↻ Refresh` button. The panel is publish-gated; private sims see "Publish the simulation to see distribution stats." instead. Same publish gate as every other share surface (`is_public=true`).
 
+## Reproducibility Config Export
+
+The **citation primitive** behind every other share surface. Six of the ten share surfaces (transcript, trajectory, thread, watch, GIF, share card) make a finished simulation citable — but until this endpoint shipped, none of them carried the parameters needed to reproduce the run. PR #71's shareable scenario URLs carry the scenario text and template slug; this blob carries everything else, in a single pretty-printed file suitable for a paper appendix or a thread screenshot.
+
+`GET /api/simulation/<id>/reproduce.json` returns a v1-schema JSON document with:
+
+- **`schema_version`** — literal `"1"`. Bumped on breaking changes; v1-aware parsers should reject other values.
+- **`exported_at`** — UTC ISO-8601 timestamp of the export.
+- **`simulation_id`** — echoed sim id.
+- **`scenario`** — the simulation requirement / scenario text. Falls back to the state-level `simulation_requirement` field for older sims that wrote it onto state rather than into the generated config.
+- **`agent_count`** — number of agent profiles generated for the run (maps to `state.profiles_count`).
+- **`total_rounds`** — total rounds the simulation ran (or is configured to run). Prefers the runner's recorded total; falls back to `time_config.total_simulation_hours * 60 / time_config.minutes_per_round` when the runner hasn't populated the field.
+- **`platforms`** — the four boolean / integer parameters that decide which channels the agents post to: `twitter`, `reddit`, `polymarket`, `polymarket_market_count`.
+- **`time_config`** — the four cadence knobs that drive the simulation's temporal envelope: `minutes_per_round`, `total_simulation_hours`, `peak_hours`, `off_peak_hours`. Field set is intentionally narrow: the full LLM-generated config includes per-agent posting frequency + event schedules + platform tuning, but those are derived from the entity graph rather than parameters a researcher reproduces by hand.
+- **`director_events`** — operator-injected scenario events (e.g. "Liquidity Crisis" at round 15) that shaped the belief curve. `null` when no events were injected — the common case. Each event carries its `round`, `label`, and optional `description`.
+- **`lineage`** — describes how this simulation was created. `kind` is one of `original` (created via the standard prepare flow), `fork` (created via `POST /api/simulation/fork`, same agent population, new sim id), or `counterfactual` (created via `POST /api/simulation/branch-counterfactual`, a fork plus an injection event scheduled at a specific round). Carries `parent_simulation_id` plus, for counterfactual branches, a `counterfactual` sub-object with `trigger_round` / `label` / 140-char `preview` so the badge can render the headline without a second fetch.
+- **`config_reasoning`** — LLM-generated rationale for the chosen knobs, captured at prepare time. Empty string for older sims that didn't persist a rationale.
+
+Implementation:
+
+- **Pure stdlib.** `json` + `os`. No new dependencies; helpers in `app/services/repro_export.py`.
+- **Read-only.** The service composes the blob from on-disk artifacts (`state.json`, `simulation_config.json`, `counterfactual_injection.json`, optional director events) — it never writes.
+- **Schema-locked.** `SCHEMA_VERSION` constant + `REQUIRED_KEYS` frozenset so a downstream consumer can validate cheaply via `validate_blob(blob)`.
+- **Defense-in-depth.** Corrupt artifacts degrade to `null` rather than 500ing the export — the citation surface must be available even when ancillary files are missing.
+- **Bytewise-stable.** Pretty-printed (indent=2, sort_keys=True) so identical exports of the same finished simulation are byte-for-byte identical. The file hash is therefore a stable citation key.
+
+Cached for 5 minutes; the blob does not change once the sim has reached a terminal state. Same publish gate as every other share surface — requires the simulation to be public (`is_public=true`).
+
+The Embed dialog has a "🔬 Reproducibility config" panel (collapsed by default) — a summary grid (Schema version · Agents · Rounds · Platforms · Director events · Lineage), a "Reproduce via curl" snippet ready to copy, a `Download reproduce.json` button, and (when the sim was forked or branched) a small inline lineage badge — `🪐 Forked` or `🔀 Counterfactual` — beside the title. The badge tooltip shows the canonical parent sim id so the operator can grab it for `/share/<id>` or `/watch/<id>` without reading the JSON.
+
 ## Webhook Delivery Log
 
 Every dispatch attempt of the outbound completion webhook (the one configured in **Settings → Integrations → Webhook**, see [WEBHOOKS.md](WEBHOOKS.md)) appends a JSON line to `<sim_dir>/webhook-log.jsonl`. Each row records:

@@ -215,6 +215,36 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 嵌入对话框有「📊 分发统计」面板(默认折叠,点击 ▾ 展开)— 一个有序的两列表(分享面 · 计数,按计数倒序排序),一个「总服务数:N」行,以及一个「↻ 刷新」按钮。该面板有发布门控;私有模拟会显示「发布模拟以查看分发统计。」。与每个其他分享面一样的发布门控(`is_public=true`)。
 
+## 可复现配置导出
+
+每个分享面背后的**引用基元**。十个分享面中的六个(转录、轨迹、推文串、观看页、GIF、分享卡)让一次完成的模拟可被引用 — 但在此端点上线前,它们都没有携带复现该次运行所需的参数。PR #71 的可分享情景 URL 携带了情景文本与模板 slug;此 blob 携带其余的一切,以一份美化打印的文件呈现,适用于论文附录或推文截图。
+
+`GET /api/simulation/<id>/reproduce.json` 返回一份 v1-schema 的 JSON 文档,字段包括:
+
+- **`schema_version`** — 字面量 `"1"`。破坏性变更时升级;v1 解析器应拒绝其他值。
+- **`exported_at`** — 导出时刻的 UTC ISO-8601 时间戳。
+- **`simulation_id`** — 回显的模拟 ID。
+- **`scenario`** — 模拟需求 / 情景文本。对于将 `simulation_requirement` 写入 state 而非生成配置的旧模拟,会回退至 state 字段。
+- **`agent_count`** — 该次运行生成的智能体档案数(对应 `state.profiles_count`)。
+- **`total_rounds`** — 模拟运行(或配置运行)的总轮次。优先取 runner 记录的总数;当 runner 尚未填充该字段时回退至 `time_config.total_simulation_hours * 60 / time_config.minutes_per_round`。
+- **`platforms`** — 决定智能体发帖到哪些渠道的四个布尔 / 整数参数:`twitter`、`reddit`、`polymarket`、`polymarket_market_count`。
+- **`time_config`** — 驱动模拟时序包络的四个节拍旋钮:`minutes_per_round`、`total_simulation_hours`、`peak_hours`、`off_peak_hours`。字段集刻意收窄:LLM 生成的完整配置还包含每代理发帖频率 + 事件计划 + 平台调优,但那些是从实体图谱派生的,并非研究者手工复现的参数。
+- **`director_events`** — 操作者注入的情景事件(如第 15 轮的「流动性危机」),它们形塑了信念曲线。当未注入事件时为 `null`(常见情形)。每个事件携带 `round`、`label` 与可选 `description`。
+- **`lineage`** — 描述此次模拟的创建路径。`kind` 取值之一:`original`(经标准 prepare 流程创建)、`fork`(经 `POST /api/simulation/fork` 创建,代理种群相同、新模拟 ID)、`counterfactual`(经 `POST /api/simulation/branch-counterfactual` 创建,即 fork 加上某一轮调度的注入事件)。携带 `parent_simulation_id`,对反事实分支额外携带 `counterfactual` 子对象,内含 `trigger_round` / `label` / 140 字符 `preview`,使徽章可在不二次请求的情况下渲染头条。
+- **`config_reasoning`** — prepare 时刻捕获的 LLM 选择各旋钮的理由。未持久化此理由的旧模拟为空字符串。
+
+实现:
+
+- **仅标准库。** `json` + `os`。零新增依赖;辅助函数位于 `app/services/repro_export.py`。
+- **只读。** 该服务从磁盘工件(`state.json`、`simulation_config.json`、`counterfactual_injection.json`、可选的 director 事件)组装该 blob — 永不写入。
+- **schema 锁定。** `SCHEMA_VERSION` 常量 + `REQUIRED_KEYS` 冻结集 — 下游消费者可以通过 `validate_blob(blob)` 廉价校验。
+- **纵深防御。** 工件损坏时降级为 `null`,而不让导出 500 — 引用面必须在辅助文件缺失时仍可用。
+- **字节级稳定。** 美化打印(indent=2、sort_keys=True)— 同一已完成模拟的多次导出在字节层面完全一致。文件哈希因此可作为稳定的引用键。
+
+缓存 5 分钟;模拟到达终止状态后,blob 不再变化。与其他分享面一样的发布门控 — 要求模拟为公开(`is_public=true`)。
+
+嵌入对话框有「🔬 可复现配置」面板(默认折叠)— 概要网格(Schema 版本 · 智能体 · 轮次 · 平台 · 导演事件 · 谱系)、可一键复制的「使用 curl 复现」片段、`下载 reproduce.json` 按钮,以及(当模拟为派生或反事实分支时)标题旁的小型内联谱系徽章 — `🪐 派生` 或 `🔀 反事实`。徽章 tooltip 展示父模拟规范 ID,操作者无需阅读 JSON 即可获取它供 `/share/<id>` 或 `/watch/<id>` 使用。
+
 ## 图库搜索与筛选
 
 `/explore` 是公开研究界面 — 每一次发布的 MiroShark 模拟,都以卡片网格浏览。当语料库突破几十条后,反向时间序列的滚动列表就不再是工具,因此图库现在自带索引:卡片之上有一个关键词搜索框、一组共识筛选芯片、一组质量筛选芯片以及一个排序下拉。激活的筛选集合保存在 URL 参数中(`?q=…&consensus=bearish&quality=excellent&sort=rounds`),因此任意筛选视图都可作为书签分享 — "每一次关于 Aave 的优秀质量看跌预言"成了一个可发推文的 URL。

@@ -571,6 +571,50 @@ export const getSurfaceStats = (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the reproducibility config blob for a
+ * simulation.
+ *
+ * The blob is a v1-schema JSON document carrying every parameter
+ * another operator would need to re-run the same simulation —
+ * scenario text, agent count, total rounds, platform toggles, the
+ * four cadence knobs from `time_config`, any operator-injected
+ * director events, and a `lineage` block describing fork /
+ * counterfactual parentage. The citation primitive behind every
+ * other share surface.
+ *
+ * Same publish gate as the share card / transcript / trajectory /
+ * thread endpoints. Returns 403 for unpublished simulations. Cached
+ * for 5 minutes; identical exports of the same finished simulation
+ * are bytewise-identical (citation-hash friendly).
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getReproductionUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/reproduce.json`
+}
+
+/**
+ * Fetch the parsed reproducibility config blob for a published
+ * simulation. Returns the same JSON document `getReproductionUrl`
+ * resolves to, but as an in-memory object — useful for rendering the
+ * lineage badge or the inline config preview without a second fetch.
+ *
+ * The endpoint follows the standard share-surface envelope: the
+ * Flask handler returns the blob directly (not wrapped in
+ * `{success, data}`), so callers consume `response.data` as the
+ * blob itself.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<object>} the v1-schema reproduction blob
+ */
+export const getReproduction = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/reproduce.json`)
+}
+
+/**
  * Build the absolute URL of the public share landing page for a
  * simulation. The page exposes Open Graph + Twitter Card meta tags so
  * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls

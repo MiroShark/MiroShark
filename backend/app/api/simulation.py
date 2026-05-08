@@ -5415,6 +5415,114 @@ def get_surface_stats(simulation_id: str):
         }), 500
 
 
+# ============== Reproducibility Config Export ==============
+#
+# Six of the ten share surfaces (transcript, trajectory, thread, watch,
+# GIF, share card) make a finished simulation citable. This endpoint
+# closes the **reproducibility gap** behind those citation surfaces: a
+# machine-readable JSON blob carrying every parameter another operator
+# would need to re-run the same simulation — scenario, agent count,
+# total rounds, platform toggles, time-config knobs, director events,
+# fork/counterfactual lineage. Anyone with the blob has the citation
+# primitive that the academic and quant audiences need before they can
+# cite MiroShark in a paper or thread without manual qualification.
+#
+# Same publish gate as every other share surface — the blob describes
+# a public sim's parameters, so it should only be retrievable for sims
+# the operator has chosen to surface. Pretty-printed (indent=2,
+# sort_keys=True) so a ``curl > config.json`` produces a diff-friendly
+# file; identical exports are bytewise identical (citation-hash
+# friendly).
+
+
+@simulation_bp.route('/<simulation_id>/reproduce.json', methods=['GET'])
+def get_reproduce_config(simulation_id: str):
+    """Return a complete reproducibility config blob for a published sim.
+
+    The blob is a v1-schema JSON document containing every parameter a
+    second operator would need to re-run the same simulation:
+    ``scenario`` text, ``agent_count``, ``total_rounds``, platform
+    toggles (twitter / reddit / polymarket + market count), the four
+    cadence knobs from ``time_config`` (minutes per round, total hours,
+    peak / off-peak windows), any operator-injected ``director_events``,
+    and the ``lineage`` block describing whether this sim is original,
+    a plain fork of another sim, or a counterfactual branch (with the
+    parent ID + injection metadata travelling along).
+
+    Pure read; pretty-printed for paper appendix / thread screenshot
+    use. ``Cache-Control: public, max-age=300`` — slightly longer than
+    the trajectory CSV's 60s because the reproduction blob doesn't
+    change once the sim has reached a terminal state.
+
+    Closes the gap that PR #71's shareable scenario URLs left open:
+    that flow carries scenario text and template slug, but not agent
+    count, rounds, or director events.
+    """
+    from ..services import repro_export
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}",
+            }), 404
+
+        config_data = manager.get_simulation_config(simulation_id)
+        sim_dir = os.path.join(
+            Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id
+        )
+
+        blob = repro_export.build_repro_config(
+            state.to_dict(), config_data, sim_dir
+        )
+
+        payload = repro_export.render_json_bytes(blob)
+        response = Response(
+            payload, mimetype="application/json; charset=utf-8"
+        )
+        # 5-min cache — reproduction blob is stable once the sim
+        # finishes; live runs change rarely enough that a 5-min stale
+        # window is fine for the citation use case.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        # Inline so a click in the SPA renders in-tab; the EmbedDialog
+        # uses an explicit ``download`` attribute on its anchor when it
+        # wants a save-as.
+        filename = f"miroshark-{simulation_id[:12]}-reproduce.json"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="{filename}"'
+        )
+        return response
+
+    except Exception as e:
+        logger.error(
+            f"reproduce.json: failed for {simulation_id}: "
+            f"{e}\n{traceback.format_exc()}"
+        )
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 # ============== Webhook Delivery Log ==============
 #
 # PR #46 shipped the outbound completion webhook. This pair of routes
