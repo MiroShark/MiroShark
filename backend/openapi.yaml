@@ -932,6 +932,55 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/SuccessEnvelope" }
 
+  /api/simulation/{simulation_id}/lineage:
+    get:
+      tags: [Analytics]
+      summary: Parent + public children of a published simulation (fork / counterfactual graph).
+      description: |
+        Returns the lineage graph slice rooted at the requested
+        simulation: the parent it was forked / branched from (if any)
+        and every **public** simulation whose `parent_simulation_id`
+        points back at it.
+
+        Closes the navigation gap that PR #75's reproducibility config
+        export uncovered. PR #75 persists `parent_simulation_id` plus
+        a counterfactual trigger marker into every simulation's
+        directory — the data is on disk, but the lineage is
+        one-directional (a child knows its parent, the parent has no
+        visibility into its children). A researcher who runs a base
+        scenario then triggers three counterfactual branches has no
+        way to navigate from the parent to the branches without
+        remembering each child sim id. This endpoint surfaces the
+        reverse pointer.
+
+        Children are public-only. Operators who fork privately for
+        in-progress work are not surprised to see those branches leak
+        into a tweeted parent's lineage view. The total count caps at
+        50 entries; sims with more children than that are an extreme
+        outlier and the cap is defense-in-depth, not a normal
+        truncation case.
+
+        Same publish gate as the share card / transcript / trajectory
+        / thread / reproduce.json endpoints. Cached for 5 minutes —
+        the graph slice is stable once the parent and its branches
+        reach terminal states.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Lineage graph slice — parent + public children.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/SimulationLineage"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/compare:
     get:
       tags: [Analytics]
@@ -3223,6 +3272,146 @@ components:
             LLM-generated rationale for the chosen knobs, captured at
             prepare time. Empty string for older sims that didn't
             persist a rationale.
+
+    SimulationLineage:
+      type: object
+      description: |
+        Lineage graph slice returned by
+        `/api/simulation/{id}/lineage`. Pairs the parent pointer that
+        already lived on disk (PR #75 reproducibility config export)
+        with the reverse pointers — the **public** children whose
+        `parent_simulation_id` matches the requested simulation —
+        making the fork / counterfactual graph navigable both ways.
+
+        `parent` is `null` for original sims; `children` is a possibly
+        empty list capped at 50 entries; `total_children` reflects the
+        public-only scan total even when the response was capped.
+
+        When the requested simulation is itself a counterfactual
+        branch, `counterfactual` carries the trigger round + label so
+        the badge can render "🔀 Counterfactual at round 12
+        (ceo_resigns)" without a second fetch.
+      required:
+        - simulation_id
+        - lineage_kind
+        - parent
+        - children
+        - total_children
+        - counterfactual
+      properties:
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        lineage_kind:
+          type: string
+          enum: [original, fork, counterfactual]
+          description: |
+            How the requested simulation was created. `original` ⇒ no
+            parent. `fork` ⇒ created via `POST /api/simulation/fork`.
+            `counterfactual` ⇒ created via
+            `POST /api/simulation/branch-counterfactual` (fork plus an
+            injection event scheduled at a specific round). Mirrors
+            `lineage.kind` from the reproduce.json export.
+        parent:
+          type: object
+          nullable: true
+          description: |
+            The parent simulation entry, or `null` for originals. When
+            the parent has been unpublished, `is_public` is `false` and
+            `scenario_preview` is the empty string — the SPA renders
+            the bare placeholder rather than a click-through link.
+          required:
+            - simulation_id
+            - scenario_preview
+            - created_at
+            - is_public
+          properties:
+            simulation_id: { type: string }
+            scenario_preview:
+              type: string
+              description: Up to 80 chars of the parent scenario, truncated with an ellipsis.
+            created_at:
+              type: string
+              description: Best-effort UTC timestamp from the parent's state.json.
+            is_public:
+              type: boolean
+              description: |
+                Whether the parent is itself published. False parents
+                are echoed by id only — no scenario, no click-through.
+        children:
+          type: array
+          description: |
+            Public child simulations whose `parent_simulation_id`
+            matches the requested sim. Sorted by `created_at`
+            ascending (oldest fork first — natural narrative order).
+            Capped at 50 entries; `total_children` reflects the
+            uncapped count.
+          items:
+            type: object
+            required:
+              - simulation_id
+              - scenario_preview
+              - created_at
+              - is_public
+              - kind
+              - counterfactual
+            properties:
+              simulation_id: { type: string }
+              scenario_preview:
+                type: string
+                description: Up to 80 chars of the child scenario.
+              created_at:
+                type: string
+                description: Best-effort UTC timestamp from the child's state.json.
+              is_public:
+                type: boolean
+                enum: [true]
+                description: Always true — private children are filtered out server-side.
+              kind:
+                type: string
+                enum: [fork, counterfactual]
+                description: |
+                  How the child was created. `fork` ⇒ same agent
+                  population, fresh sim id, no scheduled injection.
+                  `counterfactual` ⇒ fork plus an injection event
+                  scheduled at a specific round.
+              counterfactual:
+                type: object
+                nullable: true
+                description: |
+                  Present only when `kind == "counterfactual"`. Carries
+                  the trigger round + label so the badge can render
+                  "🔀 Counterfactual at round 12 (ceo_resigns)" inline.
+                required: [trigger_round, label]
+                properties:
+                  trigger_round:
+                    type: integer
+                    minimum: 0
+                    description: Round at which the child's injection fires.
+                  label:
+                    type: string
+                    description: Operator-supplied or auto-generated branch label.
+        total_children:
+          type: integer
+          minimum: 0
+          description: |
+            Public-only child count discovered on disk. Equal to
+            `len(children)` unless the cap truncated the response.
+        counterfactual:
+          type: object
+          nullable: true
+          description: |
+            When the requested simulation is itself a counterfactual
+            branch, the trigger round + label travel along so the
+            badge can render the headline without a second fetch.
+            `null` for originals + plain forks.
+          required: [trigger_round, label]
+          properties:
+            trigger_round:
+              type: integer
+              minimum: 0
+            label:
+              type: string
 
     SettingsUpdate:
       type: object

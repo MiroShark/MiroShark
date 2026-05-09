@@ -89,6 +89,7 @@
 | `GET` | `/api/simulation/<id>/thread.json` | 同样的推文串内容,以 `{tweets, total, inflections_recorded, truncated}` 形式返回,供程序消费 |
 | `GET` | `/api/simulation/<id>/surface-stats` | 每个分享面的请求计数器 — 分享卡 / 回放 GIF / 转录 / 推文串 / 观看页 / Atom / RSS,以及合成的 `total` |
 | `GET` | `/api/simulation/<id>/reproduce.json` | 引用基元 — v1-schema 可复现配置 blob,携带情景、智能体数、总轮次、平台切换、时序配置旋钮、导演事件以及派生 / 反事实谱系。已完成模拟的多次导出在字节级别完全一致(便于以哈希引用) |
+| `GET` | `/api/simulation/<id>/lineage` | 谱系图切片 — 该模拟派生 / 分支自的父模拟,以及每一个 `parent_simulation_id` 指回此模拟的公开子模拟。弥补可复现配置遗留的导航空白 |
 | `GET` | `/api/simulation/<id>/webhook-log` | 最近的出站 webhook 投递记录(最近 10 条 + 总次数)。需管理员 token |
 | `POST` | `/api/simulation/<id>/webhook-retry` | 重发已完成模拟的完成 webhook。需管理员 token |
 | `POST` | `/api/simulation/<id>/article` | 生成 Substack 风格的报道 |

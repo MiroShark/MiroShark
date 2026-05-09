@@ -309,6 +309,31 @@ Cached for 5 minutes; the blob does not change once the sim has reached a termin
 
 The Embed dialog has a "🔬 Reproducibility config" panel (collapsed by default) — a summary grid (Schema version · Agents · Rounds · Platforms · Director events · Lineage), a "Reproduce via curl" snippet ready to copy, a `Download reproduce.json` button, and (when the sim was forked or branched) a small inline lineage badge — `🪐 Forked` or `🔀 Counterfactual` — beside the title. The badge tooltip shows the canonical parent sim id so the operator can grab it for `/share/<id>` or `/watch/<id>` without reading the JSON.
 
+## Simulation Lineage Navigator
+
+Closes the navigation gap PR #75's reproducibility config export uncovered. The `parent_simulation_id` pointer is on disk for every fork or counterfactual branch, but the lineage was *one-directional* — a child knew its parent, the parent had no visibility into its children. A researcher who runs a base scenario then triggers three counterfactual branches has to remember each child sim id; there's no way to navigate from the parent to "the three branches that diverged at round 12".
+
+`GET /api/simulation/<id>/lineage` returns the lineage graph slice rooted at the requested sim:
+
+- **`simulation_id`** — echoed.
+- **`lineage_kind`** — `"original"` / `"fork"` / `"counterfactual"`. Mirrors `lineage.kind` in the reproduce.json export.
+- **`parent`** — the parent sim entry (`simulation_id`, `scenario_preview` truncated to 80 chars, `created_at`, `is_public`), or `null` for original sims. When the parent has been unpublished after the fact, the entry is echoed with `is_public=false` and an empty `scenario_preview` so the SPA can render a bare placeholder.
+- **`children`** — every **public** simulation whose `parent_simulation_id` matches the requested sim. Each child carries its own `kind` (`fork` / `counterfactual`) and an optional `counterfactual` block (`trigger_round` + `label`) so the badge can render "🔀 Counterfactual at round 12 (ceo_resigns)" inline. Sorted by `created_at` ascending — oldest fork first, the natural narrative order. Capped at 50 entries.
+- **`total_children`** — public-only scan total, even when the response was truncated by the cap.
+- **`counterfactual`** — when the requested sim is itself a counterfactual branch, the trigger round + label travel along so the panel can render the headline without a second `reproduce.json` fetch.
+
+Implementation:
+
+- **Pure stdlib.** `json` + `os`. Helpers in `app/services/lineage_service.py`. No new dependencies.
+- **Read-only.** The service composes the response from on-disk `state.json` files for the requested sim + the candidate child set. Never writes.
+- **Public children only.** Operators forking privately for in-progress work do not leak those branches into a tweeted parent's lineage view.
+- **Defense-in-depth.** A child whose `state.json` is mid-rewrite or corrupt at scan time is silently skipped — the lineage view never crashes a load. Self-pointing edge cases (a hand-edited sim whose `parent_simulation_id` is itself) do not recurse.
+- **Bounded.** `MAX_CHILDREN = 50` cap is defense-in-depth against a pathologically forked sim. Sims with more children than that are an extreme outlier; `total_children` reflects the uncapped count so the UI can show "showing first N of M".
+
+Cached for 5 minutes; the graph slice is stable once the parent and its branches reach terminal states. Same publish gate as every other share surface — requires the simulation to be public (`is_public=true`).
+
+The Embed dialog has a "🌳 Lineage" panel that auto-shows whenever there's something to navigate to (a parent, one or more children, or both). Originals with no forks see no panel at all — the dialog stays as compact as it was before this section shipped. The panel renders the parent as a one-row card with a 60-char scenario preview + "Open parent ↗" link, and each public child as a clickable row tagged `🪐 Forked` or `🔀 Counterfactual`. Counterfactual rows surface the trigger round + label inline ("At round 12 (ceo_resigns) · scenario preview…") so the row reads as the narrative event, not a slightly different scenario. Clicking any row opens that sim's `/watch/<id>` page in a new tab.
+
 ## Webhook Delivery Log
 
 Every dispatch attempt of the outbound completion webhook (the one configured in **Settings → Integrations → Webhook**, see [WEBHOOKS.md](WEBHOOKS.md)) appends a JSON line to `<sim_dir>/webhook-log.jsonl`. Each row records:

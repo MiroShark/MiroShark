@@ -668,6 +668,159 @@
               </div>
             </div>
 
+            <!-- Lineage navigator — closes the navigation gap PR #75
+                 (reproducibility config) left behind. The
+                 `parent_simulation_id` pointer existed on disk but was
+                 one-directional (a child knew its parent, the parent
+                 had no visibility into its children). This section
+                 surfaces both directions: a Parent row when the sim
+                 was forked / branched, and a Children list of every
+                 public simulation whose parent points back at this
+                 one. Hidden entirely for original sims with no forks
+                 (the common case) so the dialog stays compact. -->
+            <div
+              v-if="hasLineageGraph"
+              class="transcript-section lineage-section"
+            >
+              <div class="transcript-head lineage-head" @click="toggleLineage">
+                <span class="transcript-icon">🌳</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Lineage', '谱系') }}
+                    <span class="lineage-count-chip" v-if="lineageTotalChildren > 0">
+                      {{ lineageTotalChildren }}
+                      {{ lineageTotalChildren === 1
+                          ? $tr('branch', '分支')
+                          : $tr('branches', '分支') }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Navigate the fork / counterfactual graph this simulation belongs to. Click a row to open that sim in a new tab.', '浏览此模拟所属的派生 / 反事实分支图。点击任意行可在新标签页中打开对应模拟。') }}
+                  </div>
+                </div>
+                <button
+                  class="repro-chevron lineage-chevron"
+                  :class="{ 'repro-chevron-open': lineageExpanded }"
+                  :aria-expanded="lineageExpanded"
+                  type="button"
+                >
+                  ▾
+                </button>
+              </div>
+
+              <div v-if="lineageExpanded" class="lineage-body">
+                <div v-if="lineageLoading" class="repro-loading">
+                  {{ $tr('Loading lineage…', '加载谱系中…') }}
+                </div>
+                <div v-else-if="lineageError" class="transcript-empty repro-error">
+                  {{ lineageError }}
+                </div>
+                <div v-else>
+                  <!-- Parent row — shown when this sim was forked or
+                       branched from another sim. Public parents render
+                       as a click-through; unpublished parents render
+                       the bare id without the link. -->
+                  <div v-if="lineageParent" class="lineage-parent-row">
+                    <div class="lineage-row-arrow">↑</div>
+                    <div class="lineage-row-body">
+                      <div class="lineage-row-head">
+                        <span class="lineage-row-tag">{{ $tr('Parent', '父级') }}</span>
+                        <span
+                          class="lineage-row-id"
+                          :title="lineageParent.simulation_id"
+                        >
+                          {{ truncateSimId(lineageParent.simulation_id) }}
+                        </span>
+                      </div>
+                      <div
+                        v-if="lineageParent.scenario_preview"
+                        class="lineage-row-scenario"
+                      >
+                        {{ lineageParent.scenario_preview }}
+                      </div>
+                      <div v-else class="lineage-row-private">
+                        {{ $tr('Parent simulation is unpublished.', '父级模拟未发布。') }}
+                      </div>
+                      <a
+                        v-if="parentWatchUrl"
+                        :href="parentWatchUrl"
+                        target="_blank"
+                        rel="noopener"
+                        class="lineage-row-link"
+                      >
+                        {{ $tr('Open parent ↗', '打开父级 ↗') }}
+                      </a>
+                    </div>
+                  </div>
+
+                  <!-- Children list — every public sim whose
+                       parent_simulation_id points at this one. Sorted
+                       oldest fork first (natural narrative order). -->
+                  <div v-if="lineageChildren.length > 0" class="lineage-children">
+                    <div class="lineage-children-head">
+                      <span class="lineage-row-arrow">↓</span>
+                      <span class="lineage-row-tag">
+                        {{ lineageTotalChildren === 1
+                            ? $tr('Child', '子级')
+                            : $tr('Children', '子级') }}
+                      </span>
+                      <span
+                        v-if="lineageChildren.length < lineageTotalChildren"
+                        class="lineage-truncated-note"
+                      >
+                        {{ $tr('Showing first', '显示前') }}
+                        {{ lineageChildren.length }}
+                        {{ $tr('of', '/共') }}
+                        {{ lineageTotalChildren }}
+                      </span>
+                    </div>
+                    <a
+                      v-for="child in lineageChildren"
+                      :key="child.simulation_id"
+                      class="lineage-child-row"
+                      :href="childWatchUrl(child)"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      <span
+                        class="lineage-child-badge"
+                        :class="{
+                          'lineage-child-badge-fork': child.kind === 'fork',
+                          'lineage-child-badge-cf': child.kind === 'counterfactual',
+                        }"
+                      >
+                        {{ formatChildKindBadge(child) }}
+                      </span>
+                      <span class="lineage-child-body">
+                        <span
+                          class="lineage-row-id"
+                          :title="child.simulation_id"
+                        >
+                          {{ truncateSimId(child.simulation_id) }}
+                        </span>
+                        <span class="lineage-row-scenario">
+                          {{ formatChildScenarioPreview(child) }}
+                        </span>
+                      </span>
+                      <span class="lineage-child-cta">↗</span>
+                    </a>
+                  </div>
+
+                  <div class="lineage-actions">
+                    <button
+                      class="surface-stats-refresh lineage-refresh"
+                      type="button"
+                      :disabled="lineageLoading"
+                      @click="loadLineage"
+                    >
+                      <span v-if="lineageLoading">{{ $tr('Refreshing…', '刷新中…') }}</span>
+                      <span v-else>↻ {{ $tr('Refresh', '刷新') }}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Verified-prediction annotation — lets operators turn a
                  published simulation into a "called it" record on the
                  /verified gallery page. Only meaningful once the run is
@@ -957,6 +1110,7 @@ import {
   getSurfaceStats,
   getReproductionUrl,
   getReproduction,
+  getSimulationLineage,
   getFeedUrl,
   getSimulationOutcome,
   submitSimulationOutcome,
@@ -1390,6 +1544,133 @@ const toggleRepro = () => {
   }
 }
 
+// ── Lineage navigator state ────────────────────────────────────────────
+// Reverse pointer over the same `parent_simulation_id` data the
+// reproducibility blob carries. The reproduce.json export tells a
+// reader where this sim came from; the lineage panel tells them where
+// it went — every public child whose `parent_simulation_id` matches.
+// Same publish gate as the share / repro endpoints. Collapsed by
+// default to keep the dialog compact for the common original-with-no-
+// children case (where the panel hides itself entirely).
+const lineageExpanded = ref(false)
+const lineageLoading = ref(false)
+const lineageError = ref('')
+const lineagePayload = ref(null)
+
+// Surface visibility — the lineage section disappears entirely when
+// there's nothing to navigate to (no parent + no children). For
+// originals with no forks the dialog stays as compact as it was
+// before this section shipped.
+const hasLineageGraph = computed(() => {
+  const p = lineagePayload.value
+  if (!p) return false
+  if (p.parent) return true
+  if (Array.isArray(p.children) && p.children.length > 0) return true
+  return false
+})
+
+const lineageChildren = computed(() => {
+  const p = lineagePayload.value
+  if (!p || !Array.isArray(p.children)) return []
+  return p.children
+})
+
+const lineageTotalChildren = computed(() => {
+  const p = lineagePayload.value
+  return Number.isFinite(p?.total_children) ? p.total_children : 0
+})
+
+const lineageParent = computed(() => lineagePayload.value?.parent || null)
+
+const formatChildKindBadge = (child) => {
+  if (!child) return ''
+  if (child.kind === 'counterfactual') return tr('🔀 Counterfactual', '🔀 反事实')
+  if (child.kind === 'fork') return tr('🪐 Forked', '🪐 派生')
+  return ''
+}
+
+const formatChildScenarioPreview = (child) => {
+  if (!child) return ''
+  // Counterfactuals carry their own headline (trigger round + label);
+  // surface that ahead of the scenario text so the row reads as the
+  // narrative event, not a slightly different scenario.
+  const cf = child.counterfactual
+  if (child.kind === 'counterfactual' && cf) {
+    const round = Number.isInteger(cf.trigger_round) ? cf.trigger_round : '?'
+    const label = cf.label
+      ? ` (${cf.label})`
+      : ''
+    const head = tr('At round ', '第 ') + round + tr('', ' 轮') + label
+    if (child.scenario_preview) {
+      return head + ' · ' + child.scenario_preview
+    }
+    return head
+  }
+  return child.scenario_preview || ''
+}
+
+const childWatchUrl = (child) => {
+  if (!child || !child.simulation_id) return ''
+  return getWatchUrl(child.simulation_id, origin.value)
+}
+
+const parentWatchUrl = computed(() => {
+  if (!lineageParent.value || !lineageParent.value.is_public) return ''
+  return getWatchUrl(lineageParent.value.simulation_id, origin.value)
+})
+
+const truncateSimId = (id) => {
+  if (!id) return ''
+  return id.length > 14 ? id.slice(0, 14) + '…' : id
+}
+
+const loadLineage = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    lineagePayload.value = null
+    return
+  }
+  lineageLoading.value = true
+  lineageError.value = ''
+  try {
+    const res = await getSimulationLineage(props.simulationId)
+    if (res && res.success && res.data) {
+      lineagePayload.value = res.data
+    } else {
+      lineagePayload.value = null
+      lineageError.value = tr(
+        'Could not parse the lineage payload.',
+        '无法解析谱系数据。',
+      )
+    }
+  } catch (err) {
+    if (err?.response?.status === 403) {
+      lineageError.value = tr(
+        'Publish the simulation to see its lineage.',
+        '发布模拟以查看谱系。',
+      )
+    } else if (err?.response?.status === 404) {
+      lineageError.value = tr(
+        'Simulation not found.',
+        '未找到模拟。',
+      )
+    } else {
+      lineageError.value = err?.response?.data?.error
+        || err?.message
+        || tr('Could not load the lineage.', '无法加载谱系。')
+    }
+    lineagePayload.value = null
+  } finally {
+    lineageLoading.value = false
+  }
+}
+
+const toggleLineage = () => {
+  lineageExpanded.value = !lineageExpanded.value
+  if (lineageExpanded.value && !lineagePayload.value && !lineageError.value) {
+    loadLineage()
+  }
+}
+
 const _writeClipboard = async (text) => {
   if (!text) return false
   try {
@@ -1807,6 +2088,17 @@ watch(() => props.open, async (val) => {
   reproExpanded.value = false
   reproBlob.value = null
   reproError.value = ''
+  // Eager-fetch the lineage payload on dialog open so the panel can
+  // auto-show when there are children to navigate. Fetching cheaply
+  // upfront beats the alternative (collapsed-by-default with no
+  // visual hint there's a lineage to explore) for the navigation
+  // use case the panel exists to enable.
+  lineageExpanded.value = false
+  lineagePayload.value = null
+  lineageError.value = ''
+  if (isPublic.value) {
+    loadLineage()
+  }
 })
 
 // When the operator toggles public on, the share-card endpoint flips from
@@ -1830,6 +2122,16 @@ watch(isPublic, () => {
     loadRepro()
   } else {
     reproBlob.value = null
+  }
+  // Lineage panel mirrors the same lifecycle. Critically, we always
+  // reload (not just when expanded) the first time the sim is
+  // published — the panel auto-shows when there are children to
+  // navigate, and that decision needs the payload, not just the
+  // expand-on-click trigger.
+  if (lineageExpanded.value || lineagePayload.value) {
+    loadLineage()
+  } else {
+    lineagePayload.value = null
   }
 })
 </script>
@@ -2915,6 +3217,209 @@ watch(isPublic, () => {
   }
   .repro-refresh {
     margin-left: 0;
+  }
+}
+
+/* Lineage navigator — fork / counterfactual graph slice. Visually
+   sits beneath the reproducibility config (the reproduce.json blob
+   tells a reader where this sim came from; this section tells them
+   where it went). Uses a green tint to distinguish from the indigo
+   reproducibility block above and the orange watch-page block below. */
+.lineage-section {
+  border: 1px solid rgba(34, 139, 34, 0.16);
+  background: rgba(34, 139, 34, 0.03);
+}
+
+.lineage-head {
+  cursor: pointer;
+}
+
+.lineage-count-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  background: rgba(34, 139, 34, 0.12);
+  color: #1f7a1f;
+  vertical-align: middle;
+}
+
+.lineage-chevron {
+  margin-left: auto;
+}
+
+.lineage-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 10px;
+}
+
+.lineage-parent-row,
+.lineage-child-row {
+  display: flex;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(10, 10, 10, 0.07);
+  background: #ffffff;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+  align-items: flex-start;
+}
+
+.lineage-child-row:hover {
+  border-color: rgba(34, 139, 34, 0.4);
+  background: rgba(34, 139, 34, 0.04);
+}
+
+.lineage-row-arrow {
+  font-size: 14px;
+  font-weight: 700;
+  color: #1f7a1f;
+  flex: 0 0 auto;
+  width: 16px;
+  text-align: center;
+}
+
+.lineage-row-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lineage-row-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.lineage-row-tag {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #6b6b6b;
+}
+
+.lineage-row-id {
+  font-family: var(--font-mono, "SFMono-Regular", "Menlo", monospace);
+  font-size: 11px;
+  font-weight: 600;
+  color: #4a4a4a;
+}
+
+.lineage-row-scenario {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #2a2a2a;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.lineage-row-private {
+  font-size: 11px;
+  color: #9a9a9a;
+  font-style: italic;
+}
+
+.lineage-row-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: #1f7a1f;
+  text-decoration: none;
+  letter-spacing: 0.02em;
+  margin-top: 2px;
+}
+
+.lineage-row-link:hover {
+  text-decoration: underline;
+}
+
+.lineage-children {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.lineage-children-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.lineage-truncated-note {
+  margin-left: auto;
+  font-size: 10px;
+  color: #9a9a9a;
+  letter-spacing: 0.02em;
+}
+
+.lineage-child-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 6px;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  align-self: flex-start;
+}
+
+.lineage-child-badge-fork {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4f46e5;
+}
+
+.lineage-child-badge-cf {
+  background: rgba(234, 88, 12, 0.1);
+  color: #c2410c;
+}
+
+.lineage-child-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.lineage-child-cta {
+  font-size: 14px;
+  color: #6b6b6b;
+  flex: 0 0 auto;
+  align-self: center;
+}
+
+.lineage-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.lineage-refresh {
+  margin-left: auto;
+}
+
+@media (max-width: 600px) {
+  .lineage-child-row,
+  .lineage-parent-row {
+    flex-wrap: wrap;
+  }
+  .lineage-truncated-note {
+    margin-left: 0;
+    width: 100%;
   }
 }
 

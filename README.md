@@ -107,6 +107,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Webhook Delivery Log** | Per-sim `webhook-log.jsonl` records every dispatch attempt (status code, latency, error). Inspect from the EmbedDialog and re-fire any failed delivery with a "Retry" button — closes the operational blindspot every Zapier / n8n integration eventually hits |
 | **Surface Usage Analytics** | `GET /api/simulation/<id>/surface-stats` — per-share-surface request counters (share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS) with a synthetic `total`. Inbound observability for the distribution loop the webhook log tracks on the outbound side |
 | **Reproducibility Config** | `GET /api/simulation/<id>/reproduce.json` — citation primitive for the share surfaces. A v1-schema JSON blob carrying every parameter another operator needs to re-run the same simulation: scenario, agent count, total rounds, platform toggles, time-config knobs, director events, and fork / counterfactual lineage. Identical exports of a finished sim are bytewise-identical, so the file hash is a stable citation key |
+| **Lineage Navigator** | `GET /api/simulation/<id>/lineage` — turn the `parent_simulation_id` pointer into a navigable graph. Surfaces the parent a sim was forked / branched from plus every public child whose parent points back at it. Trace the intellectual ancestry of a result without remembering each child sim id |
 
 Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 
@@ -239,6 +240,7 @@ cp .env.example .env
 | **Webhook 投递日志** | 每个模拟在 `webhook-log.jsonl` 记录每次投递尝试(HTTP 状态码、延迟、错误)。可在 EmbedDialog 中查看,并通过「重试」按钮重发任何失败的投递 — 弥补每个 Zapier / n8n 集成最终都会遇到的运维盲点 |
 | **分发统计(分享面使用分析)** | `GET /api/simulation/<id>/surface-stats` — 每个分享面的请求计数器(分享卡 / 回放 GIF / 转录 / 轨迹 / 推文串 / 观看页 / Atom / RSS),以及合成的 `total`。Webhook 日志在出站侧跟踪分发回路,本面则负责入站可观测性 |
 | **可复现配置导出** | `GET /api/simulation/<id>/reproduce.json` — 分享面背后的引用基元。v1-schema 的 JSON 文档,携带另一位研究者复现同一次模拟所需的全部参数:情景、智能体数、轮次、平台切换、时序配置、导演事件、派生 / 反事实谱系。已完成模拟的多次导出在字节级别完全一致 — 文件哈希可作为稳定的引用键 |
+| **谱系导航** | `GET /api/simulation/<id>/lineage` — 将 `parent_simulation_id` 指针转化为可导航的图。展示该模拟派生 / 分支自的父模拟,以及每一个把父级指回此模拟的公开子模拟。无需记住每个子模拟 ID,即可追踪一项结果的思想脉络 |
 
 每项功能详见 **[docs/FEATURES.zh-CN.md](docs/FEATURES.zh-CN.md)**。
 

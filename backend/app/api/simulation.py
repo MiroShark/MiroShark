@@ -5523,6 +5523,107 @@ def get_reproduce_config(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/lineage', methods=['GET'])
+def get_simulation_lineage(simulation_id: str):
+    """Return the parent + public children for a published simulation.
+
+    PR #75's reproducibility config persisted ``parent_simulation_id``
+    plus a counterfactual trigger marker into every sim's directory.
+    The data was on disk but the lineage was *one-directional*: a child
+    knew its parent, the parent had no visibility into its children. A
+    researcher who ran a base scenario then triggered three
+    counterfactual branches couldn't navigate from the parent to the
+    branches without remembering each child sim id.
+
+    This endpoint reads the requested sim's state for its own parent
+    pointer + counterfactual marker, then walks the public sim corpus
+    to collect children whose ``parent_simulation_id`` matches. The
+    response is the compact graph slice the EmbedDialog renders as a
+    🌳 Lineage section.
+
+    Response::
+
+        {
+          "success": true,
+          "data": {
+            "simulation_id": "sim_abc...",
+            "lineage_kind": "original" | "fork" | "counterfactual",
+            "parent": null | {
+              "simulation_id": "sim_parent...",
+              "scenario_preview": "What if Aave's reserve factor...",
+              "created_at": "2026-04-30T12:00:00",
+              "is_public": true
+            },
+            "children": [
+              {
+                "simulation_id": "sim_child...",
+                "scenario_preview": "Counterfactual at round 12...",
+                "created_at": "2026-05-01T09:00:00",
+                "is_public": true,
+                "kind": "fork" | "counterfactual",
+                "counterfactual": null | { "trigger_round": 12, "label": "ceo_resigns" }
+              },
+              ...
+            ],
+            "total_children": 3,
+            "counterfactual": null | { "trigger_round": 12, "label": "ceo_resigns" }
+          }
+        }
+
+    Same publish gate as the share card / transcript / trajectory /
+    thread / reproduce.json endpoints — the lineage view is part of the
+    public discovery surface, only meaningful for sims an operator has
+    already chosen to publish. ``Cache-Control: public, max-age=300``
+    matches the reproduce.json endpoint; the graph slice is stable
+    once the parent and its branches reach terminal states.
+    """
+    from ..services import lineage_service
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}",
+            }), 404
+
+        payload = lineage_service.build_lineage_payload(
+            simulation_id,
+            Config.WONDERWALL_SIMULATION_DATA_DIR,
+        )
+
+        response = jsonify({"success": True, "data": payload})
+        response.headers["Cache-Control"] = "public, max-age=300"
+        return response
+
+    except Exception as e:
+        logger.error(
+            f"lineage: failed for {simulation_id}: "
+            f"{e}\n{traceback.format_exc()}"
+        )
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 # ============== Webhook Delivery Log ==============
 #
 # PR #46 shipped the outbound completion webhook. This pair of routes

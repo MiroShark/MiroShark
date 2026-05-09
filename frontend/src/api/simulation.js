@@ -615,6 +615,44 @@ export const getReproduction = (simulationId) => {
 }
 
 /**
+ * Fetch the lineage graph slice for a published simulation — the
+ * parent it was forked / branched from (if any) and every public
+ * child whose `parent_simulation_id` points back at it.
+ *
+ * Closes the navigation gap that PR #75's reproducibility config left
+ * behind: the parent → children pointer existed on disk
+ * (`parent_simulation_id` plus an optional
+ * `counterfactual_injection.json`) but was one-directional, so a
+ * researcher running counterfactual branches couldn't navigate from
+ * a parent simulation to its branches without remembering each child
+ * sim id.
+ *
+ * Same publish gate as the share card / transcript / trajectory /
+ * thread / reproduce.json endpoints. Returns 403 for unpublished
+ * simulations. Cached for 5 minutes — the graph slice is stable once
+ * the parent and its branches reach terminal states.
+ *
+ * Response shape (under `data`):
+ *   {
+ *     simulation_id: string,
+ *     lineage_kind: 'original' | 'fork' | 'counterfactual',
+ *     parent: null | { simulation_id, scenario_preview, created_at, is_public },
+ *     children: [
+ *       { simulation_id, scenario_preview, created_at, is_public,
+ *         kind: 'fork' | 'counterfactual',
+ *         counterfactual: null | { trigger_round, label } }
+ *     ],
+ *     total_children: number,
+ *     counterfactual: null | { trigger_round, label }
+ *   }
+ *
+ * @param {string} simulationId
+ */
+export const getSimulationLineage = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/lineage`)
+}
+
+/**
  * Build the absolute URL of the public share landing page for a
  * simulation. The page exposes Open Graph + Twitter Card meta tags so
  * pasting the URL into Twitter/X / Discord / Slack / LinkedIn unfurls
