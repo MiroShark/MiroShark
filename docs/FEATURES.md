@@ -267,6 +267,8 @@ Counters tracked (one per share surface):
 - `thread_txt` / `thread_json` — `thread.txt` / `thread.json` serves
 - `watch_page` — `/watch/<id>` serves (public sims only)
 - `feed_atom` / `feed_rss` — number of times this simulation was syndicated to an Atom or RSS feed render
+- `reproduce_json` — `reproduce.json` serves (citation primitive — every fetch is an attempted reproduction)
+- `lineage` — `/lineage` serves (graph navigation — every fetch is an operator walking the fork tree)
 
 Plus a synthetic `total` summing all counters. Every key is always present (zero-defaulted), so a frontend renders the table without special-casing missing fields.
 

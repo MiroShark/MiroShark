@@ -203,6 +203,8 @@ WONDERWALL_MODEL_NAME=your-model-id
 - `thread_txt` / `thread_json` — `thread.txt` / `thread.json` 服务次数
 - `watch_page` — `/watch/<id>` 服务次数(仅公开模拟)
 - `feed_atom` / `feed_rss` — 此模拟出现在已渲染的 Atom 或 RSS 订阅源中的次数
+- `reproduce_json` — `reproduce.json` 服务次数(引用基元 — 每次抓取都对应一次复现尝试)
+- `lineage` — `/lineage` 服务次数(谱系导航 — 每次抓取都对应一次研究者在派生树上的浏览)
 
 以及一个合成的 `total` 字段汇总所有计数器。每个键都始终存在(零默认),因此前端无需为缺失字段做特殊处理。
 

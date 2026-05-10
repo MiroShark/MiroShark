@@ -4,9 +4,10 @@ Closes the **inbound** observability gap that paired with the outbound
 webhook delivery log (PR #73). Every public share surface
 (``share-card.png``, ``replay.gif``, ``transcript.md`` / ``.json``,
 ``trajectory.csv`` / ``.jsonl``, ``thread.txt`` / ``.json``,
-``/watch/<id>``, ``/api/feed.atom`` + ``feed.rss``) increments a counter
-on disk after it serves a successful response. The counts are returned
-by ``GET /api/simulation/<id>/surface-stats`` so an operator running
+``/watch/<id>``, ``/api/feed.atom`` + ``feed.rss``, ``reproduce.json``,
+``/lineage``) increments a counter on disk after it serves a successful
+response. The counts are returned by
+``GET /api/simulation/<id>/surface-stats`` so an operator running
 MiroShark for a DeFi fund or research group can see which surfaces
 their audience actually uses — the first operator-side feedback loop on
 distribution.
@@ -39,7 +40,9 @@ Schema::
       "thread_json": 0,
       "watch_page": 0,
       "feed_atom": 0,
-      "feed_rss": 0
+      "feed_rss": 0,
+      "reproduce_json": 0,
+      "lineage": 0
     }
 
 The ``read_surface_stats`` helper returns the same dict with every key
@@ -74,6 +77,8 @@ SURFACE_KEYS: frozenset[str] = frozenset(
         "watch_page",
         "feed_atom",
         "feed_rss",
+        "reproduce_json",
+        "lineage",
     }
 )
 

@@ -93,7 +93,7 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/trajectory.jsonl` | Per-round belief JSONL (DuckDB / pipelines) |
 | `GET` | `/api/simulation/<id>/thread.txt` | Auto-formatted X / Twitter tweet thread (one tweet per belief inflection point, ≤280 chars each) |
 | `GET` | `/api/simulation/<id>/thread.json` | Same tweet thread as `thread.txt` but as `{tweets, total, inflections_recorded, truncated}` for programmatic consumers |
-| `GET` | `/api/simulation/<id>/surface-stats` | Per-share-surface request counters — share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS, plus a synthetic `total` |
+| `GET` | `/api/simulation/<id>/surface-stats` | Per-share-surface request counters — share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS / reproduce.json / lineage, plus a synthetic `total` |
 | `GET` | `/api/simulation/<id>/reproduce.json` | Citation primitive — v1-schema reproducibility config blob carrying scenario, agent count, total rounds, platform toggles, time-config knobs, director events, and fork / counterfactual lineage. Identical exports of a finished sim are bytewise-identical (citation-hash friendly) |
 | `GET` | `/api/simulation/<id>/lineage` | Lineage graph slice — parent the sim was forked / branched from + every public child whose `parent_simulation_id` points back at it. Closes the navigation gap the reproduction config left open |
 | `GET` | `/api/simulation/<id>/webhook-log` | Recent outbound-webhook delivery attempts (last 10 + total count). Admin-token gated |

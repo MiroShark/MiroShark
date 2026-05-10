@@ -1326,6 +1326,8 @@ const SURFACE_STAT_LABELS = [
   { key: 'watch_page', label: tr('Watch page', '观看页面') },
   { key: 'feed_atom', label: tr('Atom feed', 'Atom 源') },
   { key: 'feed_rss', label: tr('RSS feed', 'RSS 源') },
+  { key: 'reproduce_json', label: tr('Reproduce config · JSON', '可复现配置 · JSON') },
+  { key: 'lineage', label: tr('Lineage graph', '谱系图') },
 ]
 
 const surfaceStatsRows = computed(() => {
