@@ -14,7 +14,9 @@ This module turns the public listing into a small queryable corpus:
 * outcome filter — ``correct`` / ``incorrect`` / ``partial`` (the
   ``verified=1`` toggle stays for backward compatibility)
 * sort by ``date`` (default, newest first), ``rounds`` (highest
-  agent/round count first), or ``agents``
+  agent/round count first), ``agents``, or ``trending`` (highest
+  cumulative share-surface serves first — the surface-stats counter
+  total)
 
 The helpers are pure-stdlib and operate on plain dicts (the gallery card
 payload returned by ``_build_gallery_card_payload``) so they're testable
@@ -57,8 +59,18 @@ QUALITY_VALUES: frozenset[str] = frozenset({"excellent", "good", "fair", "poor"}
 #: ``POST /api/simulation/<id>/outcome``.
 OUTCOME_VALUES: frozenset[str] = frozenset({"correct", "incorrect", "partial"})
 
-#: Allowed sort keys.
-SORT_VALUES: frozenset[str] = frozenset({"date", "rounds", "agents"})
+#: Allowed sort keys. ``trending`` ranks cards by their cumulative
+#: share-surface serve count (the ``surface_stats`` total), turning the
+#: operator-facing distribution analytics into a discovery primitive —
+#: the most-served simulations float to the top of the gallery so a
+#: viral run is findable by merit rather than by recency.
+SORT_VALUES: frozenset[str] = frozenset({"date", "rounds", "agents", "trending"})
+
+#: Transient field name the route handler sets on each card before
+#: calling :func:`sort_cards` with ``sort="trending"``. Kept here so the
+#: handler and the sort key reader stay in lockstep — renaming the
+#: field is a one-line change.
+TRENDING_FIELD = "_serves_total"
 
 
 # ── Param normalisation ───────────────────────────────────────────────────
@@ -300,6 +312,25 @@ def _agents_key(card: dict) -> tuple[int, str]:
     return (ac, _date_key(card))
 
 
+def _trending_key(card: dict) -> tuple[int, str]:
+    """Sort key for ``trending`` — highest cumulative share-surface
+    serves first, breaks ties on date so the most-served-and-most-recent
+    floats above the most-served-and-stale.
+
+    Reads :data:`TRENDING_FIELD` (``_serves_total``) which the route
+    handler injects into every card before sorting (a per-request sweep
+    over ``surface_stats.read_surface_stats`` for each public sim).
+    Cards missing the field — sims with no surface-stats file yet, or
+    callers that forgot the sweep — degrade to ``0`` so they fall to
+    the bottom of the trending list without raising.
+    """
+    try:
+        total = int(card.get(TRENDING_FIELD) or 0)
+    except (TypeError, ValueError):
+        total = 0
+    return (max(0, total), _date_key(card))
+
+
 def sort_cards(cards: list[dict], *, sort: str = "date") -> list[dict]:
     """Return a new list sorted by the requested key, newest/largest first."""
     key = normalise_sort(sort)
@@ -307,6 +338,8 @@ def sort_cards(cards: list[dict], *, sort: str = "date") -> list[dict]:
         return sorted(cards, key=_rounds_key, reverse=True)
     if key == "agents":
         return sorted(cards, key=_agents_key, reverse=True)
+    if key == "trending":
+        return sorted(cards, key=_trending_key, reverse=True)
     return sorted(cards, key=_date_key, reverse=True)
 
 

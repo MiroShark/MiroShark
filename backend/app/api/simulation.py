@@ -6084,6 +6084,26 @@ def list_public_simulations():
                 )
                 continue
 
+        # ``trending`` ranks public sims by their cumulative share-surface
+        # serves. Inject ``_serves_total`` (the surface-stats counter sum)
+        # into each card before sorting — single sweep over the corpus, so
+        # the per-card cost is one ``json.load`` of the (small) stats file
+        # at most. Sims with no stats file yet degrade to ``0`` so they
+        # land at the bottom rather than raising. Skipped on every other
+        # sort key to keep the default ``date`` path read-free.
+        if sort_key == "trending":
+            from ..services import surface_stats as _surface_stats
+            for card in all_cards:
+                sim_dir = os.path.join(
+                    Config.WONDERWALL_SIMULATION_DATA_DIR,
+                    card.get("simulation_id") or "",
+                )
+                try:
+                    stats = _surface_stats.read_surface_stats(sim_dir)
+                    card[gallery_filters.TRENDING_FIELD] = int(stats.get("total", 0) or 0)
+                except Exception:
+                    card[gallery_filters.TRENDING_FIELD] = 0
+
         page_items, total = gallery_filters.select_filtered_cards(
             all_cards,
             q=q,
@@ -6095,6 +6115,13 @@ def list_public_simulations():
             limit=limit,
             offset=offset,
         )
+
+        # Drop the transient ``_serves_total`` field before serialisation —
+        # it's an implementation detail of the trending sort, not part of
+        # the public response contract. Per-sim surface counts remain
+        # available via ``GET /api/simulation/<id>/surface-stats``.
+        for card in page_items:
+            card.pop(gallery_filters.TRENDING_FIELD, None)
 
         page_num = (offset // limit) + 1 if limit > 0 else 1
 

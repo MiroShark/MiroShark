@@ -868,8 +868,16 @@ export const suggestScenarios = (data) => {
  *   consensus?: 'bullish'|'neutral'|'bearish',
  *   quality?: 'excellent'|'good'|'fair'|'poor',
  *   outcome?: 'correct'|'incorrect'|'partial',
- *   sort?: 'date'|'rounds'|'agents',
+ *   sort?: 'date'|'rounds'|'agents'|'trending',
  * }
+ *
+ * `sort=trending` ranks public simulations by their cumulative
+ * share-surface serve count (the sum of every per-surface counter the
+ * `/api/simulation/<id>/surface-stats` endpoint exposes), so the most
+ * widely-distributed runs float to the top of the gallery. Ties break
+ * on date so the most-served-and-most-recent beats the
+ * most-served-and-stale. Sims with no surface-stats file yet count as
+ * zero serves and sort to the bottom.
  */
 export const getPublicSimulations = (options = {}) => {
   const params = {}

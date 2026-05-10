@@ -278,7 +278,7 @@ WONDERWALL_MODEL_NAME=your-model-id
 - **`consensus`** — `bullish` / `neutral` / `bearish`。基于与分享卡 / 回放 GIF / 转录 / Webhook / 订阅源一致的 ±0.2 阈值的最终轮主导立场进行筛选,与那些界面在同一模拟上报告的内容保持一致。
 - **`quality`** — `excellent` / `good` / `fair` / `poor`。与 `quality_health` 首词进行不区分大小写比较。
 - **`outcome`** — `correct` / `incorrect` / `partial`。隐含 `verified=1`(仅已验证)。
-- **`sort`** — `date`(默认 — 最新优先)、`rounds`(当前轮次最多优先)或 `agents`(种群最大优先)。
+- **`sort`** — `date`(默认 — 最新优先)、`rounds`(当前轮次最多优先)、`agents`(种群最大优先)或 `trending`(累计分享面服务次数最高优先 — 累加 `surface-stats` 端点暴露的每一个计数器;按日期打破并列,使「服务最多且最新」浮于「服务最多但陈旧」之上)。`trending` 是从分发分析回流到发现排序的首条反馈回路 — 被分享得越多的模拟会更容易被发现。
 - **`page`** — 1 起编号的页号;`offset` 的替代值。`page=1` 即偏移 0。两者组合方式一致:`total` 反映**已筛选**的计数(而非语料库大小),所以"加载更多""剩余 X 个"提示和 `has_more` 标志在当前筛选集合内保持准确。
 
 `/verified` 路由保留 `verifiedOnly: true` 模式,并与所有筛选条件兼容 — `/verified?q=aave&consensus=bullish` 是有效的。通过头部芯片在「已验证」与「Explore」之间切换时,会跨越路由切换沿用激活的查询字符串,用户不会因切换「已验证」而丢失搜索。

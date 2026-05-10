@@ -188,7 +188,7 @@ Same publish gate as the share card and transcript (`is_public=true`). The bulli
 - **`consensus`** — `bullish` / `neutral` / `bearish`. Filters by the dominant final-round stance using the same ±0.2 threshold the share card, replay GIF, transcript, webhook, and feed renderers all use, so a "bullish" filter here matches what those surfaces report for the same simulation.
 - **`quality`** — `excellent` / `good` / `fair` / `poor`. Compared case-insensitively against the first word of `quality_health`.
 - **`outcome`** — `correct` / `incorrect` / `partial`. Implies `verified=1` (verified-only).
-- **`sort`** — `date` (default — newest first), `rounds` (highest current_round first), or `agents` (largest population first).
+- **`sort`** — `date` (default — newest first), `rounds` (highest current_round first), `agents` (largest population first), or `trending` (highest cumulative share-surface serve count first — sums every counter the `surface-stats` endpoint exposes; ties break on date so the most-served-and-most-recent floats above the most-served-and-stale). `trending` is the first feedback loop from distribution analytics into discovery ranking — sims that get shared get found more easily.
 - **`page`** — 1-based page number; alternative to `offset`. `page=1` is offset 0. The two compose the same way: `total` reflects the **filtered** count (not the corpus size), so the load-more "X remaining" hint and `has_more` flag stay accurate inside the active filter set.
 
 The `/verified` route preserves the `verifiedOnly: true` mode and stays compatible with every filter — `/verified?q=aave&consensus=bullish` works. Toggling Verified ↔ Explore via the header chip carries the active query string across the route swap so the user doesn't lose their search.

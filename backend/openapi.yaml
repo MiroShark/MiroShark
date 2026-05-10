@@ -1625,11 +1625,15 @@ paths:
           name: sort
           description: |
             `date` (default — newest first), `rounds` (highest
-            `current_round` first), or `agents` (largest population
-            first).
+            `current_round` first), `agents` (largest population
+            first), or `trending` (highest cumulative share-surface
+            serve count first — sums every counter the
+            `surface-stats` endpoint exposes; ties break on date so
+            the most-served-and-most-recent floats above the
+            most-served-and-stale).
           schema:
             type: string
-            enum: [date, rounds, agents]
+            enum: [date, rounds, agents, trending]
             default: date
       responses:
         "200":
@@ -1666,7 +1670,7 @@ paths:
                         enum: [correct, incorrect, partial, null]
                       sort:
                         type: string
-                        enum: [date, rounds, agents]
+                        enum: [date, rounds, agents, trending]
 
   # ────────────────────────────────────────────────────────────────────
   # Export

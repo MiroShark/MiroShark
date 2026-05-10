@@ -120,7 +120,7 @@ GET /api/simulation/public?q=aave&consensus=bearish&quality=excellent&sort=round
 | `consensus` | `bullish` / `neutral` / `bearish` | Dominant final-round stance using the same ±0.2 threshold the share card / replay GIF / transcript / webhook / feed all use. |
 | `quality` | `excellent` / `good` / `fair` / `poor` | Compared case-insensitively against the first word of `quality_health`. |
 | `outcome` | `correct` / `incorrect` / `partial` | Implies `verified=1` (verified-only). |
-| `sort` | `date` / `rounds` / `agents` | `date` (default — newest first), `rounds` (highest current_round first), or `agents` (largest population first). |
+| `sort` | `date` / `rounds` / `agents` / `trending` | `date` (default — newest first), `rounds` (highest current_round first), `agents` (largest population first), or `trending` (highest cumulative share-surface serve count first — sums every counter the `surface-stats` endpoint exposes). |
 | `verified` | truthy (`1`/`true`/`yes`) | Restrict to simulations with a recorded outcome annotation — the `/verified` hall. |
 | `limit` / `offset` | `[1, 100]` / `≥0` | Pagination knobs. `total` reflects the **filtered** count. |
 | `page` | `≥1` | 1-based alternative to `offset`. Wins over `offset` when both are supplied. |

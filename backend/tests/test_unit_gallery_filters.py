@@ -56,6 +56,7 @@ def _card(
     created_at: str = "2026-04-22T10:12:34",
     current_round: int = 0,
     agent_count: int = 0,
+    serves_total: int | None = None,
 ) -> dict:
     consensus: dict | None = None
     if (bullish or neutral or bearish):
@@ -65,7 +66,7 @@ def _card(
         outcome = {"label": outcome_label}
         if outcome_url:
             outcome["outcome_url"] = outcome_url
-    return {
+    card: dict = {
         "simulation_id": sid,
         "scenario": scenario,
         "final_consensus": consensus,
@@ -75,6 +76,9 @@ def _card(
         "current_round": current_round,
         "agent_count": agent_count,
     }
+    if serves_total is not None:
+        card[gf.TRENDING_FIELD] = serves_total
+    return card
 
 
 # ── Param normalisation ───────────────────────────────────────────────────
@@ -179,6 +183,8 @@ class TestNormaliseEnums:
         ("date", "date"),
         ("Rounds", "rounds"),
         ("AGENTS", "agents"),
+        ("Trending", "trending"),
+        ("TRENDING", "trending"),
         ("", "date"),
         (None, "date"),
         ("popularity", "date"),
@@ -352,6 +358,114 @@ class TestSortCards:
     def test_empty_list_returns_empty(self):
         assert gf.sort_cards([], sort="date") == []
         assert gf.sort_cards([], sort="rounds") == []
+
+
+# ── trending sort — surface-stats integration ─────────────────────────────
+
+
+class TestTrendingSort:
+    """The ``trending`` sort key turns the surface-stats counters into a
+    discovery primitive — the most-served sims float to the top.
+
+    The route handler injects a transient ``_serves_total`` field on
+    every card before sorting (single sweep over
+    ``surface_stats.read_surface_stats`` for each public sim). These
+    tests exercise the sort behaviour directly against that field —
+    no Flask, no filesystem.
+    """
+
+    def test_trending_sort_key_is_recognised(self):
+        # Locks in the public contract — the ``trending`` literal is the
+        # one the openapi enum + frontend dropdown both reference.
+        assert "trending" in gf.SORT_VALUES
+        assert gf.normalise_sort("trending") == "trending"
+
+    def test_transient_field_name_is_locked(self):
+        # The route handler and the sort-key reader both reference
+        # this constant — renaming it without updating both sides
+        # would silently turn trending into a no-op (every card would
+        # land at zero serves). Pin the literal so a rename trips CI.
+        assert gf.TRENDING_FIELD == "_serves_total"
+
+    def test_trending_orders_by_serves_descending(self):
+        cards = [
+            _card("low",  serves_total=5,   created_at="2026-04-01T00:00:00"),
+            _card("high", serves_total=500, created_at="2026-04-01T00:00:00"),
+            _card("mid",  serves_total=50,  created_at="2026-04-01T00:00:00"),
+        ]
+        out = gf.sort_cards(cards, sort="trending")
+        assert [c["simulation_id"] for c in out] == ["high", "mid", "low"]
+
+    def test_trending_breaks_ties_on_date_newest_first(self):
+        # Same serve count → most-served-and-most-recent wins so a
+        # viral sim from this week beats a viral sim from last year.
+        cards = [
+            _card("stale",  serves_total=200, created_at="2026-01-01T00:00:00"),
+            _card("recent", serves_total=200, created_at="2026-04-30T00:00:00"),
+            _card("middle", serves_total=200, created_at="2026-03-15T00:00:00"),
+        ]
+        out = gf.sort_cards(cards, sort="trending")
+        assert [c["simulation_id"] for c in out] == ["recent", "middle", "stale"]
+
+    def test_missing_serves_field_degrades_to_zero(self):
+        # A card with no ``_serves_total`` (sim has no surface-stats
+        # file yet, or the route handler skipped the sweep) must NOT
+        # raise — it lands at zero serves and sorts to the bottom.
+        cards = [
+            _card("seen",   serves_total=10),
+            _card("unseen"),  # no serves_total at all
+            _card("popular", serves_total=99),
+        ]
+        out = gf.sort_cards(cards, sort="trending")
+        assert [c["simulation_id"] for c in out] == ["popular", "seen", "unseen"]
+
+    def test_garbage_serves_value_degrades_to_zero(self):
+        # Hand-edited counters could produce non-int / negative
+        # values. The sort key clamps to >= 0 so a corrupt entry
+        # doesn't outrank a legitimate high-serve sim.
+        cards = [
+            _card("a", serves_total=10),
+            _card("b"),
+            _card("c", serves_total=20),
+            _card("d"),
+        ]
+        cards[1][gf.TRENDING_FIELD] = "not-a-number"  # type: ignore[assignment]
+        cards[3][gf.TRENDING_FIELD] = -50  # type: ignore[assignment]
+        out = gf.sort_cards(cards, sort="trending")
+        # c (20) > a (10) > b/d (both clamped to 0); date ties between
+        # b and d break lexically on the shared default created_at.
+        assert out[0]["simulation_id"] == "c"
+        assert out[1]["simulation_id"] == "a"
+        assert {c["simulation_id"] for c in out[2:]} == {"b", "d"}
+
+    def test_trending_select_pipes_through_filter_and_sort(self):
+        # End-to-end ``select_filtered_cards`` with sort=trending +
+        # filter combined: the trending sort runs after the filter, so
+        # a high-serve card that doesn't match the filter is excluded.
+        cards = [
+            _card("a", scenario="aave", bullish=70, serves_total=300),
+            _card("b", scenario="eth",  bullish=70, serves_total=999),
+            _card("c", scenario="aave", bearish=70, serves_total=10),
+        ]
+        page, total = gf.select_filtered_cards(
+            cards, q="aave", sort="trending"
+        )
+        # 'b' is excluded by q='aave' (scenario doesn't match);
+        # 'a' (300) outranks 'c' (10).
+        assert total == 2
+        assert [c["simulation_id"] for c in page] == ["a", "c"]
+
+    def test_trending_handles_all_zero_corpus_gracefully(self):
+        # New deployment, nobody's served anything yet — every card
+        # has zero serves. The sort must not raise; it falls back to
+        # date order (the tie-break) so the result stays deterministic.
+        cards = [
+            _card("a", serves_total=0, created_at="2026-04-01T00:00:00"),
+            _card("b", serves_total=0, created_at="2026-04-30T00:00:00"),
+            _card("c", serves_total=0, created_at="2026-04-15T00:00:00"),
+        ]
+        out = gf.sort_cards(cards, sort="trending")
+        assert [c["simulation_id"] for c in out] == ["b", "c", "a"]
 
 
 # ── select_filtered_cards — end-to-end ────────────────────────────────────

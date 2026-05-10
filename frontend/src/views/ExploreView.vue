@@ -106,6 +106,7 @@
               :disabled="loading"
             >
               <option value="date">{{ $tr('Newest first', '最新优先') }}</option>
+              <option value="trending">{{ $tr('🔥 Trending', '🔥 热门') }}</option>
               <option value="rounds">{{ $tr('Most rounds', '轮次最多') }}</option>
               <option value="agents">{{ $tr('Most agents', '智能体最多') }}</option>
             </select>
@@ -456,7 +457,7 @@ const verifiedFilter = ref(props.verifiedOnly)
 // just forward whatever's in the URL.
 const ALLOWED_CONSENSUS = new Set(['bullish', 'neutral', 'bearish'])
 const ALLOWED_QUALITY = new Set(['excellent', 'good', 'fair', 'poor'])
-const ALLOWED_SORT = new Set(['date', 'rounds', 'agents'])
+const ALLOWED_SORT = new Set(['date', 'rounds', 'agents', 'trending'])
 
 const _readEnumParam = (val, allowed) => {
   if (!val) return ''
