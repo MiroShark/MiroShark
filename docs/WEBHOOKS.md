@@ -27,11 +27,14 @@ Either set environment variables before launching MiroShark:
 ```bash
 WEBHOOK_URL=https://hooks.slack.com/services/T0XXX/B0YYY/abcSECRETxyz
 PUBLIC_BASE_URL=https://miroshark.app           # optional, see below
+WEBHOOK_SECRET=                                  # optional, see "Verifying webhook signatures" below
 ```
 
 …or open **Settings → Integrations · Webhook** and paste the URL there. Settings changes apply at runtime — no restart.
 
 `PUBLIC_BASE_URL` is the publicly-reachable base of your MiroShark deployment (e.g. `https://miroshark.app`). When set, the payload contains absolute `share_url` and `share_card_url` fields so Slack / Discord auto-unfurl with the simulation card. Leave it blank if you only need relative paths and your consumer can build absolute URLs itself.
+
+`WEBHOOK_SECRET` is the shared secret used to HMAC-sign every dispatched payload — see [Verifying webhook signatures](#verifying-webhook-signatures) below. Leave it blank to skip signing (existing integrations continue working unchanged). Generate a fresh value with `python -c 'import secrets; print(secrets.token_hex(32))'` and paste it into both the MiroShark `.env` and your consumer's environment.
 
 ---
 
@@ -95,6 +98,7 @@ PUBLIC_BASE_URL=https://miroshark.app           # optional, see below
 | `User-Agent` | `MiroShark-Webhook/1.0` |
 | `X-MiroShark-Event` | The same value as `event` |
 | `X-MiroShark-Sim-Id` | The same value as `sim_id` |
+| `X-MiroShark-Signature` | `sha256=<hex>` HMAC of the raw body. Present only when `WEBHOOK_SECRET` is set. See [Verifying webhook signatures](#verifying-webhook-signatures). |
 
 ---
 
@@ -107,6 +111,66 @@ PUBLIC_BASE_URL=https://miroshark.app           # optional, see below
 - **2xx = success** — anything else is logged as a delivery failure but never raised.
 - **Delivery log** — every dispatch attempt (auto-fired *or* manually replayed) appends one JSON line to `<sim_dir>/webhook-log.jsonl` with timestamp, masked URL, HTTP status code, latency, and trigger label. Bounded to 50 rows on disk; `GET /api/simulation/<id>/webhook-log` (admin-token gated) returns the last 10 entries newest-first plus the all-time `total_attempts` counter.
 - **Manual retry** — `POST /api/simulation/<id>/webhook-retry` (admin-token gated) re-fires the completion webhook for a sim already in a terminal state. Useful when the original delivery hit a transient 5xx, the URL was misconfigured at the time, or the consuming integration was down. The retry payload carries an extra top-level `retry: true` so downstream consumers can dedupe replays. The replay bypasses the per-process `(sim_id, status)` dedup gate that auto-fires honour (that gate exists only to prevent the runner's two terminal code paths from double-firing automatically; an explicit retry should always go through). Returns 400 when no webhook URL is configured, 409 when the simulation has not reached a terminal state.
+
+---
+
+## Verifying webhook signatures
+
+When `WEBHOOK_SECRET` is configured on your MiroShark instance, every outbound payload is signed with HMAC-SHA256 and the signature is shipped as the `X-MiroShark-Signature` header. The signature lets your consumer prove the payload actually came from your MiroShark instance and wasn't spoofed en route — the same scheme [Stripe](https://stripe.com/docs/webhooks/signatures) and [GitHub](https://docs.github.com/en/webhooks/using-webhooks/validating-webhook-deliveries) use.
+
+The signature is computed over the **raw request body** (not the parsed JSON) so a recipient must verify *before* parsing — re-serializing JSON can re-order keys or change whitespace and break the digest.
+
+**Backward compatible.** When `WEBHOOK_SECRET` is unset or empty on the MiroShark side, the signature header is omitted entirely and existing integrations keep working without changes. Recipients should treat "no signature header" as "no signature configured" and decide locally whether to accept unsigned deliveries.
+
+Generate a strong secret once and set the **same value** on both sides:
+
+```bash
+python -c 'import secrets; print(secrets.token_hex(32))'
+# → 64 hex chars; paste into WEBHOOK_SECRET on both ends
+```
+
+### Python (Flask / FastAPI / plain WSGI)
+
+```python
+import hashlib, hmac, os
+
+WEBHOOK_SECRET = os.environ["WEBHOOK_SECRET"].encode()
+
+def verify(raw_body: bytes, header: str) -> bool:
+    expected = "sha256=" + hmac.new(WEBHOOK_SECRET, raw_body, hashlib.sha256).hexdigest()
+    return hmac.compare_digest(expected, header or "")
+```
+
+`hmac.compare_digest` is constant-time so a network attacker can't time-trial the comparison.
+
+### Node.js (Express)
+
+```javascript
+const crypto = require('crypto');
+const SECRET = process.env.WEBHOOK_SECRET;
+
+function verify(rawBody, header) {
+  const expected = 'sha256=' + crypto.createHmac('sha256', SECRET).update(rawBody).digest('hex');
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(header || ''));
+}
+```
+
+In Express, attach `express.raw({ type: 'application/json' })` to the route so `req.body` arrives as a `Buffer` — verify before `JSON.parse`.
+
+### Bash / curl + openssl
+
+Manual one-shot check from the terminal — useful when triaging "did the webhook fire from the right MiroShark?" from inside a Slack incident channel:
+
+```bash
+SIGNATURE=$(curl -fsSL -X POST https://your-app.example.com/miroshark-webhook \
+  -H 'Content-Type: application/json' \
+  --data-binary @payload.json \
+  -D - -o /dev/null | grep -i '^x-miroshark-signature:' | cut -d' ' -f2 | tr -d '\r')
+
+EXPECTED=sha256=$(openssl dgst -sha256 -hmac "$WEBHOOK_SECRET" -hex payload.json | awk '{print $2}')
+
+[ "$SIGNATURE" = "$EXPECTED" ] && echo OK || echo TAMPERED
+```
 
 ---
 
@@ -183,3 +247,4 @@ Omit the body to test the currently saved `WEBHOOK_URL`.
 - The full webhook URL is treated as a secret — `GET /api/settings` only returns the masked form (`https://hooks.slack.com/***`). The path is never echoed back.
 - Webhook calls go straight from your MiroShark instance to your endpoint — no Anthropic or third-party hop.
 - Validation rejects any URL that doesn't start with `http://` or `https://`. JavaScript / file / FTP URLs are blocked at the API layer.
+- `WEBHOOK_SECRET` is **transport-only** — it's used to sign each dispatch but never persisted to the per-sim delivery log (`webhook-log.jsonl` records the masked URL, never the secret) and never echoed by any API endpoint. Rotate it any time by setting a new value on both sides; in-flight retries continue using whatever secret is set at retry time.

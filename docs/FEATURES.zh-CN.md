@@ -335,6 +335,19 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 实现:`app/services/webhook_service.py` 中的辅助(`_record_delivery`、`_append_log_entry`、`read_webhook_log`、`retry_webhook_for_simulation`)+ `_start_dispatch_thread` 在自动触发与重试路径间共享。零新增依赖(纯标准库 `json` + `os` + `time` + `threading`)。磁盘上限 50 行;旧投递自动滚出,日志永不无界增长。
 
+## Webhook 签名验证
+
+当配置了 `WEBHOOK_SECRET` 时,每一份出站 webhook 载荷都会被 HMAC 签名,摘要通过 `X-MiroShark-Signature: sha256=<hex>` 头部和现有的 `X-MiroShark-Event` / `X-MiroShark-Sim-Id` 一起送出。消费方可以据此证明载荷确实来自这台 MiroShark — Stripe 和 GitHub 的出站 webhook 用的就是同一套方案,消费侧用三行 stdlib `hmac` 就能完成校验。
+
+- **对原始 body 签名。** 摘要是基于走线的字节计算的,在消费侧做任何重新序列化*之前*。消费方必须在解析 JSON 之前完成验证 — 重新序列化可能改变字段顺序或空白,从而破坏摘要。
+- **`sha256=<64 个十六进制字符>` 格式。** 与 Stripe / GitHub 同形。永远小写十六进制;摘要固定 64 字符长度。
+- **向后兼容。** 当 `WEBHOOK_SECRET` 未设置或留空时,头部会被完全省略,已有集成无需任何改动即可继续工作。未配置密钥的消费方应当把「没有签名头」当作「未配置签名」处理,自行决定是否接受未签名的投递。
+- **仅用于传输层。** 密钥永远不会写入投递日志(`webhook-log.jsonl` 只记录脱敏 URL,绝不保存密钥或签名)。在两端同时轮换密钥是零停机操作 — 在飞行中的重试会使用调度时刻已设置的值。
+- **重试各自签名。** 重试端点会向载荷加入 `retry: true`,body 字节随之改变,签名也随之改变。每次投递(自动触发或运维者重试)都会带上为其自身 body 计算的签名。
+- **常数时间验证。** 公开的 `verify_signature` 辅助(在 `app/services/webhook_service.py` 中)使用 `hmac.compare_digest`,网络上的攻击者无法通过时序差侧信道试出签名。[WEBHOOKS.zh-CN.md](WEBHOOKS.zh-CN.md) → 「验证 webhook 签名」中的代码片段遵循同样的模式。
+
+实现:`compute_signature(payload_bytes, secret=None)` 在调用时读取 `WEBHOOK_SECRET`(所以一次 Settings 变更或环境变量改动会立即生效),返回 `"sha256=" + hmac.sha256(secret, body).hexdigest()` 或在留空时返回 `None`。`_post_json` 仅在 `compute_signature` 返回非 None 时才注入头部 — 自动触发、重试、以及「发送测试事件」按钮共享同一条调度路径,所以三条路径的签名行为完全一致。零新增依赖(纯标准库 `hmac` + `hashlib`)。
+
 ## 文章生成
 
 模拟结束后,点击 **Write Article**,MiroShark 会让 Smart 模型写一篇 400–600 字的 Substack 风格报道,基于真实发生的事件 — 关键发现、市场动态、信念变化和影响。文章会缓存到 `generated_article.json`,这样重新打开不会再消耗 token;传 `force_regenerate=true` 可以刷新。

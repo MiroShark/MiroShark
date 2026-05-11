@@ -50,6 +50,8 @@ Payload shape::
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import threading
@@ -67,6 +69,21 @@ logger = get_logger('miroshark.webhook')
 WEBHOOK_USER_AGENT = "MiroShark-Webhook/1.0"
 WEBHOOK_TIMEOUT_SECONDS = 5.0
 WEBHOOK_MAX_SCENARIO_CHARS = 280
+
+# ---- HMAC signing -----------------------------------------------------
+#
+# When ``WEBHOOK_SECRET`` is set, every dispatched payload is signed with
+# ``hmac-sha256(secret, body_bytes)`` and the signature is shipped as the
+# ``X-MiroShark-Signature`` header so the recipient can prove the
+# payload actually came from this MiroShark instance and wasn't spoofed
+# en route. Same scheme Stripe and GitHub use — operators verify with
+# three lines of stdlib ``hmac``.
+#
+# Backward compatible: when ``WEBHOOK_SECRET`` is unset or empty, the
+# header is omitted and existing integrations keep working unchanged.
+WEBHOOK_SECRET_ENV_VAR = "WEBHOOK_SECRET"
+SIGNATURE_HEADER = "X-MiroShark-Signature"
+SIGNATURE_PREFIX = "sha256="
 
 # ---- Delivery log (per-simulation) -------------------------------------
 #
@@ -356,6 +373,63 @@ def _record_delivery(
     _append_log_entry(sim_dir, entry)
 
 
+def _resolve_webhook_secret() -> str:
+    """Read ``WEBHOOK_SECRET`` at call time.
+
+    Late binding mirrors :func:`_resolve_webhook_url` so a Settings change
+    or an ``os.environ`` mutation takes effect immediately without
+    re-importing the module.
+    """
+    return (os.environ.get(WEBHOOK_SECRET_ENV_VAR, "") or "").strip()
+
+
+def compute_signature(
+    payload_bytes: bytes,
+    secret: Optional[str] = None,
+) -> Optional[str]:
+    """Return ``sha256=<hex>`` for ``payload_bytes`` under ``secret``.
+
+    ``secret`` defaults to the ``WEBHOOK_SECRET`` env var. A blank /
+    missing secret returns ``None`` — the dispatcher then omits the
+    signature header entirely so existing integrations stay
+    backward-compatible.
+    """
+    if secret is None:
+        secret = _resolve_webhook_secret()
+    if not secret:
+        return None
+    digest = hmac.new(
+        secret.encode("utf-8"),
+        payload_bytes,
+        hashlib.sha256,
+    ).hexdigest()
+    return f"{SIGNATURE_PREFIX}{digest}"
+
+
+def verify_signature(
+    payload_bytes: bytes,
+    header_value: Optional[str],
+    secret: str,
+) -> bool:
+    """Constant-time verification helper for recipients.
+
+    Returns ``True`` iff ``header_value`` is the signature this
+    MiroShark instance would emit for ``payload_bytes`` under ``secret``.
+    Uses :func:`hmac.compare_digest` so a network attacker can't time-
+    trial the comparison.
+
+    This function is published so the docs can point operators at one
+    canonical implementation — the recipient-side check is symmetric
+    with :func:`compute_signature` and never needs to diverge.
+    """
+    if not header_value or not secret:
+        return False
+    expected = compute_signature(payload_bytes, secret)
+    if expected is None:
+        return False
+    return hmac.compare_digest(expected, header_value)
+
+
 def validate_url(url: str) -> Optional[str]:
     """Return ``None`` if the URL is acceptable, else an error message.
 
@@ -537,16 +611,21 @@ def _post_json(url: str, payload: Dict[str, Any], timeout: float) -> Tuple[bool,
     except Exception as exc:
         return False, f"Could not serialize payload: {exc}"
 
+    headers: Dict[str, str] = {
+        'Content-Type': 'application/json; charset=utf-8',
+        'User-Agent': WEBHOOK_USER_AGENT,
+        'X-MiroShark-Event': payload.get('event', 'simulation.unknown'),
+        'X-MiroShark-Sim-Id': payload.get('sim_id', ''),
+    }
+    signature = compute_signature(body)
+    if signature is not None:
+        headers[SIGNATURE_HEADER] = signature
+
     req = urllib.request.Request(
         url,
         data=body,
         method='POST',
-        headers={
-            'Content-Type': 'application/json; charset=utf-8',
-            'User-Agent': WEBHOOK_USER_AGENT,
-            'X-MiroShark-Event': payload.get('event', 'simulation.unknown'),
-            'X-MiroShark-Sim-Id': payload.get('sim_id', ''),
-        },
+        headers=headers,
     )
 
     try:

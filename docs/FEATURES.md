@@ -361,6 +361,19 @@ The dispatcher writes to disk only after the POST returns (or times out) so the 
 
 Implementation: helpers in `app/services/webhook_service.py` (`_record_delivery`, `_append_log_entry`, `read_webhook_log`, `retry_webhook_for_simulation`) + `_start_dispatch_thread` shared between auto-fire and retry paths. Zero new dependencies (pure stdlib `json` + `os` + `time` + `threading`). Bounded to 50 lines on disk; older deliveries roll off so the log never grows unbounded.
 
+## Webhook Signature Verification
+
+When `WEBHOOK_SECRET` is set, every outbound webhook payload is HMAC-signed and the digest is shipped as an `X-MiroShark-Signature: sha256=<hex>` header alongside the existing `X-MiroShark-Event` / `X-MiroShark-Sim-Id` headers. The signature lets a recipient prove the payload actually came from this MiroShark instance — the same scheme Stripe and GitHub use for their outbound webhooks, verifiable on the consumer side with three lines of stdlib `hmac`.
+
+- **Signed over the raw body.** The digest is computed from the bytes that get sent on the wire, *before* any re-serialization on the recipient side. Consumers must verify before parsing JSON — re-serializing can re-order keys or change whitespace and break the digest.
+- **`sha256=<64 hex chars>` format.** Same shape Stripe and GitHub use. Always lowercase hex; constant 64-char digest length.
+- **Backward compatible.** When `WEBHOOK_SECRET` is unset or blank, the header is omitted entirely and existing integrations continue working without changes. Recipients that have no secret configured should treat "no signature header" as "no signature configured" and decide locally whether to accept unsigned deliveries.
+- **Transport-only.** The secret is never persisted to the delivery log (`webhook-log.jsonl` records the masked URL, never the secret or the signature). Rotating the secret on both sides is a no-downtime operation — in-flight retries pick up whatever value is set at dispatch time.
+- **Retries carry their own signature.** The retry endpoint adds `retry: true` to the payload, which changes the body bytes, which changes the signature. Each delivery (auto-fire or operator-driven retry) carries the signature for its own body.
+- **Constant-time verification.** The published helper (`verify_signature` in `app/services/webhook_service.py`) uses `hmac.compare_digest` so a network attacker can't time-trial the comparison. The verification snippets in [WEBHOOKS.md](WEBHOOKS.md) → "Verifying webhook signatures" follow the same pattern.
+
+Implementation: `compute_signature(payload_bytes, secret=None)` reads `WEBHOOK_SECRET` at call time (so a Settings change or env mutation takes effect immediately), returns `"sha256=" + hmac.sha256(secret, body).hexdigest()` or `None` when blank. `_post_json` injects the header only when `compute_signature` returns non-None — auto-fire, retry, and the `Send test event` button all share the same dispatch path, so all three paths sign consistently. Zero new dependencies (pure stdlib `hmac` + `hashlib`).
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

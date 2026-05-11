@@ -104,6 +104,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Trace Interview** | See the full reasoning chain behind an agent's reply, not just the reply |
 | **Push Notifications** | Web-push alerts when long-running graph / sim / report jobs finish |
 | **Completion Webhook** | POST a JSON summary the moment a sim finishes — wires Slack, Discord, Zapier, Make, n8n, or any custom endpoint with one URL field |
+| **Webhook Signature Verification** | Optional `WEBHOOK_SECRET` HMAC-signs every dispatched payload with an `X-MiroShark-Signature: sha256=<hex>` header. Recipients verify in three lines of stdlib `hmac` — same scheme Stripe and GitHub use. Empty secret = no header, fully backward compatible |
 | **Webhook Delivery Log** | Per-sim `webhook-log.jsonl` records every dispatch attempt (status code, latency, error). Inspect from the EmbedDialog and re-fire any failed delivery with a "Retry" button — closes the operational blindspot every Zapier / n8n integration eventually hits |
 | **Surface Usage Analytics** | `GET /api/simulation/<id>/surface-stats` — per-share-surface request counters (share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS / reproduce.json / lineage) with a synthetic `total`. Inbound observability for the distribution loop the webhook log tracks on the outbound side |
 | **Reproducibility Config** | `GET /api/simulation/<id>/reproduce.json` — citation primitive for the share surfaces. A v1-schema JSON blob carrying every parameter another operator needs to re-run the same simulation: scenario, agent count, total rounds, platform toggles, time-config knobs, director events, and fork / counterfactual lineage. Identical exports of a finished sim are bytewise-identical, so the file hash is a stable citation key |
@@ -237,6 +238,7 @@ cp .env.example .env
 | **轨迹访谈** | 查看智能体回复背后的完整推理链,而不止是回复本身 |
 | **推送通知** | 长耗时图谱 / 模拟 / 报告任务完成时的浏览器推送提醒 |
 | **完成 Webhook** | 模拟一结束即 POST 一份 JSON 摘要 — 一个 URL 字段即可连通 Slack、Discord、Zapier、Make、n8n 或任意自定义端点 |
+| **Webhook 签名验证** | 可选的 `WEBHOOK_SECRET` 会用 HMAC 对每次投递的载荷签名,并通过 `X-MiroShark-Signature: sha256=<hex>` 头部送出。消费方用三行 stdlib `hmac` 即可校验 — Stripe 和 GitHub 用的就是这一套。留空即无签名头部,完全向后兼容 |
 | **Webhook 投递日志** | 每个模拟在 `webhook-log.jsonl` 记录每次投递尝试(HTTP 状态码、延迟、错误)。可在 EmbedDialog 中查看,并通过「重试」按钮重发任何失败的投递 — 弥补每个 Zapier / n8n 集成最终都会遇到的运维盲点 |
 | **分发统计(分享面使用分析)** | `GET /api/simulation/<id>/surface-stats` — 每个分享面的请求计数器(分享卡 / 回放 GIF / 转录 / 轨迹 / 推文串 / 观看页 / Atom / RSS / `reproduce.json` / `/lineage`),以及合成的 `total`。Webhook 日志在出站侧跟踪分发回路,本面则负责入站可观测性 |
 | **可复现配置导出** | `GET /api/simulation/<id>/reproduce.json` — 分享面背后的引用基元。v1-schema 的 JSON 文档,携带另一位研究者复现同一次模拟所需的全部参数:情景、智能体数、轮次、平台切换、时序配置、导演事件、派生 / 反事实谱系。已完成模拟的多次导出在字节级别完全一致 — 文件哈希可作为稳定的引用键 |

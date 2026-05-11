@@ -995,6 +995,47 @@
                 <div v-if="webhookRetryMessage" class="webhook-log-message" :class="webhookRetryMessageClass">
                   {{ webhookRetryMessage }}
                 </div>
+
+                <!-- Signature verification hint — appears once a delivery has
+                     succeeded so the operator has proof the basic wire works
+                     before being asked to layer signing on top. Shows the
+                     env var NAME only (`WEBHOOK_SECRET`); the actual secret
+                     value is never echoed by the frontend, the API, or the
+                     delivery log. Collapsed by default to keep the dialog
+                     compact for users on the unsigned default path. -->
+                <div
+                  v-if="hasSuccessfulWebhookDelivery"
+                  class="signature-hint"
+                  :class="{ 'signature-hint-open': signatureHintExpanded }"
+                >
+                  <button
+                    class="signature-hint-toggle"
+                    @click="toggleSignatureHint"
+                    :title="signatureHintExpanded ? $tr('Hide signature verification hint', '隐藏签名验证提示') : $tr('Show signature verification hint', '显示签名验证提示')"
+                  >
+                    <span class="signature-hint-icon">🔐</span>
+                    <span class="signature-hint-title">
+                      {{ $tr('Verify webhook signatures', '验证 webhook 签名') }}
+                    </span>
+                    <span class="signature-hint-chevron">{{ signatureHintExpanded ? '▾' : '▸' }}</span>
+                  </button>
+                  <div v-if="signatureHintExpanded" class="signature-hint-body">
+                    <p class="signature-hint-line">
+                      {{ $tr(
+                        'Set the WEBHOOK_SECRET environment variable on this MiroShark instance and MiroShark will HMAC-sign every dispatch with an X-MiroShark-Signature header. Recipients verify with three lines of stdlib hmac — same scheme Stripe and GitHub use.',
+                        '在这台 MiroShark 实例上设置 WEBHOOK_SECRET 环境变量,MiroShark 就会用 HMAC 对每一次投递签名,并通过 X-MiroShark-Signature 头部送出。消费方用三行 stdlib hmac 即可校验 — Stripe 和 GitHub 用的就是同一套。'
+                      ) }}
+                    </p>
+                    <code class="signature-hint-code">WEBHOOK_SECRET=&lt;your 32+ char secret&gt;</code>
+                    <p class="signature-hint-line">
+                      <a
+                        href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md#verifying-webhook-signatures"
+                        target="_blank"
+                        rel="noopener"
+                      >{{ $tr('Verification snippets (Python / Node.js / curl)', '验证示例(Python / Node.js / curl)') }} ↗</a>
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1930,6 +1971,20 @@ const webhookEntryClass = (entry) => {
     return 'webhook-row-timeout'
   }
   return 'webhook-row-fail'
+}
+
+// Show the "Verify webhook signatures" hint once the operator has
+// confirmed their webhook is wired up (at least one 2xx delivery
+// on disk). Earlier than that, the hint would be talking about
+// signing a connection that hasn't proven it works — bad time to
+// recommend an additional moving part.
+const hasSuccessfulWebhookDelivery = computed(() =>
+  webhookLogEntries.value.some((e) => e && e.ok === true),
+)
+
+const signatureHintExpanded = ref(false)
+const toggleSignatureHint = () => {
+  signatureHintExpanded.value = !signatureHintExpanded.value
 }
 
 const webhookEntryIcon = (entry) => {
@@ -4111,6 +4166,70 @@ watch(isPublic, () => {
 .webhook-log-message-error {
   background: rgba(255, 68, 68, 0.12);
   color: #b22020;
+}
+
+.signature-hint {
+  margin-top: 4px;
+  border: 1px solid rgba(10, 10, 10, 0.10);
+  border-radius: 6px;
+  background: rgba(10, 10, 10, 0.025);
+}
+
+.signature-hint-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #0a0a0a;
+  cursor: pointer;
+  text-align: left;
+}
+
+.signature-hint-icon {
+  font-size: 14px;
+}
+
+.signature-hint-title {
+  flex: 1;
+}
+
+.signature-hint-chevron {
+  color: rgba(10, 10, 10, 0.5);
+  font-size: 12px;
+}
+
+.signature-hint-body {
+  padding: 0 10px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.signature-hint-line {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: rgba(10, 10, 10, 0.78);
+}
+
+.signature-hint-line a {
+  color: #0a0a0a;
+  text-decoration: underline;
+}
+
+.signature-hint-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  background: rgba(10, 10, 10, 0.06);
+  padding: 6px 8px;
+  border-radius: 4px;
+  color: #0a0a0a;
+  user-select: all;
 }
 
 @media (max-width: 600px) {

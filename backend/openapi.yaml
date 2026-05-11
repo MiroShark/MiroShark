@@ -2841,6 +2841,14 @@ components:
         the dispatcher after each POST attempt completes — successful
         or otherwise. Failure rows carry the upstream message in
         `error`; success rows have `error: null`.
+
+        Note on HMAC signing: when `WEBHOOK_SECRET` is configured, the
+        dispatcher attaches an `X-MiroShark-Signature: sha256=<hex>`
+        header computed from the raw request body. The signature is
+        **transport-only** — only `url_masked` is stored here; neither
+        the secret nor the signature value is persisted to disk. See
+        `docs/WEBHOOKS.md` → "Verifying webhook signatures" for the
+        recipient-side verification pattern.
       required: [attempt, timestamp, ok, url_masked, trigger]
       properties:
         attempt:
