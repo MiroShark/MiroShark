@@ -201,7 +201,7 @@ def test_signature_header_present_when_secret_set(tmp_path, monkeypatch):
         assert _wait_for_log_lines(tmp_path, expected=1) == 1
 
     # ``Request.header_items`` returns capitalized header names.
-    assert "X-miroshark-signature" in {k.lower() for k in captured["headers"]}
+    assert "x-miroshark-signature" in {k.lower() for k in captured["headers"]}
     sig = None
     for k, v in captured["headers"].items():
         if k.lower() == SIGNATURE_HEADER.lower():
