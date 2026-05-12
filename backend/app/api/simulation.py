@@ -5527,6 +5527,114 @@ def get_reproduce_config(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/notebook.ipynb', methods=['GET'])
+def get_notebook_ipynb(simulation_id: str):
+    """Return a pre-populated Jupyter notebook for a published simulation.
+
+    The notebook is a v1-schema nbformat 4 JSON document with the
+    trajectory CSV embedded directly + analysis cells scaffolded around
+    it: imports, CSV load via ``pd.read_csv(io.StringIO(...))``,
+    belief-evolution line chart, final-round consensus bar chart, and a
+    quality + participation summary DataFrame. Runs air-gapped — anyone
+    with the ``.ipynb`` file can hit Run All without any network call
+    back to the MiroShark host.
+
+    Pairs with the trajectory CSV as the **second** institution-targeted
+    export. The CSV told analysts *"here is the data"*; this notebook
+    tells them *"here is the analysis, ready to run"*.
+
+    Same publish gate as the reproduce.json / trajectory.csv / share-card
+    surfaces. ``Cache-Control: public, max-age=300`` matches the
+    reproduce.json endpoint — the notebook is stable once the sim
+    reaches a terminal state. Identical exports of the same finished
+    simulation are bytewise-identical (citation-hash friendly), same
+    property the reproducibility config has.
+    """
+    from ..services import notebook_export
+    from ..services import repro_export
+    from ..services import trajectory_export
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}",
+            }), 404
+
+        sim_dir = os.path.join(
+            Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id
+        )
+
+        # Reuse the same row assembly + CSV renderer the standalone
+        # trajectory.csv route serves — the notebook embeds an identical
+        # CSV byte stream so the SHA-256 hashes line up across surfaces.
+        rows = trajectory_export.build_rows(sim_dir)
+        csv_bytes = trajectory_export.render_csv(rows)
+        csv_text = csv_bytes.decode("utf-8")
+
+        config_data = manager.get_simulation_config(simulation_id)
+        repro_blob = repro_export.build_repro_config(
+            state.to_dict(), config_data, sim_dir
+        )
+
+        base_url = _resolve_share_base_url()
+        notebook = notebook_export.build_notebook(
+            sim_id=simulation_id,
+            csv_text=csv_text,
+            repro_blob=repro_blob,
+            base_url=base_url,
+        )
+        payload = notebook_export.render_notebook_bytes(notebook)
+
+        response = Response(
+            payload, mimetype="application/x-ipynb+json; charset=utf-8"
+        )
+        # 5-min cache — matches the reproduce.json endpoint. The
+        # embedded trajectory grows by one row per round on a live run,
+        # but the citation use case targets terminal-state sims where
+        # the notebook is fully stable.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        # ``attachment`` so a click from the EmbedDialog triggers a
+        # save-as — Jupyter / VS Code / Colab all open ``.ipynb`` files
+        # from disk; in-tab rendering of the raw JSON is not useful.
+        filename = f"miroshark-{simulation_id[:12]}-notebook.ipynb"
+        response.headers["Content-Disposition"] = (
+            f'attachment; filename="{filename}"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "notebook_ipynb")
+        return response
+
+    except Exception as e:
+        logger.error(
+            f"notebook.ipynb: failed for {simulation_id}: "
+            f"{e}\n{traceback.format_exc()}"
+        )
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/lineage', methods=['GET'])
 def get_simulation_lineage(simulation_id: str):
     """Return the parent + public children for a published simulation.

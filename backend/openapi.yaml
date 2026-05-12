@@ -1487,6 +1487,65 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/notebook.ipynb:
+    get:
+      tags: [Publish & Embed]
+      summary: Pre-populated Jupyter notebook for a published simulation.
+      description: |
+        Returns a ready-to-run `.ipynb` document for the simulation —
+        nbformat 4 JSON with the trajectory CSV embedded directly + a
+        scaffolded sequence of code cells: imports, CSV load via
+        `pd.read_csv(io.StringIO(...))`, belief-evolution line chart
+        (bullish / neutral / bearish % over rounds, ±0.2 stance
+        threshold consistent with every other surface), final-round
+        consensus bar chart, and a quality + participation summary
+        DataFrame.
+
+        Pairs with `trajectory.csv` as the **second** institution-
+        targeted export. The CSV told analysts *"here is the data"*;
+        the notebook tells them *"here is the analysis, ready to run."*
+        Institutional observers download this, open it in JupyterLab /
+        VS Code / Colab, and have a working analysis without writing the
+        usual `pd.read_csv()` + `matplotlib` boilerplate.
+
+        **Standalone-runnable.** The trajectory data lives inside the
+        notebook as a Python multi-line string — anyone with the
+        `.ipynb` file can hit Run All in an air-gapped kernel; no
+        network call back to the MiroShark host is needed. This matters
+        for paper-appendix attachments and academic archive
+        environments where reviewer kernels are sandboxed.
+
+        Identical exports of the same finished simulation produce
+        bytewise-identical notebooks (sort_keys + indent=2 + trailing
+        newline). The file hash is therefore a stable citation key,
+        same property the `reproduce.json` blob has. Cached for 5
+        minutes; the notebook is stable once the sim reaches a terminal
+        state.
+
+        Same publish gate as every other share surface — requires the
+        simulation to be public (`is_public=true`).
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: |
+            `application/x-ipynb+json` notebook. Treat as opaque JSON
+            shaped by the [Jupyter nbformat 4 spec](https://nbformat.readthedocs.io/).
+            `Content-Disposition: attachment; filename="miroshark-<id12>-notebook.ipynb"`.
+          content:
+            application/x-ipynb+json:
+              schema:
+                type: object
+                description: |
+                  nbformat 4 notebook document — see the [nbformat spec](https://nbformat.readthedocs.io/).
+                  Top-level keys: `nbformat`, `nbformat_minor`,
+                  `metadata` (kernelspec + language_info + a
+                  `miroshark` block with `schema_version`,
+                  `simulation_id`, `trajectory_sha256`), and `cells`
+                  (markdown + code, see endpoint description for order).
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /share/{simulation_id}:
     get:
       tags: [Publish & Embed]
@@ -3086,6 +3145,10 @@ components:
               type: integer
               minimum: 0
               description: Successful `/lineage` serves.
+            notebook_ipynb:
+              type: integer
+              minimum: 0
+              description: Successful `notebook.ipynb` serves.
             total:
               type: integer
               minimum: 0

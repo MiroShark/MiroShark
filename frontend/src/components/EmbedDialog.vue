@@ -668,6 +668,70 @@
               </div>
             </div>
 
+            <!-- Jupyter notebook export — analysis-ready surface paired
+                 with the reproducibility config. The repro blob is
+                 "here is the data"; this notebook is "here is the
+                 analysis, ready to run". Trajectory CSV is embedded
+                 directly so the notebook runs air-gapped (no network
+                 call back to the MiroShark host). Same publish gate as
+                 every other share surface. The body is a pure download
+                 surface — there's no inline preview because the .ipynb
+                 is a 30+ KB JSON document the SPA shouldn't pull just
+                 to render a button. -->
+            <div class="transcript-section notebook-section">
+              <div class="transcript-head notebook-head">
+                <span class="transcript-icon">📓</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Jupyter notebook', 'Jupyter 笔记本') }}
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Pre-populated analysis notebook — trajectory data embedded, belief evolution + final consensus charts scaffolded, ready to run in JupyterLab, VS Code, or Colab. No network call back required.', '预填的分析笔记本 — 嵌入轨迹数据,已搭建信念演化与最终共识图表,可在 JupyterLab、VS Code 或 Colab 中直接运行,无需联网。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="notebook-body">
+                <div v-if="!isPublic" class="transcript-empty">
+                  {{ $tr('Publish the simulation to enable the Jupyter notebook export.', '发布模拟以启用 Jupyter 笔记本导出。') }}
+                </div>
+                <template v-else>
+                  <div class="repro-curl-block">
+                    <div class="repro-curl-head">
+                      <span class="repro-curl-label">{{ $tr('Download via curl', '使用 curl 下载') }}</span>
+                      <button class="snippet-copy-btn" @click="copy('notebookCurl')">
+                        {{ copied === 'notebookCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy', '复制') }}
+                      </button>
+                    </div>
+                    <pre class="snippet-code"><code>{{ notebookCurlSnippet }}</code></pre>
+                  </div>
+                  <div class="repro-note">
+                    {{ $tr('Identical exports of a finished simulation produce bytewise-identical notebooks — the file hash is a stable citation key, same property the reproduce.json blob has. Opens directly in JupyterLab, VS Code, and Google Colab.', '已完成模拟的多次导出在字节级别完全一致 — 文件哈希可作为稳定的引用键,与 reproduce.json 一致。可直接在 JupyterLab、VS Code 与 Google Colab 中打开。') }}
+                  </div>
+                  <div class="repro-actions">
+                    <a
+                      v-if="notebookDownloadUrl"
+                      class="repro-download"
+                      :href="notebookDownloadUrl"
+                      :download="notebookDownloadFilename"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {{ $tr('Download notebook.ipynb', '下载 notebook.ipynb') }}
+                    </a>
+                    <button
+                      class="snippet-copy-btn repro-copy-url"
+                      type="button"
+                      @click="copy('notebookUrl')"
+                      :disabled="!notebookDownloadUrl"
+                    >
+                      {{ copied === 'notebookUrl' ? '✓ ' + $tr('URL copied', '已复制 URL') : $tr('Copy URL', '复制 URL') }}
+                    </button>
+                  </div>
+                </template>
+              </div>
+            </div>
+
             <!-- Lineage navigator — closes the navigation gap PR #75
                  (reproducibility config) left behind. The
                  `parent_simulation_id` pointer existed on disk but was
@@ -1151,6 +1215,7 @@ import {
   getSurfaceStats,
   getReproductionUrl,
   getReproduction,
+  getNotebookUrl,
   getSimulationLineage,
   getFeedUrl,
   getSimulationOutcome,
@@ -1369,6 +1434,7 @@ const SURFACE_STAT_LABELS = [
   { key: 'feed_rss', label: tr('RSS feed', 'RSS 源') },
   { key: 'reproduce_json', label: tr('Reproduce config · JSON', '可复现配置 · JSON') },
   { key: 'lineage', label: tr('Lineage graph', '谱系图') },
+  { key: 'notebook_ipynb', label: tr('Jupyter notebook · IPYNB', 'Jupyter 笔记本 · IPYNB') },
 ]
 
 const surfaceStatsRows = computed(() => {
@@ -1532,6 +1598,28 @@ const reproCurlSnippet = computed(() => {
   // forwards redirects (the production deploy may sit behind a CDN
   // that issues a 308 to the canonical host).
   return `curl -fsSL '${reproDownloadUrl.value}' -o reproduce.json`
+})
+
+// ── Notebook export state ──────────────────────────────────────────────
+// Pre-populated Jupyter notebook download — sits beneath the
+// reproducibility config because both are institution-targeted: the
+// repro blob is "here is the data", the notebook is "here is the
+// analysis, ready to run". Pure download surface — there is no parsed
+// preview because the .ipynb body is a 30 KB+ JSON document the SPA
+// shouldn't pull just to render a button.
+const notebookDownloadUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getNotebookUrl(props.simulationId, origin.value)
+})
+
+const notebookDownloadFilename = computed(() => {
+  if (!props.simulationId) return 'notebook.ipynb'
+  return `miroshark-${props.simulationId.slice(0, 12)}-notebook.ipynb`
+})
+
+const notebookCurlSnippet = computed(() => {
+  if (!notebookDownloadUrl.value) return ''
+  return `curl -fsSL '${notebookDownloadUrl.value}' -o ${notebookDownloadFilename.value}`
 })
 
 const loadRepro = async () => {
@@ -1817,6 +1905,8 @@ const copy = async (which) => {
   }
   else if (which === 'reproUrl') text = reproDownloadUrl.value
   else if (which === 'reproCurl') text = reproCurlSnippet.value
+  else if (which === 'notebookUrl') text = notebookDownloadUrl.value
+  else if (which === 'notebookCurl') text = notebookCurlSnippet.value
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)

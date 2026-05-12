@@ -93,8 +93,9 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/trajectory.jsonl` | Per-round belief JSONL (DuckDB / pipelines) |
 | `GET` | `/api/simulation/<id>/thread.txt` | Auto-formatted X / Twitter tweet thread (one tweet per belief inflection point, ≤280 chars each) |
 | `GET` | `/api/simulation/<id>/thread.json` | Same tweet thread as `thread.txt` but as `{tweets, total, inflections_recorded, truncated}` for programmatic consumers |
-| `GET` | `/api/simulation/<id>/surface-stats` | Per-share-surface request counters — share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS / reproduce.json / lineage, plus a synthetic `total` |
+| `GET` | `/api/simulation/<id>/surface-stats` | Per-share-surface request counters — share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS / reproduce.json / lineage / notebook.ipynb, plus a synthetic `total` |
 | `GET` | `/api/simulation/<id>/reproduce.json` | Citation primitive — v1-schema reproducibility config blob carrying scenario, agent count, total rounds, platform toggles, time-config knobs, director events, and fork / counterfactual lineage. Identical exports of a finished sim are bytewise-identical (citation-hash friendly) |
+| `GET` | `/api/simulation/<id>/notebook.ipynb` | Pre-populated Jupyter notebook — trajectory CSV embedded directly + belief-evolution / final-consensus / quality-summary cells scaffolded. Runs air-gapped (no network call back required). nbformat 4 JSON. Same bytewise-stable property as the reproduce.json blob |
 | `GET` | `/api/simulation/<id>/lineage` | Lineage graph slice — parent the sim was forked / branched from + every public child whose `parent_simulation_id` points back at it. Closes the navigation gap the reproduction config left open |
 | `GET` | `/api/simulation/<id>/webhook-log` | Recent outbound-webhook delivery attempts (last 10 + total count). Admin-token gated |
 | `POST` | `/api/simulation/<id>/webhook-retry` | Re-fire the completion webhook for a finished sim. Admin-token gated |
@@ -149,6 +150,16 @@ duckdb.sql("""
 ```
 
 The CSV column order is locked: `round, round_timestamp, bullish_pct, neutral_pct, bearish_pct, participating_agents, total_posts, total_engagements, quality_health, participation_rate`. The bullish / neutral / bearish percentages use the same ±0.2 stance threshold as the gallery, share card, transcript, webhook, and feed surfaces, so the numbers in the DataFrame match what every other surface reports for the same round.
+
+Or skip the boilerplate entirely and download the pre-populated notebook — trajectory data embedded, belief-evolution + final-consensus charts scaffolded, ready to run:
+
+```bash
+curl -fsSL "https://your-host/api/simulation/<id>/notebook.ipynb" \
+  -o simulation.ipynb
+jupyter lab simulation.ipynb     # or: code simulation.ipynb, or upload to Colab
+```
+
+The notebook is self-contained — the trajectory CSV is embedded as a Python string literal so the cells run in an air-gapped kernel. Identical exports of a finished simulation produce bytewise-identical notebooks (citation-hash friendly), same property the `reproduce.json` blob has. nbformat 4 spec: <https://nbformat.readthedocs.io/>.
 
 ## Report Agent
 

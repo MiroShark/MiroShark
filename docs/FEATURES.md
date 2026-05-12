@@ -269,6 +269,7 @@ Counters tracked (one per share surface):
 - `feed_atom` / `feed_rss` — number of times this simulation was syndicated to an Atom or RSS feed render
 - `reproduce_json` — `reproduce.json` serves (citation primitive — every fetch is an attempted reproduction)
 - `lineage` — `/lineage` serves (graph navigation — every fetch is an operator walking the fork tree)
+- `notebook_ipynb` — `notebook.ipynb` serves (every fetch is an analyst opening the run in Jupyter / VS Code / Colab)
 
 Plus a synthetic `total` summing all counters. Every key is always present (zero-defaulted), so a frontend renders the table without special-casing missing fields.
 
@@ -310,6 +311,30 @@ Implementation:
 Cached for 5 minutes; the blob does not change once the sim has reached a terminal state. Same publish gate as every other share surface — requires the simulation to be public (`is_public=true`).
 
 The Embed dialog has a "🔬 Reproducibility config" panel (collapsed by default) — a summary grid (Schema version · Agents · Rounds · Platforms · Director events · Lineage), a "Reproduce via curl" snippet ready to copy, a `Download reproduce.json` button, and (when the sim was forked or branched) a small inline lineage badge — `🪐 Forked` or `🔀 Counterfactual` — beside the title. The badge tooltip shows the canonical parent sim id so the operator can grab it for `/share/<id>` or `/watch/<id>` without reading the JSON.
+
+## Jupyter Notebook Export
+
+The **analysis-ready** companion to the reproducibility config — the second institution-targeted export. The trajectory CSV told analysts *"here is the data"*; the notebook tells them *"here is the analysis, ready to run."* Institutional observers (the Lorimer-Ventures tier) who land on a published simulation download a single `.ipynb` file and open it in JupyterLab / VS Code / Google Colab — no boilerplate `pd.read_csv()` + `import matplotlib.pyplot as plt` + axis-config to write.
+
+`GET /api/simulation/<id>/notebook.ipynb` returns an nbformat 4 JSON document with a locked seven-cell sequence:
+
+1. **Markdown header.** Sim id, scenario as blockquote, run metadata table (agents · rounds · platforms · lineage · quality health · generated_at), reproducibility URL link.
+2. **Code: imports.** A commented `%pip install --quiet pandas matplotlib` line for the kernel that doesn't have them yet, plus `import io / pandas as pd / matplotlib.pyplot as plt`.
+3. **Code: trajectory load.** The full `trajectory.csv` content is embedded directly inside the notebook as a Python string literal (via `repr()`, so any byte sequence — including arbitrary numbers of consecutive quotes, backslashes, embedded newlines — round-trips correctly), then read via `pd.read_csv(io.StringIO(TRAJECTORY_CSV))`. Anyone running the cell gets the same bytes the `trajectory.csv` endpoint serves. The cell finishes with `df.head()` to preview the DataFrame.
+4. **Code: belief-evolution chart.** Three-line plot (bullish / neutral / bearish percentages over rounds) using the same `#22c55e` / `#6b7280` / `#ef4444` palette every other surface uses, so a screenshot of this chart is paste-compatible with the share card.
+5. **Code: final-round consensus.** Bar chart of the final stance distribution with per-bar percentage annotations.
+6. **Code: quality + participation summary.** A small `pd.DataFrame` summarising row count, first/last round, unique `quality_health` values, and the last non-null `participation_rate`. Surfaces the run health at a glance without scanning the whole DataFrame.
+7. **Markdown footer.** Reproducibility metadata (notebook schema version, simulation id, trajectory SHA-256 hash, full reproduce.json link). The SHA-256 lets a reviewer verify the embedded data wasn't tampered with after the file was downloaded.
+
+Implementation:
+
+- **Standalone-runnable.** The trajectory data lives inside the notebook itself — no network call back to the MiroShark host is required to hit Run All. This matters for paper-appendix attachments and academic archive environments where reviewer kernels are sandboxed (and for institutional analysts whose corporate firewalls block outbound HTTP).
+- **Pure stdlib.** `json` + `os` + `hashlib`, plus `trajectory_export.build_rows` reused for CSV row assembly so the embedded data matches what `trajectory.csv` serves byte-for-byte. The chart code cells are strings — Matplotlib is referenced inside the cells the user runs, never imported at generation time. Zero new dependencies. Helpers in `app/services/notebook_export.py`.
+- **Bytewise-stable.** Same `sort_keys=True + indent=2 + trailing newline` pattern the reproducibility config uses, so two exports of the same finished simulation produce bytewise-identical notebooks. The file hash is therefore a stable citation key, same property the `reproduce.json` blob has.
+- **Schema-locked.** `SCHEMA_VERSION = "1"` plus a `CELL_ORDER` constant pinning the cell-type sequence. Downstream tools that pin "the chart cell is at index 4" stay correct across minor refactors.
+- **Defense-in-depth.** Missing artifacts (sim still running, corrupt trajectory, no quality file) degrade gracefully — the notebook still renders, the embedded CSV may just have fewer rows.
+
+Cached for 5 minutes; same publish gate as every other share surface — requires `is_public=true`. The Embed dialog has a "📓 Jupyter notebook" panel beneath the reproducibility config — a "Download via curl" snippet ready to copy, a `Download notebook.ipynb` button, and a `Copy URL` button. The download surface is intentionally pure — there's no inline preview because the `.ipynb` body is a 30+ KB JSON document the SPA shouldn't pull just to render a button.
 
 ## Simulation Lineage Navigator
 

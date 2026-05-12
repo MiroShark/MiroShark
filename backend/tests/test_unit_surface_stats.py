@@ -76,6 +76,7 @@ def test_surface_keys_includes_every_serve_handler():
         "feed_rss",
         "reproduce_json",
         "lineage",
+        "notebook_ipynb",
     }
     assert set(surface_stats.SURFACE_KEYS) == expected
 
@@ -273,6 +274,7 @@ def test_surface_stats_route_decorator_registered():
         "thread_json",
         "reproduce_json",
         "lineage",
+        "notebook_ipynb",
     ],
 )
 def test_serve_handlers_increment_their_surface_key(surface_key: str):

@@ -615,6 +615,36 @@ export const getReproduction = (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the pre-populated Jupyter notebook for a
+ * published simulation.
+ *
+ * The notebook is an nbformat 4 `.ipynb` document with the trajectory
+ * CSV embedded directly + scaffolded analysis cells (imports, CSV
+ * load via `pd.read_csv(io.StringIO(...))`, belief-evolution line
+ * chart, final consensus bar chart, quality + participation summary
+ * DataFrame). Runs air-gapped — anyone with the file can hit Run All
+ * without any network call back to the MiroShark host.
+ *
+ * Pairs with `trajectory.csv` as the second institution-targeted
+ * export. The CSV told analysts "here is the data"; the notebook
+ * tells them "here is the analysis, ready to run". Identical exports
+ * of the same finished sim are bytewise-identical (citation-hash
+ * friendly), same property the reproduce.json blob has.
+ *
+ * Same publish gate as the share card / transcript / trajectory /
+ * thread / reproduce.json endpoints. Returns 403 for unpublished
+ * simulations.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getNotebookUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/notebook.ipynb`
+}
+
+/**
  * Fetch the lineage graph slice for a published simulation — the
  * parent it was forked / branched from (if any) and every public
  * child whose `parent_simulation_id` points back at it.
