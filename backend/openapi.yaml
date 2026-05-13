@@ -1748,7 +1748,7 @@ paths:
         newsletter does.
 
         Mirrors `GET /api/simulation/public` selection (publish-gated,
-        sorted by `created_at` desc, capped at 20 entries) so a
+        sorted by `created_at` desc, default cap 20 entries) so a
         subscription stays in lockstep with what shows up on `/explore`.
         Pure stdlib XML — zero new dependencies.
 
@@ -1759,6 +1759,14 @@ paths:
 
         Browsers auto-discover this feed via the `<link rel="alternate"
         type="application/atom+xml">` tag in `index.html`.
+
+        **Filtered feeds.** The same filter knobs the gallery API
+        exposes are honoured here — `?consensus=bullish&quality=excellent`
+        turns the feed into a "bullish + excellent" signal source for
+        n8n, Zapier, Make, or any RSS reader. Filters combine with
+        logical AND, unknown values fall back to "no filter" for that
+        knob, and active filters are echoed in the feed channel title
+        + subtitle so subscribers can tell which slice they're on.
       parameters:
         - in: query
           name: verified
@@ -1767,6 +1775,65 @@ paths:
             simulations with a recorded outcome annotation — the same
             curated set the `/verified` page surfaces.
           schema: { type: string }
+        - in: query
+          name: q
+          description: |
+            Case-insensitive substring search over each simulation's
+            scenario text. Matches the gallery API's `?q=` knob.
+          schema: { type: string }
+        - in: query
+          name: consensus
+          description: |
+            Filter to simulations whose dominant belief stance matches
+            the value. Uses the same ±0.2 stance threshold the gallery,
+            share card, replay GIF, and webhook all share — a
+            33.4 / 33.3 / 33.3 split falls out of every bucket.
+          schema:
+            type: string
+            enum: [bullish, neutral, bearish]
+        - in: query
+          name: quality
+          description: |
+            Filter to simulations whose `quality_health` tier matches
+            the value. Compared case-insensitively against the
+            lowercased first word, so `Good with caveats` slots into
+            `quality=good`.
+          schema:
+            type: string
+            enum: [excellent, good, fair, poor]
+        - in: query
+          name: outcome
+          description: |
+            Filter to simulations whose operator-marked outcome label
+            matches the value. Subset of `verified=1` that further
+            narrows on the resolution direction.
+          schema:
+            type: string
+            enum: [correct, incorrect, partial]
+        - in: query
+          name: sort
+          description: |
+            Sort key. `date` is newest-first (default). `trending` ranks
+            cards by their cumulative share-surface serves
+            (`surface-stats.json` total) so a viral run floats above a
+            forgotten one. `rounds` / `agents` mirror the gallery sort
+            keys.
+          schema:
+            type: string
+            enum: [date, rounds, agents, trending]
+            default: date
+        - in: query
+          name: limit
+          description: |
+            Maximum entries to include. Clamped to the feed-specific cap
+            (50) — smaller than the gallery API's 100 because
+            aggressive aggregators re-fetch the feed every few minutes
+            and a 100-entry XML doc costs them too much per poll.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
       responses:
         "200":
           description: |
@@ -1780,11 +1847,14 @@ paths:
       tags: [Publish & Embed]
       summary: RSS 2.0 syndication feed of the public simulation gallery.
       description: |
-        Same content + selection as `/api/feed.atom` rendered as RSS 2.0
-        for older readers and self-hosted aggregators that haven't moved
-        off the legacy format. Published runs include their share-card
-        PNG as an `<enclosure>` so podcast-style readers handle it
-        natively.
+        Same content + selection + filter knobs as `/api/feed.atom`
+        rendered as RSS 2.0 for older readers and self-hosted
+        aggregators that haven't moved off the legacy format. Published
+        runs include their share-card PNG as an `<enclosure>` so
+        podcast-style readers handle it natively. Filtered streams
+        (`?consensus=` / `?quality=` / `?sort=trending` / `?q=` /
+        `?outcome=` / `?verified=` / `?limit=`) are supported so the
+        discovery channel doesn't fragment on format.
       parameters:
         - in: query
           name: verified
@@ -1792,6 +1862,45 @@ paths:
             Truthy values (`1`, `true`, `yes`, `on`) restrict the feed to
             simulations with a recorded outcome annotation.
           schema: { type: string }
+        - in: query
+          name: q
+          description: |
+            Case-insensitive substring search over each simulation's
+            scenario text.
+          schema: { type: string }
+        - in: query
+          name: consensus
+          description: Dominant-stance filter, same semantics as `/api/feed.atom`.
+          schema:
+            type: string
+            enum: [bullish, neutral, bearish]
+        - in: query
+          name: quality
+          description: Quality-tier filter, same semantics as `/api/feed.atom`.
+          schema:
+            type: string
+            enum: [excellent, good, fair, poor]
+        - in: query
+          name: outcome
+          description: Outcome-label filter, same semantics as `/api/feed.atom`.
+          schema:
+            type: string
+            enum: [correct, incorrect, partial]
+        - in: query
+          name: sort
+          description: Sort key, same options as `/api/feed.atom`.
+          schema:
+            type: string
+            enum: [date, rounds, agents, trending]
+            default: date
+        - in: query
+          name: limit
+          description: Maximum entries to include, capped at 50.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
       responses:
         "200":
           description: |

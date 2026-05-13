@@ -27,9 +27,11 @@ from flask import Response, request
 
 from . import feed_bp
 from ..config import Config
+from ..services import gallery_filters
 from ..services.simulation_manager import SimulationManager
 from ..services.feed import (
     DEFAULT_FEED_LIMIT,
+    MAX_FEED_LIMIT,
     render_feed,
     select_public_cards,
 )
@@ -81,6 +83,29 @@ def _serve_feed(fmt: str) -> Response:
 
     verified_only = _is_truthy(request.args.get("verified") or "")
 
+    # Same filter knobs the gallery exposes — composing them here turns
+    # the feed into a structured signal source (Feedly / n8n / Zapier
+    # consumers can subscribe to "bullish + excellent" without scraping
+    # the gallery API). Validation mirrors gallery_filters exactly so a
+    # bookmarked URL produces the same selection on both surfaces.
+    q = gallery_filters.normalise_query(request.args.get("q"))
+    consensus = gallery_filters.normalise_consensus(request.args.get("consensus"))
+    quality = gallery_filters.normalise_quality(request.args.get("quality"))
+    outcome = gallery_filters.normalise_outcome(request.args.get("outcome"))
+    sort_key = gallery_filters.normalise_sort(request.args.get("sort"))
+
+    # ``limit`` honours its own cap (50 — feed-specific, smaller than the
+    # gallery's 100) since aggressive aggregators re-fetch the feed every
+    # few minutes and a 100-entry XML doc costs them too much per poll.
+    raw_limit = request.args.get("limit")
+    limit = DEFAULT_FEED_LIMIT
+    if raw_limit is not None and str(raw_limit).strip() != "":
+        try:
+            limit = int(raw_limit)
+        except (TypeError, ValueError):
+            limit = DEFAULT_FEED_LIMIT
+        limit = max(1, min(limit, MAX_FEED_LIMIT))
+
     try:
         manager = SimulationManager()
         all_sims = manager.list_simulations()
@@ -90,13 +115,26 @@ def _serve_feed(fmt: str) -> Response:
         logger.warning("feed: failed to list simulations (%s) — serving empty feed", exc)
         all_sims = []
 
+    def _read_serves_total(sim_dir: str) -> int:
+        try:
+            stats = surface_stats.read_surface_stats(sim_dir)
+            return int(stats.get("total", 0) or 0)
+        except Exception:
+            return 0
+
     cards = select_public_cards(
         all_sims,
         sim_data_dir=Config.WONDERWALL_SIMULATION_DATA_DIR,
         card_builder=_build_gallery_card_payload,
         outcome_reader=_read_outcome_file,
-        limit=DEFAULT_FEED_LIMIT,
+        limit=limit,
         verified_only=verified_only,
+        q=q,
+        consensus=consensus,
+        quality=quality,
+        outcome=outcome,
+        sort=sort_key,
+        surface_stats_reader=_read_serves_total if sort_key == "trending" else None,
     )
 
     base_url = _resolve_base_url()
@@ -110,6 +148,11 @@ def _serve_feed(fmt: str) -> Response:
         feed_path=feed_path,
         verified_only=verified_only,
         locale=locale,
+        q=q,
+        consensus=consensus,
+        quality=quality,
+        outcome=outcome,
+        sort=sort_key,
     )
 
     response = Response(body, mimetype=mime)
@@ -141,15 +184,30 @@ def _serve_feed(fmt: str) -> Response:
 def feed_atom():
     """Atom 1.0 representation of the public simulation gallery.
 
-    Query parameters:
+    Query parameters mirror the gallery API so a bookmarked feed URL
+    answers the same question as ``GET /api/simulation/public``:
 
-      * ``verified`` — when truthy (``1``, ``true``, ``yes``, ``on``)
-        restricts the feed to simulations with a recorded outcome
+      * ``verified`` — truthy values (``1`` / ``true`` / ``yes`` / ``on``)
+        restrict the feed to simulations with a recorded outcome
         annotation (the ``/verified`` curated hall).
+      * ``q`` — case-insensitive substring search over each simulation's
+        scenario text.
+      * ``consensus`` — ``bullish`` / ``neutral`` / ``bearish``; uses
+        the same ±0.2 stance dominance threshold as the gallery.
+      * ``quality`` — ``excellent`` / ``good`` / ``fair`` / ``poor``.
+      * ``outcome`` — ``correct`` / ``incorrect`` / ``partial`` (subset
+        of ``verified=1`` that further narrows on the outcome label).
+      * ``sort`` — ``date`` (default, newest first) / ``rounds`` /
+        ``agents`` / ``trending`` (cumulative share-surface serves).
+      * ``limit`` — 1..50; default 20.
 
-    Cap of 20 entries per the repo-actions specification — keeps the
-    rendered XML small enough that aggressive aggregator polling stays
-    cheap.
+    Unknown / invalid values fall back to the default for that knob — a
+    typo'd ``?consensus=bullsih`` returns the full feed rather than an
+    empty one, matching the gallery's "graceful degradation" contract.
+
+    Default cap of 20 entries per the repo-actions specification — keeps
+    the rendered XML small enough that aggressive aggregator polling
+    stays cheap.
     """
     return _serve_feed("atom")
 
@@ -158,8 +216,11 @@ def feed_atom():
 def feed_rss():
     """RSS 2.0 representation of the public simulation gallery.
 
-    Same content + selection as ``/api/feed.atom`` — older readers /
-    self-hosted aggregators that haven't moved off RSS get this surface
-    so the discovery channel doesn't fragment on format.
+    Same content + selection + query parameter set as
+    ``/api/feed.atom`` — older readers / self-hosted aggregators that
+    haven't moved off RSS get the same filtered streams Atom subscribers
+    do (``?consensus=`` / ``?quality=`` / ``?sort=`` / ``?q=`` /
+    ``?outcome=`` / ``?verified=`` / ``?limit=``), so the discovery
+    channel doesn't fragment on format.
     """
     return _serve_feed("rss")

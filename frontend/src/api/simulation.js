@@ -735,17 +735,52 @@ export const getWatchUrl = (simulationId, origin) => {
  * visible on /explore, so subscribing maps 1:1 to "every new public
  * MiroShark simulation lands in my reader."
  *
+ * Filter knobs mirror the gallery API — `consensus`, `quality`,
+ * `outcome`, `q`, `sort`, `limit` — so callers can build a feed URL
+ * that subscribes a reader (Feedly, n8n, Zapier, …) to a structured
+ * slice of the corpus: "bullish + excellent + trending" rather than
+ * the full firehose. Default/empty filters are omitted from the query
+ * string so the URL stays clean when no filters are active.
+ *
  * @param {Object} [options]
  * @param {('atom'|'rss')} [options.format='atom']
  * @param {boolean} [options.verified=false]
  * @param {string} [options.origin]
+ * @param {('bullish'|'neutral'|'bearish')} [options.consensus]
+ * @param {('excellent'|'good'|'fair'|'poor')} [options.quality]
+ * @param {('correct'|'incorrect'|'partial')} [options.outcome]
+ * @param {string} [options.q]
+ * @param {('date'|'rounds'|'agents'|'trending')} [options.sort]
+ * @param {number} [options.limit]
  * @returns {string}
  */
-export const getFeedUrl = ({ format = 'atom', verified = false, origin } = {}) => {
+export const getFeedUrl = ({
+  format = 'atom',
+  verified = false,
+  origin,
+  consensus,
+  quality,
+  outcome,
+  q,
+  sort,
+  limit,
+} = {}) => {
   const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
   const ext = format === 'rss' ? 'rss' : 'atom'
-  const query = verified ? '?verified=1' : ''
-  return `${base}/api/feed.${ext}${query}`
+
+  const params = new URLSearchParams()
+  if (verified) params.set('verified', '1')
+  if (consensus) params.set('consensus', consensus)
+  if (quality) params.set('quality', quality)
+  if (outcome) params.set('outcome', outcome)
+  if (q && q.trim()) params.set('q', q.trim())
+  if (sort && sort !== 'date') params.set('sort', sort)
+  if (limit && Number.isFinite(Number(limit)) && Number(limit) > 0) {
+    params.set('limit', String(Math.min(50, Math.max(1, Math.trunc(Number(limit))))))
+  }
+
+  const query = params.toString()
+  return query ? `${base}/api/feed.${ext}?${query}` : `${base}/api/feed.${ext}`
 }
 
 /**

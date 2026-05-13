@@ -30,8 +30,10 @@ from __future__ import annotations
 
 import html
 from datetime import datetime, timezone
-from typing import Any, Iterable, Optional
+from typing import Any, Callable, Iterable, Optional
 from xml.etree import ElementTree as ET
+
+from . import gallery_filters
 
 
 # Atom requires a stable feed id even when the underlying paths change —
@@ -43,6 +45,11 @@ FEED_GENERATOR_NAME = "MiroShark"
 # specification (20) — keeps the rendered XML small enough that bots
 # polling on a tight cadence don't pull megabytes per fetch.
 DEFAULT_FEED_LIMIT = 20
+
+# Hard ceiling for ``?limit=`` on the feed surface — readers + bots that
+# poll aggressively don't get to extract the whole gallery in one fetch.
+# Matches the gallery API cap.
+MAX_FEED_LIMIT = 50
 
 # Atom + RSS title cap. Most readers truncate around 100 chars when
 # laying out the river view, so trim there with an ellipsis to keep
@@ -490,6 +497,71 @@ def render_rss(
 # ── Public-facing render dispatcher ───────────────────────────────────────
 
 
+def _filter_chip(
+    *,
+    consensus: Optional[str],
+    quality: Optional[str],
+    outcome: Optional[str],
+    q: str,
+    sort: str,
+    is_zh: bool,
+) -> str:
+    """One-line summary of the active filters for the feed title/subtitle.
+
+    Returns an empty string when no filter is active so the unfiltered
+    feed renders its original title. Sort is only echoed when the caller
+    opted out of the default (``date``) — readers expect "latest" by
+    default, so naming it explicitly would be noise.
+    """
+    parts: list[str] = []
+    if consensus:
+        parts.append(
+            {
+                "bullish": ("Bullish", "看涨"),
+                "neutral": ("Neutral", "中性"),
+                "bearish": ("Bearish", "看跌"),
+            }[consensus][1 if is_zh else 0]
+        )
+    if quality:
+        label_en = quality.capitalize()
+        label_zh = {
+            "excellent": "优",
+            "good": "良",
+            "fair": "中",
+            "poor": "差",
+        }.get(quality, quality)
+        parts.append(label_zh if is_zh else label_en)
+    if outcome:
+        label_zh, label_en = {
+            "correct": ("已验证", "Verified"),
+            "incorrect": ("误判", "Incorrect"),
+            "partial": ("部分应验", "Partial"),
+        }.get(outcome, (outcome, outcome.capitalize()))
+        parts.append(label_zh if is_zh else label_en)
+    if q:
+        # Trim to keep the title row narrow in River-view UIs; readers
+        # see the full query if they expand the entry.
+        snippet = q.strip()
+        if len(snippet) > 30:
+            snippet = snippet[:29].rstrip() + "…"
+        parts.append(f'"{snippet}"')
+    sort_norm = (sort or "").strip().lower()
+    if sort_norm in {"trending", "rounds", "agents"}:
+        sort_label_zh = {
+            "trending": "热度",
+            "rounds": "轮次",
+            "agents": "智能体",
+        }[sort_norm]
+        sort_label_en = sort_norm.capitalize()
+        parts.append(
+            ("按" + sort_label_zh) if is_zh else f"sorted by {sort_label_en}"
+        )
+    if not parts:
+        return ""
+    sep = " · " if is_zh else " · "
+    return sep.join(parts)
+
+
 def render_feed(
     fmt: str,
     cards: Iterable[dict],
@@ -498,6 +570,11 @@ def render_feed(
     feed_path: str,
     verified_only: bool = False,
     locale: str = "en",
+    q: str = "",
+    consensus: Optional[str] = None,
+    quality: Optional[str] = None,
+    outcome: Optional[str] = None,
+    sort: str = "date",
 ) -> tuple[bytes, str]:
     """Render the feed in the requested format.
 
@@ -509,8 +586,22 @@ def render_feed(
     (default) and ``zh-CN``. Per-entry scenario text and the bracketed
     feature names (Feedly / Readwise / Inoreader / NetNewsWire) stay in
     their source language so reader auto-discovery still matches.
+
+    Active filters (``consensus``, ``quality``, ``outcome``, ``q``, non-
+    default ``sort``) are appended to the channel title + subtitle so a
+    subscriber whose feed is "MiroShark · Bullish + Excellent" can tell
+    at a glance which slice of the gallery they signed up for. Empty
+    filters fall through to the original title.
     """
     is_zh = locale == "zh-CN"
+    chip = _filter_chip(
+        consensus=consensus,
+        quality=quality,
+        outcome=outcome,
+        q=q,
+        sort=sort,
+        is_zh=is_zh,
+    )
     if verified_only:
         if is_zh:
             title = "MiroShark · 已验证预言"
@@ -538,6 +629,14 @@ def render_feed(
                 "belief drift, and prediction outcomes you can fork into your "
                 "own scenarios."
             )
+
+    if chip:
+        title = f"{title} · {chip}"
+        suffix = (
+            f"已应用筛选: {chip}." if is_zh
+            else f"Filtered: {chip}."
+        )
+        subtitle = f"{subtitle} {suffix}"
 
     fmt_norm = (fmt or "").strip().lower()
     if fmt_norm == "rss":
@@ -572,36 +671,131 @@ def select_public_cards(
     outcome_reader,
     limit: int = DEFAULT_FEED_LIMIT,
     verified_only: bool = False,
+    q: str = "",
+    consensus: Optional[str] = None,
+    quality: Optional[str] = None,
+    outcome: Optional[str] = None,
+    sort: str = "date",
+    surface_stats_reader: Optional[Callable[[str], int]] = None,
 ) -> list[dict]:
     """Filter + sort + truncate the gallery cards used to render a feed.
 
     Mirrors the exact selection ``GET /api/simulation/public`` performs so
-    a subscription stays in lockstep with what shows up on /explore.
+    a subscription stays in lockstep with what shows up on /explore — and
+    extends that parity to the gallery's filter knobs (``q``, ``consensus``,
+    ``quality``, ``outcome``, ``sort``). An operator who scoped their
+    /explore view to "bullish + excellent" gets the same selection in
+    RSS by appending ``?consensus=bullish&quality=excellent`` to their
+    feed URL.
+
+    ``sort="trending"`` ranks by the cumulative share-surface serve count
+    that the gallery surfaces — pass a ``surface_stats_reader`` callback
+    that takes a ``sim_dir`` and returns the integer total. The reader is
+    only invoked when ``sort == "trending"`` so the default ``date`` path
+    stays read-free.
+
     Pulled out into a helper so the feed module can be unit-tested
     without booting Flask: the route layer plugs in the real
     ``_build_gallery_card_payload`` and ``_read_outcome_file``.
     """
     import os
 
+    sort_key = gallery_filters.normalise_sort(sort)
+
+    # Build cards for every public sim, then let ``gallery_filters`` do
+    # the filter / sort / limit dance the gallery API already uses. Going
+    # through the same helper guarantees the feed and ``GET
+    # /api/simulation/public`` answer the same question identically — a
+    # 33.4 / 33.3 / 33.3 split never leaks into ``consensus=bullish`` on
+    # either surface, ``quality_health="Good with caveats"`` matches
+    # ``quality=good`` on both, etc.
     public_sims = [s for s in sims if bool(getattr(s, "is_public", False))]
-    public_sims.sort(key=lambda s: s.created_at or "", reverse=True)
-
-    if verified_only:
-        verified_sims = []
-        for s in public_sims:
-            sim_dir = os.path.join(sim_data_dir, s.simulation_id)
-            if outcome_reader(sim_dir) is not None:
-                verified_sims.append(s)
-        public_sims = verified_sims
-
-    page = public_sims[: max(1, min(int(limit or DEFAULT_FEED_LIMIT), 100))]
 
     cards: list[dict] = []
-    for state in page:
+    for state in public_sims:
         sim_dir = os.path.join(sim_data_dir, state.simulation_id)
         try:
             cards.append(card_builder(state, sim_dir))
         except Exception:
             # One bad sim should not blank out the whole feed.
             continue
-    return cards
+
+    if sort_key == "trending" and surface_stats_reader is not None:
+        for card in cards:
+            sim_id = card.get("simulation_id") or card.get("id") or ""
+            sim_dir = os.path.join(sim_data_dir, sim_id)
+            try:
+                card[gallery_filters.TRENDING_FIELD] = int(
+                    surface_stats_reader(sim_dir) or 0
+                )
+            except Exception:
+                card[gallery_filters.TRENDING_FIELD] = 0
+
+    # Clamp ``limit`` into the feed envelope first so a caller passing
+    # ``limit=10_000`` can't bypass our 50-entry cap by going through this
+    # helper — the gallery's MAX_LIMIT (100) is too generous for an XML
+    # surface that aggressive aggregators re-fetch every few minutes.
+    try:
+        effective_limit = int(limit) if limit is not None else DEFAULT_FEED_LIMIT
+    except (TypeError, ValueError):
+        effective_limit = DEFAULT_FEED_LIMIT
+    effective_limit = max(1, min(effective_limit, MAX_FEED_LIMIT))
+
+    # ``verified_only`` is enforced via the on-disk ``outcome_reader``
+    # rather than gallery_filters' embedded-outcome gate: the live card
+    # builder (``_build_gallery_card_payload``) doesn't always inline the
+    # outcome record, so trusting the card field alone would silently
+    # drop legit verified sims. Run the on-disk gate BEFORE the rest of
+    # the filter stack so the trending / pagination math operates on the
+    # right corpus.
+    if verified_only and outcome_reader is not None:
+        cards = [
+            c for c in cards
+            if _has_outcome_record(c, sim_data_dir, outcome_reader)
+        ]
+    elif verified_only:
+        cards = [c for c in cards if (c.get("outcome") or {}).get("label")]
+
+    page, _total = gallery_filters.select_filtered_cards(
+        cards,
+        q=q or "",
+        consensus=consensus,
+        quality=quality,
+        outcome=outcome,
+        verified_only=False,
+        sort=sort_key,
+        limit=effective_limit,
+        offset=0,
+    )
+
+    # Drop the transient trending field — it's an implementation detail of
+    # the sort, not part of the per-card payload feed renderers consume.
+    if sort_key == "trending":
+        for card in page:
+            card.pop(gallery_filters.TRENDING_FIELD, None)
+
+    return page
+
+
+def _has_outcome_record(
+    card: dict,
+    sim_data_dir: str,
+    outcome_reader: Callable[[str], Any],
+) -> bool:
+    """Return True iff the card already carries an outcome OR the
+    on-disk reader confirms one for the sim. Belt-and-suspenders so the
+    verified gate matches the pre-filter behaviour even when the card
+    builder skipped reading ``outcome.json``.
+    """
+    import os
+
+    if isinstance(card.get("outcome"), dict) and card["outcome"].get("label"):
+        return True
+    sim_id = card.get("simulation_id") or card.get("id") or ""
+    if not sim_id:
+        return False
+    sim_dir = os.path.join(sim_data_dir, sim_id)
+    try:
+        return outcome_reader(sim_dir) is not None
+    except Exception:
+        return False
