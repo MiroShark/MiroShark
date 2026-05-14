@@ -106,6 +106,10 @@ _BLUEPRINT_PREFIXES = {
     # spectator-watch URL ``/watch/<sim_id>`` is a user-facing share
     # link, not an API call.
     "watch_bp":          "",
+    # sitemap_bp serves /sitemap.xml + /robots.txt at the root so crawlers
+    # find them where they expect; /api/config/sitemap exposes the
+    # ENABLE_SITEMAP flag to the SPA — see app/api/sitemap.py.
+    "sitemap_bp":        "",
 }
 
 
