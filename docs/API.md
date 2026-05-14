@@ -101,6 +101,9 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `POST` | `/api/simulation/<id>/webhook-retry` | Re-fire the completion webhook for a finished sim. Admin-token gated |
 | `GET` | `/share/<id>` | Public OG-tag landing page (auto-redirects to SPA) |
 | `GET` | `/watch/<id>` | Live spectator-watch page — minimal full-viewport broadcast view, polls every 15 s, OG / Twitter-card unfurl |
+| `GET` | `/sitemap.xml` | Auto-generated sitemap (sitemaps.org 0.9) listing every public sim's `/share/<id>` + `/watch/<id>` URLs. `404` when `ENABLE_SITEMAP=false`. Cached 1 h |
+| `GET` | `/robots.txt` | Crawler directives — `Disallow: /api/`, `Allow: /share/` etc., advertises `Sitemap:` when enabled. Cached 1 h |
+| `GET` | `/api/config/sitemap` | Public flag `{enabled, sitemap_url}` exposed to the SPA so EmbedDialog renders the right indexing hint |
 | `POST` | `/api/simulation/<id>/article` | Generate a Substack-style write-up |
 | `GET` | `/api/simulation/<id>/export` | Full JSON export |
 | `GET` | `/api/simulation/list` | List simulations |
@@ -160,6 +163,19 @@ jupyter lab simulation.ipynb     # or: code simulation.ipynb, or upload to Colab
 ```
 
 The notebook is self-contained — the trajectory CSV is embedded as a Python string literal so the cells run in an air-gapped kernel. Identical exports of a finished simulation produce bytewise-identical notebooks (citation-hash friendly), same property the `reproduce.json` blob has. nbformat 4 spec: <https://nbformat.readthedocs.io/>.
+
+### Search Engine Discoverability
+
+Two infrastructure-tier endpoints make the public-simulation gallery discoverable to web search:
+
+- `GET /sitemap.xml` — auto-generated sitemap (sitemaps.org 0.9 schema). One `<url>` per published sim's `/share/<id>` page (priority `0.8`) plus one per `/watch/<id>` page (priority `0.7`). `<lastmod>` in W3C `YYYY-MM-DD` form. `<changefreq>always</changefreq>` for in-progress sims, `weekly` / `daily` for completed ones. Sorted by `simulation_id` so two consecutive renders against the same corpus are byte-identical. Returns `404` when `ENABLE_SITEMAP=false`. Cached `public, max-age=3600`.
+- `GET /robots.txt` — crawler directives. Always served. `Disallow: /api/` keeps the JSON namespace out of the index; `Allow:` lines for `/share/`, `/watch/`, `/explore`, `/verified`, `/embed/` invite crawlers into the public-discovery surfaces. When the sitemap is enabled, advertises it via the standard `Sitemap: <PUBLIC_BASE_URL>/sitemap.xml` directive.
+
+**Submission flow:** in Google Search Console (or Bing Webmaster Tools / Yandex Webmaster / etc.), add the site once and submit `https://<your-deployment>/sitemap.xml`. Every newly published simulation lands in the next crawl — no per-sim manual step.
+
+**Opt-out:** set `ENABLE_SITEMAP=false` in the deployment environment to make `/sitemap.xml` return 404 and drop the `Sitemap:` advertisement from `robots.txt`. Useful for private MiroShark instances or operator-only deployments where simulations should not surface in public search results.
+
+The Embed dialog has a "🔍 Discoverable in web search" callout that confirms the simulation is in the sitemap (or explains how to enable it when disabled). The flag is exposed via `GET /api/config/sitemap` — public, no secret config leaked.
 
 ## Report Agent
 

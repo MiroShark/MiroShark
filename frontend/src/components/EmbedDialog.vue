@@ -1257,6 +1257,40 @@
                 </div>
               </div>
             </div>
+
+            <!-- Search-engine indexing row — every published simulation is
+                 a /share/<id> page that researchers might land on through
+                 a Google search. This row tells the operator their sim is
+                 in the auto-generated /sitemap.xml that crawlers discover
+                 via the standard robots.txt Sitemap: directive. -->
+            <div class="feed-callout sitemap-callout">
+              <div class="feed-callout-head">
+                <span class="feed-callout-icon">🔍</span>
+                <div class="feed-callout-body">
+                  <div class="feed-callout-title">
+                    {{ sitemapEnabled
+                        ? $tr('Discoverable in web search', '可在网页搜索中发现')
+                        : $tr('Search indexing disabled', '已禁用搜索索引') }}
+                  </div>
+                  <div class="feed-callout-desc">
+                    {{ sitemapEnabled
+                        ? $tr('Auto-generated /sitemap.xml lists every published simulation’s share + watch URLs. /robots.txt advertises it via the standard Sitemap: directive — submit once to Google Search Console and every newly published sim becomes searchable.', '自动生成的 /sitemap.xml 列出每个已发布模拟的 share 与 watch URL。/robots.txt 通过标准 Sitemap: 指令通告 — 在 Google Search Console 提交一次后,每个新发布的模拟即可被搜索到。')
+                        : $tr('Sitemap disabled — set ENABLE_SITEMAP=true in your environment to surface this deployment’s public simulations to search engines.', '已禁用 Sitemap — 在环境中设置 ENABLE_SITEMAP=true,即可让此部署的公开模拟被搜索引擎收录。') }}
+                  </div>
+                </div>
+              </div>
+              <div v-if="sitemapEnabled" class="feed-callout-actions">
+                <a
+                  class="feed-callout-link"
+                  :href="sitemapUrl"
+                  target="_blank"
+                  rel="noopener"
+                  :title="$tr('Open /sitemap.xml in a new tab', '在新标签中打开 /sitemap.xml')"
+                >
+                  {{ $tr('View sitemap.xml ↗', '查看 sitemap.xml ↗') }}
+                </a>
+              </div>
+            </div>
           </div>
 
           <!-- Hint -->
@@ -1292,6 +1326,8 @@ import {
   getNotebookUrl,
   getSimulationLineage,
   getFeedUrl,
+  getSitemapUrl,
+  getSitemapConfig,
   getSimulationOutcome,
   submitSimulationOutcome,
   getWebhookLog,
@@ -1958,6 +1994,34 @@ const copyFilteredFeedUrl = async () => {
   }
 }
 
+// Search-engine sitemap surface — independent of `simulationId` (the
+// sitemap lists every published sim across the gallery), exposed here
+// so an operator who just published gets a one-click "your sim is
+// crawler-discoverable" callout. The flag comes from the public
+// /api/config/sitemap endpoint so the dialog can swap to a "disabled"
+// hint when the deployment opted out.
+const sitemapUrl = computed(() => {
+  if (!origin.value) return ''
+  return getSitemapUrl(origin.value)
+})
+const sitemapEnabled = ref(true)
+const sitemapConfigLoaded = ref(false)
+const loadSitemapConfig = async () => {
+  if (sitemapConfigLoaded.value) return
+  try {
+    const res = await getSitemapConfig()
+    sitemapEnabled.value = !!res?.data?.enabled
+  } catch {
+    // Best-effort — a transient failure shouldn't blank out the row.
+    // Default to ``enabled = true`` so the operator still sees the
+    // sitemap link; the route itself returns 404 when disabled, which
+    // is the authoritative answer.
+    sitemapEnabled.value = true
+  } finally {
+    sitemapConfigLoaded.value = true
+  }
+}
+
 const replayLoaded = ref(false)
 const replayPlay = ref(false)
 const onReplayLoad = () => {
@@ -2328,6 +2392,12 @@ watch(() => props.open, async (val) => {
   // Always pull the saved outcome — the GET endpoint is publish-gate-free
   // so even private sims will reflect a previously recorded annotation.
   await loadOutcome()
+  // Pull the sitemap config once per dialog open so the search-engine
+  // indexing row knows whether to render the "enabled" or "disabled"
+  // hint. Cheap (single small JSON) and the result rarely changes,
+  // but reading on each open keeps the row in sync if an operator
+  // toggles ``ENABLE_SITEMAP`` and reloads.
+  loadSitemapConfig()
   // Bust the share-card image cache so the preview reloads with whatever
   // state the simulation is in right now (resolution may have landed
   // since the dialog was last opened).

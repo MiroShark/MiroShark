@@ -32,3 +32,7 @@ from .share import share_bp  # noqa: E402, F401
 # stays a clean shareable URL — see api/watch.py.
 from .watch import watch_bp  # noqa: E402, F401
 
+# sitemap_bp is mounted at the root (no /api prefix) so /sitemap.xml
+# and /robots.txt land where crawlers expect them — see api/sitemap.py.
+from .sitemap import sitemap_bp  # noqa: E402, F401
+

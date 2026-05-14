@@ -96,6 +96,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Gallery Search & Filter** | Keyword search + bullish/neutral/bearish + excellent/good/fair/poor + sort by date/rounds/agents/trending on `/explore` and `/verified`. `trending` ranks by cumulative share-surface serves so the most-distributed sims float to the top. URL-encoded so `?q=aave&consensus=bearish` is bookmarkable. Same ±0.2 stance threshold as every other surface |
 | **Verified Predictions** | Annotate any public sim with the real-world outcome (called it / partial / called wrong + URL). `/verified` is the dedicated hall of calls that landed |
 | **RSS / Atom Feeds** | `/api/feed.atom` + `/api/feed.rss` — every newly published simulation lands in Feedly / Readwise / Inoreader / NetNewsWire / Obsidian RSS without anyone curating it. `?verified=1` for the verified-only stream |
+| **Search Engine Sitemap** | Auto-generated `/sitemap.xml` (sitemaps.org 0.9) lists every public sim's `/share/<id>` + `/watch/<id>` URLs; companion `/robots.txt` advertises it via the standard `Sitemap:` directive. Submit once to Google Search Console — every newly published sim becomes searchable. Pure stdlib `xml.etree.ElementTree`, opt-out via `ENABLE_SITEMAP=false` |
 | **Article Generation** | Substack-style write-up of what happened, grounded in actual posts and trades |
 | **Interaction Network** | Force-directed agent-to-agent graph with echo-chamber metrics |
 | **Demographics** | Archetype clustering (analyst / influencer / retail / observer…) |
@@ -231,6 +232,7 @@ cp .env.example .env
 | **图库搜索与筛选** | 在 `/explore` 与 `/verified` 上提供关键词搜索 + 看涨/中立/看跌 + 优秀/良好/一般/较差 + 按日期/轮次/智能体/热门排序。`trending` 按累计分享面服务次数排序,让被分发最广的模拟浮于顶部。URL 编码后 `?q=aave&consensus=bearish` 可作为书签分享。与其他所有表面共享同一 ±0.2 立场阈值 |
 | **已验证预言** | 为公开模拟标注真实结果(命中 / 部分 / 失误 + 链接)。`/verified` 是命中预言专属展厅 |
 | **RSS / Atom 订阅源** | `/api/feed.atom` + `/api/feed.rss` — 每个新发布的模拟无需任何整理就会进入 Feedly / Readwise / Inoreader / NetNewsWire / Obsidian RSS。`?verified=1` 只看已验证内容 |
+| **搜索引擎站点地图** | 自动生成的 `/sitemap.xml`(sitemaps.org 0.9)列出每个公开模拟的 `/share/<id>` + `/watch/<id>` URL;配套的 `/robots.txt` 通过标准 `Sitemap:` 指令通告。在 Google Search Console 提交一次 — 每个新发布的模拟都将变得可被搜索。纯 stdlib `xml.etree.ElementTree`,可通过 `ENABLE_SITEMAP=false` 退出 |
 | **文章生成** | Substack 风格的复盘文章,基于真实发帖与交易数据 |
 | **互动网络** | 力导向智能体关系图,带回声室指标 |
 | **人口分布** | 原型聚类(分析师 / 影响者 / 散户 / 旁观者……) |

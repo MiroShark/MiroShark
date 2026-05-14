@@ -97,6 +97,22 @@
 | `GET` | `/api/simulation/list` | 列出模拟 |
 | `GET` | `/api/simulation/history` | 模拟历史 / 差异 |
 | `GET` | `/api/simulation/public` | 可筛选、分页的公开图库列表 |
+| `GET` | `/sitemap.xml` | 自动生成的站点地图(sitemaps.org 0.9),列出每个公开模拟的 `/share/<id>` + `/watch/<id>` URL。`ENABLE_SITEMAP=false` 时返回 404。缓存 1 小时 |
+| `GET` | `/robots.txt` | 爬虫指令 — `Disallow: /api/`、`Allow: /share/` 等;启用时通过标准 `Sitemap:` 行通告。缓存 1 小时 |
+| `GET` | `/api/config/sitemap` | 公开标志 `{enabled, sitemap_url}`,供 SPA 在 EmbedDialog 中渲染正确的索引提示 |
+
+### 搜索引擎可发现性
+
+两个基础设施级端点让公开模拟图库可被网页搜索发现:
+
+- `GET /sitemap.xml` — 自动生成的站点地图(sitemaps.org 0.9 schema)。每个已发布模拟的 `/share/<id>` 页面占一个 `<url>`(优先级 `0.8`),每个 `/watch/<id>` 页面占一个 `<url>`(优先级 `0.7`)。`<lastmod>` 为 W3C `YYYY-MM-DD` 形式。进行中模拟的 `<changefreq>` 为 `always`,已完成模拟为 `weekly` / `daily`。按 `simulation_id` 排序,使同一语料库的两次连续渲染产生字节相同的 XML。`ENABLE_SITEMAP=false` 时返回 `404`。缓存 `public, max-age=3600`。
+- `GET /robots.txt` — 爬虫指令。始终对外服务。`Disallow: /api/` 阻止 JSON 命名空间被收录;`Allow:` 行邀请爬虫进入 `/share/`、`/watch/`、`/explore`、`/verified`、`/embed/` 等公共发现面。启用站点地图时,通过标准 `Sitemap: <PUBLIC_BASE_URL>/sitemap.xml` 指令进行通告。
+
+**提交流程:** 在 Google Search Console(或 Bing Webmaster Tools / Yandex Webmaster 等)添加站点一次,提交 `https://<your-deployment>/sitemap.xml`。每个新发布的模拟将在下一次抓取时上线 — 无需逐个手动操作。
+
+**禁用方式:** 在部署环境中设置 `ENABLE_SITEMAP=false`,即可让 `/sitemap.xml` 返回 404,并从 `robots.txt` 中移除 `Sitemap:` 通告。适用于私有 MiroShark 实例或不希望模拟出现在公开搜索结果中的纯运营场景。
+
+Embed 对话框包含 "🔍 可在网页搜索中发现" 提示块,确认该模拟已纳入站点地图(或解释如何启用)。该标志通过 `GET /api/config/sitemap` 暴露 — 公开,不泄露任何机密配置。
 
 ### 图库搜索与筛选
 

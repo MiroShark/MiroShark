@@ -201,7 +201,16 @@ class Config:
     # relative ``share_path`` is included and the consumer must build the
     # absolute URL themselves.
     PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', '')
-    
+
+    # Whether ``GET /sitemap.xml`` is served and ``robots.txt`` advertises
+    # it. Default ``true`` — the public sitemap is the search-engine
+    # discovery surface for the public-simulation gallery, and a
+    # crawl-ready sitemap is the right default for any deployment that
+    # exposes ``/share/<id>`` URLs publicly. Operators running a private
+    # MiroShark instance set ``ENABLE_SITEMAP=false`` to make the sitemap
+    # 404 and drop the ``Sitemap:`` directive from robots.txt.
+    ENABLE_SITEMAP = os.environ.get('ENABLE_SITEMAP', 'true').lower() == 'true'
+
     @classmethod
     def validate(cls):
         """Validate required configuration"""

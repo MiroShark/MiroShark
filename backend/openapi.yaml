@@ -82,6 +82,8 @@ tags:
     description: MCP server status surface for AI IDE clients.
   - name: Documentation
     description: This OpenAPI spec and Swagger UI.
+  - name: Discovery
+    description: Search-engine sitemap and robots.txt — auto-generated discovery surfaces over the public-simulation gallery.
 
 paths:
 
@@ -1908,6 +1910,115 @@ paths:
           content:
             application/rss+xml:
               schema: { type: string }
+
+  /sitemap.xml:
+    get:
+      tags: [Discovery]
+      summary: Auto-generated public-simulation sitemap (sitemaps.org 0.9).
+      description: |
+        Walks the public-simulation corpus (`is_public=true` only) and
+        emits one `<url>` block per `/share/<id>` plus one per
+        `/watch/<id>`. `<lastmod>` is W3C `YYYY-MM-DD` form derived
+        from the simulation's `updated_at` / `created_at` /
+        `state.json` mtime fallback chain. `<changefreq>` is `always`
+        for in-progress sims (the belief bars genuinely change every
+        round) and `weekly` for completed share entries / `daily` for
+        completed watch entries.
+
+        Mounted at the root (no `/api` prefix) so crawlers find it
+        where the protocol convention places it. `Cache-Control:
+        public, max-age=3600` — hourly is fast enough for a freshly
+        published sim to appear at the next refresh, slow enough to
+        absorb noisy crawler polling. Sims are sorted by
+        `simulation_id` ascending so two consecutive renders against
+        the same corpus produce byte-identical XML.
+
+        Capped at 50,000 `<url>` entries per the sitemap spec
+        ceiling. MiroShark's public corpus is currently three-figure
+        small; the cap is defense-in-depth against pathological
+        bulk-fork patterns.
+
+        Returns `404` when `ENABLE_SITEMAP=false` so private
+        deployments don't even hint that the sitemap surface exists.
+        `robots.txt` advertises this URL via the standard `Sitemap:`
+        directive — submit once to Google Search Console (or any
+        compliant crawler) and every newly published sim becomes
+        searchable on the next crawl.
+      responses:
+        "200":
+          description: |
+            Sitemap XML document. `Content-Type: application/xml`.
+          content:
+            application/xml:
+              schema: { type: string }
+        "404":
+          description: |
+            `ENABLE_SITEMAP=false` on this deployment.
+          content:
+            text/plain:
+              schema: { type: string }
+
+  /robots.txt:
+    get:
+      tags: [Discovery]
+      summary: Crawler directives for the deployment.
+      description: |
+        Always served (whether `ENABLE_SITEMAP=true` or not) so
+        well-behaved crawlers see the `Disallow: /api/` directive
+        that keeps the JSON namespace out of the search index. Carries
+        `Allow:` lines for the public-discovery surfaces (`/share/`,
+        `/watch/`, `/explore`, `/verified`, `/embed/`).
+
+        When the sitemap is enabled, a trailing
+        `Sitemap: <PUBLIC_BASE_URL>/sitemap.xml` line points crawlers
+        at it for automatic discovery. When disabled, the line is
+        omitted so the URL doesn't leak through robots.txt either.
+        `Cache-Control: public, max-age=3600` mirrors the sitemap
+        cadence so a single CDN purge refreshes both surfaces.
+      responses:
+        "200":
+          description: |
+            Plain-text robots directives.
+          content:
+            text/plain:
+              schema: { type: string }
+
+  /api/config/sitemap:
+    get:
+      tags: [Discovery]
+      summary: Public sitemap-config flag for the SPA.
+      description: |
+        Exposes whether `/sitemap.xml` is enabled on this deployment
+        so the EmbedDialog renders the right hint without leaking
+        any secret config. Returns `{enabled, sitemap_url}` where
+        `sitemap_url` is the absolute public URL when enabled and
+        `null` otherwise. Public — the flag is not sensitive and the
+        URL is the same one any crawler would discover via
+        robots.txt.
+      responses:
+        "200":
+          description: Sitemap config envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    type: object
+                    required: [enabled, sitemap_url]
+                    properties:
+                      enabled:
+                        type: boolean
+                        description: Whether `/sitemap.xml` serves content on this deployment.
+                      sitemap_url:
+                        type: string
+                        nullable: true
+                        description: |
+                          Absolute URL of `/sitemap.xml` when enabled
+                          and a base URL is resolvable; `null`
+                          otherwise.
 
   /api/simulation/{simulation_id}/export:
     get:

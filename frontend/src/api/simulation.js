@@ -784,6 +784,42 @@ export const getFeedUrl = ({
 }
 
 /**
+ * Build the absolute URL of the auto-generated public sitemap.
+ *
+ * The sitemap lists every published simulation's `/share/<id>` and
+ * `/watch/<id>` URLs in the sitemaps.org 0.9 XML format, ready to
+ * submit once to Google Search Console (or any compliant crawler).
+ * `/robots.txt` advertises this URL via the standard `Sitemap:`
+ * directive, so well-behaved bots discover it automatically.
+ *
+ * Returns the URL even when the operator has set ENABLE_SITEMAP=false
+ * — the caller should consult `getSitemapConfig()` to know whether
+ * the URL actually serves content (404 when disabled).
+ *
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getSitemapUrl = (origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/sitemap.xml`
+}
+
+/**
+ * Fetch the public sitemap config — exposes whether `/sitemap.xml`
+ * is enabled on this deployment so the EmbedDialog can render the
+ * right hint without leaking any secret config.
+ *
+ * Response shape (under `data`):
+ *   {
+ *     enabled: boolean,
+ *     sitemap_url: string | null
+ *   }
+ */
+export const getSitemapConfig = () => {
+  return service.get('/api/config/sitemap')
+}
+
+/**
  * Branch a simulation with a narrative injection at a specific round.
  * The new simulation is READY and shares the parent's agent population;
  * when the runner hits trigger_round it auto-promotes the injection into

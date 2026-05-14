@@ -219,6 +219,27 @@ Each entry carries the scenario as the title (truncated with an ellipsis past 10
 
 The Embed dialog has a "Follow the gallery via RSS" callout with one-click subscribe links for the Atom feed, the RSS 2.0 feed, and the verified-only Atom feed, plus a **filter builder** (consensus + quality + sort) that emits the matching `?consensus=…&quality=…&sort=…` URL with a copy button — the slice an operator picks lands directly in any reader that consumes RSS or Atom. The /explore header has a "📡 Subscribe via RSS" chip that mirrors the active filter (verified-only when the filter is on).
 
+## Search-Engine Sitemap (`/sitemap.xml` + `/robots.txt`)
+
+The auto-generated discovery surface for web search. Every other share surface (`/share/<id>`, `/watch/<id>`, RSS / Atom, replay GIF) makes an *individual* simulation findable to someone who already has the link. The sitemap closes the gap on the *other* half — researchers and operators who don't know the simulation exists yet but search for the scenario keywords.
+
+`GET /sitemap.xml` walks the public-simulation corpus once per request and emits the sitemaps.org 0.9 XML document Googlebot / Bingbot / DuckDuckBot expect:
+
+- One `<url>` block per published sim's `/share/<id>` page (priority `0.8`, the canonical citation surface).
+- One `<url>` block per published sim's `/watch/<id>` page (priority `0.7`, the live broadcast surface).
+- `<lastmod>` in W3C `YYYY-MM-DD` form, derived from `state.json`'s `updated_at` / `created_at` / file mtime fallback chain.
+- `<changefreq>always</changefreq>` for in-progress sims (the belief bars genuinely change every round); `weekly` for completed share entries, `daily` for completed watch entries (the watch page re-renders less often once the run terminates).
+- Sims sorted by `simulation_id` ascending so two consecutive renders against the same corpus produce byte-identical XML.
+
+`GET /robots.txt` is the companion discovery file. Every deployment serves it (whether the sitemap is enabled or not) so well-behaved crawlers see the `Disallow: /api/` directive that keeps the JSON namespace out of the search index. When the sitemap is enabled, a trailing `Sitemap: <PUBLIC_BASE_URL>/sitemap.xml` line points crawlers at it for automatic discovery — submit once to Google Search Console and every newly published sim becomes searchable on the next crawl. The robots file always carries `Allow:` lines for the public-discovery surfaces (`/share/`, `/watch/`, `/explore`, `/verified`, `/embed/`) so crawlers know which routes they're invited into.
+
+- **Opt-out:** `ENABLE_SITEMAP=false` (default `true`) makes `/sitemap.xml` return `404` and drops the `Sitemap:` line from `robots.txt`. Operators running a private MiroShark instance — or one indexing sensitive scenarios — flip the flag.
+- **Bounded:** capped at 50,000 `<url>` entries (the spec ceiling per file). MiroShark's public corpus is currently three-figure small; the cap is defense-in-depth against pathological bulk-fork patterns rather than a normal truncation case.
+- **Caching:** `Cache-Control: public, max-age=3600` — hourly is fast enough for a freshly published sim to surface to crawlers at the next refresh, slow enough that a noisy crawler doesn't tax the gallery query.
+- **Implementation:** `app/services/sitemap.py` (~270 LoC, pure stdlib `xml.etree.ElementTree` + `os` + `datetime`) + `app/api/sitemap.py` (Flask blueprint mounted at the root, no `/api` prefix, mirroring `share_bp` / `watch_bp`). Zero new dependencies.
+
+The Embed dialog has a "🔍 Discoverable in web search" callout — distinct from the RSS subscribe block above — with a "View sitemap.xml ↗" link. The flag comes from a public `GET /api/config/sitemap` endpoint so the dialog renders the right hint when an operator has opted out.
+
 ## Live Watch Page (Spectator Broadcast)
 
 The seventh thin renderer over the same on-disk `sim_dir/` folder. The previous six (gallery card, share card, replay GIF, transcript, RSS / Atom feed, trajectory CSV / JSONL) all surface a *finished* simulation; the watch page surfaces a *live* one — the format MiroShark was missing for "tweet a sim mid-run" sharing.
