@@ -820,6 +820,26 @@ export const getSitemapConfig = () => {
 }
 
 /**
+ * Fetch the notification-channel config — tells the SPA which of the
+ * three terminal-state notification channels (generic webhook, Discord
+ * rich embed, Slack Block Kit) are wired up on this deployment. Only
+ * presence booleans cross the wire; the underlying URLs (which often
+ * carry an opaque secret in the path) stay server-side.
+ *
+ * Response shape (under `data`):
+ *   {
+ *     webhook_configured: boolean,
+ *     discord_configured: boolean,
+ *     slack_configured:   boolean,
+ *   }
+ *
+ * @returns {Promise}
+ */
+export const getNotificationsConfig = () => {
+  return service.get('/api/config/notifications')
+}
+
+/**
  * Branch a simulation with a narrative injection at a specific round.
  * The new simulation is READY and shares the parent's agent population;
  * when the runner hits trigger_round it auto-promotes the injection into

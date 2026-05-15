@@ -665,6 +665,34 @@ class SimulationRunner:
                     )
                 except Exception as _wh_err:
                     logger.warning(f"Webhook dispatch failed: {_wh_err}")
+
+                # Channel-native notifications — Discord rich embed +
+                # Slack Block Kit. Each is opt-in via its own env var;
+                # unconfigured channels no-op. Dedup is per-channel so
+                # an operator running only Discord doesn't lose Slack
+                # delivery to a fall-through.
+                try:
+                    from .discord_notify import notify_if_configured as _notify_discord
+                    _notify_discord(
+                        simulation_id,
+                        "completed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=state.completed_at,
+                    )
+                except Exception as _dn_err:
+                    logger.warning(f"Discord notify dispatch failed: {_dn_err}")
+                try:
+                    from .slack_notify import notify_if_configured as _notify_slack
+                    _notify_slack(
+                        simulation_id,
+                        "completed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=state.completed_at,
+                    )
+                except Exception as _sn_err:
+                    logger.warning(f"Slack notify dispatch failed: {_sn_err}")
             else:
                 state.runner_status = RunnerStatus.FAILED
                 # Read error info from main log file
@@ -693,6 +721,35 @@ class SimulationRunner:
                     )
                 except Exception as _wh_err:
                     logger.warning(f"Webhook dispatch failed: {_wh_err}")
+
+                # Channel-native failure cards — amber-bordered Discord
+                # embed + red-tagged Slack message. Operators wiring a
+                # channel for ops-visibility need to know about the
+                # failure path too.
+                try:
+                    from .discord_notify import notify_if_configured as _notify_discord
+                    _notify_discord(
+                        simulation_id,
+                        "failed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=datetime.now().isoformat(),
+                        error=state.error,
+                    )
+                except Exception as _dn_err:
+                    logger.warning(f"Discord notify dispatch failed: {_dn_err}")
+                try:
+                    from .slack_notify import notify_if_configured as _notify_slack
+                    _notify_slack(
+                        simulation_id,
+                        "failed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=datetime.now().isoformat(),
+                        error=state.error,
+                    )
+                except Exception as _sn_err:
+                    logger.warning(f"Slack notify dispatch failed: {_sn_err}")
             
             state.twitter_running = False
             state.reddit_running = False
@@ -829,6 +886,31 @@ class SimulationRunner:
                                             )
                                         except Exception as _wh_err:
                                             logger.warning(f"Webhook dispatch failed: {_wh_err}")
+
+                                        # Channel-native notifications — same dedup posture
+                                        # as the webhook above; the per-module ``_FIRED``
+                                        # set blocks the second dispatch when the
+                                        # exit-code path also fires.
+                                        try:
+                                            from .discord_notify import notify_if_configured as _notify_discord
+                                            _notify_discord(
+                                                state.simulation_id,
+                                                "completed",
+                                                state=state,
+                                                completed_at=state.completed_at,
+                                            )
+                                        except Exception as _dn_err:
+                                            logger.warning(f"Discord notify dispatch failed: {_dn_err}")
+                                        try:
+                                            from .slack_notify import notify_if_configured as _notify_slack
+                                            _notify_slack(
+                                                state.simulation_id,
+                                                "completed",
+                                                state=state,
+                                                completed_at=state.completed_at,
+                                            )
+                                        except Exception as _sn_err:
+                                            logger.warning(f"Slack notify dispatch failed: {_sn_err}")
                                 
                                 # Update round info (from round_end event)
                                 elif event_type == "round_end":

@@ -1983,6 +1983,61 @@ paths:
             text/plain:
               schema: { type: string }
 
+  /api/config/notifications:
+    get:
+      tags: [Settings & Push]
+      summary: Public notification-channel config probe for the SPA.
+      description: |
+        Exposes which notification channels are wired up on this
+        deployment without revealing the underlying URLs (the
+        webhooks usually carry an opaque secret in the path). Three
+        independent booleans, one per channel:
+
+          * `webhook_configured`  — generic `WEBHOOK_URL` is set.
+          * `discord_configured`  — `DISCORD_WEBHOOK_URL` is set.
+          * `slack_configured`    — `SLACK_WEBHOOK_URL` is set.
+
+        Mirrors the existing `GET /api/config/sitemap` posture — a
+        small public envelope the `EmbedDialog` consumes on mount to
+        render the right status chips beside the share-and-embed
+        surfaces. `Cache-Control: no-store` so a Settings-modal save
+        is reflected on the next dialog open.
+      responses:
+        "200":
+          description: Notification-channel config envelope.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    type: object
+                    required: [webhook_configured, discord_configured, slack_configured]
+                    properties:
+                      webhook_configured:
+                        type: boolean
+                        description: |
+                          `WEBHOOK_URL` is set and non-empty. The generic
+                          JSON-blob webhook covers Zapier / Make / n8n /
+                          IFTTT / any custom listener.
+                      discord_configured:
+                        type: boolean
+                        description: |
+                          `DISCORD_WEBHOOK_URL` is set. When `true`,
+                          MiroShark POSTs a Discord-native rich embed
+                          (consensus-coloured border, scenario title,
+                          belief percentage fields, share-card thumbnail,
+                          link) on every terminal-state transition.
+                      slack_configured:
+                        type: boolean
+                        description: |
+                          `SLACK_WEBHOOK_URL` is set. When `true`,
+                          MiroShark POSTs a Slack Block Kit message
+                          (header + context + section fields + actions
+                          button) on every terminal-state transition.
+
   /api/config/sitemap:
     get:
       tags: [Discovery]

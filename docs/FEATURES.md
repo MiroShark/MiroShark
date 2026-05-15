@@ -421,6 +421,15 @@ When `WEBHOOK_SECRET` is set, every outbound webhook payload is HMAC-signed and 
 
 Implementation: `compute_signature(payload_bytes, secret=None)` reads `WEBHOOK_SECRET` at call time (so a Settings change or env mutation takes effect immediately), returns `"sha256=" + hmac.sha256(secret, body).hexdigest()` or `None` when blank. `_post_json` injects the header only when `compute_signature` returns non-None — auto-fire, retry, and the `Send test event` button all share the same dispatch path, so all three paths sign consistently. Zero new dependencies (pure stdlib `hmac` + `hashlib`).
 
+## Channel-Native Completion Notifications (Discord + Slack)
+
+The generic webhook (`WEBHOOK_URL`) posts a raw JSON blob — perfect for Zapier / Make / n8n, but Discord renders nothing from JSON and Slack inlines it as an ugly code block. Two channel-native paths land formatted cards in the platform's own format:
+
+- **Discord rich embed** — set `DISCORD_WEBHOOK_URL` (Discord → Server Settings → Integrations → Webhooks). MiroShark POSTs a Discord embed with: scenario title, consensus-coloured border (`#22c55e` bullish / `#6b7280` neutral / `#ef4444` bearish / `#f59e0b` failed), Bullish / Neutral / Bearish / Quality / Rounds / Agents fields, share-card thumbnail, and a clickable share-page link. Failure runs append the truncated exit-code message as an `Error` field.
+- **Slack Block Kit** — set `SLACK_WEBHOOK_URL` (api.slack.com/apps → Incoming Webhooks). MiroShark POSTs a Block Kit message with: scenario header, status-verb context line, `mrkdwn` belief bars (`█████░░░░░ 52.0%`), Quality / Scale / Resolution fields, and a "View simulation" action button. Failure runs append a fenced-code error section.
+
+Channels are independent. Set one, two, or all three — each fires on every `simulation.completed` / `simulation.failed` event, deduped per `(sim_id, status)` so the runner's two terminal code paths never produce duplicate cards. The SPA exposes `GET /api/config/notifications` returning `{webhook_configured, discord_configured, slack_configured}` so the EmbedDialog can render live status chips beside the share-and-embed surfaces. Pure stdlib `urllib.request` — zero new dependencies. Full setup walkthrough in [NOTIFICATIONS.md](NOTIFICATIONS.md).
+
 ## Article Generation
 
 After a simulation finishes, click **Write Article** and MiroShark asks the Smart model to produce a 400–600-word Substack-style write-up grounded in what actually happened — key findings, market dynamics, belief shifts, and implications. The article is cached at `generated_article.json` so it doesn't re-spend tokens on reopen; pass `force_regenerate=true` to refresh.

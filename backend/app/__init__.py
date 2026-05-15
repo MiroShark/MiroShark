@@ -79,7 +79,7 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp
+    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
@@ -107,6 +107,10 @@ def create_app(config_class=Config):
     # /api/, so the blueprint is mounted with no prefix to match the
     # protocol convention.
     app.register_blueprint(sitemap_bp)
+    # notifications_bp serves /api/config/notifications — kept on the
+    # /api root (no extra sub-prefix) to mirror the sitemap config
+    # endpoint that pairs with it on the SPA side.
+    app.register_blueprint(notifications_bp)
     
     # Health check
     @app.route('/health')

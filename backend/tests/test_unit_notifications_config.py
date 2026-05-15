@@ -1,0 +1,173 @@
+"""Unit tests for ``GET /api/config/notifications``.
+
+The endpoint is a pure projection over three env vars (or, in the
+case of the generic webhook, the cached ``Config.WEBHOOK_URL``
+attribute). We exercise it via a minimal Flask app that mounts
+*only* the notifications blueprint so the test doesn't need
+``create_app`` (which would boot Neo4j and the simulation runner —
+both unavailable in the unit environment).
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+
+_BACKEND = Path(__file__).resolve().parent.parent
+if str(_BACKEND) not in sys.path:
+    sys.path.insert(0, str(_BACKEND))
+
+
+def _make_app():
+    """Standalone Flask app that only knows about ``notifications_bp``.
+
+    Mirrors the helper pattern in ``test_unit_admin_auth.py`` —
+    mounting the blueprint on a throwaway app exercises the same
+    code path with zero infra.
+    """
+    from flask import Flask
+    from app.api.notifications import notifications_bp
+
+    app = Flask(__name__)
+    app.register_blueprint(notifications_bp)
+    return app
+
+
+@pytest.fixture
+def client():
+    app = _make_app()
+    app.config["TESTING"] = True
+    with app.test_client() as c:
+        yield c
+
+
+def _payload(client):
+    resp = client.get("/api/config/notifications")
+    assert resp.status_code == 200, resp.data
+    body = resp.get_json()
+    assert body["success"] is True
+    return body["data"]
+
+
+def test_notifications_config_all_unset(monkeypatch, client):
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+
+    data = _payload(client)
+    assert data == {
+        "webhook_configured": False,
+        "discord_configured": False,
+        "slack_configured": False,
+    }
+
+
+def test_notifications_config_discord_only(monkeypatch, client):
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://discord.example/webhook")
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+
+    data = _payload(client)
+    assert data == {
+        "webhook_configured": False,
+        "discord_configured": True,
+        "slack_configured": False,
+    }
+
+
+def test_notifications_config_slack_only(monkeypatch, client):
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    monkeypatch.setenv(
+        "SLACK_WEBHOOK_URL",
+        "https://hooks.slack.com/services/T0/B0/abc",
+    )
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+
+    data = _payload(client)
+    assert data == {
+        "webhook_configured": False,
+        "discord_configured": False,
+        "slack_configured": True,
+    }
+
+
+def test_notifications_config_all_three_configured(monkeypatch, client):
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://discord.example/webhook")
+    monkeypatch.setenv(
+        "SLACK_WEBHOOK_URL",
+        "https://hooks.slack.com/services/T0/B0/abc",
+    )
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "https://example.com/hook", raising=False)
+
+    data = _payload(client)
+    assert data == {
+        "webhook_configured": True,
+        "discord_configured": True,
+        "slack_configured": True,
+    }
+
+
+def test_notifications_config_blank_env_var_treated_as_unset(monkeypatch, client):
+    """Operators sometimes leave an empty assignment in ``.env``
+    (``DISCORD_WEBHOOK_URL=``) — that must read as unset, not as a
+    malformed configured channel."""
+    monkeypatch.setenv("DISCORD_WEBHOOK_URL", "   ")
+    monkeypatch.setenv("SLACK_WEBHOOK_URL", "")
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "  ", raising=False)
+
+    data = _payload(client)
+    assert data == {
+        "webhook_configured": False,
+        "discord_configured": False,
+        "slack_configured": False,
+    }
+
+
+def test_notifications_config_no_store_cache_header(monkeypatch, client):
+    """A Settings-modal save flips the booleans the moment it lands;
+    a cache header would leave stale chips in the dialog until a hard
+    reload."""
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+
+    resp = client.get("/api/config/notifications")
+    assert resp.status_code == 200
+    cache_control = resp.headers.get("Cache-Control", "")
+    assert "no-store" in cache_control
+
+
+# ── Wiring guards ──────────────────────────────────────────────────────
+
+
+def test_notifications_route_decorator_present():
+    """Drift guard — the route decorator must stay on the
+    notifications blueprint so the URL keeps resolving."""
+    api_path = _BACKEND / "app" / "api" / "notifications.py"
+    text = api_path.read_text(encoding="utf-8")
+    assert '@notifications_bp.route("/api/config/notifications"' in text
+    assert "def notifications_config(" in text
+
+
+def test_app_factory_registers_notifications_blueprint():
+    """The factory must mount the blueprint — catches the failure
+    mode where the file exists but never got registered."""
+    init_path = _BACKEND / "app" / "__init__.py"
+    text = init_path.read_text(encoding="utf-8")
+    assert "notifications_bp" in text
+    assert "app.register_blueprint(notifications_bp)" in text
+
+
+def test_blueprint_module_exports_notifications_bp():
+    api_init = _BACKEND / "app" / "api" / "__init__.py"
+    text = api_init.read_text(encoding="utf-8")
+    assert "from .notifications import notifications_bp" in text

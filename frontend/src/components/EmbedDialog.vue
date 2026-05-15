@@ -1291,6 +1291,70 @@
                 </a>
               </div>
             </div>
+
+            <!-- Terminal-state notification channels. The generic
+                 webhook (PR #46) plus the two channel-native paths
+                 land platform-formatted cards in the operator's
+                 Discord / Slack channel of choice. Status chips render
+                 the live config so an operator can see which of the
+                 three channels are wired up without opening Settings.
+                 The booleans come from /api/config/notifications. -->
+            <div class="feed-callout notifications-callout">
+              <div class="feed-callout-head">
+                <span class="feed-callout-icon">🔔</span>
+                <div class="feed-callout-body">
+                  <div class="feed-callout-title">
+                    {{ $tr('Channel notifications on completion', '完成时的频道通知') }}
+                  </div>
+                  <div class="feed-callout-desc">
+                    {{ $tr('MiroShark POSTs a platform-native card to each configured channel the moment a simulation completes or fails — Discord gets a consensus-coloured embed, Slack gets a Block Kit message, the generic webhook gets the raw JSON. Each channel is opt-in via its own env var.', 'MiroShark 在模拟完成或失败时,会向每个已配置渠道推送对应平台原生的卡片 — Discord 收到按共识着色的 embed,Slack 收到 Block Kit 消息,通用 Webhook 收到原始 JSON。每个渠道可通过各自的环境变量单独启用。') }}
+                  </div>
+                  <div class="notifications-chips">
+                    <span
+                      class="notifications-chip"
+                      :class="{ 'notifications-chip-on': notifConfig.webhook_configured }"
+                      :title="notifConfig.webhook_configured
+                        ? $tr('Generic JSON webhook is wired up — Zapier / Make / n8n / IFTTT / custom listeners', '通用 JSON Webhook 已接入 — Zapier / Make / n8n / IFTTT / 自定义监听端点')
+                        : $tr('Set WEBHOOK_URL to enable the generic JSON webhook channel', '设置 WEBHOOK_URL 即可启用通用 JSON Webhook 渠道')"
+                    >
+                      <span class="notifications-chip-dot">{{ notifConfig.webhook_configured ? '✓' : '○' }}</span>
+                      Webhook
+                    </span>
+                    <span
+                      class="notifications-chip"
+                      :class="{ 'notifications-chip-on': notifConfig.discord_configured }"
+                      :title="notifConfig.discord_configured
+                        ? $tr('Discord rich embeds are wired up — completed sims land as coloured cards', 'Discord rich embed 已接入 — 模拟完成后会以彩色卡片形式呈现')
+                        : $tr('Set DISCORD_WEBHOOK_URL to enable Discord rich-embed cards', '设置 DISCORD_WEBHOOK_URL 即可启用 Discord rich embed 卡片')"
+                    >
+                      <span class="notifications-chip-dot">{{ notifConfig.discord_configured ? '✓' : '○' }}</span>
+                      Discord
+                    </span>
+                    <span
+                      class="notifications-chip"
+                      :class="{ 'notifications-chip-on': notifConfig.slack_configured }"
+                      :title="notifConfig.slack_configured
+                        ? $tr('Slack Block Kit messages are wired up — completed sims land as channel cards', 'Slack Block Kit 已接入 — 模拟完成后会以频道卡片形式呈现')
+                        : $tr('Set SLACK_WEBHOOK_URL to enable Slack Block Kit messages', '设置 SLACK_WEBHOOK_URL 即可启用 Slack Block Kit 消息')"
+                    >
+                      <span class="notifications-chip-dot">{{ notifConfig.slack_configured ? '✓' : '○' }}</span>
+                      Slack
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="feed-callout-actions">
+                <a
+                  class="feed-callout-link feed-callout-link-secondary"
+                  href="https://github.com/aaronjmars/MiroShark/blob/main/docs/NOTIFICATIONS.md"
+                  target="_blank"
+                  rel="noopener"
+                  :title="$tr('Channel setup guide on GitHub', 'GitHub 上的渠道接入指南')"
+                >
+                  {{ $tr('Setup guide ↗', '接入指南 ↗') }}
+                </a>
+              </div>
+            </div>
           </div>
 
           <!-- Hint -->
@@ -1328,6 +1392,7 @@ import {
   getFeedUrl,
   getSitemapUrl,
   getSitemapConfig,
+  getNotificationsConfig,
   getSimulationOutcome,
   submitSimulationOutcome,
   getWebhookLog,
@@ -2022,6 +2087,39 @@ const loadSitemapConfig = async () => {
   }
 }
 
+// Notification-channel config — three booleans tracking the live
+// state of WEBHOOK_URL / DISCORD_WEBHOOK_URL / SLACK_WEBHOOK_URL.
+// The chips render off these booleans so an operator sees at a
+// glance which channels will fire on the next terminal-state event.
+// We default everything to ``false`` (chip = ○) so a fetch failure
+// degrades to "no channels wired up" rather than a misleading green.
+const notifConfig = ref({
+  webhook_configured: false,
+  discord_configured: false,
+  slack_configured: false,
+})
+const notifConfigLoaded = ref(false)
+const loadNotificationsConfig = async () => {
+  if (notifConfigLoaded.value) return
+  try {
+    const res = await getNotificationsConfig()
+    const data = res?.data || {}
+    notifConfig.value = {
+      webhook_configured: !!data.webhook_configured,
+      discord_configured: !!data.discord_configured,
+      slack_configured: !!data.slack_configured,
+    }
+  } catch {
+    notifConfig.value = {
+      webhook_configured: false,
+      discord_configured: false,
+      slack_configured: false,
+    }
+  } finally {
+    notifConfigLoaded.value = true
+  }
+}
+
 const replayLoaded = ref(false)
 const replayPlay = ref(false)
 const onReplayLoad = () => {
@@ -2398,6 +2496,10 @@ watch(() => props.open, async (val) => {
   // but reading on each open keeps the row in sync if an operator
   // toggles ``ENABLE_SITEMAP`` and reloads.
   loadSitemapConfig()
+  // Pull the notification-channel config — cheap (three env reads
+  // server-side, no Neo4j) so reading on each dialog open lets the
+  // chips reflect a Settings save without requiring a hard refresh.
+  loadNotificationsConfig()
   // Bust the share-card image cache so the preview reloads with whatever
   // state the simulation is in right now (resolution may have landed
   // since the dialog was last opened).
@@ -4211,6 +4313,59 @@ watch(isPublic, () => {
   background: var(--color-orange, #ff6b1a);
   color: #fff;
   border-color: var(--color-orange, #ff6b1a);
+}
+
+/* Notifications callout — three status chips track WEBHOOK_URL /
+   DISCORD_WEBHOOK_URL / SLACK_WEBHOOK_URL. Chips are intentionally
+   small and muted; the goal is "at-a-glance" config feedback, not a
+   primary action. The chip palette mirrors the feed-callout link
+   palette so the notifications row blends with the surrounding
+   secondary affordances rather than competing for attention. */
+.notifications-chips {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.notifications-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(10, 10, 10, 0.12);
+  background: #ffffff;
+  color: #6a6a6a;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  cursor: help;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.notifications-chip-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(10, 10, 10, 0.08);
+  color: #6a6a6a;
+}
+
+.notifications-chip-on {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.08);
+  color: #1d7a3d;
+}
+
+.notifications-chip-on .notifications-chip-dot {
+  background: #22c55e;
+  color: #ffffff;
 }
 
 .feed-filter-builder {

@@ -105,6 +105,8 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Trace Interview** | See the full reasoning chain behind an agent's reply, not just the reply |
 | **Push Notifications** | Web-push alerts when long-running graph / sim / report jobs finish |
 | **Completion Webhook** | POST a JSON summary the moment a sim finishes — wires Slack, Discord, Zapier, Make, n8n, or any custom endpoint with one URL field |
+| **Discord Rich Embed** | Set `DISCORD_WEBHOOK_URL` and MiroShark POSTs a Discord-native embed alongside the generic webhook: consensus-coloured border, scenario title, belief percentage fields, share-card thumbnail, link. Operators no longer have to teach Discord how to render a raw JSON blob — pure stdlib, opt-in, fire-and-forget. See [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
+| **Slack Block Kit** | Set `SLACK_WEBHOOK_URL` and MiroShark POSTs a Slack-native Block Kit message: scenario header, Unicode block-bar belief percentages, Quality + Scale + Resolution fields, "View simulation" action button. Channel-native rendering instead of a JSON code-block dump — pure stdlib, opt-in, fire-and-forget |
 | **Webhook Signature Verification** | Optional `WEBHOOK_SECRET` HMAC-signs every dispatched payload with an `X-MiroShark-Signature: sha256=<hex>` header. Recipients verify in three lines of stdlib `hmac` — same scheme Stripe and GitHub use. Empty secret = no header, fully backward compatible |
 | **Webhook Delivery Log** | Per-sim `webhook-log.jsonl` records every dispatch attempt (status code, latency, error). Inspect from the EmbedDialog and re-fire any failed delivery with a "Retry" button — closes the operational blindspot every Zapier / n8n integration eventually hits |
 | **Surface Usage Analytics** | `GET /api/simulation/<id>/surface-stats` — per-share-surface request counters (share card / replay GIF / transcript / trajectory / thread / watch page / Atom / RSS / reproduce.json / lineage / notebook.ipynb) with a synthetic `total`. Inbound observability for the distribution loop the webhook log tracks on the outbound side |
@@ -241,6 +243,8 @@ cp .env.example .env
 | **轨迹访谈** | 查看智能体回复背后的完整推理链,而不止是回复本身 |
 | **推送通知** | 长耗时图谱 / 模拟 / 报告任务完成时的浏览器推送提醒 |
 | **完成 Webhook** | 模拟一结束即 POST 一份 JSON 摘要 — 一个 URL 字段即可连通 Slack、Discord、Zapier、Make、n8n 或任意自定义端点 |
+| **Discord 富嵌入** | 设置 `DISCORD_WEBHOOK_URL`,MiroShark 会在通用 Webhook 之外另行推送一份 Discord 原生 embed:按共识着色的边框、情景标题、信念百分比字段、分享卡缩略图、链接。运营者无需再为 Discord 写格式化代码 — 纯 stdlib,按需启用,fire-and-forget。详见 [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
+| **Slack Block Kit** | 设置 `SLACK_WEBHOOK_URL`,MiroShark 会推送 Slack 原生 Block Kit 消息:情景标题块、Unicode 块字符信念百分比、质量 / 规模 / 结局字段、「打开模拟」操作按钮。频道里的不是 JSON 代码块,而是真正的频道卡片 — 纯 stdlib,按需启用,fire-and-forget |
 | **Webhook 签名验证** | 可选的 `WEBHOOK_SECRET` 会用 HMAC 对每次投递的载荷签名,并通过 `X-MiroShark-Signature: sha256=<hex>` 头部送出。消费方用三行 stdlib `hmac` 即可校验 — Stripe 和 GitHub 用的就是这一套。留空即无签名头部,完全向后兼容 |
 | **Webhook 投递日志** | 每个模拟在 `webhook-log.jsonl` 记录每次投递尝试(HTTP 状态码、延迟、错误)。可在 EmbedDialog 中查看,并通过「重试」按钮重发任何失败的投递 — 弥补每个 Zapier / n8n 集成最终都会遇到的运维盲点 |
 | **分发统计(分享面使用分析)** | `GET /api/simulation/<id>/surface-stats` — 每个分享面的请求计数器(分享卡 / 回放 GIF / 转录 / 轨迹 / 推文串 / 观看页 / Atom / RSS / `reproduce.json` / `/lineage`),以及合成的 `total`。Webhook 日志在出站侧跟踪分发回路,本面则负责入站可观测性 |

@@ -36,3 +36,8 @@ from .watch import watch_bp  # noqa: E402, F401
 # and /robots.txt land where crawlers expect them — see api/sitemap.py.
 from .sitemap import sitemap_bp  # noqa: E402, F401
 
+# notifications_bp serves /api/config/notifications — a public config
+# probe that tells the SPA which channels (webhook / Discord / Slack)
+# are wired up on this deployment without leaking the URLs themselves.
+from .notifications import notifications_bp  # noqa: E402, F401
+
