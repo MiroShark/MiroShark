@@ -1996,6 +1996,10 @@ paths:
           * `webhook_configured`  — generic `WEBHOOK_URL` is set.
           * `discord_configured`  — `DISCORD_WEBHOOK_URL` is set.
           * `slack_configured`    — `SLACK_WEBHOOK_URL` is set.
+          * `dkg_configured`      — all three of `DKG_API_URL`,
+            `DKG_AUTH_TOKEN`, `DKG_CONTEXT_GRAPH_ID` are set.
+          * `dkg_network`         — `"testnet"` / `"mainnet"` /
+            `null` (suppressed when the integration isn't usable).
 
         Mirrors the existing `GET /api/config/sitemap` posture — a
         small public envelope the `EmbedDialog` consumes on mount to
@@ -2037,6 +2041,25 @@ paths:
                           MiroShark POSTs a Slack Block Kit message
                           (header + context + section fields + actions
                           button) on every terminal-state transition.
+                      dkg_configured:
+                        type: boolean
+                        description: |
+                          All three of `DKG_API_URL`, `DKG_AUTH_TOKEN`,
+                          and `DKG_CONTEXT_GRAPH_ID` are set. When
+                          `true`, the EmbedDialog renders the
+                          OriginTrail DKG citation card with a publish
+                          CTA (or the citation primitives if already
+                          anchored). Auth token never leaves the
+                          backend.
+                      dkg_network:
+                        type: [string, "null"]
+                        enum: [testnet, mainnet, null]
+                        description: |
+                          Pure metadata — labels the chain the
+                          operator's daemon was configured against so
+                          the SPA renders the right network chip and
+                          explorer link. `null` when the integration
+                          isn't fully configured.
 
   /api/config/sitemap:
     get:
@@ -2338,6 +2361,181 @@ paths:
         "409":
           description: Simulation has not reached a terminal state yet.
         "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
+
+  /api/simulation/{simulation_id}/dkg-citation:
+    get:
+      tags: [Publish & Embed]
+      summary: Read the persisted OriginTrail DKG citation for a published sim.
+      description: |
+        Returns the on-chain citation primitives anchored when an
+        operator clicked "Publish to DKG" in the share dialog. Pure
+        read of `<sim_dir>/dkg-citation.json` — no daemon call. The
+        citation file is the source of truth once a Knowledge Asset
+        has been anchored.
+
+        Same publish gate as the `reproduce.json` / thread / lineage
+        surfaces: a private sim returns 403 even if a citation file
+        happens to be on disk.
+
+        Returns 404 (not 500) when the sim has never been anchored —
+        the EmbedDialog uses that as the "render the publish CTA"
+        signal.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Citation primitives for the on-chain Knowledge Asset.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [ual, network, context_graph_id, assertion_name, published_at]
+                        properties:
+                          ual:
+                            type: string
+                            description: Universal Asset Locator (`urn:dkg:context-graph:…`).
+                          merkle_root:
+                            type: string
+                            description: Hex Merkle root committed on-chain.
+                          transaction_hash:
+                            type: string
+                            description: Hex transaction hash on the anchoring chain.
+                          block_number:
+                            type: [integer, "null"]
+                          finalized: { type: boolean }
+                          network:
+                            type: string
+                            enum: [testnet, mainnet]
+                          context_graph_id: { type: string }
+                          assertion_name: { type: string }
+                          reproduce_config_sha256:
+                            type: string
+                            description: |
+                              `sha256:<hex>` of the canonical
+                              `reproduce.json` bytes — the citation
+                              key a verifier re-hashes locally.
+                          explorer_url:
+                            type: string
+                            format: uri
+                            description: OriginTrail DKG explorer link for the UAL.
+                          published_at:
+                            type: string
+                            format: date-time
+                          schema_version: { type: string, enum: ["1"] }
+        "403":
+          description: Simulation is not published.
+        "404":
+          description: No DKG citation yet for this simulation.
+
+  /api/simulation/{simulation_id}/publish-dkg:
+    post:
+      tags: [Publish & Embed]
+      summary: Anchor a finished simulation on the OriginTrail DKG.
+      description: |
+        Walks the OriginTrail DKG v9/v10 WM → SWM → VM publish pipeline
+        on the operator's local daemon and returns the resulting UAL
+        + Merkle root + transaction hash + block number.
+
+        Idempotent: a successful publish persists
+        `<sim_dir>/dkg-citation.json` and subsequent calls return the
+        cached citation directly — no double-spend of TRAC or gas. The
+        on-disk file is the source of truth.
+
+        Steps the route walks server-side:
+
+          1. `POST /api/assertion/create`          (Working Memory)
+          2. `POST /api/assertion/{name}/write`    (append Turtle RDF)
+          3. `POST /api/assertion/{name}/promote`  (WM → SWM)
+          4. `POST /api/shared-memory/publish`     (SWM → Verified Memory)
+
+        Returns 503 when `DKG_*` env vars are unset, 502 on a daemon
+        error (chain failure, insufficient TRAC, name collision), 504
+        on connection refused / publish timeout, and 422 when the
+        simulation hasn't reached the prepared state. The publish
+        action requires the admin token because on-chain anchoring
+        costs TRAC + gas.
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                force:
+                  type: boolean
+                  description: |
+                    Re-anchor even when a `dkg-citation.json` already
+                    exists. The v1 UI does not expose this; it is an
+                    escape hatch for operators who explicitly want to
+                    burn TRAC + gas on a fresh anchor after correcting
+                    upstream data.
+            example:
+              force: false
+      responses:
+        "200":
+          description: |
+            Publish succeeded (or a cached citation was returned for
+            an already-anchored sim).
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      cached:
+                        type: boolean
+                        description: |
+                          `true` when the citation came from
+                          `dkg-citation.json` without contacting the
+                          daemon; `false` when freshly anchored.
+                      data:
+                        $ref: "#/components/schemas/DkgCitation"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Simulation is not published.
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422":
+          description: Simulation has not reached the prepared state — nothing to anchor yet.
+        "502":
+          description: |
+            DKG daemon returned an error (chain failure, validation
+            error, insufficient TRAC, name collision, etc.).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, enum: [false] }
+                  error: { type: string }
+                  stage:
+                    type: string
+                    enum: [create, write, promote, publish, unknown]
+                  daemon_status_code:
+                    type: integer
+                    description: The HTTP status the daemon returned.
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
+        "504":
+          description: DKG daemon unreachable or publish timed out.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, enum: [false] }
+                  error: { type: string }
+                  stage:
+                    type: string
+                    enum: [create, write, promote, publish]
 
   # ────────────────────────────────────────────────────────────────────
   # Report Agent
@@ -2859,6 +3057,65 @@ components:
       required: [simulation_id]
       properties:
         simulation_id: { type: string }
+
+    DkgCitation:
+      type: object
+      description: |
+        Citation primitives for a simulation anchored on the OriginTrail
+        DKG. Persisted as `<sim_dir>/dkg-citation.json` after a
+        successful publish and returned by both
+        `GET /api/simulation/{simulation_id}/dkg-citation` and the 200
+        response of `POST /api/simulation/{simulation_id}/publish-dkg`.
+      required: [ual, network, context_graph_id, assertion_name, published_at, schema_version]
+      properties:
+        ual:
+          type: string
+          description: Universal Asset Locator (`urn:dkg:context-graph:…`).
+        merkle_root:
+          type: string
+          description: Hex Merkle root of the on-chain assertion.
+        transaction_hash:
+          type: string
+          description: Hex transaction hash on the anchoring chain.
+        block_number:
+          type: [integer, "null"]
+        finalized:
+          type: boolean
+          description: |
+            Daemon's signal that the on-chain transaction has reached
+            finality on the anchoring chain.
+        network:
+          type: string
+          enum: [testnet, mainnet]
+          description: |
+            Pure metadata — labels which chain the operator's daemon
+            was configured against so the SPA renders the right
+            explorer link. MiroShark does not pick the chain.
+        context_graph_id:
+          type: string
+        assertion_name:
+          type: string
+          description: |
+            DKG assertion name (`miroshark-sim-<simulation_id>`). The
+            collision-on-409 behaviour of `POST /api/assertion/create`
+            is the backstop to the on-disk idempotency guard.
+        reproduce_config_sha256:
+          type: string
+          description: |
+            `sha256:<hex>` of the canonical `reproduce.json` bytes. The
+            citation key — a verifier fetches the URL, re-hashes the
+            bytes, and compares to this literal (which is also embedded
+            in the Turtle RDF committed on-chain).
+        explorer_url:
+          type: string
+          format: uri
+          description: OriginTrail DKG explorer link for the UAL.
+        published_at:
+          type: string
+          format: date-time
+        schema_version:
+          type: string
+          enum: ["1"]
 
     SimulationEnvelope:
       allOf:

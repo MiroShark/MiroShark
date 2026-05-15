@@ -52,17 +52,35 @@ def _payload(client):
     return body["data"]
 
 
+def _clear_dkg(monkeypatch):
+    """Reset the four DKG_* config attributes back to the unset shape.
+
+    The notifications probe reads DKG state via ``dkg_publisher.is_configured()``
+    which late-binds through ``Config`` — so a test that toggles DKG must
+    clear it both ways or earlier cases leak into later ones via attribute
+    state on the Config class.
+    """
+    from app.config import Config
+    monkeypatch.setattr(Config, "DKG_API_URL", "", raising=False)
+    monkeypatch.setattr(Config, "DKG_AUTH_TOKEN", "", raising=False)
+    monkeypatch.setattr(Config, "DKG_CONTEXT_GRAPH_ID", "", raising=False)
+    monkeypatch.setattr(Config, "DKG_NETWORK", "testnet", raising=False)
+
+
 def test_notifications_config_all_unset(monkeypatch, client):
     monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+    _clear_dkg(monkeypatch)
 
     data = _payload(client)
     assert data == {
         "webhook_configured": False,
         "discord_configured": False,
         "slack_configured": False,
+        "dkg_configured": False,
+        "dkg_network": None,
     }
 
 
@@ -71,12 +89,15 @@ def test_notifications_config_discord_only(monkeypatch, client):
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+    _clear_dkg(monkeypatch)
 
     data = _payload(client)
     assert data == {
         "webhook_configured": False,
         "discord_configured": True,
         "slack_configured": False,
+        "dkg_configured": False,
+        "dkg_network": None,
     }
 
 
@@ -88,12 +109,15 @@ def test_notifications_config_slack_only(monkeypatch, client):
     )
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+    _clear_dkg(monkeypatch)
 
     data = _payload(client)
     assert data == {
         "webhook_configured": False,
         "discord_configured": False,
         "slack_configured": True,
+        "dkg_configured": False,
+        "dkg_network": None,
     }
 
 
@@ -105,12 +129,15 @@ def test_notifications_config_all_three_configured(monkeypatch, client):
     )
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "https://example.com/hook", raising=False)
+    _clear_dkg(monkeypatch)
 
     data = _payload(client)
     assert data == {
         "webhook_configured": True,
         "discord_configured": True,
         "slack_configured": True,
+        "dkg_configured": False,
+        "dkg_network": None,
     }
 
 
@@ -122,13 +149,58 @@ def test_notifications_config_blank_env_var_treated_as_unset(monkeypatch, client
     monkeypatch.setenv("SLACK_WEBHOOK_URL", "")
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "  ", raising=False)
+    _clear_dkg(monkeypatch)
 
     data = _payload(client)
     assert data == {
         "webhook_configured": False,
         "discord_configured": False,
         "slack_configured": False,
+        "dkg_configured": False,
+        "dkg_network": None,
     }
+
+
+def test_notifications_config_dkg_configured(monkeypatch, client):
+    """All three DKG_* required vars set → dkg_configured is True and
+    dkg_network reports whichever chain the operator labelled."""
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+    monkeypatch.setattr(Config, "DKG_API_URL", "http://127.0.0.1:9200", raising=False)
+    monkeypatch.setattr(Config, "DKG_AUTH_TOKEN", "abc123def456", raising=False)
+    monkeypatch.setattr(Config, "DKG_CONTEXT_GRAPH_ID", "cg-miroshark", raising=False)
+    monkeypatch.setattr(Config, "DKG_NETWORK", "mainnet", raising=False)
+
+    data = _payload(client)
+    assert data == {
+        "webhook_configured": False,
+        "discord_configured": False,
+        "slack_configured": False,
+        "dkg_configured": True,
+        "dkg_network": "mainnet",
+    }
+
+
+def test_notifications_config_dkg_partial_treated_as_unconfigured(monkeypatch, client):
+    """Missing any one of the three required vars → not configured.
+    Catches the footgun where an operator sets DKG_API_URL but forgets
+    the token — the SPA should not surface a broken publish button."""
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+    monkeypatch.setattr(Config, "DKG_API_URL", "http://127.0.0.1:9200", raising=False)
+    monkeypatch.setattr(Config, "DKG_AUTH_TOKEN", "", raising=False)
+    monkeypatch.setattr(Config, "DKG_CONTEXT_GRAPH_ID", "cg-miroshark", raising=False)
+    monkeypatch.setattr(Config, "DKG_NETWORK", "testnet", raising=False)
+
+    data = _payload(client)
+    assert data["dkg_configured"] is False
+    # Network metadata is suppressed when the integration isn't usable —
+    # showing "testnet" with no daemon would be misleading.
+    assert data["dkg_network"] is None
 
 
 def test_notifications_config_no_store_cache_header(monkeypatch, client):
