@@ -113,6 +113,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **Reproducibility Config** | `GET /api/simulation/<id>/reproduce.json` — citation primitive for the share surfaces. A v1-schema JSON blob carrying every parameter another operator needs to re-run the same simulation: scenario, agent count, total rounds, platform toggles, time-config knobs, director events, and fork / counterfactual lineage. Identical exports of a finished sim are bytewise-identical, so the file hash is a stable citation key |
 | **Jupyter Notebook Export** | `GET /api/simulation/<id>/notebook.ipynb` — analysis-ready companion to the reproducibility config. The trajectory CSV is embedded directly inside the notebook so it runs air-gapped; cells scaffold imports, the belief-evolution line chart, the final-consensus bar chart, and a quality summary DataFrame. Opens in JupyterLab, VS Code, or Google Colab in one click. Bytewise-stable, same citation-hash property as reproduce.json |
 | **Lineage Navigator** | `GET /api/simulation/<id>/lineage` — turn the `parent_simulation_id` pointer into a navigable graph. Surfaces the parent a sim was forked / branched from plus every public child whose parent points back at it. Trace the intellectual ancestry of a result without remembering each child sim id |
+| **OriginTrail DKG Citation** | Opt-in: set `DKG_API_URL` + `DKG_AUTH_TOKEN` + `DKG_CONTEXT_GRAPH_ID` and the EmbedDialog grows a "Publish to DKG" button. Anchors the scenario, agent count, final consensus, quality, lineage, and `reproduce.json` SHA-256 on the OriginTrail Decentralized Knowledge Graph as a cryptographically verifiable Knowledge Asset. Returned UAL + Merkle root + transaction hash become a permanent, un-rewritable citation key — provenance property that survives the MiroShark host going away. Idempotent (one publish per sim) and stdlib-only. See [docs/DKG.md](docs/DKG.md) |
 
 Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 
@@ -158,6 +159,7 @@ Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 | [CLI](docs/CLI.md) | `miroshark-cli` reference |
 | [MCP](docs/MCP.md) | Claude Desktop / Cursor / Windsurf / Continue integration + report agent tools (auto-generated snippets in Settings → AI Integration) |
 | [Webhooks](docs/WEBHOOKS.md) | Completion webhook payload, headers, delivery semantics, Slack/Discord/Zapier/n8n recipes |
+| [DKG citation](docs/DKG.md) | OriginTrail DKG anchoring — UAL + Merkle root + on-chain citation key for any finished sim |
 | [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
 | [Contributing](CONTRIBUTING.md) | Tests and development |
 

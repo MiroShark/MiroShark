@@ -202,6 +202,27 @@ class Config:
     # absolute URL themselves.
     PUBLIC_BASE_URL = os.environ.get('PUBLIC_BASE_URL', '')
 
+    # OriginTrail DKG (Decentralized Knowledge Graph) publishing.
+    # Optional integration that anchors a finished simulation's
+    # citation surface (scenario, agent count, final consensus, quality,
+    # lineage, reproduce.json hash) on the OriginTrail DKG as a
+    # cryptographically verifiable Knowledge Asset. The returned UAL +
+    # Merkle root + transaction hash become a permanent, blockchain-anchored
+    # citation key — same provenance property Stripe / DOI give a record,
+    # but for simulation results.
+    #
+    # All four vars empty → integration disabled, ``/api/config/notifications``
+    # reports ``dkg_configured: false``, the EmbedDialog hides the button.
+    # Operator runs the OriginTrail daemon locally (``dkg init && dkg
+    # start``) on the testnet faucet path, creates a context graph
+    # (``dkg context-graph create miroshark``), pastes the auth token + CG
+    # id here. ``DKG_NETWORK`` is metadata only — labels the chain the
+    # daemon was configured against so the explorer URL is correct.
+    DKG_API_URL = os.environ.get('DKG_API_URL', '').rstrip('/')
+    DKG_AUTH_TOKEN = os.environ.get('DKG_AUTH_TOKEN', '')
+    DKG_CONTEXT_GRAPH_ID = os.environ.get('DKG_CONTEXT_GRAPH_ID', '')
+    DKG_NETWORK = (os.environ.get('DKG_NETWORK', 'testnet') or 'testnet').strip().lower()
+
     # Whether ``GET /sitemap.xml`` is served and ``robots.txt`` advertises
     # it. Default ``true`` — the public sitemap is the search-engine
     # discovery surface for the public-simulation gallery, and a

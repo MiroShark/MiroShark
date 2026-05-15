@@ -5927,6 +5927,239 @@ def retry_webhook(simulation_id: str):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# ============== OriginTrail DKG citation surface ==============
+
+
+@simulation_bp.route('/<simulation_id>/dkg-citation', methods=['GET'])
+def get_dkg_citation(simulation_id: str):
+    """Return the persisted DKG citation for a published simulation.
+
+    Pure read of ``<sim_dir>/dkg-citation.json``. Returns 404 when the
+    sim has never been anchored to the OriginTrail DKG (the common case
+    for any sim that hasn't had the "Publish to DKG" button clicked).
+    No daemon call — the citation file is the source of truth once an
+    on-chain anchor exists.
+
+    Same publish gate as the reproduce.json / thread / lineage surfaces:
+    a private sim can't expose its citation publicly even if one
+    happened to be persisted.
+    """
+    from ..services import dkg_publisher
+
+    locale = get_locale(request)
+    try:
+        validate_simulation_id(simulation_id)
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published.",
+                    "该模拟未发布。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        citation = dkg_publisher.read_citation(sim_dir)
+        if not citation:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "No DKG citation yet for this simulation.",
+                    "该模拟尚未生成 DKG 引用。",
+                    locale,
+                ),
+            }), 404
+
+        return jsonify({"success": True, "data": citation})
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as e:
+        logger.error(
+            f"dkg-citation: failed for {simulation_id}: {e}\n{traceback.format_exc()}"
+        )
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@simulation_bp.route('/<simulation_id>/publish-dkg', methods=['POST'])
+@require_admin_token
+def publish_dkg(simulation_id: str):
+    """Anchor a finished simulation's citation surface on the OriginTrail DKG.
+
+    Triggered manually from the EmbedDialog "Publish to DKG" button.
+    Builds the same reproduce.json blob the existing ``/reproduce.json``
+    endpoint returns, hashes its bytes (citation key), wraps it in
+    Turtle RDF alongside the consensus / quality / scenario summary,
+    and walks the WM → SWM → VM publish pipeline on the operator's
+    local DKG daemon. Returns the ``ual`` + ``merkleRoot`` +
+    ``transactionHash`` + ``blockNumber`` so the SPA can render a
+    citation badge with an explorer link.
+
+    Idempotent: a successful publish persists the citation to
+    ``<sim_dir>/dkg-citation.json`` and subsequent calls return it
+    directly without re-hitting the daemon — no double-spend of TRAC /
+    gas. The on-disk file is the source of truth.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``
+    because publishing has on-chain cost implications (TRAC + gas).
+
+    Status codes:
+      * 200  — publish succeeded (or cached citation returned)
+      * 400  — invalid simulation_id
+      * 403  — simulation not published (call POST /publish first)
+      * 404  — simulation not found
+      * 422  — sim reachable but the reproduce.json blob is empty
+        (sim hasn't reached the prepared state yet)
+      * 502  — DKG daemon returned an error (chain failure, insufficient
+        TRAC, name collision, etc.)
+      * 503  — DKG_* env vars not configured on this deployment
+      * 504  — DKG daemon unreachable / publish timed out
+    """
+    from ..services import dkg_publisher
+    from ..services import repro_export
+    from ..services import webhook_service
+
+    locale = get_locale(request)
+    try:
+        validate_simulation_id(simulation_id)
+
+        if not dkg_publisher.is_configured():
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "DKG publishing is not configured on this deployment. "
+                    "Set DKG_API_URL, DKG_AUTH_TOKEN, and DKG_CONTEXT_GRAPH_ID.",
+                    "该部署未配置 DKG 发布。请设置 DKG_API_URL、DKG_AUTH_TOKEN 与 DKG_CONTEXT_GRAPH_ID。",
+                    locale,
+                ),
+            }), 503
+
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish first.",
+                    "该模拟未发布,请先调用 POST /api/simulation/<id>/publish。",
+                    locale,
+                ),
+            }), 403
+
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}",
+            }), 404
+
+        config_data = manager.get_simulation_config(simulation_id)
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+
+        # Build the same reproduce.json bytes the public endpoint serves
+        # so the on-chain SHA-256 matches what a verifier would compute
+        # by fetching the URL.
+        repro_blob = repro_export.build_repro_config(state.to_dict(), config_data, sim_dir)
+        reproduce_json_bytes = repro_export.render_json_bytes(repro_blob)
+
+        # Sanity check: refuse to anchor a sim that hasn't reached the
+        # prepared state. agent_count==0 and total_rounds==0 means the
+        # blob is structurally valid but semantically empty — citing
+        # something with no parameters would be misleading.
+        if not (repro_blob.get("agent_count") or repro_blob.get("total_rounds")):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation has not reached the prepared state — nothing to anchor yet.",
+                    "模拟尚未到达可发布状态,暂无可锚定的数据。",
+                    locale,
+                ),
+            }), 422
+
+        # Reuse the webhook payload assembler so the consensus / quality
+        # / scenario claims on-chain match the notification claims
+        # byte-for-byte (single source of truth across surfaces).
+        run_state = SimulationRunner.get_run_state(simulation_id)
+        completed_at = getattr(run_state, "completed_at", None) if run_state else None
+        sim_status = (state.status.value if hasattr(state.status, "value") else str(state.status)).lower()
+        if sim_status not in ("completed", "failed"):
+            sim_status = "completed"  # we still anchor what's there
+
+        base_url = _resolve_share_base_url()
+        webhook_payload = webhook_service.build_payload(
+            simulation_id,
+            sim_status,
+            sim_dir,
+            state=run_state,
+            base_url=base_url,
+            completed_at=completed_at,
+        )
+
+        # ``force`` lets the caller request a re-anchor — exposed but
+        # not wired into the UI in v1. The on-disk citation guard handles
+        # the common idempotent case.
+        body = request.get_json(silent=True) or {}
+        force = bool(body.get("force", False))
+
+        result = dkg_publisher.publish_simulation(
+            simulation_id=simulation_id,
+            sim_dir=sim_dir,
+            repro_blob=repro_blob,
+            reproduce_json_bytes=reproduce_json_bytes,
+            webhook_payload=webhook_payload,
+            base_url=base_url,
+            force=force,
+        )
+
+        if not result.get("ok"):
+            stage = result.get("stage") or "unknown"
+            status_code = result.get("status_code") or 0
+            # Map daemon failures to sensible HTTP semantics:
+            # * 0 from transport (connection refused / timeout) → 504
+            # * 4xx from daemon (auth, validation, TRAC) → 502
+            # * 5xx from daemon (chain / RPC) → 502
+            # * not_configured → 503 (already handled above; defensive)
+            if stage == "not_configured":
+                http_status = 503
+            elif status_code == 0:
+                http_status = 504
+            else:
+                http_status = 502
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    f"DKG publish failed at stage '{stage}': {result.get('error', 'unknown')}",
+                    f"DKG 发布在阶段 '{stage}' 失败:{result.get('error', '未知')}",
+                    locale,
+                ),
+                "stage": stage,
+                "daemon_status_code": status_code,
+            }), http_status
+
+        return jsonify({
+            "success": True,
+            "data": result.get("citation"),
+            "cached": bool(result.get("cached")),
+        })
+
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as e:
+        logger.error(
+            f"publish-dkg: failed for {simulation_id}: {e}\n{traceback.format_exc()}"
+        )
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ============== Public Gallery ==============
 
 

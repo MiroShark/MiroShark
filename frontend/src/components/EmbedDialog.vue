@@ -732,6 +732,139 @@
               </div>
             </div>
 
+            <!-- OriginTrail DKG citation — the on-chain provenance
+                 surface. Opt-in: rendered only when DKG_* env vars are
+                 wired up on this deployment. The "Publish to DKG"
+                 button walks the WM→SWM→VM publish pipeline on the
+                 operator's local DKG node, hashes the reproduce.json
+                 bytes (citation key), and returns the UAL + Merkle
+                 root + transaction hash so the simulation gets a
+                 blockchain-anchored citation key. Idempotent — once
+                 anchored, subsequent dialog opens read the cached
+                 citation from disk without re-hitting the daemon. -->
+            <div
+              v-if="isPublic && notifConfig.dkg_configured"
+              class="transcript-section dkg-section"
+            >
+              <div class="transcript-head dkg-head">
+                <span class="transcript-icon">⛓️</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('OriginTrail DKG citation', 'OriginTrail DKG 引用') }}
+                    <span
+                      v-if="notifConfig.dkg_network"
+                      class="lineage-count-chip"
+                      :class="`dkg-network-chip-${notifConfig.dkg_network}`"
+                    >
+                      {{ notifConfig.dkg_network === 'mainnet'
+                          ? $tr('mainnet', '主网')
+                          : $tr('testnet', '测试网') }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Anchor the scenario, agent count, consensus, quality, and reproduce.json hash on the OriginTrail DKG as a cryptographically verifiable Knowledge Asset. The returned UAL + Merkle root + transaction hash become a permanent citation key — same provenance property a DOI gives a paper.', '将情景、智能体数、共识、质量与 reproduce.json 哈希作为可加密验证的知识资产锚定到 OriginTrail DKG。返回的 UAL + Merkle 根 + 交易哈希就是永久引用键 — 提供与论文 DOI 同等的来源证明。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="dkg-body">
+                <!-- Already anchored — show the citation primitives -->
+                <div v-if="dkgCitation && dkgCitation.ual" class="dkg-card">
+                  <div class="dkg-row">
+                    <span class="dkg-row-label">UAL</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="dkgCitation.ual"
+                    >{{ formatUalShort(dkgCitation.ual) }}</code>
+                    <button
+                      class="snippet-copy-btn dkg-copy"
+                      type="button"
+                      @click="copy('dkgUal')"
+                    >
+                      {{ copied === 'dkgUal' ? '✓' : $tr('Copy', '复制') }}
+                    </button>
+                  </div>
+                  <div v-if="dkgCitation.merkle_root" class="dkg-row">
+                    <span class="dkg-row-label">{{ $tr('Merkle root', 'Merkle 根') }}</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="dkgCitation.merkle_root"
+                    >{{ formatHashShort(dkgCitation.merkle_root) }}</code>
+                    <button
+                      class="snippet-copy-btn dkg-copy"
+                      type="button"
+                      @click="copy('dkgMerkle')"
+                    >
+                      {{ copied === 'dkgMerkle' ? '✓' : $tr('Copy', '复制') }}
+                    </button>
+                  </div>
+                  <div v-if="dkgCitation.transaction_hash" class="dkg-row">
+                    <span class="dkg-row-label">{{ $tr('Transaction', '交易') }}</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="dkgCitation.transaction_hash"
+                    >{{ formatHashShort(dkgCitation.transaction_hash) }}</code>
+                    <span v-if="typeof dkgCitation.block_number === 'number'" class="dkg-row-meta">
+                      {{ $tr('block', '区块') }} #{{ dkgCitation.block_number }}
+                    </span>
+                  </div>
+                  <div v-if="dkgCitation.reproduce_config_sha256" class="dkg-row">
+                    <span class="dkg-row-label">{{ $tr('Config hash', '配置哈希') }}</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="dkgCitation.reproduce_config_sha256"
+                    >{{ formatHashShort(dkgCitation.reproduce_config_sha256) }}</code>
+                  </div>
+                  <div class="dkg-actions">
+                    <a
+                      v-if="dkgCitation.explorer_url"
+                      class="repro-download"
+                      :href="dkgCitation.explorer_url"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {{ $tr('Open on DKG explorer ↗', '在 DKG 浏览器中打开 ↗') }}
+                    </a>
+                    <span v-if="dkgCitation.finalized" class="dkg-finalized-badge">
+                      ✓ {{ $tr('Finalized', '已最终确认') }}
+                    </span>
+                  </div>
+                  <div class="repro-note">
+                    {{ $tr('A verifier fetches reproduce.json, SHA-256s the bytes, and compares to the on-chain config hash. Match = the simulation parameters have not been altered since anchoring.', '验证者获取 reproduce.json,计算 SHA-256 后与链上配置哈希比对。匹配则证明该模拟参数自锚定后未被篡改。') }}
+                  </div>
+                </div>
+
+                <!-- Not yet anchored — show the publish CTA -->
+                <div v-else-if="!dkgLoading" class="dkg-card dkg-card-empty">
+                  <div class="dkg-empty-text">
+                    {{ $tr('No on-chain citation yet for this simulation.', '该模拟尚未生成链上引用。') }}
+                  </div>
+                  <div class="dkg-actions">
+                    <button
+                      class="repro-download dkg-publish-btn"
+                      type="button"
+                      :disabled="dkgPublishing"
+                      @click="publishDkg"
+                    >
+                      <span v-if="dkgPublishing">
+                        {{ $tr('Anchoring on-chain…', '正在上链…') }}
+                      </span>
+                      <span v-else>
+                        ⛓️ {{ $tr('Publish to DKG', '发布至 DKG') }}
+                      </span>
+                    </button>
+                  </div>
+                  <div class="repro-note">
+                    {{ $tr('Requires the local DKG daemon to be running (dkg start) and a funded wallet. Anchoring costs TRAC + gas on the configured chain.', '需要本地 DKG 守护进程已启动(dkg start)及一个已充值的钱包。上链需消耗所选链的 TRAC 与 gas 费。') }}
+                  </div>
+                </div>
+
+                <div v-if="dkgError" class="webhook-log-message" :class="dkgErrorClass">
+                  {{ dkgError }}
+                </div>
+              </div>
+            </div>
+
             <!-- Lineage navigator — closes the navigation gap PR #75
                  (reproducibility config) left behind. The
                  `parent_simulation_id` pointer existed on disk but was
@@ -1397,6 +1530,8 @@ import {
   submitSimulationOutcome,
   getWebhookLog,
   retryWebhookDelivery,
+  getDkgCitation,
+  publishToDkg,
 } from '../api/simulation'
 import { tr } from '../i18n'
 
@@ -2097,6 +2232,8 @@ const notifConfig = ref({
   webhook_configured: false,
   discord_configured: false,
   slack_configured: false,
+  dkg_configured: false,
+  dkg_network: null,
 })
 const notifConfigLoaded = ref(false)
 const loadNotificationsConfig = async () => {
@@ -2108,12 +2245,16 @@ const loadNotificationsConfig = async () => {
       webhook_configured: !!data.webhook_configured,
       discord_configured: !!data.discord_configured,
       slack_configured: !!data.slack_configured,
+      dkg_configured: !!data.dkg_configured,
+      dkg_network: data.dkg_network || null,
     }
   } catch {
     notifConfig.value = {
       webhook_configured: false,
       discord_configured: false,
       slack_configured: false,
+      dkg_configured: false,
+      dkg_network: null,
     }
   } finally {
     notifConfigLoaded.value = true
@@ -2183,6 +2324,8 @@ const copy = async (which) => {
   else if (which === 'reproCurl') text = reproCurlSnippet.value
   else if (which === 'notebookUrl') text = notebookDownloadUrl.value
   else if (which === 'notebookCurl') text = notebookCurlSnippet.value
+  else if (which === 'dkgUal') text = dkgCitation.value?.ual || ''
+  else if (which === 'dkgMerkle') text = dkgCitation.value?.merkle_root || ''
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -2455,6 +2598,126 @@ const retryWebhook = async () => {
   }
 }
 
+// ---- DKG citation state -------------------------------------------------
+//
+// The OriginTrail DKG citation card is an opt-in surface: it lives only
+// when ``notifConfig.dkg_configured`` is true. State machine:
+//   1. mount → loadDkgCitation() probes for an existing on-chain anchor
+//   2. citation present → render UAL + Merkle + tx + explorer link
+//   3. citation absent → render "Publish to DKG" button
+//   4. click → publishDkg() walks WM→SWM→VM on the daemon, ~15-120s
+//   5. on success → citation populated, button hidden
+const dkgCitation = ref(null)
+const dkgLoading = ref(false)
+const dkgPublishing = ref(false)
+const dkgError = ref('')
+const dkgErrorClass = ref('')
+
+const loadDkgCitation = async () => {
+  if (!props.simulationId) return
+  if (!notifConfig.value.dkg_configured) return
+  if (!isPublic.value) return
+  dkgLoading.value = true
+  dkgError.value = ''
+  try {
+    const res = await getDkgCitation(props.simulationId)
+    if (res?.success && res.data) {
+      dkgCitation.value = res.data
+    } else {
+      dkgCitation.value = null
+    }
+  } catch (err) {
+    const status = err?.response?.status
+    // 404 just means "no anchor yet" — the common pre-publish state,
+    // never an error to surface. Anything else (403, 5xx) leaves the
+    // citation as null and the card renders the publish CTA.
+    if (status !== 404) {
+      // Soft-failure: don't paint a red error before the user has
+      // even clicked anything. The publish attempt itself will surface
+      // any real daemon issue.
+    }
+    dkgCitation.value = null
+  } finally {
+    dkgLoading.value = false
+  }
+}
+
+const publishDkg = async () => {
+  if (!props.simulationId || dkgPublishing.value) return
+  if (!notifConfig.value.dkg_configured) return
+  if (!isPublic.value) return
+  dkgPublishing.value = true
+  dkgError.value = ''
+  dkgErrorClass.value = ''
+  try {
+    const res = await publishToDkg(props.simulationId)
+    if (res?.success && res.data?.ual) {
+      dkgCitation.value = res.data
+      dkgError.value = res?.cached
+        ? tr('Already anchored — returned existing citation.', '已锚定 — 返回现有引用。')
+        : tr('Published to DKG. Citation anchored on-chain.', '已发布至 DKG,引用已上链。')
+      dkgErrorClass.value = 'webhook-log-message-ok'
+    } else {
+      dkgError.value = res?.error || tr('Could not publish to DKG.', '无法发布至 DKG。')
+      dkgErrorClass.value = 'webhook-log-message-error'
+    }
+  } catch (err) {
+    const status = err?.response?.status
+    const serverErr = err?.response?.data?.error
+    if (status === 401) {
+      dkgError.value = tr(
+        'Admin token does not match — set Authorization: Bearer $MIROSHARK_ADMIN_TOKEN at your reverse proxy to publish to DKG.',
+        '管理员 token 不匹配 — 请在反向代理处设置 Authorization: Bearer $MIROSHARK_ADMIN_TOKEN 才能发布至 DKG。',
+      )
+    } else if (status === 503) {
+      dkgError.value = serverErr || tr(
+        'DKG publishing is not configured on this deployment.',
+        '该部署未配置 DKG 发布。',
+      )
+    } else if (status === 504) {
+      dkgError.value = serverErr || tr(
+        'DKG daemon unreachable or publish timed out. Check that the local DKG node is running.',
+        '无法访问 DKG 守护进程或发布超时,请确认本地 DKG 节点已运行。',
+      )
+    } else if (status === 502) {
+      dkgError.value = serverErr || tr(
+        'DKG daemon returned an error. Check the node logs and TRAC balance.',
+        'DKG 守护进程返回错误,请检查节点日志与 TRAC 余额。',
+      )
+    } else if (status === 422) {
+      dkgError.value = serverErr || tr(
+        'Simulation has not reached the prepared state — nothing to anchor yet.',
+        '模拟尚未到达可发布状态,暂无可锚定的数据。',
+      )
+    } else {
+      dkgError.value = serverErr || err?.message || tr('Could not publish to DKG.', '无法发布至 DKG。')
+    }
+    dkgErrorClass.value = 'webhook-log-message-error'
+  } finally {
+    dkgPublishing.value = false
+  }
+}
+
+const _resetDkgState = () => {
+  dkgCitation.value = null
+  dkgLoading.value = false
+  dkgPublishing.value = false
+  dkgError.value = ''
+  dkgErrorClass.value = ''
+}
+
+const formatUalShort = (ual) => {
+  if (!ual || typeof ual !== 'string') return ''
+  if (ual.length <= 48) return ual
+  return `${ual.slice(0, 28)}…${ual.slice(-16)}`
+}
+
+const formatHashShort = (hash) => {
+  if (!hash || typeof hash !== 'string') return ''
+  if (hash.length <= 18) return hash
+  return `${hash.slice(0, 10)}…${hash.slice(-6)}`
+}
+
 const _resetWebhookLogState = () => {
   webhookLogExpanded.value = false
   webhookLogEntries.value = []
@@ -2476,6 +2739,7 @@ watch(() => props.open, async (val) => {
   replayLoaded.value = false
   _resetOutcomeForm()
   _resetWebhookLogState()
+  _resetDkgState()
   // Refresh public state when reopened — reflects external flips.
   try {
     const res = await getEmbedSummary(props.simulationId)
@@ -2499,7 +2763,11 @@ watch(() => props.open, async (val) => {
   // Pull the notification-channel config — cheap (three env reads
   // server-side, no Neo4j) so reading on each dialog open lets the
   // chips reflect a Settings save without requiring a hard refresh.
-  loadNotificationsConfig()
+  await loadNotificationsConfig()
+  // Probe for an existing DKG citation. Only meaningful when the
+  // deployment has DKG_* env vars wired up *and* the sim is public —
+  // the load helper short-circuits on either gate so this is cheap.
+  loadDkgCitation()
   // Bust the share-card image cache so the preview reloads with whatever
   // state the simulation is in right now (resolution may have landed
   // since the dialog was last opened).
@@ -2566,6 +2834,10 @@ watch(isPublic, () => {
   } else {
     lineagePayload.value = null
   }
+  // DKG citation probe flips on the same publish gate. The load helper
+  // short-circuits when the sim is private or the deployment isn't
+  // configured for DKG, so we can always call it.
+  loadDkgCitation()
 })
 </script>
 
@@ -4796,5 +5068,125 @@ watch(isPublic, () => {
 .embed-dialog-leave-to .embed-dialog {
   transform: translateY(8px) scale(0.98);
   opacity: 0;
+}
+
+/* ---- OriginTrail DKG citation card -------------------------------------
+ *
+ * Visually slots between the Jupyter notebook export and the lineage
+ * navigator. The card reuses the same vertical-stack pattern as the
+ * reproducibility config block (head + body + actions + note) so it
+ * lands in the dialog without a new visual idiom.
+ */
+.dkg-section {
+  margin-top: 18px;
+}
+
+.dkg-body {
+  padding: 12px 14px 14px;
+}
+
+.dkg-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.dkg-card-empty {
+  align-items: flex-start;
+  background: #ffffff;
+  border-style: dashed;
+}
+
+.dkg-empty-text {
+  color: #475569;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.dkg-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dkg-row-label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  min-width: 96px;
+}
+
+.dkg-row-value {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 12.5px;
+  color: #0f172a;
+  word-break: break-all;
+}
+
+.dkg-row-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  padding: 3px 6px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.dkg-row-meta {
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+.dkg-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.dkg-copy {
+  flex: 0 0 auto;
+}
+
+.dkg-publish-btn {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #ffffff;
+  border: none;
+}
+
+.dkg-publish-btn:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+
+.dkg-publish-btn:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.dkg-finalized-badge {
+  color: #15803d;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.dkg-network-chip-testnet {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.dkg-network-chip-mainnet {
+  background: #dcfce7;
+  color: #166534;
 }
 </style>

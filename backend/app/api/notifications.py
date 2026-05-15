@@ -14,6 +14,12 @@ operators can opt in to any subset:
 * ``DISCORD_WEBHOOK_URL`` — Discord rich-embed cards
 * ``SLACK_WEBHOOK_URL``   — Slack Block Kit messages
 
+Plus the OriginTrail DKG citation surface, which is wired up only when
+all three of ``DKG_API_URL`` / ``DKG_AUTH_TOKEN`` / ``DKG_CONTEXT_GRAPH_ID``
+are non-empty. The probe exposes ``dkg_configured`` and ``dkg_network``
+so the EmbedDialog can render the "Publish to DKG (testnet|mainnet)"
+button accordingly; the auth token itself never leaves the backend.
+
 Each ``*_configured`` boolean is ``True`` iff the corresponding env
 var is set to a non-empty value. No URL ever leaves the backend.
 
@@ -28,6 +34,7 @@ from flask import Blueprint, Response, jsonify
 
 from ..services import discord_notify, slack_notify
 from ..services import webhook_service
+from ..services import dkg_publisher
 from ..utils.logger import get_logger
 
 
@@ -46,10 +53,16 @@ def notifications_config() -> Response:
     auth.
     """
     webhook_url = webhook_service._resolve_webhook_url()
+    dkg_cfg = dkg_publisher._resolve_config()
     data = {
         "webhook_configured": bool(webhook_url),
         "discord_configured": discord_notify.is_configured(),
         "slack_configured": slack_notify.is_configured(),
+        "dkg_configured": dkg_publisher.is_configured(),
+        # Pure metadata — labels which chain the operator's daemon was
+        # configured against so the SPA can render "Publish to DKG
+        # (testnet|mainnet)" without leaking the API URL or auth token.
+        "dkg_network": dkg_cfg.get("network", "testnet") if dkg_publisher.is_configured() else None,
     }
     response = jsonify({"success": True, "data": data})
     # No caching — channel status flips the moment an operator pastes

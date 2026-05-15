@@ -822,7 +822,8 @@ export const getSitemapConfig = () => {
 /**
  * Fetch the notification-channel config — tells the SPA which of the
  * three terminal-state notification channels (generic webhook, Discord
- * rich embed, Slack Block Kit) are wired up on this deployment. Only
+ * rich embed, Slack Block Kit) are wired up on this deployment, plus
+ * whether the OriginTrail DKG citation surface is reachable. Only
  * presence booleans cross the wire; the underlying URLs (which often
  * carry an opaque secret in the path) stay server-side.
  *
@@ -831,12 +832,58 @@ export const getSitemapConfig = () => {
  *     webhook_configured: boolean,
  *     discord_configured: boolean,
  *     slack_configured:   boolean,
+ *     dkg_configured:     boolean,
+ *     dkg_network:        "testnet" | "mainnet" | null,
  *   }
  *
  * @returns {Promise}
  */
 export const getNotificationsConfig = () => {
   return service.get('/api/config/notifications')
+}
+
+/**
+ * Read the persisted OriginTrail DKG citation for a published sim.
+ * Returns 404 when the sim has never been anchored — same publish gate
+ * as the reproduce.json endpoint. No daemon call.
+ *
+ * Response shape (under `data`):
+ *   {
+ *     ual: "urn:dkg:context-graph:…",
+ *     merkle_root: "0x…",
+ *     transaction_hash: "0x…",
+ *     block_number: number | null,
+ *     finalized: boolean,
+ *     network: "testnet" | "mainnet",
+ *     context_graph_id: string,
+ *     assertion_name: string,
+ *     reproduce_config_sha256: "sha256:…",
+ *     explorer_url: string,
+ *     published_at: ISO8601 string,
+ *   }
+ *
+ * @param {string} simulationId
+ */
+export const getDkgCitation = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/dkg-citation`)
+}
+
+/**
+ * Anchor a finished simulation's citation surface on the OriginTrail
+ * DKG. Requires admin auth (the publish action has on-chain cost
+ * implications: TRAC + gas). Idempotent — the second call returns the
+ * cached citation without re-anchoring.
+ *
+ * Same response shape as ``getDkgCitation`` for the success case, with
+ * an additional ``cached: boolean`` field at the top level signalling
+ * whether the daemon was contacted.
+ *
+ * @param {string} simulationId
+ * @param {{ force?: boolean }} [opts]
+ */
+export const publishToDkg = (simulationId, opts = {}) => {
+  const body = opts.force ? { force: true } : {}
+  return service.post(`/api/simulation/${simulationId}/publish-dkg`, body)
 }
 
 /**
