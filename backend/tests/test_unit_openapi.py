@@ -110,6 +110,7 @@ _BLUEPRINT_PREFIXES = {
     # find them where they expect; /api/config/sitemap exposes the
     # ENABLE_SITEMAP flag to the SPA — see app/api/sitemap.py.
     "sitemap_bp":        "",
+    "notifications_bp":  "",
 }
 
 
