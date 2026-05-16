@@ -2,7 +2,7 @@
 URL fetching and text extraction utility for MiroShark document ingestion.
 
 Primary path: ask the configured web-search LLM (WEB_SEARCH_MODEL, e.g.
-`x-ai/grok-4.1-fast:online`) to read the URL and return the main readable
+`google/gemini-3-flash-preview:online`) to read the URL and return the main readable
 content. This bypasses brittle HTML parsing and handles JS-heavy pages
 that a static parser can't. The model MUST have web access — use an
 `:online` variant on OpenRouter for any model without native browsing,
@@ -110,7 +110,7 @@ def fetch_url_text(url: str, timeout: int = 60) -> dict:
     if not model:
         raise ValueError(
             "No web-search model configured. Set WEB_SEARCH_MODEL in .env "
-            "(e.g. x-ai/grok-4.1-fast:online)."
+            "(e.g. google/gemini-3-flash-preview:online)."
         )
 
     logger.info(f"Fetching URL via LLM ({model}): {url}")

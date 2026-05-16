@@ -39,7 +39,7 @@ class Config:
     # Smart model — stronger model for intelligence-sensitive workflows
     # (report generation, ontology extraction, graph reasoning).
     # When not set, these workflows use the default LLM config above.
-    # Cloud preset: x-ai/grok-4.1-fast (stable JSON, fast reports)
+    # Cloud preset: google/gemini-3-flash-preview (stable JSON, fast reports)
     SMART_PROVIDER = os.environ.get('SMART_PROVIDER', '')   # "openai", "claude-code", or empty (inherit)
     SMART_API_KEY = os.environ.get('SMART_API_KEY', '')
     SMART_BASE_URL = os.environ.get('SMART_BASE_URL', '')
@@ -156,7 +156,7 @@ class Config:
 
     # NER model — faster model for entity extraction (high-volume, mechanical task)
     # When not set, NER uses the default LLM config above.
-    # Cloud preset: x-ai/grok-4.1-fast (stable JSON with reasoning disabled)
+    # Cloud preset: google/gemini-3-flash-preview (stable JSON with reasoning disabled)
     NER_MODEL_NAME = os.environ.get('NER_MODEL_NAME', '')
     NER_BASE_URL = os.environ.get('NER_BASE_URL', '')
     NER_API_KEY = os.environ.get('NER_API_KEY', '')
@@ -175,7 +175,7 @@ class Config:
 
     # Disable chain-of-thought on reasoning-capable OpenRouter models by default.
     # Passes `reasoning: {enabled: false}` in extra_body — huge latency win
-    # (~3x on Qwen3-Flash, ~3x on Grok-4.1-Fast) and zero-op on models that
+    # (~3x on Qwen3-Flash, ~3x on Gemini-3-Flash) and zero-op on models that
     # ignore the flag. Set false if a slot benefits from CoT (rare for
     # MiroShark's short, structured prompts).
     LLM_DISABLE_REASONING = os.environ.get('LLM_DISABLE_REASONING', 'true').lower() == 'true'

@@ -93,7 +93,7 @@ git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
 ```
 
-`.env.example` ships with the Cloud preset (Mimo V2 Flash + Grok-4.1 Fast) as the active default. Open `.env` and paste your OpenRouter key into the five blank `*_API_KEY=` lines (`LLM_`, `SMART_`, `NER_`, `OPENAI_`, `EMBEDDING_` — same key in all of them). No model edits needed unless you want a different lineup.
+`.env.example` ships with the Cloud preset (Mimo V2 Flash + Gemini 3 Flash) as the active default. Open `.env` and paste your OpenRouter key into the five blank `*_API_KEY=` lines (`LLM_`, `SMART_`, `NER_`, `OPENAI_`, `EMBEDDING_` — same key in all of them). No model edits needed unless you want a different lineup.
 
 Then launch:
 
@@ -138,14 +138,14 @@ LLM_MODEL_NAME=xiaomi/mimo-v2-flash
 SMART_PROVIDER=openai
 SMART_API_KEY=sk-or-v1-YOUR_KEY
 SMART_BASE_URL=https://openrouter.ai/api/v1
-SMART_MODEL_NAME=x-ai/grok-4.1-fast
+SMART_MODEL_NAME=google/gemini-3-flash-preview
 
-NER_MODEL_NAME=x-ai/grok-4.1-fast
+NER_MODEL_NAME=google/gemini-3-flash-preview
 NER_BASE_URL=https://openrouter.ai/api/v1
 NER_API_KEY=sk-or-v1-YOUR_KEY
 
 WONDERWALL_MODEL_NAME=xiaomi/mimo-v2-flash
-WEB_SEARCH_MODEL=x-ai/grok-4.1-fast:online
+WEB_SEARCH_MODEL=google/gemini-3-flash-preview:online
 
 OPENAI_API_KEY=sk-or-v1-YOUR_KEY
 OPENAI_API_BASE_URL=https://openrouter.ai/api/v1

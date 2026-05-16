@@ -50,7 +50,7 @@ LLM_MODEL_NAME=qwen2.5:32b
 
 # ─── Smart model (reports, ontology, graph reasoning — #1 quality lever) ───
 # SMART_PROVIDER=openai
-# SMART_MODEL_NAME=x-ai/grok-4.1-fast          # Cloud preset
+# SMART_MODEL_NAME=google/gemini-3-flash-preview          # Cloud preset
 
 # ─── Wonderwall (agent sim loop — #1 cost driver, use cheapest viable) ───
 # WONDERWALL_MODEL_NAME=xiaomi/mimo-v2-flash
@@ -61,10 +61,10 @@ LLM_MODEL_NAME=qwen2.5:32b
 # WONDERWALL_API_KEY=not-checked
 
 # ─── NER (entity extraction — needs reliable JSON, no hidden CoT) ───
-# NER_MODEL_NAME=x-ai/grok-4.1-fast
+# NER_MODEL_NAME=google/gemini-3-flash-preview
 
 # ─── Disable chain-of-thought on reasoning-capable OpenRouter models ───
-# ~3x lower latency on Qwen3-Flash / Grok-4.1-Fast. Flip to false
+# ~3x lower latency on Qwen3-Flash / Gemini-3-Flash. Flip to false
 # per-deployment if a slot needs CoT.
 LLM_DISABLE_REASONING=true
 
@@ -110,7 +110,7 @@ REASONING_TRACE_ENABLED=true
 # Also powers the /api/graph/fetch-url URL importer — models without native
 # browsing must use an ":online" variant.
 WEB_ENRICHMENT_ENABLED=true
-# WEB_SEARCH_MODEL=x-ai/grok-4.1-fast:online
+# WEB_SEARCH_MODEL=google/gemini-3-flash-preview:online
 
 # ─── Embedding batching ───
 # How many texts per HTTP request. Higher is faster on graph builds;

@@ -34,22 +34,22 @@ def _mask_key(key: str) -> str:
 # copied into when the caller supplies `preset_api_key`.
 _PRESETS = {
     'cheap': {
-        'label': 'Cloud — ~$1/run (Mimo V2 Flash + Grok-4.1 Fast)',
+        'label': 'Cloud — ~$1/run (Mimo V2 Flash + Gemini 3 Flash)',
         'fields': {
             'LLM_PROVIDER': 'openai',
             'LLM_BASE_URL': 'https://openrouter.ai/api/v1',
             'LLM_MODEL_NAME': 'xiaomi/mimo-v2-flash',
             'SMART_PROVIDER': 'openai',
             'SMART_BASE_URL': 'https://openrouter.ai/api/v1',
-            'SMART_MODEL_NAME': 'x-ai/grok-4.1-fast',
+            'SMART_MODEL_NAME': 'google/gemini-3-flash-preview',
             'NER_BASE_URL': 'https://openrouter.ai/api/v1',
-            'NER_MODEL_NAME': 'x-ai/grok-4.1-fast',
+            'NER_MODEL_NAME': 'google/gemini-3-flash-preview',
             'WONDERWALL_MODEL_NAME': 'xiaomi/mimo-v2-flash',
             'EMBEDDING_PROVIDER': 'openai',
             'EMBEDDING_BASE_URL': 'https://openrouter.ai/api',
             'EMBEDDING_MODEL': 'openai/text-embedding-3-large',
             'EMBEDDING_DIMENSIONS': 768,
-            'WEB_SEARCH_MODEL': 'x-ai/grok-4.1-fast:online',
+            'WEB_SEARCH_MODEL': 'google/gemini-3-flash-preview:online',
         },
         'key_slots': ['LLM_API_KEY', 'SMART_API_KEY', 'NER_API_KEY', 'EMBEDDING_API_KEY'],
     },

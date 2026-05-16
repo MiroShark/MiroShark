@@ -13,22 +13,22 @@
 | 槽位 | 控制的内容 | 关键发现 |
 |---|---|---|
 | **Default** | 人设丰富度、模拟密度 | Mimo V2 Flash 在 flash 价位上能给出辨识度高的人物声音 |
-| **Smart** | 报告质量(头号杠杆) | Grok-4.1 Fast 在关闭 reasoning 的 ReACT 报告循环中表现稳定 |
+| **Smart** | 报告质量(头号杠杆) | Gemini 3 Flash 在关闭 reasoning 的 ReACT 报告循环中表现稳定 |
 | **NER** | 抽取可靠性 | 需要确定性的 JSON — 选一个不会暗中输出 CoT 的模型 |
 | **Wonderwall** | 成本(最大消费方) | 850+ 次调用、7M+ tokens。冗长程度比 $/M 更重要 |
 
 ### 云端模式 — 约 1 美元/次,约 10 分钟
 
-Mimo V2 Flash 做人设 + Grok-4.1 Fast 做 smart/NER。每个槽位都关闭了 reasoning(`LLM_DISABLE_REASONING=true` 会在 `extra_body` 里发送 `reasoning: {enabled: false}`),这就是一次场景建议从约 45 秒变成约 3 秒的差别。
+Mimo V2 Flash 做人设 + Gemini 3 Flash 做 smart/NER。每个槽位都关闭了 reasoning(`LLM_DISABLE_REASONING=true` 会在 `extra_body` 里发送 `reasoning: {enabled: false}`),这就是一次场景建议从约 45 秒变成约 3 秒的差别。
 
 | 槽位 | 模型 | 备注 |
 |---|---|---|
 | Default | `xiaomi/mimo-v2-flash` | 画像生成、模拟配置、记忆压缩 |
-| Smart | `x-ai/grok-4.1-fast` | 报告 ReACT 循环 — 每次运行只有约 19 次调用 |
-| NER | `x-ai/grok-4.1-fast` | 关闭 reasoning 后输出稳定 JSON |
+| Smart | `google/gemini-3-flash-preview` | 报告 ReACT 循环 — 每次运行只有约 19 次调用 |
+| NER | `google/gemini-3-flash-preview` | 关闭 reasoning 后输出稳定 JSON |
 | Wonderwall | `xiaomi/mimo-v2-flash` | 每次运行 850+ 次智能体动作调用;保持低冗长度 |
 
-嵌入用 `openai/text-embedding-3-large`(通过 Matryoshka 截断到 768 维)。Web 增强用 `x-ai/grok-4.1-fast:online`。
+嵌入用 `openai/text-embedding-3-large`(通过 Matryoshka 截断到 768 维)。Web 增强用 `google/gemini-3-flash-preview:online`。
 
 > **延迟提示** — 每次 OpenRouter 调用都会经过 `LLMClient`,默认会在 `extra_body` 中注入 `reasoning: {enabled: false}`。仅当某个具体槽位从思维链中收益时才用 `LLM_DISABLE_REASONING=false` 关掉这个默认行为(对 MiroShark 的结构化提示词来说很罕见)。
 
