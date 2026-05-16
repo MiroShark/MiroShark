@@ -200,6 +200,7 @@ WONDERWALL_MODEL_NAME=your-model-id
 - `replay_gif` — `replay.gif` 服务次数
 - `transcript_md` / `transcript_json` — `transcript.md` / `transcript.json` 服务次数
 - `trajectory_csv` / `trajectory_jsonl` — `trajectory.csv` / `trajectory.jsonl` 服务次数
+- `chart_svg` — `chart.svg` 服务次数(可缩放的逐轮信念图 SVG)
 - `thread_txt` / `thread_json` — `thread.txt` / `thread.json` 服务次数
 - `watch_page` — `/watch/<id>` 服务次数(仅公开模拟)
 - `feed_atom` / `feed_rss` — 此模拟出现在已渲染的 Atom 或 RSS 订阅源中的次数

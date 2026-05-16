@@ -180,6 +180,16 @@ Two endpoints, same row schema, different serialization:
 
 Same publish gate as the share card and transcript (`is_public=true`). The bullish / neutral / bearish percentages use the same ±0.2 stance threshold as every other surface, so a number in the CSV matches what the gallery, share card, replay GIF, transcript, webhook, and feed report for the same round. The Embed dialog exposes a "Download .csv" + "Download .jsonl" pair beneath the transcript row, plus a copyable CSV URL and a `pd.read_csv("<url>")` quickstart snippet.
 
+## Trajectory Chart SVG
+
+The scalable-vector companion to the trajectory CSV / JSONL data export. Where the CSV gives Pandas / Excel / Tableau / R the raw numbers, `GET /api/simulation/<id>/chart.svg` gives every other platform a ready-made image of the belief journey — bullish (`#22c55e`), neutral (`#6b7280`), bearish (`#ef4444`) polylines plotted against round number on a fixed `viewBox="0 0 800 400"`, with a 5-line y-axis grid, round-number x-axis labels, a three-swatch legend, and the scenario title.
+
+Pure-stdlib `xml.etree.ElementTree` renderer — no Cairo, no matplotlib, no Pillow, zero new dependencies. Same approach as the sitemap (PR #82) and the Jupyter notebook (PR #80). The output is bytewise-deterministic so the byte hash works as a cache key the same way the reproduce.json hash works as a citation key.
+
+Embeddable anywhere `<img>` renders — Notion, Substack, Ghost, GitHub READMEs, LinkedIn posts, Discord embeds with image attachments, and LaTeX papers via `\includesvg{}`. Vector means a reader on a 5K display sees crisp lines, and a reader on a phone sees the same chart sized down without losing axis labels. `<img>` means no JavaScript at the embed site — the chart loads with the page like any other static asset.
+
+Same publish gate as the trajectory CSV. Returns `404` when the simulation hasn't recorded any rounds yet (the embed site can render its own placeholder rather than a blank SVG that looks like a styling bug). The Embed dialog exposes a `📈 Trajectory chart (SVG)` section beneath the trajectory CSV row: a lazy-loaded preview, a "Download .svg" anchor, a copyable URL, and a paste-ready `<img>` embed snippet. The chart-svg counter joins the surface-stats schema so an operator can see how many embeds the chart drove independently of the share card and replay GIF.
+
 ## Gallery Search & Filtering
 
 `/explore` is the public research surface — every published MiroShark simulation, browsable as a card grid. Once the corpus grew past a few dozen entries the reverse-chronological scroll stopped being a tool, so the gallery now indexes itself: a keyword search box, a consensus filter chip group, a quality filter chip group, and a sort dropdown sit above the cards. The active filter set lives in URL params (`?q=…&consensus=bearish&quality=excellent&sort=rounds`), so any filtered view is bookmarkable and shareable — "every excellent-quality bearish call about Aave" is a URL you can tweet.

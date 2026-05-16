@@ -1332,6 +1332,48 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/chart.svg:
+    get:
+      tags: [Publish & Embed]
+      summary: Per-round belief trajectory as a stdlib-rendered SVG.
+      description: |
+        Scalable-vector companion to the share card (PNG verdict),
+        replay GIF (motion), and Jupyter notebook (matplotlib). Three
+        polylines — bullish (`#22c55e`), neutral (`#6b7280`), bearish
+        (`#ef4444`) — plotted against round number with grid lines,
+        legend, axis labels, and the scenario title. Same ±0.2 stance
+        threshold as every other surface so the curves match the share
+        card's final-state bars.
+
+        Embeddable as `<img src="…/chart.svg">` in Notion, Substack,
+        Ghost, GitHub READMEs, and LaTeX `\includesvg{}` — vector
+        means no resolution choice, and `<img>` means no JavaScript at
+        the embed site. Pure stdlib `xml.etree.ElementTree`; zero new
+        deps.
+
+        Same publish gate as the trajectory CSV. Returns `404` when no
+        trajectory rows are on disk yet (the sim is mid-startup) so an
+        embedding site can render a placeholder rather than a blank
+        SVG that looks like a styling bug. `viewBox` is `0 0 800 400`;
+        consumers can size the embed with the `<img>` width/height
+        attributes without losing fidelity.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "SVG with `Content-Type: image/svg+xml; charset=utf-8` + `Cache-Control: public, max-age=300`."
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                description: |
+                  Complete SVG 1.1 document with `viewBox="0 0 800 400"`.
+                  Three `<polyline>` elements (one per stance) on a
+                  white background with a 5-line y-axis grid and
+                  round-number x-axis labels.
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/thread.txt:
     get:
       tags: [Publish & Embed]
@@ -3681,6 +3723,14 @@ components:
               type: integer
               minimum: 0
               description: Successful `notebook.ipynb` serves.
+            chart_svg:
+              type: integer
+              minimum: 0
+              description: |
+                Successful `chart.svg` serves — the per-round belief
+                trajectory rendered as a scalable vector image
+                embeddable as an `<img>` tag in Notion / Substack /
+                Ghost / GitHub READMEs / LaTeX.
             total:
               type: integer
               minimum: 0

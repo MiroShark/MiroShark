@@ -508,6 +508,26 @@ export const getTrajectoryJsonlUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the per-round belief trajectory chart
+ * rendered as a stdlib-pure SVG. Scalable-vector companion to the
+ * share card (PNG verdict), replay GIF (motion), and Jupyter
+ * notebook (matplotlib). Three lines — bullish / neutral / bearish —
+ * plotted against round number on a 800×400 viewBox.
+ *
+ * Embeddable as `<img src="…/chart.svg">` in Notion, Substack, Ghost,
+ * GitHub READMEs, and LaTeX — vector means no resolution choice, and
+ * `<img>` means no JavaScript at the embed site.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getChartSvgUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/chart.svg`
+}
+
+/**
  * Build the absolute URL of the auto-generated Twitter / X tweet
  * thread for a finished simulation. Plain-text form — one intro
  * tweet, one tweet per belief inflection point (rounds where the

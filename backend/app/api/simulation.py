@@ -5228,6 +5228,84 @@ def get_trajectory_jsonl(simulation_id: str):
     return _serve_trajectory(simulation_id, "jsonl")
 
 
+@simulation_bp.route('/<simulation_id>/chart.svg', methods=['GET'])
+def get_chart_svg(simulation_id: str):
+    """Per-round belief trajectory rendered as a stdlib SVG.
+
+    Scalable-vector companion to the share card (PNG verdict), replay
+    GIF (motion), and Jupyter notebook (matplotlib). Three lines —
+    bullish (``#22c55e``) / neutral (``#6b7280``) / bearish (``#ef4444``)
+    — plotted against round number with grid, legend, and the scenario
+    title. Same ±0.2 stance threshold as every other surface so the
+    curves match the share card's final-state bars.
+
+    Embeddable as ``<img src="…/chart.svg">`` in Notion, Substack,
+    Ghost, GitHub READMEs, and LaTeX ``\\includesvg{}`` — vector means
+    no resolution choice, and ``<img>`` means no JavaScript at the
+    embed site. Pure stdlib ``xml.etree.ElementTree``; zero new deps.
+
+    Same publish gate as the trajectory CSV. Returns 404 when no
+    trajectory rows are on disk yet (the sim is mid-startup) so an
+    embedding site can render its own placeholder rather than a blank
+    SVG that looks like a styling bug.
+    """
+    from ..services import chart_svg as chart_renderer
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        scenario = summary.get("scenario") or ""
+        payload = chart_renderer.render_chart_svg_bytes(sim_dir, scenario)
+        if payload is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Trajectory not available yet — the simulation hasn't recorded any rounds.",
+                    "尚无可用的轨迹 — 模拟还没有记录任何回合。",
+                    locale,
+                ),
+            }), 404
+
+        response = Response(payload, mimetype="image/svg+xml; charset=utf-8")
+        # 5-minute cache — the trajectory grows by one row per round on
+        # a live run; a 5-minute window matches the watch-page poll
+        # cadence so embedding sites see fresh curves while crawlers
+        # don't hammer disk reads.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        # Inline so an embedding ``<img>`` renders in place; the
+        # EmbedDialog "Download .svg" anchor uses an explicit
+        # ``download`` attribute when an operator wants a save-as.
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-chart.svg"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "chart_svg")
+        return response
+
+    except Exception as e:
+        logger.error(f"chart.svg: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 def _resolve_share_base_url() -> str:
     """Same proxy-aware base URL the share / watch routes use.
 
