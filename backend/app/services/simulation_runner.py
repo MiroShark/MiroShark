@@ -693,6 +693,17 @@ class SimulationRunner:
                     )
                 except Exception as _sn_err:
                     logger.warning(f"Slack notify dispatch failed: {_sn_err}")
+                try:
+                    from .email_notify import notify_if_configured as _notify_email
+                    _notify_email(
+                        simulation_id,
+                        "completed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=state.completed_at,
+                    )
+                except Exception as _en_err:
+                    logger.warning(f"Email notify dispatch failed: {_en_err}")
             else:
                 state.runner_status = RunnerStatus.FAILED
                 # Read error info from main log file
@@ -750,6 +761,18 @@ class SimulationRunner:
                     )
                 except Exception as _sn_err:
                     logger.warning(f"Slack notify dispatch failed: {_sn_err}")
+                try:
+                    from .email_notify import notify_if_configured as _notify_email
+                    _notify_email(
+                        simulation_id,
+                        "failed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=datetime.now().isoformat(),
+                        error=state.error,
+                    )
+                except Exception as _en_err:
+                    logger.warning(f"Email notify dispatch failed: {_en_err}")
             
             state.twitter_running = False
             state.reddit_running = False
@@ -911,6 +934,16 @@ class SimulationRunner:
                                             )
                                         except Exception as _sn_err:
                                             logger.warning(f"Slack notify dispatch failed: {_sn_err}")
+                                        try:
+                                            from .email_notify import notify_if_configured as _notify_email
+                                            _notify_email(
+                                                state.simulation_id,
+                                                "completed",
+                                                state=state,
+                                                completed_at=state.completed_at,
+                                            )
+                                        except Exception as _en_err:
+                                            logger.warning(f"Email notify dispatch failed: {_en_err}")
                                 
                                 # Update round info (from round_end event)
                                 elif event_type == "round_end":

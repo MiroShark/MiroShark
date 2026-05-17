@@ -1,23 +1,25 @@
 # Channel Notifications
 
 MiroShark fires a notification the moment a simulation reaches a terminal
-state (`simulation.completed` or `simulation.failed`). Three independent
+state (`simulation.completed` or `simulation.failed`). Four independent
 channels run in parallel — each opt-in via its own env var:
 
-| Channel  | Env var               | Format             | Use case                                                      |
-| -------- | --------------------- | ------------------ | ------------------------------------------------------------- |
-| Webhook  | `WEBHOOK_URL`         | Raw JSON `POST`    | Zapier / Make / n8n / IFTTT / custom listeners                |
-| Discord  | `DISCORD_WEBHOOK_URL` | Discord rich embed | Discord channels — coloured cards with belief % fields        |
-| Slack    | `SLACK_WEBHOOK_URL`   | Slack Block Kit    | Slack channels — header + block-bar fields + action button    |
+| Channel  | Env var                       | Format               | Use case                                                      |
+| -------- | ----------------------------- | -------------------- | ------------------------------------------------------------- |
+| Webhook  | `WEBHOOK_URL`                 | Raw JSON `POST`      | Zapier / Make / n8n / IFTTT / custom listeners                |
+| Discord  | `DISCORD_WEBHOOK_URL`         | Discord rich embed   | Discord channels — coloured cards with belief % fields        |
+| Slack    | `SLACK_WEBHOOK_URL`           | Slack Block Kit      | Slack channels — header + block-bar fields + action button    |
+| Email    | `SMTP_HOST` + `SMTP_TO`       | `multipart/alternative` | Any inbox or mailing list — no platform account required   |
 
-Channels are independent. Set one, two, or all three — each fires
-separately. Unset env vars are silently skipped, so existing deployments
-that only use the generic webhook are unaffected by this feature.
+Channels are independent. Set one, two, three, or all four — each
+fires separately. Unset env vars are silently skipped, so existing
+deployments that only use the generic webhook are unaffected by this
+feature.
 
 The SPA exposes a public probe at `GET /api/config/notifications`
-returning `{webhook_configured, discord_configured, slack_configured}` so
-the operator can confirm channel status without opening the backend
-config.
+returning `{webhook_configured, discord_configured, slack_configured,
+email_configured}` so the operator can confirm channel status without
+opening the backend config.
 
 ## Generic webhook (existing, PR #46)
 
@@ -91,6 +93,94 @@ containing the truncated exit-code message.
 
 Same dedup posture and fire-and-forget guarantees as Discord.
 
+## SMTP completion email
+
+The one notification channel that requires no platform account, no
+OAuth flow, and no incoming-webhook URL. Set `SMTP_HOST` plus a
+comma-separated `SMTP_TO` recipient list and MiroShark sends a
+`multipart/alternative` email (plain text + HTML) to every recipient
+on every terminal-state transition:
+
+```bash
+# Minimal config — unauthenticated relay (self-hosted Postfix, LAN MX)
+SMTP_HOST=relay.internal
+SMTP_PORT=25
+SMTP_TO=research@example.com
+
+# Authenticated config (Gmail / SendGrid / Mailgun / any hosted relay)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=miroshark-bot@example.com
+SMTP_PASSWORD=<gmail-app-password>     # NOT your regular password
+SMTP_FROM=alerts@miroshark.app         # optional — defaults to miroshark-notify@<host>
+SMTP_TO=research@example.com,ops@example.com
+```
+
+Body structure (both parts):
+
+* **Subject** — `[MiroShark] <Direction>: <Scenario>` where
+  `<Direction>` is one of `Bullish` / `Neutral` / `Bearish` /
+  `Failed`. Inbox filters can triage on this alone — no body parse
+  needed.
+* **Plain-text part** — Scenario header, then key/value pairs:
+  `Status`, `Bullish` / `Neutral` / `Bearish` (each with the same
+  Unicode block bar Slack uses — `█████░░░░░ 52.0%`), `Quality`,
+  `Scale`, `Outcome`, and an absolute `View:` URL. Reads cleanly in
+  mutt / Apple Mail / Outlook list-view previews.
+* **HTML part** — Same fields in a single `<table>` (the only
+  layout Outlook / Gmail / Apple Mail render consistently), with
+  inline-CSS colour swatches matching the Discord embed border, a
+  consensus-coloured top border, and a "View simulation →" button
+  CTA (only when `PUBLIC_BASE_URL` is set so the URL is absolute).
+* **Headers** — `X-MiroShark-Sim-Id: <sim_id>` and
+  `X-MiroShark-Event: simulation.{completed,failed}` so server-side
+  filters (Sieve / Gmail filter / Outlook rule) can route without
+  scanning the subject.
+
+Failure runs append the truncated exit-code message as an `Error`
+section (HTML: amber-bordered code block; plain: `Error:` block).
+
+### Transport selection
+
+The dispatcher picks the SMTP class by port:
+
+| Port | Transport     | When to use                                                       |
+| ---- | ------------- | ----------------------------------------------------------------- |
+| 465  | `SMTP_SSL`    | Implicit TLS (legacy SMTPS).                                      |
+| 587  | `SMTP` + STARTTLS | Submission port — the modern default; what Gmail / SendGrid expect. |
+| 25   | `SMTP` (plain)    | Internal LAN relays — set `SMTP_USE_TLS=false`.                  |
+
+If STARTTLS fails on port 587 *and* credentials are configured, the
+dispatcher refuses to send rather than leak credentials in cleartext.
+On unauthenticated runs (no `SMTP_USER`/`SMTP_PASSWORD`), a failed
+STARTTLS falls back to plaintext so a LAN relay that doesn't speak
+TLS still gets the message.
+
+### Gmail recipe
+
+1. Enable 2-Step Verification on the sender Google account.
+2. Account → Security → App Passwords → generate one for "Mail."
+3. `SMTP_USER=<gmail-address>`, `SMTP_PASSWORD=<16-char-app-password>`,
+   `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`.
+4. Set `SMTP_FROM` to the same address as `SMTP_USER` so the
+   "From" header passes Gmail's outbound sender check.
+
+### Test snippet
+
+```python
+# Verify a relay is reachable without touching MiroShark
+import smtplib, ssl
+with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as conn:
+    conn.starttls(context=ssl.create_default_context())
+    conn.login("you@gmail.com", "<app-password>")
+    print("OK")
+```
+
+Dedup posture is identical to the Discord / Slack notifiers — the
+runner's two terminal code paths both fire, but the per-process
+`(sim_id, status)` set ensures the inbox sees exactly one message
+per terminal state.
+
 ## Picking the right channel
 
 * **Discord** — community-facing. Use when the audience wants the
@@ -101,14 +191,21 @@ Same dedup posture and fire-and-forget guarantees as Discord.
   *operationally*: a quick read of the bars, an explicit action
   button, the sim id in monospaced font. Best for engineering /
   research channels.
+* **Email** — universal. Use when the audience doesn't live in a
+  chat tool (research teams, hedge-fund back-office, analysts) or
+  when the operator wants a permanent searchable record that
+  doesn't depend on a third-party SaaS retention policy. The one
+  channel that works without anyone signing up for anything new.
 * **Generic webhook** — automation-facing. Use when the result
   needs to land in a workflow tool (Zapier / Make / n8n) that
   unpacks the JSON itself.
 
 ## Sandbox note
 
-Pure stdlib (`urllib.request` + `json` + `os` + `hmac`). No new
-dependencies. The HMAC signing scheme on the generic webhook
+Pure stdlib (`urllib.request` + `json` + `os` + `hmac` for the
+webhook channels; `smtplib` + `email.mime` + `ssl` for email). No
+new dependencies. The HMAC signing scheme on the generic webhook
 (`X-MiroShark-Signature`, PR #79) applies only to that channel —
-Discord and Slack incoming webhooks use the platforms' own
-URL-as-secret authentication and ignore signature headers.
+Discord, Slack, and Email use the platforms' own authentication
+(URL-as-secret for the chat channels; SMTP auth + STARTTLS for the
+email channel) and ignore signature headers.

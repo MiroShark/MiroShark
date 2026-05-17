@@ -7,12 +7,13 @@ often carry an opaque secret in the path). Mirrors the existing
 ``EmbedDialog`` reads on mount and uses to render the right status
 chips beside the share-and-embed surfaces.
 
-Three independent channels, each gated by a separate env var so
+Four independent channels, each gated by a separate env var so
 operators can opt in to any subset:
 
 * ``WEBHOOK_URL``         — generic JSON ``POST`` (PR #46)
 * ``DISCORD_WEBHOOK_URL`` — Discord rich-embed cards
 * ``SLACK_WEBHOOK_URL``   — Slack Block Kit messages
+* ``SMTP_HOST`` + ``SMTP_TO`` — SMTP completion emails (multipart/alternative)
 
 Plus the OriginTrail DKG citation surface, which is wired up only when
 all three of ``DKG_API_URL`` / ``DKG_AUTH_TOKEN`` / ``DKG_CONTEXT_GRAPH_ID``
@@ -32,7 +33,7 @@ from __future__ import annotations
 
 from flask import Blueprint, Response, jsonify
 
-from ..services import discord_notify, slack_notify
+from ..services import discord_notify, slack_notify, email_notify
 from ..services import webhook_service
 from ..services import dkg_publisher
 from ..utils.logger import get_logger
@@ -48,9 +49,10 @@ def notifications_config() -> Response:
     """Expose which notification channels are configured.
 
     Returns ``{success, data: {webhook_configured, discord_configured,
-    slack_configured}}``. No URL values are leaked — only presence
-    booleans, so this endpoint is safe to call from the SPA without
-    auth.
+    slack_configured, email_configured, dkg_configured, dkg_network}}``.
+    No URL values, recipient lists, or auth tokens are leaked — only
+    presence booleans, so this endpoint is safe to call from the SPA
+    without auth.
     """
     webhook_url = webhook_service._resolve_webhook_url()
     dkg_cfg = dkg_publisher._resolve_config()
@@ -58,6 +60,7 @@ def notifications_config() -> Response:
         "webhook_configured": bool(webhook_url),
         "discord_configured": discord_notify.is_configured(),
         "slack_configured": slack_notify.is_configured(),
+        "email_configured": email_notify.is_configured(),
         "dkg_configured": dkg_publisher.is_configured(),
         # Pure metadata — labels which chain the operator's daemon was
         # configured against so the SPA can render "Publish to DKG

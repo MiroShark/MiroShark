@@ -348,6 +348,16 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 实现:`compute_signature(payload_bytes, secret=None)` 在调用时读取 `WEBHOOK_SECRET`(所以一次 Settings 变更或环境变量改动会立即生效),返回 `"sha256=" + hmac.sha256(secret, body).hexdigest()` 或在留空时返回 `None`。`_post_json` 仅在 `compute_signature` 返回非 None 时才注入头部 — 自动触发、重试、以及「发送测试事件」按钮共享同一条调度路径,所以三条路径的签名行为完全一致。零新增依赖(纯标准库 `hmac` + `hashlib`)。
 
+## 频道原生完成通知(Discord + Slack + Email)
+
+通用 webhook(`WEBHOOK_URL`)推送的是原始 JSON — 对 Zapier / Make / n8n 完美匹配,但 Discord 不会从 JSON 渲染任何东西,Slack 会把它原样塞进一个难看的代码块。三条频道原生路径把已格式化的卡片(或邮件)分别送到对应平台:
+
+- **Discord 富嵌入** — 设置 `DISCORD_WEBHOOK_URL`(Discord → 服务器设置 → 集成 → Webhooks)。MiroShark 推送一份 Discord embed:情景标题、按共识着色的边框(`#22c55e` bullish / `#6b7280` neutral / `#ef4444` bearish / `#f59e0b` failed)、Bullish / Neutral / Bearish / Quality / Rounds / Agents 字段、分享卡缩略图、可点击的分享页链接。失败运行会附加截断后的退出码错误作为 `Error` 字段。
+- **Slack Block Kit** — 设置 `SLACK_WEBHOOK_URL`(api.slack.com/apps → Incoming Webhooks)。MiroShark 推送一条 Block Kit 消息:情景标题块、状态动词上下文行、`mrkdwn` 信念条(`█████░░░░░ 52.0%`)、Quality / Scale / Resolution 字段,以及一个 "View simulation" 操作按钮。失败运行会附加一个 fenced-code 错误段。
+- **SMTP 完成邮件** — 设置 `SMTP_HOST` 与 `SMTP_TO`(逗号分隔的收件人列表)。MiroShark 发出一封 `multipart/alternative` 邮件:主题为 `[MiroShark] Bullish: <情景>`,邮箱过滤规则只看主题就能按方向分流;纯文本部分使用与 Slack 相同的 Unicode 块字符信念条;HTML 部分采用与 Discord 同色系的内联色块,以及按共识着色的「View simulation →」CTA。`SMTP_USER` / `SMTP_PASSWORD` 可选,支持无认证中继(`localhost:25`、自建 Postfix);587 端口尝试 STARTTLS,STARTTLS 失败时若已设置凭据会拒绝明文发送。这是唯一一个零平台依赖的通知通道 — 每位运营者都已经有邮箱。
+
+四个通道彼此独立。设置一个、两个、三个或全部四个 — 每个通道都在每次 `simulation.completed` / `simulation.failed` 事件上独立触发,按 `(sim_id, status)` 去重,所以 runner 的两条终止代码路径不会产生重复卡片。SPA 通过 `GET /api/config/notifications` 暴露 `{webhook_configured, discord_configured, slack_configured, email_configured}`,EmbedDialog 据此在分享 / 嵌入面上实时显示状态指示。纯标准库 `urllib.request` + `smtplib` — 零新增依赖。完整接入指南见 [NOTIFICATIONS.md](NOTIFICATIONS.md)。
+
 ## 文章生成
 
 模拟结束后,点击 **Write Article**,MiroShark 会让 Smart 模型写一篇 400–600 字的 Substack 风格报道,基于真实发生的事件 — 关键发现、市场动态、信念变化和影响。文章会缓存到 `generated_article.json`,这样重新打开不会再消耗 token;传 `force_regenerate=true` 可以刷新。

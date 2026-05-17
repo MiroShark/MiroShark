@@ -1996,6 +1996,9 @@ paths:
           * `webhook_configured`  — generic `WEBHOOK_URL` is set.
           * `discord_configured`  — `DISCORD_WEBHOOK_URL` is set.
           * `slack_configured`    — `SLACK_WEBHOOK_URL` is set.
+          * `email_configured`    — `SMTP_HOST` and `SMTP_TO` are
+            both set (a host without recipients has nowhere to send,
+            so both are required).
           * `dkg_configured`      — all three of `DKG_API_URL`,
             `DKG_AUTH_TOKEN`, `DKG_CONTEXT_GRAPH_ID` are set.
           * `dkg_network`         — `"testnet"` / `"mainnet"` /
@@ -2018,7 +2021,7 @@ paths:
                   success: { type: boolean, enum: [true] }
                   data:
                     type: object
-                    required: [webhook_configured, discord_configured, slack_configured]
+                    required: [webhook_configured, discord_configured, slack_configured, email_configured]
                     properties:
                       webhook_configured:
                         type: boolean
@@ -2041,6 +2044,20 @@ paths:
                           MiroShark POSTs a Slack Block Kit message
                           (header + context + section fields + actions
                           button) on every terminal-state transition.
+                      email_configured:
+                        type: boolean
+                        description: |
+                          Both `SMTP_HOST` and `SMTP_TO` are set
+                          (recipients are required — a host with no
+                          recipients has nowhere to send, so the
+                          channel reads as unconfigured). When `true`,
+                          MiroShark sends a `multipart/alternative`
+                          email (plain-text + HTML) on every
+                          terminal-state transition via the configured
+                          relay. `SMTP_USER` / `SMTP_PASSWORD` are
+                          optional — unauthenticated relays (e.g.
+                          `localhost:25`) are supported. Recipient
+                          addresses themselves are never returned.
                       dkg_configured:
                         type: boolean
                         description: |

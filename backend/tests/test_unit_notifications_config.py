@@ -67,9 +67,21 @@ def _clear_dkg(monkeypatch):
     monkeypatch.setattr(Config, "DKG_NETWORK", "testnet", raising=False)
 
 
+def _clear_email(monkeypatch):
+    """Reset SMTP_* env vars so the email channel reads as unconfigured."""
+    monkeypatch.delenv("SMTP_HOST", raising=False)
+    monkeypatch.delenv("SMTP_TO", raising=False)
+    monkeypatch.delenv("SMTP_PORT", raising=False)
+    monkeypatch.delenv("SMTP_USER", raising=False)
+    monkeypatch.delenv("SMTP_PASSWORD", raising=False)
+    monkeypatch.delenv("SMTP_FROM", raising=False)
+    monkeypatch.delenv("SMTP_USE_TLS", raising=False)
+
+
 def test_notifications_config_all_unset(monkeypatch, client):
     monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    _clear_email(monkeypatch)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
@@ -79,6 +91,7 @@ def test_notifications_config_all_unset(monkeypatch, client):
         "webhook_configured": False,
         "discord_configured": False,
         "slack_configured": False,
+        "email_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
     }
@@ -87,6 +100,7 @@ def test_notifications_config_all_unset(monkeypatch, client):
 def test_notifications_config_discord_only(monkeypatch, client):
     monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://discord.example/webhook")
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    _clear_email(monkeypatch)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
@@ -96,6 +110,7 @@ def test_notifications_config_discord_only(monkeypatch, client):
         "webhook_configured": False,
         "discord_configured": True,
         "slack_configured": False,
+        "email_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
     }
@@ -107,6 +122,7 @@ def test_notifications_config_slack_only(monkeypatch, client):
         "SLACK_WEBHOOK_URL",
         "https://hooks.slack.com/services/T0/B0/abc",
     )
+    _clear_email(monkeypatch)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
@@ -116,17 +132,56 @@ def test_notifications_config_slack_only(monkeypatch, client):
         "webhook_configured": False,
         "discord_configured": False,
         "slack_configured": True,
+        "email_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
     }
 
 
-def test_notifications_config_all_three_configured(monkeypatch, client):
+def test_notifications_config_email_only(monkeypatch, client):
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_TO", "alerts@example.com")
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+    _clear_dkg(monkeypatch)
+
+    data = _payload(client)
+    assert data == {
+        "webhook_configured": False,
+        "discord_configured": False,
+        "slack_configured": False,
+        "email_configured": True,
+        "dkg_configured": False,
+        "dkg_network": None,
+    }
+
+
+def test_notifications_config_email_requires_both_host_and_to(monkeypatch, client):
+    """SMTP_HOST alone (no SMTP_TO) is not a usable channel — the SPA
+    chip should stay off so an operator doesn't think email is wired
+    when nothing would actually ship."""
+    monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
+    monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.delenv("SMTP_TO", raising=False)
+    from app.config import Config
+    monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
+    _clear_dkg(monkeypatch)
+
+    data = _payload(client)
+    assert data["email_configured"] is False
+
+
+def test_notifications_config_all_four_configured(monkeypatch, client):
     monkeypatch.setenv("DISCORD_WEBHOOK_URL", "https://discord.example/webhook")
     monkeypatch.setenv(
         "SLACK_WEBHOOK_URL",
         "https://hooks.slack.com/services/T0/B0/abc",
     )
+    monkeypatch.setenv("SMTP_HOST", "smtp.example.com")
+    monkeypatch.setenv("SMTP_TO", "alerts@example.com")
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "https://example.com/hook", raising=False)
     _clear_dkg(monkeypatch)
@@ -136,6 +191,7 @@ def test_notifications_config_all_three_configured(monkeypatch, client):
         "webhook_configured": True,
         "discord_configured": True,
         "slack_configured": True,
+        "email_configured": True,
         "dkg_configured": False,
         "dkg_network": None,
     }
@@ -147,6 +203,8 @@ def test_notifications_config_blank_env_var_treated_as_unset(monkeypatch, client
     malformed configured channel."""
     monkeypatch.setenv("DISCORD_WEBHOOK_URL", "   ")
     monkeypatch.setenv("SLACK_WEBHOOK_URL", "")
+    monkeypatch.setenv("SMTP_HOST", "  ")
+    monkeypatch.setenv("SMTP_TO", "   ")
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "  ", raising=False)
     _clear_dkg(monkeypatch)
@@ -156,6 +214,7 @@ def test_notifications_config_blank_env_var_treated_as_unset(monkeypatch, client
         "webhook_configured": False,
         "discord_configured": False,
         "slack_configured": False,
+        "email_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
     }
@@ -166,6 +225,7 @@ def test_notifications_config_dkg_configured(monkeypatch, client):
     dkg_network reports whichever chain the operator labelled."""
     monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    _clear_email(monkeypatch)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     monkeypatch.setattr(Config, "DKG_API_URL", "http://127.0.0.1:9200", raising=False)
@@ -178,6 +238,7 @@ def test_notifications_config_dkg_configured(monkeypatch, client):
         "webhook_configured": False,
         "discord_configured": False,
         "slack_configured": False,
+        "email_configured": False,
         "dkg_configured": True,
         "dkg_network": "mainnet",
     }
@@ -189,6 +250,7 @@ def test_notifications_config_dkg_partial_treated_as_unconfigured(monkeypatch, c
     the token — the SPA should not surface a broken publish button."""
     monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    _clear_email(monkeypatch)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     monkeypatch.setattr(Config, "DKG_API_URL", "http://127.0.0.1:9200", raising=False)
@@ -209,6 +271,7 @@ def test_notifications_config_no_store_cache_header(monkeypatch, client):
     reload."""
     monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
+    _clear_email(monkeypatch)
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
 

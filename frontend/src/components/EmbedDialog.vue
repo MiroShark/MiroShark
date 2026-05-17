@@ -1440,7 +1440,7 @@
                     {{ $tr('Channel notifications on completion', '完成时的频道通知') }}
                   </div>
                   <div class="feed-callout-desc">
-                    {{ $tr('MiroShark POSTs a platform-native card to each configured channel the moment a simulation completes or fails — Discord gets a consensus-coloured embed, Slack gets a Block Kit message, the generic webhook gets the raw JSON. Each channel is opt-in via its own env var.', 'MiroShark 在模拟完成或失败时,会向每个已配置渠道推送对应平台原生的卡片 — Discord 收到按共识着色的 embed,Slack 收到 Block Kit 消息,通用 Webhook 收到原始 JSON。每个渠道可通过各自的环境变量单独启用。') }}
+                    {{ $tr('MiroShark POSTs a platform-native card to each configured channel the moment a simulation completes or fails — Discord gets a consensus-coloured embed, Slack gets a Block Kit message, Email gets a multipart/alternative message with plain-text belief bars and an HTML CTA, the generic webhook gets the raw JSON. Each channel is opt-in via its own env var.', 'MiroShark 在模拟完成或失败时,会向每个已配置渠道推送对应平台原生的卡片 — Discord 收到按共识着色的 embed,Slack 收到 Block Kit 消息,邮件渠道发出包含纯文本信念条与 HTML CTA 的 multipart/alternative 邮件,通用 Webhook 收到原始 JSON。每个渠道可通过各自的环境变量单独启用。') }}
                   </div>
                   <div class="notifications-chips">
                     <span
@@ -1472,6 +1472,16 @@
                     >
                       <span class="notifications-chip-dot">{{ notifConfig.slack_configured ? '✓' : '○' }}</span>
                       Slack
+                    </span>
+                    <span
+                      class="notifications-chip"
+                      :class="{ 'notifications-chip-on': notifConfig.email_configured }"
+                      :title="notifConfig.email_configured
+                        ? $tr('SMTP completion emails are wired up — every terminal-state transition ships a multipart/alternative message to the configured recipients', 'SMTP 完成邮件已接入 — 每次模拟达到终止状态都会向已配置收件人发出 multipart/alternative 邮件')
+                        : $tr('Set SMTP_HOST and SMTP_TO to enable completion emails (SMTP_USER/SMTP_PASSWORD optional)', '设置 SMTP_HOST 与 SMTP_TO 即可启用完成邮件(SMTP_USER/SMTP_PASSWORD 可选)')"
+                    >
+                      <span class="notifications-chip-dot">{{ notifConfig.email_configured ? '✓' : '○' }}</span>
+                      Email
                     </span>
                   </div>
                 </div>
@@ -2222,8 +2232,9 @@ const loadSitemapConfig = async () => {
   }
 }
 
-// Notification-channel config — three booleans tracking the live
-// state of WEBHOOK_URL / DISCORD_WEBHOOK_URL / SLACK_WEBHOOK_URL.
+// Notification-channel config — four booleans tracking the live
+// state of WEBHOOK_URL / DISCORD_WEBHOOK_URL / SLACK_WEBHOOK_URL /
+// (SMTP_HOST + SMTP_TO).
 // The chips render off these booleans so an operator sees at a
 // glance which channels will fire on the next terminal-state event.
 // We default everything to ``false`` (chip = ○) so a fetch failure
@@ -2232,6 +2243,7 @@ const notifConfig = ref({
   webhook_configured: false,
   discord_configured: false,
   slack_configured: false,
+  email_configured: false,
   dkg_configured: false,
   dkg_network: null,
 })
@@ -2245,6 +2257,7 @@ const loadNotificationsConfig = async () => {
       webhook_configured: !!data.webhook_configured,
       discord_configured: !!data.discord_configured,
       slack_configured: !!data.slack_configured,
+      email_configured: !!data.email_configured,
       dkg_configured: !!data.dkg_configured,
       dkg_network: data.dkg_network || null,
     }
@@ -2253,6 +2266,7 @@ const loadNotificationsConfig = async () => {
       webhook_configured: false,
       discord_configured: false,
       slack_configured: false,
+      email_configured: false,
       dkg_configured: false,
       dkg_network: null,
     }
