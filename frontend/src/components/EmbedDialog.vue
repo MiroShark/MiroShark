@@ -447,6 +447,72 @@
               </div>
             </div>
 
+            <!-- Farcaster Frame v2 — the Base-chain audience surface.
+                 $MIROSHARK lives on Base; the Base-native social
+                 network is Farcaster / Warpcast. When the share URL
+                 is pasted into a cast, the share-page <head> emits
+                 fc:frame:* meta tags so the cast renders as an
+                 interactive Frame card with the chart SVG as the
+                 preview and a "View Simulation →" link button. This
+                 section surfaces the Frame image + a Warpcast
+                 composer link so the operator can preview the Frame
+                 before casting. -->
+            <div class="transcript-section trajectory-section farcaster-frame-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">🟣</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">{{ $tr('Farcaster Frame', 'Farcaster Frame') }}</div>
+                  <div class="transcript-sub">
+                    {{ $tr('Paste the share link into any Farcaster client (Warpcast, Supercast, the in-wallet Frame in Coinbase Wallet) and the cast renders as an interactive belief-chart card with a one-tap link to the full simulation. Zero new dependencies — pure Frame v2 meta tags on the share page.', '在任何 Farcaster 客户端(Warpcast、Supercast、Coinbase Wallet 内置 Frame)中粘贴分享链接,Cast 会渲染为带一键链接到完整模拟的交互式信念图卡片。零新依赖 — 仅在分享页面添加 Frame v2 meta 标签。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && farcasterFrameImage" class="chart-svg-preview farcaster-frame-preview">
+                <img
+                  :src="farcasterFrameImage"
+                  :alt="$tr('Farcaster Frame preview', 'Farcaster Frame 预览')"
+                  loading="lazy"
+                  class="chart-svg-img"
+                />
+              </div>
+
+              <div class="transcript-actions">
+                <a
+                  v-if="isPublic && farcasterComposeUrl"
+                  class="transcript-download-btn"
+                  :href="farcasterComposeUrl"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🟣 {{ $tr('Compose on Warpcast', '在 Warpcast 中撰写') }}
+                </a>
+                <span v-if="!isPublic" class="transcript-empty">
+                  {{ $tr('Publish the simulation to enable the Farcaster Frame.', '发布模拟以启用 Farcaster Frame。') }}
+                </span>
+                <span
+                  v-else-if="farcasterHasTrajectory === false"
+                  class="transcript-empty farcaster-frame-fallback"
+                >
+                  {{ $tr('No trajectory yet — the Frame will preview the share card until rounds are recorded.', '尚无轨迹数据 — 在记录回合之前,Frame 将预览分享卡片。') }}
+                </span>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Share URL (paste into a Farcaster cast)', '分享 URL(粘贴到 Farcaster Cast)') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('farcasterShare')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'farcasterShare' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ farcasterShareUrl || '—' }}</code></pre>
+              </div>
+            </div>
+
             <!-- Twitter / X tweet thread — pairs with the share card
                  (visual), replay GIF (motion), transcript (prose), and
                  trajectory CSV (data) as the sixth share format. The
@@ -1612,6 +1678,8 @@ import {
   retryWebhookDelivery,
   getDkgCitation,
   publishToDkg,
+  getFrameMetadata,
+  buildWarpcastComposeUrl,
 } from '../api/simulation'
 import { tr } from '../i18n'
 
@@ -1749,6 +1817,54 @@ const chartSvgEmbedSnippet = computed(() => {
   const url = chartSvgUrl.value || 'https://your-host/api/simulation/<id>/chart.svg'
   return `<img src="${url}" alt="MiroShark belief trajectory chart" style="max-width:100%;height:auto;" />`
 })
+
+// ── Farcaster Frame state ───────────────────────────────────────────────
+// Loaded on dialog open whenever the sim is public. The endpoint hands
+// back the chart-SVG image URL (or share-card fallback for sims with no
+// trajectory yet), the share URL, and the button shape — the section
+// renders the image as a preview and offers a Warpcast composer link
+// pre-filled with the share URL.
+const farcasterFrameImage = ref('')
+const farcasterShareUrl = ref('')
+const farcasterHasTrajectory = ref(null)
+
+const farcasterComposeUrl = computed(() => {
+  if (!farcasterShareUrl.value) return ''
+  return buildWarpcastComposeUrl(farcasterShareUrl.value)
+})
+
+const loadFrameMetadata = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    farcasterFrameImage.value = ''
+    farcasterShareUrl.value = ''
+    farcasterHasTrajectory.value = null
+    return
+  }
+  try {
+    const res = await getFrameMetadata(props.simulationId)
+    const data = res && res.data && res.data.success ? res.data.data : null
+    if (data) {
+      farcasterFrameImage.value = data.image_url || ''
+      farcasterShareUrl.value = data.share_url || ''
+      farcasterHasTrajectory.value = data.has_trajectory === true
+    } else {
+      farcasterFrameImage.value = shareLandingUrl.value
+        ? `${origin.value}/api/simulation/${props.simulationId}/share-card.png`
+        : ''
+      farcasterShareUrl.value = shareLandingUrl.value
+      farcasterHasTrajectory.value = null
+    }
+  } catch (_err) {
+    // Frame metadata is best-effort. Fall back to the share-landing
+    // URL we already render in the share section so the operator can
+    // still paste *something* into Farcaster — the share page will
+    // emit the matching Frame tags on its own when the cast is
+    // scraped.
+    farcasterShareUrl.value = shareLandingUrl.value
+    farcasterFrameImage.value = ''
+    farcasterHasTrajectory.value = null
+  }
+}
 
 const threadTxtUrl = computed(() => {
   if (!props.simulationId || !origin.value) return ''
@@ -2408,6 +2524,7 @@ const copy = async (which) => {
   else if (which === 'trajectoryCsv') text = trajectoryCsvUrl.value
   else if (which === 'chartSvg') text = chartSvgUrl.value
   else if (which === 'chartSvgEmbed') text = chartSvgEmbedSnippet.value
+  else if (which === 'farcasterShare') text = farcasterShareUrl.value || shareLandingUrl.value
   else if (which === 'threadTxt') text = threadTxtUrl.value
   else if (which === 'threadFull') {
     // The full thread copy joins the per-tweet array with the same
@@ -2872,6 +2989,10 @@ watch(() => props.open, async (val) => {
   // gate, so a private sim resolves cleanly to the empty state without
   // an extra round-trip on every dialog open.
   loadThread()
+  // Same publish gate for the Farcaster Frame metadata — fetched once on
+  // open so the operator sees the Frame image preview + Warpcast
+  // composer link without a manual refresh.
+  loadFrameMetadata()
   // Reset surface-stats state on each open so a previously expanded
   // panel doesn't show stale numbers from a different sim. The
   // counters are only fetched on demand (when the operator expands
@@ -2905,6 +3026,9 @@ watch(isPublic, () => {
   // Re-fetch the thread when the publish flag flips — going public means
   // the gate now passes, so the previously-403 fetch should retry.
   loadThread()
+  // Same flip applies to the Farcaster Frame metadata — going public
+  // means the 403 → 200 gate flip should populate the Frame preview.
+  loadFrameMetadata()
   // Same publish-gate flip applies to the surface-stats panel — pull
   // fresh counters if the user has the panel expanded.
   if (surfaceStatsExpanded.value) {

@@ -1374,6 +1374,61 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/frame-metadata:
+    get:
+      tags: [Publish & Embed]
+      summary: Farcaster Frame v2 metadata for a published simulation.
+      description: |
+        Closes the Base-chain audience gap that none of the other share
+        surfaces address. $MIROSHARK lives on Base, and the Base-native
+        social network is Farcaster / Warpcast. A `/share/<id>` URL
+        pasted into a Farcaster cast today shows a blank link card;
+        with the `fc:frame:*` meta tags the share blueprint emits
+        alongside the existing Open Graph block, every cast containing
+        a MiroShark share URL becomes an interactive Frame card —
+        chart-SVG image as the Frame preview, a "View Simulation →"
+        link button, no JavaScript, no new deps.
+
+        The endpoint exists so the frontend EmbedDialog can build the
+        Warpcast compose link dynamically without hardcoding the base
+        URL, and so future Frame-action buttons (post actions, mint
+        flows) can be added via backend config rather than HTML
+        redeployment. The Frame spec itself reads the meta tags from
+        the share-page HTML head — see `backend/app/api/share.py` for
+        the server-side tag injection.
+
+        Same publish gate as the chart SVG: `403` on unpublished sims
+        so private scenario titles never leak through the Frame
+        metadata. Sims with no trajectory data yet still return `200` —
+        the image URL falls back to `share-card.png` so a fresh sim
+        still gets a Farcaster-ready unfurl while the trajectory
+        accumulates. The `has_trajectory` flag in the response signals
+        whether the chart SVG is the backing image (`true`) or the
+        share-card PNG (`false`).
+
+        Honours `X-Forwarded-Proto` / `X-Forwarded-Host` for
+        deployments behind a TLS-terminating reverse proxy so the
+        Frame image / share / button-target URLs resolve to the public
+        origin, not the WSGI `SERVER_NAME`.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: "Frame metadata JSON with `Cache-Control: public, max-age=300`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    $ref: "#/components/schemas/FrameMetadata"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/thread.txt:
     get:
       tags: [Publish & Embed]
@@ -3271,6 +3326,116 @@ components:
         body: { type: string }
         round: { type: integer, minimum: 0 }
         platform: { type: string, enum: [twitter, reddit, both] }
+
+    FrameMetadataButton:
+      type: object
+      required: [label, action, target]
+      description: |
+        Single Farcaster Frame v2 button. We only ever emit a one-button
+        link-action that takes the reader to the SPA simulation view,
+        but the schema is intentionally generic so post-action and
+        mint-action buttons can be added later without a breaking spec
+        change.
+      properties:
+        label:
+          type: string
+          description: |
+            Button caption rendered inside the Frame card. Capped to a
+            handful of characters in practice (Warpcast wraps long
+            labels onto a second line).
+        action:
+          type: string
+          enum: [link, post, post_redirect, mint, tx]
+          description: |
+            Frame v2 action verb. `link` opens the `target` URL in
+            the reader's browser; `post` POSTs a Frame action to
+            `target`; the others are reserved for future flows.
+        target:
+          type: string
+          format: uri
+          description: |
+            Destination URL for the button action.
+
+    FrameMetadata:
+      type: object
+      required:
+        - sim_id
+        - is_publishable
+        - has_trajectory
+        - frame_version
+        - image_url
+        - image_aspect_ratio
+        - share_url
+        - buttons
+      description: |
+        Farcaster Frame v2 metadata block for a published simulation —
+        the schema the share-page renderer transcribes into
+        `<meta property="fc:frame:*">` tags. The Frame spec reads the
+        tags from the HTML head; this endpoint exists so the EmbedDialog
+        can build the Warpcast compose link dynamically and so future
+        Frame-action buttons can be added via backend config rather than
+        HTML redeployment.
+      properties:
+        sim_id:
+          type: string
+          description: Echoed simulation id.
+        sim_title:
+          type: string
+          description: |
+            Scenario title truncated to the same 80-char cap the chart
+            SVG title uses. Empty string when the sim has no scenario
+            recorded yet.
+        is_publishable:
+          type: boolean
+          description: |
+            Always `true` on a 200 response — the endpoint 403s for
+            unpublished sims so this field is informational.
+        has_trajectory:
+          type: boolean
+          description: |
+            `true` when the sim has at least one recorded round, so
+            `image_url` points to the chart SVG (2:1). `false` when
+            the trajectory is empty, so `image_url` falls back to the
+            share-card PNG (1.91:1) — fresh sims still get a
+            Farcaster-ready unfurl while the trajectory accumulates.
+        frame_version:
+          type: string
+          enum: [next]
+          description: |
+            Frame v2 protocol version literal. `next` is the current
+            production value across every Frame-aware Farcaster client.
+        image_url:
+          type: string
+          format: uri
+          description: |
+            URL the `fc:frame:image` meta tag points at. Either the
+            chart SVG (`/chart.svg`, 2:1) when trajectory data is
+            present, or the share-card PNG (`/share-card.png`,
+            1.91:1) for sims that haven't recorded any rounds yet.
+        image_aspect_ratio:
+          type: string
+          enum: ["2:1", "1.91:1"]
+          description: |
+            Frame image aspect ratio. The spec only renders predictably
+            for these two values — anything else letterboxes inside
+            the cast feed.
+        share_url:
+          type: string
+          format: uri
+          description: |
+            The `/share/<id>` URL the operator pastes into a Farcaster
+            cast. Same value the EmbedDialog `Copy share URL` button
+            copies and the Warpcast compose link encodes.
+        buttons:
+          type: array
+          minItems: 1
+          maxItems: 4
+          items: { $ref: "#/components/schemas/FrameMetadataButton" }
+          description: |
+            Frame buttons. We emit a single `View Simulation →`
+            link-action today; the schema allows up to 4 (the Frame
+            spec ceiling) so future flows can extend without a
+            breaking change.
 
     RunStatus:
       type: object

@@ -5306,6 +5306,81 @@ def get_chart_svg(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/frame-metadata', methods=['GET'])
+def get_frame_metadata(simulation_id: str):
+    """Return Farcaster Frame v2 metadata for a published simulation.
+
+    Closes the Base-chain audience gap: $MIROSHARK lives on Base, and
+    the Base-native social network is Farcaster / Warpcast. Today a
+    ``/share/<id>`` URL pasted into a Farcaster cast shows a blank
+    link card. With this endpoint + the ``fc:frame:*`` meta tags the
+    share blueprint emits, every Farcaster cast containing a MiroShark
+    share URL becomes an interactive Frame card — chart-SVG image
+    (PR #85) as the Frame preview, a "View Simulation →" link button,
+    no JavaScript, no new deps.
+
+    The endpoint exists so the frontend EmbedDialog can dynamically
+    build the Warpcast compose link without hardcoding the base URL,
+    and so future Frame-action features (post-action buttons, mint
+    flows) can be added via backend config rather than HTML
+    redeployment. The Frame spec itself reads the meta tags from the
+    share-page HTML — see ``backend/app/api/share.py`` for the
+    server-side tag injection.
+
+    Same publish gate as the chart SVG: 403 on unpublished sims so
+    private scenario titles don't leak through the Frame metadata.
+    Sims with no trajectory data yet still return 200 — the image URL
+    falls back to ``share-card.png`` so a fresh sim still gets a
+    Frame-ready unfurl while the trajectory accumulates. The
+    ``has_trajectory`` flag signals whether the chart SVG is the
+    backing image (``True``) or the share-card PNG (``False``).
+    """
+    from ..services import frame_metadata as frame_metadata_service
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        base_url = _resolve_share_base_url()
+        payload = frame_metadata_service.build_frame_metadata(
+            sim_id=simulation_id,
+            scenario=summary.get("scenario") or "",
+            sim_dir=sim_dir,
+            base_url=base_url,
+            is_public=True,
+        )
+
+        response = jsonify({"success": True, "data": payload})
+        # 5-minute cache mirrors the chart-SVG cadence — a fresh
+        # trajectory point appearing every minute on a live run is
+        # still reflected within one Farcaster crawl cycle.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        return response
+
+    except Exception as e:
+        logger.error(
+            f"frame-metadata: failed for {simulation_id}: {e}\n{traceback.format_exc()}"
+        )
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 def _resolve_share_base_url() -> str:
     """Same proxy-aware base URL the share / watch routes use.
 

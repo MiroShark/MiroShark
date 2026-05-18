@@ -528,6 +528,45 @@ export const getChartSvgUrl = (simulationId, origin) => {
 }
 
 /**
+ * Fetch the Farcaster Frame v2 metadata for a published simulation.
+ *
+ * $MIROSHARK lives on Base; the Base-native social network is Farcaster
+ * / Warpcast. A `/share/<id>` URL pasted into a Farcaster cast renders
+ * as an interactive Frame card — chart-SVG image as the preview, a
+ * "View Simulation →" link button — once the share-page emits the
+ * matching `fc:frame:*` meta tags. The EmbedDialog calls this endpoint
+ * to build the Warpcast compose link without hardcoding the host, and
+ * to surface the Frame image / button details for the operator.
+ *
+ * Returns `{ success, data }` where `data` contains `frame_version`,
+ * `image_url`, `image_aspect_ratio`, `share_url`, `buttons`,
+ * `has_trajectory`. Returns `{ success: false, ... }` (HTTP 403) for
+ * unpublished sims and `404` for unknown sim ids — both cases are
+ * treated as "no Frame preview" by the dialog.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<object>}
+ */
+export const getFrameMetadata = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/frame-metadata`)
+}
+
+/**
+ * Build a Warpcast composer URL pre-filled with the share link so the
+ * operator lands inside the Warpcast composer with the Frame card
+ * already attached. Same URL-encoding scheme the backend
+ * `frame_metadata.warpcast_compose_url` helper uses — kept in sync
+ * with the backend so the test surface is one truth.
+ *
+ * @param {string} shareUrl
+ * @returns {string}
+ */
+export const buildWarpcastComposeUrl = (shareUrl) => {
+  if (!shareUrl) return 'https://warpcast.com/~/compose'
+  return `https://warpcast.com/~/compose?embeds[]=${encodeURIComponent(shareUrl)}`
+}
+
+/**
  * Build the absolute URL of the auto-generated Twitter / X tweet
  * thread for a finished simulation. Plain-text form — one intro
  * tweet, one tweet per belief inflection point (rounds where the

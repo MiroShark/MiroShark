@@ -92,6 +92,7 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/trajectory.csv` | Per-round belief CSV (`pandas.read_csv()` / Excel / Tableau / R) |
 | `GET` | `/api/simulation/<id>/trajectory.jsonl` | Per-round belief JSONL (DuckDB / pipelines) |
 | `GET` | `/api/simulation/<id>/chart.svg` | Per-round belief chart as a stdlib-rendered SVG — embed as `<img>` in Notion / Substack / Ghost / GitHub READMEs / LaTeX. Same ±0.2 stance threshold; vector scales to any size with no JavaScript |
+| `GET` | `/api/simulation/<id>/frame-metadata` | Farcaster Frame v2 metadata — `frame_version`, `image_url` (chart SVG, falling back to share card), `image_aspect_ratio`, `share_url`, `buttons`, `has_trajectory`. The matching `fc:frame:*` meta tags are emitted by the share page so a Farcaster cast containing the share URL renders as an interactive Frame card |
 | `GET` | `/api/simulation/<id>/thread.txt` | Auto-formatted X / Twitter tweet thread (one tweet per belief inflection point, ≤280 chars each) |
 | `GET` | `/api/simulation/<id>/thread.json` | Same tweet thread as `thread.txt` but as `{tweets, total, inflections_recorded, truncated}` for programmatic consumers |
 | `GET` | `/api/simulation/<id>/surface-stats` | Per-share-surface request counters — share card / replay GIF / transcript / trajectory / chart.svg / thread / watch page / Atom / RSS / reproduce.json / lineage / notebook.ipynb, plus a synthetic `total` |
