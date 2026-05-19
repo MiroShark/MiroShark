@@ -180,6 +180,19 @@ Two endpoints, same row schema, different serialization:
 
 Same publish gate as the share card and transcript (`is_public=true`). The bullish / neutral / bearish percentages use the same ±0.2 stance threshold as every other surface, so a number in the CSV matches what the gallery, share card, replay GIF, transcript, webhook, and feed report for the same round. The Embed dialog exposes a "Download .csv" + "Download .jsonl" pair beneath the transcript row, plus a copyable CSV URL and a `pd.read_csv("<url>")` quickstart snippet.
 
+## Farcaster Frame v2
+
+The on-chain audience surface. `$MIROSHARK` lives on Base; the Base-native social layer is Farcaster / Warpcast. When a token holder, researcher, or operator pasted a `/share/<id>` URL into a Farcaster cast before this feature, the cast rendered as a blank link card — every other paste context (Twitter/X, Discord, Slack, LinkedIn, iMessage, Notion, Ghost, Substack) gets a rich unfurl from the existing Open Graph block, but Farcaster saw nothing because the spec uses its own `fc:frame:*` meta-tag schema.
+
+The share-page `<head>` now emits a Frame v2 block alongside the existing Open Graph / Twitter tags. The `fc:frame:image` points at the per-round belief trajectory chart SVG (the same one the share dialog exposes under `📈 Trajectory chart (SVG)`), so a cast preview shows the actual bullish / neutral / bearish curve at 2:1 aspect ratio — readable inside the Warpcast feed without expanding. A single `View Simulation →` link button takes the reader to the SPA share landing in one tap. Sims that haven't recorded any rounds yet fall back to the share-card PNG at 1.91:1 so a freshly published sim still gets a Farcaster-ready unfurl while the trajectory accumulates.
+
+Pure stdlib on the backend (`xml.etree.ElementTree` already drives the chart SVG; the Frame logic itself is just dict assembly + meta-tag templating in `app/services/frame_metadata.py`). Zero new dependencies — same posture as PR #82 (sitemap), PR #80 (notebook), PR #79 (HMAC), PR #85 (chart SVG). Private sims suppress Frame tag injection entirely, so scenario titles never leak into a cast for a sim the operator hasn't explicitly published.
+
+The EmbedDialog surfaces a `🟣 Farcaster Frame` section: a lazy-loaded preview of the Frame image, a Warpcast composer link pre-filled with the share URL (so the operator can preview the Frame card before casting), and a copyable share URL ready to paste into any Farcaster client (Warpcast, Supercast, the in-wallet Frame in Coinbase Wallet). The `frame-metadata` JSON endpoint exists so the dialog can build the Warpcast compose link without hardcoding the host, and so future Frame-action buttons (post actions, mint flows) can be added via backend config rather than HTML redeployment.
+
+- **Frame meta tags:** `fc:frame`, `fc:frame:image`, `fc:frame:image:aspect_ratio`, `fc:frame:button:1`, `fc:frame:button:1:action`, `fc:frame:button:1:target` — emitted by `GET /share/<id>` for published sims, silently absent for private sims.
+- **Endpoint:** `GET /api/simulation/<id>/frame-metadata` → `{frame_version, image_url, image_aspect_ratio, share_url, buttons, has_trajectory, sim_title}`. Same publish gate as the chart SVG — 403 on unpublished sims, 200 with the share-card fallback for sims with no trajectory yet.
+
 ## Trajectory Chart SVG
 
 The scalable-vector companion to the trajectory CSV / JSONL data export. Where the CSV gives Pandas / Excel / Tableau / R the raw numbers, `GET /api/simulation/<id>/chart.svg` gives every other platform a ready-made image of the belief journey — bullish (`#22c55e`), neutral (`#6b7280`), bearish (`#ef4444`) polylines plotted against round number on a fixed `viewBox="0 0 800 400"`, with a 5-line y-axis grid, round-number x-axis labels, a three-swatch legend, and the scenario title.

@@ -14,13 +14,27 @@ Mounted on a separate blueprint with no URL prefix so the URL stays clean
 URL can hit the endpoint, but the underlying share-card.png and
 embed-summary endpoints both enforce the ``is_public`` gate so a private
 simulation just renders a generic preview.
+
+Farcaster Frame v2
+------------------
+
+The same head also emits ``<meta property="fc:frame:*">`` tags for
+published simulations, turning every cast that contains the share URL
+into an interactive Frame card inside Warpcast / Supercast / any
+Frame-aware Farcaster client. The Frame image is the chart SVG when
+trajectory data is present, falling back to the share-card PNG for
+mid-startup sims that haven't recorded any rounds yet. Private sims
+suppress Frame tag injection so scenario titles don't leak through
+the cast preview.
 """
 
 from __future__ import annotations
 
 import html
+import os
 from flask import Blueprint, Response, request
 
+from ..config import Config
 from ..services.simulation_manager import SimulationManager
 from ..utils.i18n import get_locale, t as _t
 from ..utils.validation import validate_simulation_id
@@ -41,12 +55,20 @@ def _render_landing_html(
     is_public: bool,
     spa_url: str,
     card_url: str,
+    frame_meta: dict | None = None,
 ) -> str:
     """Build the static HTML returned to scrapers + browsers.
 
     Keep this small and dependency-free — the page exists purely to expose
     Open Graph tags. The body is a minimal "redirecting" splash so users
     who somehow see it briefly know what's happening.
+
+    When ``frame_meta`` is supplied AND the sim is public, a block of
+    Farcaster Frame v2 ``<meta property="fc:frame:*">`` tags is emitted
+    alongside the existing Open Graph / Twitter tags. Non-Farcaster
+    scrapers silently ignore the Frame tags. For private sims the
+    Frame block is suppressed — same posture as the OG description
+    falling back to a generic string.
     """
     if scenario:
         scenario_clean = scenario.strip()
@@ -71,6 +93,43 @@ def _render_landing_html(
     spa_e = _esc(spa_url)
     spa_js = _json.dumps(spa_url)  # safe for inline <script> string literal
 
+    # Farcaster Frame v2 meta-tag block. Emitted only for published
+    # sims — private sims fall through to the generic OG preview so
+    # the scenario title never leaks into a Farcaster cast for a sim
+    # the operator hasn't explicitly published.
+    frame_block = ""
+    if is_public and frame_meta:
+        frame_image = _esc(frame_meta.get("image_url") or "")
+        frame_aspect = _esc(frame_meta.get("image_aspect_ratio") or "1.91:1")
+        frame_version = _esc(frame_meta.get("frame_version") or "next")
+        buttons = frame_meta.get("buttons") or []
+        if frame_image:
+            parts = [
+                "\n",
+                f"<meta property=\"fc:frame\" content=\"{frame_version}\">\n",
+                f"<meta property=\"fc:frame:image\" content=\"{frame_image}\">\n",
+                f"<meta property=\"fc:frame:image:aspect_ratio\" content=\"{frame_aspect}\">\n",
+            ]
+            # Frame spec caps buttons at 4; we only ever emit one, but
+            # iterate so the helper can grow without touching this
+            # branch. ``idx`` is 1-indexed per the spec.
+            for idx, button in enumerate(buttons[:4], start=1):
+                label = _esc((button or {}).get("label") or "")
+                action = _esc((button or {}).get("action") or "link")
+                target = _esc((button or {}).get("target") or spa_url)
+                if not label:
+                    continue
+                parts.append(
+                    f"<meta property=\"fc:frame:button:{idx}\" content=\"{label}\">\n"
+                )
+                parts.append(
+                    f"<meta property=\"fc:frame:button:{idx}:action\" content=\"{action}\">\n"
+                )
+                parts.append(
+                    f"<meta property=\"fc:frame:button:{idx}:target\" content=\"{target}\">\n"
+                )
+            frame_block = "".join(parts)
+
     # Note the dual redirect: <meta refresh> handles JS-off; the inline
     # script handles JS-on (instant). Bots ignore both.
     return (
@@ -94,6 +153,7 @@ def _render_landing_html(
         f"<meta name=\"twitter:title\" content=\"{title_e}\">\n"
         f"<meta name=\"twitter:description\" content=\"{desc_e}\">\n"
         f"<meta name=\"twitter:image\" content=\"{card_e}\">\n"
+        f"{frame_block}"
         "\n"
         f"<meta http-equiv=\"refresh\" content=\"0; url={spa_e}\">\n"
         f"<link rel=\"canonical\" href=\"{spa_e}\">\n"
@@ -172,12 +232,36 @@ def share_landing(simulation_id: str):
     spa_url = f"{base}/simulation/{simulation_id}/start"
     card_url = f"{base}/api/simulation/{simulation_id}/share-card.png"
 
+    # Build Farcaster Frame v2 metadata for published sims. The
+    # frame_metadata service reuses the chart-SVG trajectory loader to
+    # decide whether to point Farcaster at the chart (preferred) or
+    # the share-card PNG (fallback for mid-startup sims). Failures
+    # here must never crash the share page — we swallow exceptions
+    # and let the OG/Twitter preview stand alone.
+    frame_meta = None
+    if is_public:
+        try:
+            from ..services import frame_metadata as frame_metadata_service
+            sim_dir = os.path.join(
+                Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id
+            )
+            frame_meta = frame_metadata_service.build_frame_metadata(
+                sim_id=simulation_id,
+                scenario=scenario,
+                sim_dir=sim_dir,
+                base_url=base,
+                is_public=True,
+            )
+        except Exception:
+            frame_meta = None
+
     body = _render_landing_html(
         simulation_id=simulation_id,
         scenario=scenario if is_public else "",
         is_public=is_public,
         spa_url=spa_url,
         card_url=card_url,
+        frame_meta=frame_meta,
     )
 
     response = Response(body, mimetype="text/html; charset=utf-8")
