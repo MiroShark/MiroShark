@@ -44,7 +44,8 @@ Schema::
       "reproduce_json": 0,
       "lineage": 0,
       "notebook_ipynb": 0,
-      "chart_svg": 0
+      "chart_svg": 0,
+      "signal_json": 0
     }
 
 The ``read_surface_stats`` helper returns the same dict with every key
@@ -83,6 +84,7 @@ SURFACE_KEYS: frozenset[str] = frozenset(
         "lineage",
         "notebook_ipynb",
         "chart_svg",
+        "signal_json",
     }
 )
 

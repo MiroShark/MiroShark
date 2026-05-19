@@ -447,6 +447,102 @@
               </div>
             </div>
 
+            <!-- Machine-readable trading signal — the action primitive
+                 sitting on top of the data-export stack. Collapses the
+                 final-round belief split + quality health into a single
+                 line a quant tool, alert pipeline, or Zapier / Make /
+                 n8n workflow can consume directly. Same publish gate as
+                 every other share surface; pure stdlib, zero new deps. -->
+            <div class="transcript-section signal-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">📡</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Trading signal (JSON)', '交易信号(JSON)') }}
+                    <span v-if="signalDirection" :class="['signal-direction-badge', `signal-direction-${signalDirection.toLowerCase()}`]">
+                      {{ signalDirection }} · {{ signalConfidence }}%
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Machine-readable action primitive — direction (Bullish / Neutral / Bearish) + confidence (0 = pure three-way split, 100 = unanimous) + risk tier (low / medium / high, mapped from quality health). Consumable by quant tools, Zapier / Make / n8n workflows, and alert pipelines.', '机器可读的行动原语 — 方向(看涨 / 中性 / 看跌)+ 置信度(0 = 纯三向分裂,100 = 一致)+ 风险等级(低 / 中 / 高,源自质量健康度)。可被量化工具、Zapier / Make / n8n 工作流以及预警管道直接消费。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && signalPayload" class="signal-preview">
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Direction', '方向') }}</span>
+                  <span :class="['signal-value', `signal-direction-${signalPayload.direction.toLowerCase()}`]">
+                    {{ signalPayload.direction }}
+                  </span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Confidence', '置信度') }}</span>
+                  <span class="signal-value">{{ signalPayload.confidence_pct }}%</span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Risk tier', '风险等级') }}</span>
+                  <span :class="['signal-value', `signal-risk-${signalPayload.risk_tier}`]">
+                    {{ signalPayload.risk_tier }}
+                  </span>
+                </div>
+                <div class="signal-row signal-row-breakdown">
+                  <span class="signal-label">{{ $tr('Breakdown', '分布') }}</span>
+                  <span class="signal-value">
+                    🟢 {{ signalPayload.bullish_pct }}% · ⚪ {{ signalPayload.neutral_pct }}% · 🔴 {{ signalPayload.bearish_pct }}%
+                  </span>
+                </div>
+              </div>
+              <div v-else-if="isPublic && signalLoading" class="signal-loading">
+                {{ $tr('Loading signal…', '加载信号中…') }}
+              </div>
+              <div v-else-if="isPublic && signalError" class="signal-empty">
+                {{ signalError }}
+              </div>
+              <div v-else-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable the trading signal.', '发布模拟以启用交易信号。') }}
+              </div>
+
+              <div class="transcript-actions">
+                <a
+                  v-if="isPublic && signalJsonUrl"
+                  class="transcript-download-btn"
+                  :href="signalJsonUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-signal.json`"
+                >
+                  ↓ {{ $tr('Download signal.json', '下载 signal.json') }}
+                </a>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Signal URL', '信号 URL') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('signalUrl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'signalUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ signalJsonUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('signalCurl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'signalCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ signalCurlSnippet }}</code></pre>
+              </div>
+            </div>
+
             <!-- Twitter / X tweet thread — pairs with the share card
                  (visual), replay GIF (motion), transcript (prose), and
                  trajectory CSV (data) as the sixth share format. The
@@ -1595,6 +1691,8 @@ import {
   getTrajectoryCsvUrl,
   getTrajectoryJsonlUrl,
   getChartSvgUrl,
+  getSignalJsonUrl,
+  getSignalJson,
   getThreadTxtUrl,
   getThreadJsonUrl,
   getSurfaceStats,
@@ -1749,6 +1847,53 @@ const chartSvgEmbedSnippet = computed(() => {
   const url = chartSvgUrl.value || 'https://your-host/api/simulation/<id>/chart.svg'
   return `<img src="${url}" alt="MiroShark belief trajectory chart" style="max-width:100%;height:auto;" />`
 })
+
+// ── Trading signal state ────────────────────────────────────────────────
+const signalPayload = ref(null)
+const signalLoading = ref(false)
+const signalError = ref('')
+
+const signalJsonUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getSignalJsonUrl(props.simulationId, origin.value)
+})
+
+const signalDirection = computed(() => signalPayload.value?.direction || '')
+const signalConfidence = computed(() => {
+  const c = signalPayload.value?.confidence_pct
+  return (typeof c === 'number') ? c.toFixed(1) : ''
+})
+
+const signalCurlSnippet = computed(() => {
+  const url = signalJsonUrl.value || 'https://your-host/api/simulation/<id>/signal.json'
+  return `curl -s "${url}"`
+})
+
+const loadSignal = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    signalPayload.value = null
+    return
+  }
+  signalLoading.value = true
+  signalError.value = ''
+  try {
+    const payload = await getSignalJson(props.simulationId)
+    if (payload && typeof payload === 'object') {
+      signalPayload.value = payload
+    } else {
+      signalPayload.value = null
+      signalError.value = tr(
+        'Signal not available yet — the simulation hasn\'t recorded any rounds.',
+        '尚无可用的信号 — 模拟还没有记录任何回合。',
+      )
+    }
+  } catch (err) {
+    signalPayload.value = null
+    signalError.value = err?.message || tr('Signal fetch failed', '信号获取失败')
+  } finally {
+    signalLoading.value = false
+  }
+}
 
 const threadTxtUrl = computed(() => {
   if (!props.simulationId || !origin.value) return ''
@@ -2408,6 +2553,8 @@ const copy = async (which) => {
   else if (which === 'trajectoryCsv') text = trajectoryCsvUrl.value
   else if (which === 'chartSvg') text = chartSvgUrl.value
   else if (which === 'chartSvgEmbed') text = chartSvgEmbedSnippet.value
+  else if (which === 'signalUrl') text = signalJsonUrl.value
+  else if (which === 'signalCurl') text = signalCurlSnippet.value
   else if (which === 'threadTxt') text = threadTxtUrl.value
   else if (which === 'threadFull') {
     // The full thread copy joins the per-tweet array with the same
@@ -2872,6 +3019,10 @@ watch(() => props.open, async (val) => {
   // gate, so a private sim resolves cleanly to the empty state without
   // an extra round-trip on every dialog open.
   loadThread()
+  // Pull the trading signal alongside the thread — same publish gate,
+  // tiny payload (~250 bytes), and the preview row needs the parsed
+  // payload to render the direction / confidence / risk-tier chips.
+  loadSignal()
   // Reset surface-stats state on each open so a previously expanded
   // panel doesn't show stale numbers from a different sim. The
   // counters are only fetched on demand (when the operator expands
@@ -2905,6 +3056,8 @@ watch(isPublic, () => {
   // Re-fetch the thread when the publish flag flips — going public means
   // the gate now passes, so the previously-403 fetch should retry.
   loadThread()
+  // Same publish-gate flip applies to the trading signal — re-fetch.
+  loadSignal()
   // Same publish-gate flip applies to the surface-stats panel — pull
   // fresh counters if the user has the panel expanded.
   if (surfaceStatsExpanded.value) {
@@ -3582,6 +3735,98 @@ watch(isPublic, () => {
   height: auto;
   max-width: 100%;
   border-radius: 4px;
+}
+
+/* Trading signal — the action primitive sitting on top of the
+   data-export stack. The header badge mirrors what the JSON payload
+   carries (direction + one-decimal confidence) so an operator can
+   read the verdict without expanding the preview rows below. */
+.signal-section {
+  margin-top: 14px;
+}
+
+.signal-direction-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  text-transform: none;
+  background: rgba(10, 10, 10, 0.08);
+  color: #2a2a2a;
+}
+
+.signal-direction-bullish {
+  color: #166534;
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.signal-direction-neutral {
+  color: #374151;
+  background: rgba(107, 114, 128, 0.15);
+}
+
+.signal-direction-bearish {
+  color: #991b1b;
+  background: rgba(239, 68, 68, 0.15);
+}
+
+.signal-preview {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(10, 10, 10, 0.03);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.signal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.signal-label {
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.signal-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  color: #111827;
+}
+
+.signal-risk-low-risk {
+  color: #166534;
+}
+
+.signal-risk-medium-risk {
+  color: #92400e;
+}
+
+.signal-risk-high-risk {
+  color: #991b1b;
+}
+
+.signal-row-breakdown .signal-value {
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.signal-loading,
+.signal-empty {
+  margin-top: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
 }
 
 /* Tweet thread — short-form text companion to the transcript / share

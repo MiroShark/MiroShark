@@ -190,6 +190,41 @@ Embeddable anywhere `<img>` renders — Notion, Substack, Ghost, GitHub READMEs,
 
 Same publish gate as the trajectory CSV. Returns `404` when the simulation hasn't recorded any rounds yet (the embed site can render its own placeholder rather than a blank SVG that looks like a styling bug). The Embed dialog exposes a `📈 Trajectory chart (SVG)` section beneath the trajectory CSV row: a lazy-loaded preview, a "Download .svg" anchor, a copyable URL, and a paste-ready `<img>` embed snippet. The chart-svg counter joins the surface-stats schema so an operator can see how many embeds the chart drove independently of the share card and replay GIF.
 
+## Trading Signal JSON
+
+The action primitive sitting on top of the data-export stack. The previous surfaces (trajectory CSV, trajectory JSONL, chart SVG, transcript, notebook, reproduce.json) describe *what happened*; `GET /api/simulation/<id>/signal.json` collapses the same final-state numbers into a single line a quant tool, alert pipeline, or Zapier / Make / n8n workflow can consume directly.
+
+Returns a stable v1-schema JSON document:
+
+```json
+{
+  "schema_version": "1",
+  "simulation_id": "<sim_id>",
+  "direction": "Bullish",
+  "confidence_pct": 43.4,
+  "risk_tier": "low-risk",
+  "bullish_pct": 62.3,
+  "neutral_pct": 17.7,
+  "bearish_pct": 20.0,
+  "quality_health": "excellent",
+  "signal_generated_at": "2026-05-19T12:34:56Z"
+}
+```
+
+- **`direction`** — `Bullish` / `Neutral` / `Bearish`, the plurality stance from the final-round belief distribution. Tie-break order is documented and stable: `bullish > bearish > neutral` so a consumer can predict the output even on rare even-split rounds.
+- **`confidence_pct`** — how far the leading stance is from the three-way noise floor. `(leading_pct - 33.333) / 66.667 * 100` clamped to `[0, 100]` and rounded to one decimal place. A 33.3% leading stance is 0 (pure split); a 100% leading stance is 100 (unanimous); a 66.7% leading stance is ~50 (the midpoint).
+- **`risk_tier`** — `low-risk` / `medium-risk` / `high-risk`, mapped from `quality_health`: `excellent` → `low-risk`, `good` → `medium-risk`, anything else (`fair`, `poor`, missing, `"N/A"`) → `high-risk`. The default-to-high posture is deliberate — an unknown-quality signal is treated cautiously by downstream consumers.
+- **`bullish_pct` / `neutral_pct` / `bearish_pct`** — the underlying breakdown, same ±0.2 stance threshold as every other surface. A "Bullish 62%" signal here matches what the gallery card, share card, replay GIF, and trajectory CSV report for the same simulation.
+- **`signal_generated_at`** — ISO-8601 UTC timestamp tracking when the signal was *computed*, not when the underlying simulation completed. Re-derived on every request (bytewise determinism is not a property of this surface — unlike `reproduce.json` / `notebook.ipynb` whose bytes need to be citation-hashable).
+
+Pure derivation. No new computation. The underlying numbers are the same ones the embed-summary endpoint already builds, the gallery card already displays, and the share card PNG already renders. Stdlib-only (`datetime` for the timestamp); the `signal_service.py` module is ~200 LoC with no new dependencies.
+
+Same publish gate as every other share surface (`is_public=true`). Returns `404` when the simulation hasn't recorded any rounds yet (no `belief.final` block on the embed summary) so an embedding tool can render a "not ready" placeholder rather than a half-baked signal an alert pipeline might act on. Cached for 5 minutes — a live sim's final stance can flip round-to-round, so a short cache lets alert pipelines see fresh signals while crawlers don't hammer the embed-summary build.
+
+The Embed dialog exposes a `📡 Trading signal (JSON)` section beneath the trajectory chart row: a live preview of the signal payload, a "Download .json" anchor, a copyable URL, and a paste-ready `curl` snippet. The `signal_json` counter joins the surface-stats schema so an operator can see how many alert pipelines the signal drove independently of the visual surfaces.
+
+Closes the gap between *"a sim produces data"* and *"a sim produces a signal"* — the last mile a quant audience needed before MiroShark output could land directly in an automation rather than a notebook.
+
 ## Gallery Search & Filtering
 
 `/explore` is the public research surface — every published MiroShark simulation, browsable as a card grid. Once the corpus grew past a few dozen entries the reverse-chronological scroll stopped being a tool, so the gallery now indexes itself: a keyword search box, a consensus filter chip group, a quality filter chip group, and a sort dropdown sit above the cards. The active filter set lives in URL params (`?q=…&consensus=bearish&quality=excellent&sort=rounds`), so any filtered view is bookmarkable and shareable — "every excellent-quality bearish call about Aave" is a URL you can tweet.

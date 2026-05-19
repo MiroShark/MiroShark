@@ -5306,6 +5306,91 @@ def get_chart_svg(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/signal.json', methods=['GET'])
+def get_signal_json(simulation_id: str):
+    """Machine-readable trading signal derived from a finished simulation.
+
+    Collapses the final-round belief split + quality health into a
+    single action primitive a quant tool, Zapier workflow, or alert
+    pipeline can consume directly: ``direction`` (Bullish / Neutral /
+    Bearish) + ``confidence_pct`` (0 = pure three-way split, 100 =
+    unanimous leading stance) + ``risk_tier`` (low / medium / high,
+    mapped from quality health) + the three component percentages.
+
+    Pure derivation — the underlying numbers are the same ones the
+    embed-summary endpoint already builds, the gallery card displays,
+    and the share card PNG renders. A "Bullish 62%" signal here matches
+    what every other surface reports for the same simulation; the only
+    new information is the *shape*, not the data.
+
+    Same publish gate as every other share surface. Returns ``404``
+    when the simulation hasn't recorded any rounds yet (no
+    ``belief.final`` block on the embed summary) so an embedding tool
+    can render a "not ready" placeholder rather than a half-baked
+    signal an alert pipeline might act on.
+    """
+    from ..services import signal_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        signal = signal_service.compute_signal(summary)
+        if signal is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Signal not available yet — the simulation hasn't recorded any rounds.",
+                    "尚无可用的信号 — 模拟还没有记录任何回合。",
+                    locale,
+                ),
+            }), 404
+
+        signal["simulation_id"] = simulation_id
+
+        # Pretty-printed + sorted keys so ``curl > signal.json`` produces
+        # a diff-friendly file. ``signal_generated_at`` re-derives on
+        # every request (it tracks when the signal was *computed*, not
+        # the underlying sim), so bytewise determinism is not a property
+        # this surface aims for — unlike reproduce.json / notebook.ipynb
+        # whose bytes need to be hash-citable.
+        payload = json.dumps(signal, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        response = Response(payload, mimetype="application/json; charset=utf-8")
+        # 5-minute cache — matches the chart.svg / trajectory cadence;
+        # a live sim's final stance can flip round-to-round, so a short
+        # cache lets alert pipelines see fresh signals while crawlers
+        # don't hammer the embed-summary build.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-signal.json"'
+        )
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        surface_stats.increment_surface_stat(sim_dir, "signal_json")
+        return response
+
+    except Exception as e:
+        logger.error(f"signal.json: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 def _resolve_share_base_url() -> str:
     """Same proxy-aware base URL the share / watch routes use.
 
