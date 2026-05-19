@@ -162,12 +162,20 @@ def test_confidence_pct_is_one_hundred_for_unanimous():
 
 def test_confidence_pct_is_fifty_at_midpoint():
     """Leading stance at the midpoint between baseline and unanimous
-    (~66.7%) should produce ~50% confidence."""
+    (~66.7%) should produce ~50% confidence.
+
+    Tolerance is ``abs=0.2`` rather than ``0.1``: the implementation
+    rounds the raw computation to one decimal, so a leading stance of
+    ``66.7`` lands at ``50.1`` (raw ``50.05005…`` rounds up), and
+    ``abs(50.1 - 50.0)`` is ``0.10000000000000142`` in IEEE 754 —
+    a hair above ``0.1``, which would false-fail. ``0.2`` covers the
+    one-decimal-place quantum on either side of the midpoint without
+    changing what the test actually asserts (\"about 50%\")."""
     from app.services.signal_service import compute_signal
 
     signal = compute_signal(_summary(bullish=66.7, neutral=16.6, bearish=16.7))
     assert signal is not None
-    assert signal["confidence_pct"] == pytest.approx(50.0, abs=0.1)
+    assert signal["confidence_pct"] == pytest.approx(50.0, abs=0.2)
 
 
 def test_confidence_pct_is_rounded_to_one_decimal():
