@@ -609,6 +609,96 @@
               </div>
             </div>
 
+            <!-- Simulation archive bundle — every published share
+                 surface collapsed into a single ZIP download plus a
+                 manifest.json pairing each contained file with its
+                 SHA-256, byte size, and canonical source URL. The
+                 take-offline primitive for researchers building
+                 citation chains or running comparison studies across
+                 multiple sims. Compositional: every bundled file is
+                 byte-for-byte identical to what the standalone surface
+                 route serves, so citation hashes line up across the
+                 two distribution paths. -->
+            <div class="transcript-section archive-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">📦</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Archive bundle (.zip)', '归档包(.zip)') }}
+                    <span v-if="isPublic && archiveFileCount" class="archive-count-badge">
+                      {{ archiveFileCount }} {{ $tr('files', '个文件') }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('One ZIP, every published surface inside — share card, chart SVG, trajectory CSV / JSONL, transcript, thread, reproduce.json, notebook, and signal.json. A manifest.json pairs each file with its SHA-256, byte size, and canonical source URL so citation hashes line up across both distribution paths.', '一个 ZIP,包含所有已发布的资源 — 分享卡、图表 SVG、轨迹 CSV / JSONL、转录稿、推文串、reproduce.json、Notebook 以及 signal.json。manifest.json 为每个文件提供 SHA-256、字节数和规范源 URL,使两种分发路径上的引用哈希保持一致。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && archiveAvailable" class="archive-summary">
+                <div class="archive-summary-row">
+                  <span class="archive-label">{{ $tr('Files inside', '包含文件') }}</span>
+                  <span class="archive-value">{{ archiveFileCount }}</span>
+                </div>
+                <div class="archive-summary-row">
+                  <span class="archive-label">{{ $tr('Format', '格式') }}</span>
+                  <span class="archive-value">application/zip · {{ $tr('deflate-compressed', 'deflate 压缩') }}</span>
+                </div>
+                <div class="archive-summary-row">
+                  <span class="archive-label">{{ $tr('Citation', '引用') }}</span>
+                  <span class="archive-value">{{ $tr('manifest.json with per-file SHA-256', 'manifest.json 含逐文件 SHA-256') }}</span>
+                </div>
+              </div>
+              <div v-else-if="isPublic && archiveLoading" class="signal-loading">
+                {{ $tr('Loading archive…', '加载归档中…') }}
+              </div>
+              <div v-else-if="isPublic && !archiveAvailable" class="signal-empty">
+                {{ $tr('Archive not available yet — the simulation hasn\'t recorded any exportable surfaces.', '尚无可用的归档 — 模拟还没有记录任何可导出的内容。') }}
+              </div>
+              <div v-else-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable the archive bundle.', '发布模拟以启用归档包。') }}
+              </div>
+
+              <div class="transcript-actions">
+                <a
+                  v-if="isPublic && archiveZipUrl"
+                  class="transcript-download-btn"
+                  :href="archiveZipUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-archive.zip`"
+                >
+                  ↓ {{ $tr('Download archive.zip', '下载 archive.zip') }}
+                </a>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Archive URL', '归档 URL') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('archiveUrl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'archiveUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ archiveZipUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('archiveCurl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'archiveCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ archiveCurlSnippet }}</code></pre>
+              </div>
+            </div>
+
             <!-- Twitter / X tweet thread — pairs with the share card
                  (visual), replay GIF (motion), transcript (prose), and
                  trajectory CSV (data) as the sixth share format. The
@@ -1759,6 +1849,8 @@ import {
   getChartSvgUrl,
   getSignalJsonUrl,
   getSignalJson,
+  getArchiveZipUrl,
+  getArchiveSummary,
   getThreadTxtUrl,
   getThreadJsonUrl,
   getSurfaceStats,
@@ -1960,6 +2052,49 @@ const loadSignal = async () => {
     signalError.value = err?.message || tr('Signal fetch failed', '信号获取失败')
   } finally {
     signalLoading.value = false
+  }
+}
+
+// ── Archive bundle state ────────────────────────────────────────────────
+// Loaded on dialog open whenever the sim is public. The HEAD request
+// reads ``X-MiroShark-Archive-Files`` so the dialog can show the file
+// count without downloading the full ZIP. Failure is silent — the
+// section falls back to the static "Download archive.zip" button.
+const archiveFileCount = ref(0)
+const archiveLoading = ref(false)
+const archiveAvailable = ref(false)
+
+const archiveZipUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getArchiveZipUrl(props.simulationId, origin.value)
+})
+
+const archiveCurlSnippet = computed(() => {
+  const url = archiveZipUrl.value || 'https://your-host/api/simulation/<id>/archive.zip'
+  return `curl -OJ "${url}"`
+})
+
+const loadArchive = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    archiveAvailable.value = false
+    archiveFileCount.value = 0
+    return
+  }
+  archiveLoading.value = true
+  try {
+    const summary = await getArchiveSummary(props.simulationId)
+    if (summary && typeof summary.fileCount === 'number') {
+      archiveAvailable.value = true
+      archiveFileCount.value = summary.fileCount
+    } else {
+      archiveAvailable.value = false
+      archiveFileCount.value = 0
+    }
+  } catch (err) {
+    archiveAvailable.value = false
+    archiveFileCount.value = 0
+  } finally {
+    archiveLoading.value = false
   }
 }
 
@@ -2671,6 +2806,8 @@ const copy = async (which) => {
   else if (which === 'chartSvgEmbed') text = chartSvgEmbedSnippet.value
   else if (which === 'signalUrl') text = signalJsonUrl.value
   else if (which === 'signalCurl') text = signalCurlSnippet.value
+  else if (which === 'archiveUrl') text = archiveZipUrl.value
+  else if (which === 'archiveCurl') text = archiveCurlSnippet.value
   else if (which === 'farcasterShare') text = farcasterShareUrl.value || shareLandingUrl.value
   else if (which === 'threadTxt') text = threadTxtUrl.value
   else if (which === 'threadFull') {
@@ -3140,6 +3277,10 @@ watch(() => props.open, async (val) => {
   // tiny payload (~250 bytes), and the preview row needs the parsed
   // payload to render the direction / confidence / risk-tier chips.
   loadSignal()
+  // HEAD the archive endpoint so the bundle section can show the file
+  // count without downloading the ZIP. Same publish gate as every
+  // other surface — a private sim resolves cleanly to "not available".
+  loadArchive()
   // Same publish gate for the Farcaster Frame metadata — fetched once on
   // open so the operator sees the Frame image preview + Warpcast
   // composer link without a manual refresh.
@@ -3179,6 +3320,9 @@ watch(isPublic, () => {
   loadThread()
   // Same publish-gate flip applies to the trading signal — re-fetch.
   loadSignal()
+  // Same flip applies to the archive bundle — re-HEAD so the bundle
+  // section reflects the now-available surface count.
+  loadArchive()
   // Same flip applies to the Farcaster Frame metadata — going public
   // means the 403 → 200 gate flip should populate the Frame preview.
   loadFrameMetadata()
@@ -3951,6 +4095,59 @@ watch(isPublic, () => {
   font-size: 13px;
   color: #6b7280;
   font-style: italic;
+}
+
+/* Archive bundle — the take-offline composite. One ZIP, every
+   published surface inside, plus a manifest.json pairing each file
+   with its SHA-256 + size + canonical source URL. Layout mirrors the
+   signal section: an at-a-glance summary grid above the snippet
+   blocks so an operator can read the file count and citation
+   guarantees without expanding anything. */
+.archive-section {
+  margin-top: 14px;
+}
+
+.archive-count-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+  text-transform: none;
+  background: rgba(34, 197, 94, 0.15);
+  color: #166534;
+}
+
+.archive-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  background: rgba(10, 10, 10, 0.03);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.archive-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.archive-label {
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.archive-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  color: #111827;
 }
 
 /* Tweet thread — short-form text companion to the transcript / share

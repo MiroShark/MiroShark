@@ -614,6 +614,68 @@ export const getSignalJson = async (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the simulation archive bundle — a single
+ * ZIP containing every published share surface (share-card.png,
+ * chart.svg, trajectory.csv / jsonl, transcript.md, thread.txt,
+ * reproduce.json, notebook.ipynb, signal.json) plus a manifest.json
+ * pairing each contained file with its SHA-256, size, and canonical
+ * source URL.
+ *
+ * The twelfth share surface, and the compositional one — files inside
+ * the ZIP are byte-for-byte identical to the same file fetched from
+ * its standalone URL, so citation hashes line up across both
+ * distribution paths.
+ *
+ * Same publish gate as every other share surface. Returns 404 when no
+ * exportable surfaces are available yet (a freshly published sim that
+ * hasn't recorded any rounds). The browser receives the response with
+ * `Content-Disposition: attachment` so a click triggers a save-as.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getArchiveZipUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/archive.zip`
+}
+
+/**
+ * Fetch the archive-bundle manifest by reading the ZIP header range —
+ * cheap, since we only want the file count + sizes for the EmbedDialog
+ * preview, not the full archive contents.
+ *
+ * The implementation HEADs the archive URL, reading the
+ * `X-MiroShark-Archive-Files` response header the backend sets so we
+ * can show "8 files inside" without downloading the whole ZIP. Returns
+ * `null` on 403 (private) / 404 (no surfaces yet) / transport errors
+ * so the dialog can render a "not ready" state without crashing.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<{ fileCount: number } | null>}
+ */
+export const getArchiveSummary = async (simulationId) => {
+  try {
+    const res = await fetch(getArchiveZipUrl(simulationId), {
+      method: 'HEAD',
+      credentials: 'omit',
+      cache: 'no-store',
+    })
+    if (res.status === 403 || res.status === 404) {
+      return null
+    }
+    if (!res.ok) {
+      return null
+    }
+    const fileCountHeader = res.headers.get('x-miroshark-archive-files')
+    const fileCount = fileCountHeader ? parseInt(fileCountHeader, 10) : 0
+    return { fileCount: Number.isFinite(fileCount) ? fileCount : 0 }
+  } catch (err) {
+    return null
+  }
+}
+
+/**
  * Build the absolute URL of the auto-generated Twitter / X tweet
  * thread for a finished simulation. Plain-text form — one intro
  * tweet, one tweet per belief inflection point (rounds where the

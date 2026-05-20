@@ -238,6 +238,50 @@ The Embed dialog exposes a `📡 Trading signal (JSON)` section beneath the traj
 
 Closes the gap between *"a sim produces data"* and *"a sim produces a signal"* — the last mile a quant audience needed before MiroShark output could land directly in an automation rather than a notebook.
 
+## Simulation Archive Bundle
+
+The take-offline composite — one ZIP, every published share surface inside. Until now a researcher finishing a simulation had to chain up to nine separate `curl` calls to take the artifact set offline (`share-card.png`, `chart.svg`, `trajectory.csv`, `trajectory.jsonl`, `transcript.md`, `thread.txt`, `reproduce.json`, `notebook.ipynb`, `signal.json`). `GET /api/simulation/<id>/archive.zip` collapses every successfully-rendered surface into one timestamped ZIP plus a `manifest.json` that pairs each contained file with its SHA-256, byte size, MIME type, and canonical source URL.
+
+```json
+{
+  "schema_version": "1",
+  "simulation_id": "sim_abc123…",
+  "archive_generated_at": "2026-05-20T12:34:56Z",
+  "base_url": "https://miroshark.example.com",
+  "file_count": 8,
+  "files": [
+    {
+      "filename": "share-card.png",
+      "sha256": "<hex>",
+      "size_bytes": 12345,
+      "source_url": "https://miroshark.example.com/api/simulation/sim_abc.../share-card.png",
+      "mime_type": "image/png"
+    },
+    {
+      "filename": "chart.svg",
+      "sha256": "<hex>",
+      "size_bytes": 8192,
+      "source_url": "https://miroshark.example.com/api/simulation/sim_abc.../chart.svg",
+      "mime_type": "image/svg+xml"
+    }
+  ]
+}
+```
+
+**Compositional, not duplicative.** Every bundled file comes from the same renderer the standalone surface route already serves — `share_card.render_share_card`, `chart_svg.render_chart_svg_bytes`, `trajectory_export.render_csv` / `render_jsonl`, `repro_export.render_json_bytes`, `notebook_export.render_notebook_bytes`, `signal_service.compute_signal`, `transcript.render_markdown_bytes`, `thread_formatter.render_thread_txt`. A file inside `archive.zip` is byte-for-byte identical to the same file fetched from its standalone URL, so the SHA-256 in the manifest matches what a hash-of-the-canonical-URL workflow would compute. Citation chains anchored against `reproduce.json`'s OriginTrail DKG hash (PR #84) line up across both distribution paths.
+
+**Best-effort assembly.** Every surface builder is wrapped in a `try/except` and a missing-or-corrupt artifact yields an omitted entry rather than a `500`. The `file_count` + `files` array in the manifest enumerate exactly what landed in the ZIP — a consumer who needs a specific file can tell whether it was excluded because the underlying artifact wasn't ready vs. because the run had `n=0` rounds.
+
+**Deterministic file timestamps.** Every `ZipInfo` entry carries the same fixed `date_time` (`1980-01-01T00:00:00`) so the per-file portion of the archive bytes is reproducible across two builds of the same input set. The `manifest.json` carries `archive_generated_at` which is the only drift across requests — consumers who need bit-stable archives can hash the contained files individually (each is bytewise-deterministic) and ignore the manifest timestamp.
+
+Pure stdlib (`zipfile` + `hashlib` + `io` + `json` + `datetime`). Zero new dependencies — same posture as every other surface module. `archive_service.py` is ~430 LoC.
+
+Same publish gate as every other share surface (`is_public=true`). Returns `404` when no exportable surfaces are available yet (a freshly published sim that hasn't recorded any rounds — even `signal.json` and `reproduce.json` need a final belief block to compose). Cached for 5 minutes — matches the notebook + reproduce.json cadence so a live run's growing trajectory propagates through within a polling cycle.
+
+The Embed dialog exposes a `📦 Archive bundle (.zip)` section beneath the trading-signal row: a live file-count badge (read off the `X-MiroShark-Archive-Files` response header so the dialog doesn't have to download the full ZIP just to render a preview), a summary grid (file count + compression format + citation guarantee), a "Download archive.zip" anchor, a copyable URL, and a paste-ready `curl -OJ` snippet that uses the server-supplied filename. The `archive_zip` counter joins the surface-stats schema so an operator can see how many take-offline workflows the archive drove independently of the individual surfaces.
+
+Closes the *"how does a researcher take a sim home"* gap that nine independent endpoints couldn't close on their own.
+
 ## Gallery Search & Filtering
 
 `/explore` is the public research surface — every published MiroShark simulation, browsable as a card grid. Once the corpus grew past a few dozen entries the reverse-chronological scroll stopped being a tool, so the gallery now indexes itself: a keyword search box, a consensus filter chip group, a quality filter chip group, and a sort dropdown sit above the cards. The active filter set lives in URL params (`?q=…&consensus=bearish&quality=excellent&sort=rounds`), so any filtered view is bookmarkable and shareable — "every excellent-quality bearish call about Aave" is a URL you can tweet.

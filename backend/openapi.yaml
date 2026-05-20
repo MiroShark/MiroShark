@@ -1429,6 +1429,70 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/archive.zip:
+    get:
+      tags: [Publish & Embed]
+      summary: Bundle every published share surface into a single ZIP download.
+      description: |
+        The take-offline composite. Until now a researcher finishing a
+        simulation had to chain up to nine separate routes to take the
+        artifact set offline (`share-card.png`, `chart.svg`,
+        `trajectory.csv` / `.jsonl`, `transcript.md`, `thread.txt`,
+        `reproduce.json`, `notebook.ipynb`, `signal.json`). This endpoint
+        collapses every successfully-rendered surface into one
+        timestamped ZIP plus a `manifest.json` that pairs each contained
+        file with its SHA-256, byte size, MIME type, and canonical
+        source URL.
+
+        Compositional, not duplicative — every bundled file is
+        byte-for-byte identical to what the standalone surface route
+        serves, so citation hashes line up across both distribution
+        paths.
+
+        Best-effort assembly. Missing or corrupt artifacts (a sim
+        without a trajectory yet, a renderer that needs Pillow on a
+        stripped install) are simply omitted from the archive rather
+        than failing the request. The `file_count` and `files` array
+        in the manifest enumerate exactly what landed inside the ZIP.
+
+        Deterministic per-file timestamps. Every `ZipInfo` entry uses a
+        fixed `date_time` (`1980-01-01T00:00:00`) so the contained file
+        bytes are reproducible across builds — only `archive_generated_at`
+        in the manifest drifts. Consumers needing bit-stable archives
+        can hash each contained file individually (each is bytewise
+        deterministic) and ignore the manifest timestamp.
+
+        Same publish gate as every other share surface (`is_public=true`).
+        Returns `404` when no exportable surfaces are available yet (a
+        freshly published sim that hasn't recorded any rounds — even
+        `signal.json` and `reproduce.json` need a final belief block).
+        Cached for 5 minutes — matches the notebook + reproduce.json
+        cadence.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: |
+            ZIP archive with `Content-Type: application/zip` and
+            `Content-Disposition: attachment; filename="miroshark-<sim_id_prefix>-<date>.zip"`.
+            The `X-MiroShark-Archive-Files` response header reports the
+            number of bundled files so a HEAD request can render a
+            preview without downloading the body. Cached
+            `public, max-age=300`.
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+                description: |
+                  ZIP archive containing zero or more share-surface
+                  files plus a `manifest.json` (`ArchiveManifest`
+                  schema). The manifest enumerates every contained
+                  file with its SHA-256, byte size, MIME type, and
+                  canonical source URL.
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/signal.json:
     get:
       tags: [Publish & Embed]
@@ -3891,6 +3955,7 @@ components:
             - reproduce_json
             - lineage
             - signal_json
+            - archive_zip
             - total
           properties:
             share_card:
@@ -3973,6 +4038,17 @@ components:
                 `risk_tier`). Tracks pickup by quant tools, Zapier /
                 Make / n8n automations, and alert pipelines that
                 consume the JSON directly.
+            archive_zip:
+              type: integer
+              minimum: 0
+              description: |
+                Successful `archive.zip` serves — the take-offline
+                composite ZIP bundling every published share surface
+                (share-card, chart SVG, trajectory CSV / JSONL,
+                transcript, thread, reproduce.json, notebook, signal.json)
+                plus a `manifest.json` with per-file SHA-256s. Tracks
+                pickup by researchers building citation chains or
+                running comparison studies across multiple sims.
             total:
               type: integer
               minimum: 0
@@ -4074,6 +4150,117 @@ components:
             determinism is not a property of this surface (unlike
             reproduce.json / notebook.ipynb whose bytes need to be
             citation-hashable).
+
+    ArchiveManifestEntry:
+      type: object
+      description: |
+        Single-file entry inside the `manifest.json` document at the
+        root of an `archive.zip` bundle. Each entry pairs a contained
+        file with its SHA-256 fingerprint, byte size, MIME type, and
+        the canonical standalone-surface URL the file mirrors. A
+        consumer can verify integrity (`sha256` over the file bytes
+        inside the ZIP), refresh a single surface (`source_url`), or
+        route by content type (`mime_type`) without re-parsing the
+        ZIP.
+      required:
+        - filename
+        - sha256
+        - size_bytes
+        - source_url
+        - mime_type
+      properties:
+        filename:
+          type: string
+          description: |
+            Filename inside the ZIP (no leading path component) —
+            e.g. `share-card.png`, `chart.svg`, `trajectory.csv`,
+            `reproduce.json`, `notebook.ipynb`, `signal.json`,
+            `transcript.md`, `thread.txt`, `trajectory.jsonl`.
+        sha256:
+          type: string
+          description: |
+            Hex-encoded SHA-256 of the file contents inside the ZIP.
+            Matches the hash a consumer would compute against the
+            corresponding standalone-surface URL — citation chains
+            line up across both distribution paths.
+        size_bytes:
+          type: integer
+          minimum: 0
+          description: Byte length of the file as it appears inside the ZIP.
+        source_url:
+          type: string
+          description: |
+            Fully-qualified canonical URL the file mirrors (e.g.
+            `https://miroshark.example.com/api/simulation/sim_abc/share-card.png`).
+            Empty string when the archive was built without a known
+            base URL.
+        mime_type:
+          type: string
+          description: |
+            MIME type the matching standalone-surface route serves —
+            e.g. `image/png`, `image/svg+xml`, `text/csv`,
+            `application/json`, `application/x-ipynb+json`,
+            `text/markdown`, `text/plain`, `application/x-ndjson`.
+
+    ArchiveManifest:
+      type: object
+      description: |
+        Top-level `manifest.json` document at the root of an
+        `archive.zip` bundle. Enumerates every contained file along
+        with the archive-wide metadata a consumer needs to verify
+        integrity and trace each file back to its standalone source.
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal.
+      required:
+        - schema_version
+        - simulation_id
+        - archive_generated_at
+        - base_url
+        - file_count
+        - files
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        archive_generated_at:
+          type: string
+          format: date-time
+          description: |
+            UTC timestamp when the archive was built (ISO-8601 with
+            trailing `Z`). The only field on the archive that drifts
+            across two builds of the same input set — every contained
+            file is bytewise deterministic.
+        base_url:
+          type: string
+          description: |
+            Origin (scheme + host) used to compose each entry's
+            `source_url`. Empty when the archive was built without a
+            host context.
+        file_count:
+          type: integer
+          minimum: 0
+          description: |
+            Number of entries in `files` — also surfaced via the
+            `X-MiroShark-Archive-Files` response header so a HEAD
+            request can render a preview without downloading the
+            archive body.
+        files:
+          type: array
+          description: |
+            One `ArchiveManifestEntry` per file inside the ZIP
+            (excluding the `manifest.json` itself). Ordered by the
+            canonical surface order (`share-card.png`, `chart.svg`,
+            `trajectory.csv`, `trajectory.jsonl`, `transcript.md`,
+            `thread.txt`, `reproduce.json`, `notebook.ipynb`,
+            `signal.json`); missing surfaces are simply absent rather
+            than represented by a placeholder entry.
+          items:
+            $ref: "#/components/schemas/ArchiveManifestEntry"
 
     ReproductionConfig:
       type: object

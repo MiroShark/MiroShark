@@ -5466,6 +5466,125 @@ def get_signal_json(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/archive.zip', methods=['GET'])
+def get_archive_zip(simulation_id: str):
+    """Bundle every published share surface into a single ZIP download.
+
+    The twelfth share surface — the compositional one. A researcher
+    finishing a sim currently fetches up to nine separate routes to
+    take the simulation "offline" (``share-card.png``, ``chart.svg``,
+    ``trajectory.csv`` / ``.jsonl``, ``transcript.md``, ``thread.txt``,
+    ``reproduce.json``, ``notebook.ipynb``, ``signal.json``). This
+    endpoint collapses every successfully-rendered surface into one
+    timestamped ZIP plus a ``manifest.json`` that pairs each contained
+    file with its SHA-256, byte size, MIME type, and canonical source
+    URL.
+
+    Compositional: every bundled file is byte-for-byte identical to
+    what the standalone surface route serves, so citation hashes line
+    up across the two distribution paths. Missing or corrupt artifacts
+    are simply omitted from the archive rather than 500ing the request
+    — the manifest enumerates exactly what landed inside.
+
+    Same publish gate as every other share surface. ``Content-Type:
+    application/zip``; ``Content-Disposition: attachment`` triggers a
+    save-as in the browser. Cache window matches the other
+    multi-surface composites (5 min) — long enough to absorb a
+    research-tool refetch burst, short enough that a live run's
+    growing trajectory CSV propagates through within a polling cycle.
+    """
+    from ..services import archive_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        state_dict = state.to_dict() if state is not None else None
+
+        config_data = manager.get_simulation_config(simulation_id)
+        sim_dir = os.path.join(
+            Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id
+        )
+        base_url = _resolve_share_base_url()
+
+        zip_bytes, manifest = archive_service.build_archive(
+            sim_id=simulation_id,
+            sim_dir=sim_dir,
+            summary=summary,
+            state_dict=state_dict,
+            config_data=config_data,
+            base_url=base_url,
+        )
+
+        if not manifest.get("file_count"):
+            # Every sub-renderer failed — typical for a sim that just
+            # transitioned to ``is_public=True`` but hasn't yet
+            # recorded a round. A 404 lets an embedding tool emit a
+            # "not ready" placeholder rather than serve an empty ZIP
+            # that downstream tooling has to special-case.
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Archive not available yet — the simulation hasn't recorded any exportable surfaces.",
+                    "尚无可用的归档 — 模拟还没有记录任何可导出的内容。",
+                    locale,
+                ),
+            }), 404
+
+        response = Response(zip_bytes, mimetype="application/zip")
+        # 5-minute cache — matches the notebook.ipynb + reproduce.json
+        # cadence. The archive is a strict composition of those
+        # surfaces, so its freshness window can't be tighter than its
+        # tightest input. Live runs that update the trajectory CSV
+        # round-to-round see the new bytes propagate after the cache
+        # window expires.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        # Attachment so a click triggers a save-as in the browser —
+        # the ZIP isn't meant to be rendered in-tab; it's a
+        # take-offline primitive. Filename embeds the sim-id prefix +
+        # the manifest timestamp's date portion so a researcher
+        # archiving multiple sims can tell them apart at a glance.
+        date_token = manifest.get("archive_generated_at", "")[:10] or "unknown"
+        filename = (
+            f"miroshark-{simulation_id[:12]}-{date_token}.zip"
+        )
+        response.headers["Content-Disposition"] = (
+            f'attachment; filename="{filename}"'
+        )
+        response.headers["X-MiroShark-Archive-Files"] = str(
+            manifest.get("file_count", 0)
+        )
+        surface_stats.increment_surface_stat(sim_dir, "archive_zip")
+        return response
+
+    except Exception as e:
+        logger.error(
+            f"archive.zip: failed for {simulation_id}: "
+            f"{e}\n{traceback.format_exc()}"
+        )
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 def _resolve_share_base_url() -> str:
     """Same proxy-aware base URL the share / watch routes use.
 
