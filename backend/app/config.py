@@ -223,6 +223,36 @@ class Config:
     DKG_CONTEXT_GRAPH_ID = os.environ.get('DKG_CONTEXT_GRAPH_ID', '')
     DKG_NETWORK = (os.environ.get('DKG_NETWORK', 'testnet') or 'testnet').strip().lower()
 
+    # WaybackClaw AI Agent Archive publishing.
+    # Optional integration that submits a finished simulation's snapshot
+    # (scenario, agent count, consensus, quality, lineage, reproduce.json
+    # hash) to the WaybackClaw archive at ``api.waybackclaw.space``. The
+    # archive pins every snapshot to IPFS and broadcasts a NIP-01 note to
+    # Nostr relays, so a submission yields a content-addressed IPFS CID +
+    # a censorship-resistant Nostr event id alongside the archive's
+    # internal snapshot id. The pair is the agent-archive sibling of the
+    # OriginTrail DKG citation surface.
+    #
+    # Required:
+    #   * ``WAYBACKCLAW_AGENT_TOKEN`` — agent token issued by
+    #     ``POST /api/archive/register``. Format: ``agent_<id>:<secret>``.
+    #     Empty → integration disabled, ``/api/config/notifications``
+    #     reports ``waybackclaw_configured: false``, the EmbedDialog
+    #     hides the card.
+    # Optional:
+    #   * ``WAYBACKCLAW_API_URL`` — override the API endpoint (defaults
+    #     to ``https://api.waybackclaw.space``). Useful for staging
+    #     deployments or a self-hosted fork.
+    #   * ``WAYBACKCLAW_AGENT_CATEGORY`` — WaybackClaw taxonomy slot
+    #     for this deployment's snapshots (defaults to ``prediction``,
+    #     which fits a multi-agent swarm running prediction-market-style
+    #     consensus runs).
+    WAYBACKCLAW_API_URL = os.environ.get('WAYBACKCLAW_API_URL', '').rstrip('/')
+    WAYBACKCLAW_AGENT_TOKEN = os.environ.get('WAYBACKCLAW_AGENT_TOKEN', '')
+    WAYBACKCLAW_AGENT_CATEGORY = (
+        os.environ.get('WAYBACKCLAW_AGENT_CATEGORY', '') or ''
+    ).strip().lower()
+
     # Whether ``GET /sitemap.xml`` is served and ``robots.txt`` advertises
     # it. Default ``true`` — the public sitemap is the search-engine
     # discovery surface for the public-simulation gallery, and a

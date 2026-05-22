@@ -6740,6 +6740,235 @@ def publish_dkg(simulation_id: str):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# ============== WaybackClaw AI Agent Archive ==============
+
+
+@simulation_bp.route('/<simulation_id>/waybackclaw-record', methods=['GET'])
+def get_waybackclaw_record(simulation_id: str):
+    """Return the persisted WaybackClaw submission record for a sim.
+
+    Pure read of ``<sim_dir>/waybackclaw-record.json``. Returns 404
+    when the sim has never been submitted to the archive (the common
+    case for any sim that hasn't had the "Submit to WaybackClaw"
+    button clicked). No API call — the record file is the source of
+    truth once a snapshot has been submitted.
+
+    Same publish gate as the reproduce.json / thread / lineage / DKG
+    surfaces: a private sim can't expose its archive record publicly
+    even if one happened to be persisted.
+    """
+    from ..services import waybackclaw_publisher
+
+    locale = get_locale(request)
+    try:
+        validate_simulation_id(simulation_id)
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published.",
+                    "该模拟未发布。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        record = waybackclaw_publisher.read_record(sim_dir)
+        if not record:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "No WaybackClaw record yet for this simulation.",
+                    "该模拟尚未提交至 WaybackClaw。",
+                    locale,
+                ),
+            }), 404
+
+        return jsonify({"success": True, "data": record})
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as e:
+        logger.error(
+            f"waybackclaw-record: failed for {simulation_id}: {e}\n{traceback.format_exc()}"
+        )
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@simulation_bp.route('/<simulation_id>/publish-waybackclaw', methods=['POST'])
+@require_admin_token
+def publish_waybackclaw(simulation_id: str):
+    """Submit a finished simulation's snapshot to the WaybackClaw archive.
+
+    Triggered manually from the EmbedDialog "Submit to WaybackClaw"
+    button. Builds the same reproduce.json blob the existing
+    ``/reproduce.json`` endpoint returns, hashes its bytes (citation
+    key), wraps it in a WaybackClaw snapshot body alongside the
+    consensus / quality / scenario summary, and POSTs to
+    ``/api/archive/submit`` on ``api.waybackclaw.space``. Returns the
+    snapshot id + IPFS CID + Nostr event id so the SPA can render an
+    archive citation card with a Pinata gateway link and a Nostr
+    event reference.
+
+    Idempotent: a successful submission persists the record to
+    ``<sim_dir>/waybackclaw-record.json`` and subsequent calls return
+    it directly without re-hitting the API. The on-disk file is the
+    source of truth.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``
+    by parity with the DKG publish route. The WaybackClaw submit
+    endpoint itself is free with agent auth, but gating the surface
+    behind the admin token keeps the "who can speak on behalf of
+    this MiroShark deployment in the public archive" decision in
+    the operator's hands rather than every dialog viewer's.
+
+    Status codes:
+      * 200  — submit succeeded (or cached record returned)
+      * 400  — invalid simulation_id
+      * 403  — simulation not published (call POST /publish first)
+      * 404  — simulation not found
+      * 422  — sim reachable but reproduce.json blob is empty
+      * 429  — WaybackClaw rate limit exceeded (back off and retry)
+      * 502  — WaybackClaw API returned an error
+      * 503  — WAYBACKCLAW_AGENT_TOKEN not configured
+      * 504  — WaybackClaw API unreachable / timed out
+    """
+    from ..services import waybackclaw_publisher
+    from ..services import repro_export
+    from ..services import webhook_service
+
+    locale = get_locale(request)
+    try:
+        validate_simulation_id(simulation_id)
+
+        if not waybackclaw_publisher.is_configured():
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "WaybackClaw publishing is not configured on this deployment. "
+                    "Set WAYBACKCLAW_AGENT_TOKEN.",
+                    "该部署未配置 WaybackClaw 发布。请设置 WAYBACKCLAW_AGENT_TOKEN。",
+                    locale,
+                ),
+            }), 503
+
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish first.",
+                    "该模拟未发布,请先调用 POST /api/simulation/<id>/publish。",
+                    locale,
+                ),
+            }), 403
+
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}",
+            }), 404
+
+        config_data = manager.get_simulation_config(simulation_id)
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+
+        # Build the same reproduce.json bytes the public endpoint
+        # serves so the snapshot's reproduceConfigSha256 matches what
+        # a verifier would compute by fetching the URL.
+        repro_blob = repro_export.build_repro_config(state.to_dict(), config_data, sim_dir)
+        reproduce_json_bytes = repro_export.render_json_bytes(repro_blob)
+
+        if not (repro_blob.get("agent_count") or repro_blob.get("total_rounds")):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation has not reached the prepared state — nothing to archive yet.",
+                    "模拟尚未到达可发布状态,暂无可归档的数据。",
+                    locale,
+                ),
+            }), 422
+
+        run_state = SimulationRunner.get_run_state(simulation_id)
+        completed_at = getattr(run_state, "completed_at", None) if run_state else None
+        sim_status = (state.status.value if hasattr(state.status, "value") else str(state.status)).lower()
+        if sim_status not in ("completed", "failed"):
+            sim_status = "completed"
+
+        base_url = _resolve_share_base_url()
+        webhook_payload = webhook_service.build_payload(
+            simulation_id,
+            sim_status,
+            sim_dir,
+            state=run_state,
+            base_url=base_url,
+            completed_at=completed_at,
+        )
+
+        body = request.get_json(silent=True) or {}
+        force = bool(body.get("force", False))
+
+        result = waybackclaw_publisher.submit_snapshot(
+            simulation_id=simulation_id,
+            sim_dir=sim_dir,
+            repro_blob=repro_blob,
+            reproduce_json_bytes=reproduce_json_bytes,
+            webhook_payload=webhook_payload,
+            base_url=base_url,
+            force=force,
+        )
+
+        if not result.get("ok"):
+            stage = result.get("stage") or "unknown"
+            status_code = result.get("status_code") or 0
+            # Map API failures to sensible HTTP semantics:
+            # * 0 from transport (DNS / refused / timeout) → 504
+            # * 429 from API (rate limit) → 429
+            # * 4xx / 5xx from API → 502
+            # * not_configured → 503 (already handled above; defensive)
+            if stage == "not_configured":
+                http_status = 503
+            elif status_code == 0:
+                http_status = 504
+            elif status_code == 429:
+                http_status = 429
+            else:
+                http_status = 502
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    f"WaybackClaw submit failed at stage '{stage}': {result.get('error', 'unknown')}",
+                    f"WaybackClaw 提交在阶段 '{stage}' 失败:{result.get('error', '未知')}",
+                    locale,
+                ),
+                "stage": stage,
+                "api_status_code": status_code,
+            }), http_status
+
+        return jsonify({
+            "success": True,
+            "data": result.get("record"),
+            "cached": bool(result.get("cached")),
+        })
+
+    except ValueError as exc:
+        return jsonify({"success": False, "error": str(exc)}), 400
+    except Exception as e:
+        logger.error(
+            f"publish-waybackclaw: failed for {simulation_id}: {e}\n{traceback.format_exc()}"
+        )
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
 # ============== Public Gallery ==============
 
 

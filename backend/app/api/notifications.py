@@ -37,6 +37,7 @@ from flask import Blueprint, Response, jsonify
 from ..services import discord_notify, slack_notify, email_notify, telegram_notify
 from ..services import webhook_service
 from ..services import dkg_publisher
+from ..services import waybackclaw_publisher
 from ..utils.logger import get_logger
 
 
@@ -51,9 +52,9 @@ def notifications_config() -> Response:
 
     Returns ``{success, data: {webhook_configured, discord_configured,
     slack_configured, email_configured, telegram_configured,
-    dkg_configured, dkg_network}}``. No URL values, recipient lists,
-    or auth tokens are leaked — only presence booleans, so this
-    endpoint is safe to call from the SPA without auth.
+    dkg_configured, dkg_network, waybackclaw_configured}}``. No URL
+    values, recipient lists, or auth tokens are leaked — only presence
+    booleans, so this endpoint is safe to call from the SPA without auth.
     """
     webhook_url = webhook_service._resolve_webhook_url()
     dkg_cfg = dkg_publisher._resolve_config()
@@ -68,6 +69,9 @@ def notifications_config() -> Response:
         # configured against so the SPA can render "Publish to DKG
         # (testnet|mainnet)" without leaking the API URL or auth token.
         "dkg_network": dkg_cfg.get("network", "testnet") if dkg_publisher.is_configured() else None,
+        # WaybackClaw AI Agent Archive — opt-in agent-side citation
+        # surface alongside DKG. True iff WAYBACKCLAW_AGENT_TOKEN is set.
+        "waybackclaw_configured": waybackclaw_publisher.is_configured(),
     }
     response = jsonify({"success": True, "data": data})
     # No caching — channel status flips the moment an operator pastes

@@ -1348,6 +1348,150 @@
               </div>
             </div>
 
+            <!-- WaybackClaw AI Agent Archive — the agent-side citation
+                 sibling of the DKG card. Opt-in: rendered only when
+                 WAYBACKCLAW_AGENT_TOKEN is set on this deployment.
+                 The "Submit to WaybackClaw" button POSTs a snapshot
+                 (scenario, agent count, consensus, quality,
+                 reproduce.json hash) to api.waybackclaw.space, which
+                 pins it to IPFS and broadcasts a NIP-01 note to Nostr
+                 relays before returning the snapshot id + IPFS CID +
+                 Nostr event id. Idempotent — once submitted, subsequent
+                 dialog opens read the cached record from disk without
+                 re-hitting the API. Free for agents (no on-chain cost). -->
+            <div
+              v-if="isPublic && notifConfig.waybackclaw_configured"
+              class="transcript-section dkg-section"
+            >
+              <div class="transcript-head dkg-head">
+                <span class="transcript-icon">🗄️</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('WaybackClaw archive', 'WaybackClaw 归档') }}
+                    <span class="lineage-count-chip dkg-network-chip-testnet">
+                      {{ $tr('IPFS + Nostr', 'IPFS + Nostr') }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Submit the snapshot (scenario, agent count, consensus, quality, reproduce.json hash) to the WaybackClaw AI Agent Archive. The archive pins the record to IPFS for content-addressed storage and broadcasts it to Nostr relays for real-time distribution — an open, agent-readable history of this MiroShark deployment.', '将快照(情景、智能体数、共识、质量、reproduce.json 哈希)提交至 WaybackClaw AI Agent 归档。归档会将记录固定到 IPFS 以实现内容寻址存储,并广播到 Nostr 中继以实现实时分发 — 为该 MiroShark 部署构建一份开放、可被其他智能体读取的历史记录。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div class="dkg-body">
+                <!-- Already submitted — show the snapshot primitives -->
+                <div v-if="wbcRecord && wbcRecord.id" class="dkg-card">
+                  <div class="dkg-row">
+                    <span class="dkg-row-label">{{ $tr('Snapshot', '快照') }}</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="wbcRecord.id"
+                    >{{ wbcRecord.id }}</code>
+                    <button
+                      class="snippet-copy-btn dkg-copy"
+                      type="button"
+                      @click="copy('wbcId')"
+                    >
+                      {{ copied === 'wbcId' ? '✓' : $tr('Copy', '复制') }}
+                    </button>
+                  </div>
+                  <div v-if="wbcRecord.agent_name" class="dkg-row">
+                    <span class="dkg-row-label">{{ $tr('Agent', '智能体') }}</span>
+                    <code class="dkg-row-value dkg-row-mono">
+                      {{ wbcRecord.agent_name }}<span v-if="wbcRecord.agent_id"> · {{ wbcRecord.agent_id }}</span>
+                    </code>
+                  </div>
+                  <div v-if="wbcRecord.ipfs_cid" class="dkg-row">
+                    <span class="dkg-row-label">IPFS CID</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="wbcRecord.ipfs_cid"
+                    >{{ formatHashShort(wbcRecord.ipfs_cid) }}</code>
+                    <button
+                      class="snippet-copy-btn dkg-copy"
+                      type="button"
+                      @click="copy('wbcIpfs')"
+                    >
+                      {{ copied === 'wbcIpfs' ? '✓' : $tr('Copy', '复制') }}
+                    </button>
+                  </div>
+                  <div v-if="wbcRecord.nostr_event_id" class="dkg-row">
+                    <span class="dkg-row-label">Nostr</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="wbcRecord.nostr_event_id"
+                    >{{ formatHashShort(wbcRecord.nostr_event_id) }}</code>
+                    <button
+                      class="snippet-copy-btn dkg-copy"
+                      type="button"
+                      @click="copy('wbcNostr')"
+                    >
+                      {{ copied === 'wbcNostr' ? '✓' : $tr('Copy', '复制') }}
+                    </button>
+                  </div>
+                  <div v-if="wbcRecord.reproduce_config_sha256" class="dkg-row">
+                    <span class="dkg-row-label">{{ $tr('Config hash', '配置哈希') }}</span>
+                    <code
+                      class="dkg-row-value dkg-row-mono"
+                      :title="wbcRecord.reproduce_config_sha256"
+                    >{{ formatHashShort(wbcRecord.reproduce_config_sha256) }}</code>
+                  </div>
+                  <div class="dkg-actions">
+                    <a
+                      v-if="wbcRecord.ipfs_gateway_url"
+                      class="repro-download"
+                      :href="wbcRecord.ipfs_gateway_url"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {{ $tr('Open on IPFS gateway ↗', '在 IPFS 网关中打开 ↗') }}
+                    </a>
+                    <a
+                      v-if="wbcRecord.archive_url"
+                      class="repro-download"
+                      :href="wbcRecord.archive_url"
+                      target="_blank"
+                      rel="noopener"
+                    >
+                      {{ $tr('View agent in archive ↗', '在归档中查看智能体 ↗') }}
+                    </a>
+                  </div>
+                  <div class="repro-note">
+                    {{ $tr('A verifier fetches reproduce.json, SHA-256s the bytes, and compares to the config hash stored in the snapshot metadata. The IPFS CID makes the record itself content-addressed, and the Nostr event id gives any relay subscriber an independent witness of the submission.', '验证者获取 reproduce.json,计算 SHA-256 后与快照元数据中的配置哈希比对。IPFS CID 使记录本身可通过内容寻址访问,Nostr 事件 ID 让任意中继订阅者获得对该提交的独立见证。') }}
+                  </div>
+                </div>
+
+                <!-- Not yet submitted — show the submit CTA -->
+                <div v-else-if="!wbcLoading" class="dkg-card dkg-card-empty">
+                  <div class="dkg-empty-text">
+                    {{ $tr('Not yet submitted to the WaybackClaw archive.', '尚未提交至 WaybackClaw 归档。') }}
+                  </div>
+                  <div class="dkg-actions">
+                    <button
+                      class="repro-download dkg-publish-btn"
+                      type="button"
+                      :disabled="wbcSubmitting"
+                      @click="publishWaybackclaw"
+                    >
+                      <span v-if="wbcSubmitting">
+                        {{ $tr('Submitting…', '正在提交…') }}
+                      </span>
+                      <span v-else>
+                        🗄️ {{ $tr('Submit to WaybackClaw', '提交至 WaybackClaw') }}
+                      </span>
+                    </button>
+                  </div>
+                  <div class="repro-note">
+                    {{ $tr('Free for agents — no on-chain cost. The archive pins the snapshot to IPFS and broadcasts to Nostr.', '智能体提交免费 — 无链上费用。归档会将快照固定到 IPFS 并广播到 Nostr。') }}
+                  </div>
+                </div>
+
+                <div v-if="wbcError" class="webhook-log-message" :class="wbcErrorClass">
+                  {{ wbcError }}
+                </div>
+              </div>
+            </div>
+
             <!-- Lineage navigator — closes the navigation gap PR #75
                  (reproducibility config) left behind. The
                  `parent_simulation_id` pointer existed on disk but was
@@ -2032,6 +2176,8 @@ import {
   retryWebhookDelivery,
   getDkgCitation,
   publishToDkg,
+  getWaybackclawRecord,
+  publishToWaybackclaw,
   getFrameMetadata,
   buildWarpcastComposeUrl,
 } from '../api/simulation'
@@ -2936,6 +3082,7 @@ const notifConfig = ref({
   email_configured: false,
   dkg_configured: false,
   dkg_network: null,
+  waybackclaw_configured: false,
 })
 const notifConfigLoaded = ref(false)
 const loadNotificationsConfig = async () => {
@@ -2950,6 +3097,7 @@ const loadNotificationsConfig = async () => {
       email_configured: !!data.email_configured,
       dkg_configured: !!data.dkg_configured,
       dkg_network: data.dkg_network || null,
+      waybackclaw_configured: !!data.waybackclaw_configured,
     }
   } catch {
     notifConfig.value = {
@@ -2959,6 +3107,7 @@ const loadNotificationsConfig = async () => {
       email_configured: false,
       dkg_configured: false,
       dkg_network: null,
+      waybackclaw_configured: false,
     }
   } finally {
     notifConfigLoaded.value = true
@@ -3043,6 +3192,9 @@ const copy = async (which) => {
   else if (which === 'notebookCurl') text = notebookCurlSnippet.value
   else if (which === 'dkgUal') text = dkgCitation.value?.ual || ''
   else if (which === 'dkgMerkle') text = dkgCitation.value?.merkle_root || ''
+  else if (which === 'wbcId') text = wbcRecord.value?.id || ''
+  else if (which === 'wbcIpfs') text = wbcRecord.value?.ipfs_cid || ''
+  else if (which === 'wbcNostr') text = wbcRecord.value?.nostr_event_id || ''
   if (!text) return
   try {
     await navigator.clipboard.writeText(text)
@@ -3423,6 +3575,113 @@ const _resetDkgState = () => {
   dkgErrorClass.value = ''
 }
 
+// ---- WaybackClaw archive state -----------------------------------------
+//
+// The WaybackClaw card is the agent-archive sibling of the DKG card:
+// opt-in (gated by ``notifConfig.waybackclaw_configured``), follows the
+// same load-on-mount → submit-on-click → cached-thereafter state
+// machine. Free for agents — no on-chain cost — so the publish CTA is
+// simpler than the DKG one (no TRAC / gas balance to worry about).
+const wbcRecord = ref(null)
+const wbcLoading = ref(false)
+const wbcSubmitting = ref(false)
+const wbcError = ref('')
+const wbcErrorClass = ref('')
+
+const loadWaybackclawRecord = async () => {
+  if (!props.simulationId) return
+  if (!notifConfig.value.waybackclaw_configured) return
+  if (!isPublic.value) return
+  wbcLoading.value = true
+  wbcError.value = ''
+  try {
+    const res = await getWaybackclawRecord(props.simulationId)
+    if (res?.success && res.data) {
+      wbcRecord.value = res.data
+    } else {
+      wbcRecord.value = null
+    }
+  } catch (err) {
+    const status = err?.response?.status
+    if (status !== 404) {
+      // Soft-failure same as DKG — leave the card showing the
+      // submit CTA. The submit attempt itself surfaces real errors.
+    }
+    wbcRecord.value = null
+  } finally {
+    wbcLoading.value = false
+  }
+}
+
+const publishWaybackclaw = async () => {
+  if (!props.simulationId || wbcSubmitting.value) return
+  if (!notifConfig.value.waybackclaw_configured) return
+  if (!isPublic.value) return
+  wbcSubmitting.value = true
+  wbcError.value = ''
+  wbcErrorClass.value = ''
+  try {
+    const res = await publishToWaybackclaw(props.simulationId)
+    if (res?.success && res.data?.id) {
+      wbcRecord.value = res.data
+      wbcError.value = res?.cached
+        ? tr('Already submitted — returned existing record.', '已提交 — 返回现有归档记录。')
+        : tr('Submitted to WaybackClaw. Snapshot archived.', '已提交至 WaybackClaw,快照已归档。')
+      wbcErrorClass.value = 'webhook-log-message-ok'
+    } else {
+      wbcError.value = res?.error || tr('Could not submit to WaybackClaw.', '无法提交至 WaybackClaw。')
+      wbcErrorClass.value = 'webhook-log-message-error'
+    }
+  } catch (err) {
+    const status = err?.response?.status
+    const serverErr = err?.response?.data?.error
+    if (status === 401) {
+      wbcError.value = tr(
+        'Admin token does not match — set Authorization: Bearer $MIROSHARK_ADMIN_TOKEN to submit to WaybackClaw.',
+        '管理员 token 不匹配 — 请设置 Authorization: Bearer $MIROSHARK_ADMIN_TOKEN 才能提交至 WaybackClaw。',
+      )
+    } else if (status === 503) {
+      wbcError.value = serverErr || tr(
+        'WaybackClaw publishing is not configured on this deployment.',
+        '该部署未配置 WaybackClaw 发布。',
+      )
+    } else if (status === 504) {
+      wbcError.value = serverErr || tr(
+        'WaybackClaw API unreachable or submit timed out.',
+        '无法访问 WaybackClaw API 或提交超时。',
+      )
+    } else if (status === 502) {
+      wbcError.value = serverErr || tr(
+        'WaybackClaw API returned an error.',
+        'WaybackClaw API 返回错误。',
+      )
+    } else if (status === 429) {
+      wbcError.value = serverErr || tr(
+        'WaybackClaw rate limit exceeded — back off and retry.',
+        'WaybackClaw 速率限制 — 请稍后重试。',
+      )
+    } else if (status === 422) {
+      wbcError.value = serverErr || tr(
+        'Simulation has not reached the prepared state — nothing to archive yet.',
+        '模拟尚未到达可发布状态,暂无可归档的数据。',
+      )
+    } else {
+      wbcError.value = serverErr || err?.message || tr('Could not submit to WaybackClaw.', '无法提交至 WaybackClaw。')
+    }
+    wbcErrorClass.value = 'webhook-log-message-error'
+  } finally {
+    wbcSubmitting.value = false
+  }
+}
+
+const _resetWaybackclawState = () => {
+  wbcRecord.value = null
+  wbcLoading.value = false
+  wbcSubmitting.value = false
+  wbcError.value = ''
+  wbcErrorClass.value = ''
+}
+
 const formatUalShort = (ual) => {
   if (!ual || typeof ual !== 'string') return ''
   if (ual.length <= 48) return ual
@@ -3457,6 +3716,7 @@ watch(() => props.open, async (val) => {
   _resetOutcomeForm()
   _resetWebhookLogState()
   _resetDkgState()
+  _resetWaybackclawState()
   // Refresh public state when reopened — reflects external flips.
   try {
     const res = await getEmbedSummary(props.simulationId)
@@ -3485,6 +3745,9 @@ watch(() => props.open, async (val) => {
   // deployment has DKG_* env vars wired up *and* the sim is public —
   // the load helper short-circuits on either gate so this is cheap.
   loadDkgCitation()
+  // Probe for an existing WaybackClaw submission. Same gating shape
+  // as DKG — short-circuits unless waybackclaw_configured && isPublic.
+  loadWaybackclawRecord()
   // Bust the share-card image cache so the preview reloads with whatever
   // state the simulation is in right now (resolution may have landed
   // since the dialog was last opened).
@@ -3575,6 +3838,8 @@ watch(isPublic, () => {
   // short-circuits when the sim is private or the deployment isn't
   // configured for DKG, so we can always call it.
   loadDkgCitation()
+  // WaybackClaw record probe — same gating semantics as DKG.
+  loadWaybackclawRecord()
 })
 </script>
 

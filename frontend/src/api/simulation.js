@@ -1110,6 +1110,54 @@ export const publishToDkg = (simulationId, opts = {}) => {
 }
 
 /**
+ * Read the persisted WaybackClaw archive submission for a published
+ * sim. Returns 404 when the sim has never been submitted — same
+ * publish gate as reproduce.json / dkg-citation. No API call to
+ * api.waybackclaw.space; the on-disk record is the source of truth.
+ *
+ * Response shape (under `data`):
+ *   {
+ *     id: "snap_…",
+ *     agent_id: string,
+ *     agent_name: string,
+ *     version: string,
+ *     category: string,
+ *     captured_at: ISO8601 string,
+ *     ipfs_cid: string,
+ *     nostr_event_id: string,
+ *     access_level: string,
+ *     reproduce_config_sha256: "sha256:…",
+ *     archive_url: string,
+ *     ipfs_gateway_url: string,
+ *     submitted_at: ISO8601 string,
+ *   }
+ *
+ * @param {string} simulationId
+ */
+export const getWaybackclawRecord = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/waybackclaw-record`)
+}
+
+/**
+ * Submit a finished simulation's snapshot to the WaybackClaw AI Agent
+ * Archive. Requires admin auth (parity with the DKG publish route —
+ * gates "who can speak for this MiroShark deployment in the public
+ * archive"). Idempotent — the second call returns the cached record
+ * without re-submitting.
+ *
+ * Same response shape as ``getWaybackclawRecord`` for the success
+ * case, with an additional ``cached: boolean`` field at the top level
+ * signalling whether the API was contacted.
+ *
+ * @param {string} simulationId
+ * @param {{ force?: boolean }} [opts]
+ */
+export const publishToWaybackclaw = (simulationId, opts = {}) => {
+  const body = opts.force ? { force: true } : {}
+  return service.post(`/api/simulation/${simulationId}/publish-waybackclaw`, body)
+}
+
+/**
  * Branch a simulation with a narrative injection at a specific round.
  * The new simulation is READY and shares the parent's agent population;
  * when the runner hits trigger_round it auto-promotes the injection into
