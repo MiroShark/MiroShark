@@ -794,6 +794,32 @@ export const getReproductionUrl = (simulationId, origin) => {
 }
 
 /**
+ * Build the absolute URL of the BibTeX academic citation entry for a
+ * published simulation. Returns a one-call `@misc{…}` entry that
+ * drops straight into a LaTeX paper source or imports cleanly into
+ * Zotero / Mendeley via the "Import from URL" flow.
+ *
+ * The entry carries the reproduce.json SHA-256 in the `note` field so
+ * a reviewer can verify the citation points to the same simulation
+ * parameters years later via `sha256sum --check`. When the sim has
+ * been anchored on the OriginTrail DKG, the `annote` field carries
+ * the UAL — the same chain-of-citation property a DOI gives a paper.
+ *
+ * Same publish gate as every other share surface. Cached for 5
+ * minutes; the entry stabilises once the sim reaches a terminal
+ * state. `Content-Type: text/plain; charset=utf-8` (the format Zotero
+ * + Mendeley URL importers expect for BibTeX).
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getCiteBibUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/cite.bib`
+}
+
+/**
  * Fetch the parsed reproducibility config blob for a published
  * simulation. Returns the same JSON document `getReproductionUrl`
  * resolves to, but as an in-memory object — useful for rendering the

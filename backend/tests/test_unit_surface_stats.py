@@ -81,6 +81,7 @@ def test_surface_keys_includes_every_serve_handler():
         "signal_json",
         "archive_zip",
         "badge_svg",
+        "cite_bib",
     }
     assert set(surface_stats.SURFACE_KEYS) == expected
 

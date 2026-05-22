@@ -1130,6 +1130,91 @@
               </div>
             </div>
 
+            <!-- BibTeX academic citation — completes the citation
+                 arc. Reproduce.json carries the parameters; the
+                 notebook carries the analysis; this one carries the
+                 reference. Drops straight into a LaTeX \bibliography{}
+                 block or imports cleanly into Zotero / Mendeley via
+                 their "Import from URL" flow. The note field carries
+                 the reproduce.json SHA-256 so a reviewer can verify
+                 the citation points at the same parameters years
+                 later via sha256sum --check; the annote field carries
+                 the OriginTrail DKG UAL when the sim has been
+                 anchored on-chain. Same publish gate as every other
+                 share surface; pure stdlib, zero new deps. -->
+            <div class="transcript-section bibtex-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">📖</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('BibTeX citation (.bib)', 'BibTeX 引用(.bib)') }}
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Drop-in @misc{…} entry for a LaTeX paper, Zotero library, or Mendeley collection. The note field carries the reproduce.json SHA-256 (verifiable via sha256sum --check); the annote field carries the OriginTrail DKG UAL when the sim has been anchored on-chain. Zotero + Mendeley both import this URL directly via "Import from URL".', '可直接放入 LaTeX 论文、Zotero 文献库或 Mendeley 集合的 @misc{…} 条目。note 字段携带 reproduce.json 的 SHA-256(可用 sha256sum --check 校验);annote 字段在模拟已上链时携带 OriginTrail DKG UAL。Zotero 与 Mendeley 都可通过"从 URL 导入"直接导入此 URL。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable the BibTeX citation.', '发布模拟以启用 BibTeX 引用。') }}
+              </div>
+
+              <template v-else>
+                <div class="snippet-block transcript-snippet">
+                  <div class="snippet-head">
+                    <span class="snippet-label">{{ $tr('cite.bib URL', 'cite.bib URL') }}</span>
+                    <button
+                      class="snippet-copy-btn"
+                      @click="copy('citeBibUrl')"
+                      :disabled="!citeBibUrl"
+                    >
+                      {{ copied === 'citeBibUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                    </button>
+                  </div>
+                  <pre class="snippet-code"><code>{{ citeBibUrl || '—' }}</code></pre>
+                </div>
+
+                <div class="snippet-block transcript-snippet">
+                  <div class="snippet-head">
+                    <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                    <button
+                      class="snippet-copy-btn"
+                      @click="copy('citeBibCurl')"
+                      :disabled="!citeBibUrl"
+                    >
+                      {{ copied === 'citeBibCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                    </button>
+                  </div>
+                  <pre class="snippet-code"><code>{{ citeBibCurlSnippet }}</code></pre>
+                </div>
+
+                <div class="snippet-block transcript-snippet">
+                  <div class="snippet-head">
+                    <span class="snippet-label">{{ $tr('LaTeX \\cite', 'LaTeX \\cite') }}</span>
+                    <button
+                      class="snippet-copy-btn"
+                      @click="copy('citeBibLatex')"
+                      :disabled="!citeBibUrl"
+                    >
+                      {{ copied === 'citeBibLatex' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                    </button>
+                  </div>
+                  <pre class="snippet-code"><code>{{ citeBibLatexSnippet }}</code></pre>
+                </div>
+
+                <div class="transcript-actions">
+                  <a
+                    v-if="citeBibUrl"
+                    class="transcript-download-btn"
+                    :href="citeBibUrl"
+                    :download="`miroshark-${simulationId.slice(0, 12)}.bib`"
+                  >
+                    ↓ {{ $tr('Download .bib', '下载 .bib') }}
+                  </a>
+                </div>
+              </template>
+            </div>
+
             <!-- OriginTrail DKG citation — the on-chain provenance
                  surface. Opt-in: rendered only when DKG_* env vars are
                  wired up on this deployment. The "Publish to DKG"
@@ -1934,6 +2019,7 @@ import {
   getSurfaceStats,
   getReproductionUrl,
   getReproduction,
+  getCiteBibUrl,
   getNotebookUrl,
   getSimulationLineage,
   getFeedUrl,
@@ -2105,6 +2191,35 @@ const badgeMarkdownSnippet = computed(() => {
 const badgeHtmlSnippet = computed(() => {
   const url = badgeSvgUrl.value || 'https://your-host/api/simulation/<id>/badge.svg'
   return `<img src="${url}" alt="MiroShark Belief Badge" height="20" />`
+})
+
+// ── BibTeX academic citation state ──────────────────────────────────────
+// The reproduce.json + notebook + DKG triple gives a researcher the
+// data, the analysis surface, and the on-chain anchor. cite.bib
+// completes the loop: a one-call BibTeX entry that drops straight into
+// LaTeX / Zotero / Mendeley. The endpoint URL doubles as the Zotero
+// "Import from URL" address — the same string the operator copies for
+// a curl pull works inside a reference manager.
+
+const citeBibUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getCiteBibUrl(props.simulationId, origin.value)
+})
+
+const citeBibCurlSnippet = computed(() => {
+  const url = citeBibUrl.value || 'https://your-host/api/simulation/<id>/cite.bib'
+  const short = (props.simulationId || 'sim_unknown').slice(0, 12)
+  return `curl -fsSL '${url}' -o miroshark-${short}.bib`
+})
+
+const citeBibLatexSnippet = computed(() => {
+  // A reader who saw the URL might still want the in-paper reference
+  // syntax — the citation key is deterministic from the sim id, same
+  // shape the backend builder emits, so a paper author can paste this
+  // ``\cite{}`` line before fetching the .bib file.
+  const short = (props.simulationId || 'unknown').slice(0, 16)
+  const sanitized = short.replace(/[^A-Za-z0-9_-]/g, '') || 'unknown'
+  return `\\cite{miroshark-${sanitized}}`
 })
 
 // ── Trading signal state ────────────────────────────────────────────────
@@ -2921,6 +3036,9 @@ const copy = async (which) => {
   }
   else if (which === 'reproUrl') text = reproDownloadUrl.value
   else if (which === 'reproCurl') text = reproCurlSnippet.value
+  else if (which === 'citeBibUrl') text = citeBibUrl.value
+  else if (which === 'citeBibCurl') text = citeBibCurlSnippet.value
+  else if (which === 'citeBibLatex') text = citeBibLatexSnippet.value
   else if (which === 'notebookUrl') text = notebookDownloadUrl.value
   else if (which === 'notebookCurl') text = notebookCurlSnippet.value
   else if (which === 'dkgUal') text = dkgCitation.value?.ual || ''

@@ -261,6 +261,38 @@ The Embed dialog exposes a `🏷️ Status badge (SVG)` section: a live in-place
 
 Turns every distributed share URL into a *pull point* for new visitors who see the badge in a researcher's README — the first share surface that brings the simulation *to* the reader, instead of waiting for the reader to navigate to the share page.
 
+## BibTeX Academic Citation
+
+Closes the academic citation arc. `reproduce.json` (PR #79) carries every parameter a second operator needs to re-run the simulation; the OriginTrail DKG citation (PR #84) anchors those bytes on-chain as cryptographic provenance; the `notebook.ipynb` (PR #80) drops the trajectory into a researcher's IDE. `GET /api/simulation/<id>/cite.bib` adds the missing layer — a one-call BibTeX `@misc{…}` entry that drops straight into a LaTeX paper source, imports cleanly into Zotero / Mendeley via "Import from URL" (both readers consume `text/plain` BibTeX at an HTTP URL directly), and carries the reproduce.json SHA-256 in the `note` field so a reviewer can verify the citation points to the same simulation parameters years later via `sha256sum --check`.
+
+```bibtex
+@misc{miroshark-sim_abc123def4,
+  title        = {What if Aave's reserve factor doubled overnight?},
+  author       = {MiroShark},
+  year         = {2026},
+  month        = may,
+  url          = {https://miroshark.example.com/share/sim_abc123def456},
+  howpublished = {\url{https://miroshark.example.com/api/simulation/sim_abc123def456/reproduce.json}},
+  note         = {Reproducibility SHA-256: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8},
+  annote       = {OriginTrail DKG UAL: did:dkg:base:8453/0xabc/12345},
+}
+```
+
+- **Stable citation key.** `miroshark-{sim_id[:16]}` with non-`[A-Za-z0-9_-]` characters stripped — the BibTeX grammar allows only those in a citation key. Same input → same key across re-renders, so an author who pinned the key once never sees their `\cite{}` references silently rewire.
+- **Escapes the seven BibTeX specials.** `&`, `%`, `$`, `#`, `_` get the canonical backslash escape; `{` and `}` get the backslash-bracket escape; backslashes themselves get `\textbackslash{}`; carets and tildes get `\^{}` / `\~{}`. A scenario containing "100% APY & a flash_loan exploit" parses cleanly in LaTeX without a manual sanitisation step.
+- **SHA-256 sourced from the on-chain anchor when available.** The DKG citation (`<sim_dir>/dkg-citation.json`) stores the reproduce.json hash as `sha256:<hex>` — the BibTeX builder strips the prefix and lands the bare hex digest in the `note` field. When no DKG citation exists, the builder freshly hashes the canonical reproduce.json bytes (via the same `repro_export.render_json_bytes` the standalone `/reproduce.json` route uses), so the `note` value matches what `curl reproduce.json | sha256sum` would produce.
+- **`annote` records the DKG UAL when present.** A reviewer reading the citation can follow the UAL to the on-chain assertion, fetch the Knowledge Asset, and verify the recorded reproduce.json hash matches the local hash — DOI-grade provenance without a publishing-house intermediary.
+- **Zotero / Mendeley import URL is the endpoint URL.** Paste `https://miroshark.example.com/api/simulation/<id>/cite.bib` into Zotero → "File → Import from URL" or Mendeley → "Web Importer" and the entry lands in the library with metadata pre-populated. No manual BibTeX export step.
+- **Defensive on input.** Missing scenario → "Untitled MiroShark simulation". Missing / unparseable `created_at` → current UTC year + month. Missing `simulation_id` → `miroshark-unknown` (the route handler still returns 404 in that case — the fallback exists for the unit tests that exercise the renderer in isolation). The route handler never raises on this surface — citation must be available even when ancillary files are missing.
+
+Pure stdlib `hashlib` + `datetime` + `re` (~310 LoC in `app/services/bibtex_service.py`); zero new dependencies — same posture as `signal_service`, `badge_service`, and `repro_export`. The rendered bytes are bytewise-deterministic across calls with identical inputs (the only timestamp-driven content is the optional generation comment, which the route handler omits), so a citation chain anchored against the entry's bytes (a future ETag layer / hash-based cache) is stable across requests.
+
+Same publish gate as every other share surface (`is_public=true`). `Content-Type: text/plain; charset=utf-8` so Zotero's URL importer picks the right parser, with `Content-Disposition: inline; filename="miroshark-<id12>.bib"` so `curl -OJ` saves it ready to drop into a `\bibliography{}` block. Cached for 5 minutes — matches the `reproduce.json` + notebook cadence; the entry stabilises once the sim reaches a terminal state.
+
+The Embed dialog exposes a `📖 BibTeX citation (.bib)` section beneath the reproducibility config panel: a copyable `cite.bib` URL, a `curl -fsSL '<url>' -o miroshark-<id>.bib` snippet, a paste-ready `\cite{miroshark-...}` LaTeX reference snippet (the citation key is deterministic from the sim id, so the in-paper reference syntax is correct before the `.bib` file is even fetched), and a "Download .bib" anchor for the save-as flow. The `cite_bib` counter joins the surface-stats schema so an operator can see how many academic citations the simulation is driving independently of the other surfaces — a spike here indicates the sim is being cited in a paper draft.
+
+Turns "MiroShark is a research tool" from a positioning claim into a citation chain a peer reviewer can actually follow.
+
 ## Simulation Archive Bundle
 
 The take-offline composite — one ZIP, every published share surface inside. Until now a researcher finishing a simulation had to chain up to nine separate `curl` calls to take the artifact set offline (`share-card.png`, `chart.svg`, `trajectory.csv`, `trajectory.jsonl`, `transcript.md`, `thread.txt`, `reproduce.json`, `notebook.ipynb`, `signal.json`). `GET /api/simulation/<id>/archive.zip` collapses every successfully-rendered surface into one timestamped ZIP plus a `manifest.json` that pairs each contained file with its SHA-256, byte size, MIME type, and canonical source URL.

@@ -1757,6 +1757,86 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/cite.bib:
+    get:
+      tags: [Publish & Embed]
+      summary: BibTeX academic citation entry for a published simulation.
+      description: |
+        Returns a single `@misc{…}` BibTeX entry for the simulation —
+        the academic-citation layer closing the citation arc that
+        starts with `reproduce.json` (parameters), continues with
+        `notebook.ipynb` (analysis), and anchors on the OriginTrail
+        DKG citation (provenance).
+
+        The entry drops straight into a LaTeX paper source via
+        `\bibliography{}` and imports cleanly into Zotero / Mendeley
+        via their "Import from URL" flow (both readers consume
+        `text/plain` BibTeX at an HTTP URL directly). The endpoint
+        URL doubles as the import URL — no manual download step.
+
+        Field map:
+
+        * `title` — Scenario text (BibTeX-special-escaped), capped at
+          200 chars with ellipsis. Falls back to "Untitled MiroShark
+          simulation" when the scenario is empty.
+        * `author` — `{MiroShark}` (brace-wrapped so BibTeX treats it
+          as a corporate author).
+        * `year` + `month` — Derived from `SimulationState.created_at`.
+          Unparseable timestamps fall back to the current UTC year +
+          month so the entry is always well-formed.
+        * `url` — Canonical share URL (`<base>/share/<id>`).
+        * `howpublished` — Wrapped in `\url{…}`, points at the
+          `reproduce.json` endpoint so a reviewer who pastes the
+          citation knows where the parameters live.
+        * `note` — `Reproducibility SHA-256: <64-hex>`. Sourced from
+          the persisted DKG citation when present (on-chain anchor is
+          the source of truth), else freshly computed from the
+          canonical `reproduce.json` bytes. Omitted when neither
+          source is available.
+        * `annote` — `OriginTrail DKG UAL: <ual>`. Present only when
+          the sim has been anchored on the DKG via
+          `POST /api/simulation/{id}/publish-dkg`.
+
+        Citation key shape: `miroshark-<sim_id[:16]>` with
+        non-`[A-Za-z0-9_-]` characters stripped (the BibTeX grammar
+        allows only those in a citation key). Stable across re-renders
+        of the entry, so an author who pinned the key once never sees
+        their `\cite{}` references silently rewire on a re-export.
+
+        Same publish gate as every other share surface
+        (`is_public=true`). Cached for 5 minutes — the entry
+        stabilises once the sim reaches a terminal state.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: |
+            BibTeX entry as `text/plain; charset=utf-8` with
+            `Content-Disposition: inline; filename="miroshark-<id12>.bib"`
+            so `curl -OJ` saves a ready-to-include `.bib` file.
+            Cache-Control: `public, max-age=300`.
+          content:
+            text/plain:
+              schema:
+                type: string
+                description: |
+                  Single BibTeX `@misc{…}` entry ending with a
+                  trailing newline so concatenation with another
+                  entry produces a well-formed `.bib` library.
+              example: |
+                @misc{miroshark-sim_abc123def4,
+                  title        = {What if Aave's reserve factor doubled overnight?},
+                  author       = {MiroShark},
+                  year         = {2026},
+                  month        = may,
+                  url          = {https://miroshark.example.com/share/sim_abc123def456},
+                  howpublished = {\url{https://miroshark.example.com/api/simulation/sim_abc123def456/reproduce.json}},
+                  note         = {Reproducibility SHA-256: 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8},
+                  annote       = {OriginTrail DKG UAL: did:dkg:base:8453/0xabc/12345},
+                }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/notebook.ipynb:
     get:
       tags: [Publish & Embed]
@@ -4015,6 +4095,7 @@ components:
             - signal_json
             - archive_zip
             - badge_svg
+            - cite_bib
             - total
           properties:
             share_card:
@@ -4120,6 +4201,19 @@ components:
                 an embedding README increments this counter, so a
                 popular README produces visibly more serves than the
                 interactive surfaces.
+            cite_bib:
+              type: integer
+              minimum: 0
+              description: |
+                Successful `cite.bib` serves — the BibTeX academic
+                citation entry. Tracks pickup by LaTeX paper authors
+                pulling the entry into a `\bibliography{}` block and
+                by Zotero / Mendeley users importing via "Import from
+                URL". A spike here indicates academic adoption — a
+                sim being cited in a paper draft typically produces
+                a small number of fetches per author (one per import
+                + occasional re-fetches when the SHA-256 needs
+                re-verification).
             total:
               type: integer
               minimum: 0

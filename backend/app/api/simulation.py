@@ -5553,6 +5553,142 @@ def get_status_badge_svg(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/cite.bib', methods=['GET'])
+def get_cite_bib(simulation_id: str):
+    """Return a one-call BibTeX ``@misc{…}`` entry for a published sim.
+
+    Closes the academic citation arc. The reproduce.json blob (PR #79)
+    carries every parameter a second operator needs to re-run the
+    simulation; the OriginTrail DKG citation (PR #84) anchors that
+    blob's bytes on-chain as cryptographic provenance; the
+    notebook.ipynb (PR #80) drops the trajectory into a researcher's
+    IDE. This endpoint adds the missing layer — a BibTeX entry that
+    drops straight into a LaTeX paper source, imports cleanly into
+    Zotero / Mendeley via the "Import from URL" flow (both readers
+    consume ``text/plain`` BibTeX at an HTTP URL directly), and
+    carries the reproduce.json SHA-256 (in ``note``) so a reviewer can
+    verify the cited file with ``sha256sum --check`` years later.
+
+    The entry's ``annote`` field carries the OriginTrail UAL when the
+    sim has been anchored on the DKG — same chain-of-citation property
+    a DOI gives a paper. The reproduce.json SHA-256 is sourced from
+    the on-chain literal whenever a DKG citation exists (the on-chain
+    anchor is the source of truth), and falls back to a fresh hash of
+    the canonical reproduce.json bytes otherwise.
+
+    Same publish gate as every other share surface (``is_public=true``).
+    Returns ``404`` only when the simulation itself doesn't exist —
+    every published sim has a citation, even a freshly-published one
+    with zero recorded rounds (the entry then carries the scenario
+    + scaffolded URL without an annotation block).
+
+    ``Content-Type: text/plain; charset=utf-8`` so Zotero's "Import
+    from URL" picks the right parser, with
+    ``Content-Disposition: inline; filename="miroshark-<id12>.bib"``
+    so a browser preview names the file usefully and a
+    ``curl -OJ`` saves it ready to drop into a ``\\bibliography{}``
+    block. Cached for 5 minutes — matches the reproduce.json + notebook
+    cadence; the BibTeX entry doesn't change once a sim has reached a
+    terminal state.
+    """
+    from ..services import bibtex_service
+    from ..services import dkg_publisher
+    from ..services import repro_export
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({
+                "success": False,
+                "error": f"Simulation not found: {simulation_id}",
+            }), 404
+
+        sim_dir = os.path.join(
+            Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id
+        )
+        config_data = manager.get_simulation_config(simulation_id)
+
+        # Build the canonical reproduce.json bytes so the SHA-256 in
+        # the ``note`` field matches the same hash a verifier would
+        # get from ``curl reproduce.json | sha256sum`` — byte-for-byte
+        # identical to what the standalone /reproduce.json route serves
+        # because both call through ``repro_export.render_json_bytes``.
+        try:
+            repro_blob = repro_export.build_repro_config(
+                state.to_dict(), config_data, sim_dir
+            )
+            reproduce_bytes = repro_export.render_json_bytes(repro_blob)
+        except Exception as exc:
+            logger.warning(
+                f"cite.bib: reproduce.json hash unavailable for {simulation_id}: {exc}"
+            )
+            reproduce_bytes = None
+
+        # DKG citation overrides the local SHA-256: the on-chain anchor
+        # is the source of truth once a sim has been published to DKG.
+        dkg_citation = dkg_publisher.read_citation(sim_dir)
+
+        base_url = _resolve_share_base_url()
+        bibtex_bytes = bibtex_service.render_bibtex_bytes(
+            simulation_id=simulation_id,
+            scenario=summary.get("scenario"),
+            created_at=state.created_at,
+            base_url=base_url,
+            reproduce_json_bytes=reproduce_bytes,
+            dkg_citation=dkg_citation,
+        )
+
+        response = Response(
+            bibtex_bytes, mimetype="text/plain; charset=utf-8"
+        )
+        # 5-min cache — the entry stabilises once the sim reaches a
+        # terminal state; a live sim's evolving scenario is rare
+        # enough that a 5-min stale window is acceptable for the
+        # citation use case. Matches the reproduce.json + notebook
+        # cadence so a citation tooling round-trip sees consistent
+        # state across the three citation surfaces.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        # ``inline`` so a click in the SPA renders in-tab (BibTeX is
+        # plain text — useful to preview before saving). The
+        # EmbedDialog uses an explicit ``download`` attribute on its
+        # anchor when it wants a save-as. ``filename="…"`` lets
+        # ``curl -OJ`` land a ready-to-include ``.bib`` file.
+        filename = f"miroshark-{simulation_id[:12]}.bib"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="{filename}"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "cite_bib")
+        return response
+
+    except Exception as e:
+        logger.error(
+            f"cite.bib: failed for {simulation_id}: {e}\n{traceback.format_exc()}"
+        )
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/archive.zip', methods=['GET'])
 def get_archive_zip(simulation_id: str):
     """Bundle every published share surface into a single ZIP download.

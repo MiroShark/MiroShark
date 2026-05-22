@@ -89,6 +89,7 @@ SURFACE_KEYS: frozenset[str] = frozenset(
         "signal_json",
         "archive_zip",
         "badge_svg",
+        "cite_bib",
     }
 )
 
