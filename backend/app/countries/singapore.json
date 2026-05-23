@@ -1,0 +1,47 @@
+{
+  "code": "sg",
+  "name": "Singapore",
+  "flag_emoji": "🇸🇬",
+  "available": true,
+  "dataset": {
+    "repo_id": "nvidia/Nemotron-Personas-Singapore",
+    "local_paths": [
+      "backend/data/nemotron/singapore/data/train-*.parquet",
+      "backend/data/nemotron/data/train-*.parquet"
+    ],
+    "download_dir": "backend/data/nemotron/singapore",
+    "allow_patterns": ["data/train-*", "README.md"],
+    "country_values": ["singapore", "sg"]
+  },
+  "geography": {
+    "field": "planning_area",
+    "label": "Planning Area",
+    "values": [
+      "Ang Mo Kio", "Bedok", "Bishan", "Boon Lay", "Bukit Batok",
+      "Bukit Merah", "Bukit Panjang", "Bukit Timah", "Changi", "Choa Chu Kang",
+      "Clementi", "Downtown Core", "Geylang", "Hougang", "Jurong East",
+      "Jurong West", "Kallang", "Mandai", "Marine Parade", "Newton",
+      "Novena", "Orchard", "Outram", "Pasir Ris", "Paya Lebar",
+      "Punggol", "Queenstown", "River Valley", "Rochor", "Sembawang",
+      "Sengkang", "Serangoon", "Singapore River", "Tampines", "Tanglin",
+      "Tengah", "Toa Payoh", "Woodlands", "Yishun"
+    ],
+    "groups": {
+      "north-east": ["Hougang", "Punggol", "Sengkang", "Serangoon"],
+      "north":      ["Sembawang", "Woodlands", "Yishun"],
+      "east":       ["Bedok", "Pasir Ris", "Tampines"],
+      "west":       ["Bukit Batok", "Bukit Panjang", "Choa Chu Kang", "Jurong East", "Jurong West", "Tengah"],
+      "central":    ["Ang Mo Kio", "Bishan", "Bukit Merah", "Bukit Timah", "Clementi", "Geylang", "Kallang", "Marine Parade", "Queenstown", "Toa Payoh"]
+    }
+  },
+  "filter_fields": [
+    {"field": "age",            "type": "range",       "label": "Age Range",   "default_min": 20, "default_max": 65},
+    {"field": "planning_area",  "type": "multi-chips", "label": "Planning Area"},
+    {"field": "occupation",     "type": "dropdown",    "label": "Occupation"},
+    {"field": "education_level","type": "dropdown",    "label": "Education"},
+    {"field": "industry",       "type": "dropdown",    "label": "Industry"},
+    {"field": "sex",            "type": "single-chips","label": "Gender"}
+  ],
+  "max_agents": 500,
+  "default_agents": 250
+}

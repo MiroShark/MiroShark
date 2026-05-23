@@ -79,7 +79,7 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp
+    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp, countries_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
@@ -87,6 +87,10 @@ def create_app(config_class=Config):
     app.register_blueprint(settings_bp, url_prefix='/api/settings')
     app.register_blueprint(observability_bp, url_prefix='/api/observability')
     app.register_blueprint(mcp_bp, url_prefix='/api/mcp')
+    # countries_bp serves /api/countries (+ /api/countries/<code>) — the
+    # demographic-pack registry the SPA reads to render the country picker
+    # on the New Sim form.
+    app.register_blueprint(countries_bp, url_prefix='/api/countries')
     # docs_bp serves Swagger UI + the OpenAPI spec at /api/docs,
     # /api/openapi.yaml, /api/openapi.json (no extra sub-prefix — the spec
     # URL is the developer-facing surface so we keep it short).

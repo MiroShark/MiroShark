@@ -21,6 +21,7 @@ from ..utils.trace_context import TraceContext
 from .entity_reader import EntityNode
 from .web_enrichment import WebEnricher
 from ..storage import GraphStorage
+from . import demographic_sampler
 
 logger = get_logger('miroshark.wonderwall_profile')
 
@@ -274,6 +275,8 @@ class WonderwallProfileGenerator:
         storage: Optional[GraphStorage] = None,
         graph_id: Optional[str] = None,
         simulation_requirement: Optional[str] = None,
+        country_code: Optional[str] = None,
+        demographic_filters: Optional[Dict[str, Any]] = None,
     ):
         self.model_name = model_name or Config.LLM_MODEL_NAME
         self.llm = create_llm_client(
@@ -289,12 +292,22 @@ class WonderwallProfileGenerator:
         # Web enrichment for notable figures / thin context
         self.web_enricher = WebEnricher()
         self.simulation_requirement = simulation_requirement or ""
+
+        # Demographic grounding: when set, persona generation pulls one
+        # Nemotron row per entity and feeds it to the LLM as an additional
+        # anchor block. Falls back to graph-only generation when disabled,
+        # when deps are missing, or when the dataset can't be resolved.
+        env_country = (getattr(Config, 'DEMOGRAPHICS_COUNTRY', '') or '').strip().lower()
+        self.country_code = (country_code or env_country) or None
+        self.demographic_filters = demographic_filters or {}
+        self._demographic_seeds_by_user_id: Dict[int, Dict[str, Any]] = {}
     
     def generate_profile_from_entity(
-        self, 
-        entity: EntityNode, 
+        self,
+        entity: EntityNode,
         user_id: int,
-        use_llm: bool = True
+        use_llm: bool = True,
+        demographic_seed: Optional[Dict[str, Any]] = None,
     ) -> WonderwallAgentProfile:
         """
         Generate Wonderwall Agent Profile from knowledge graph entity
@@ -303,6 +316,8 @@ class WonderwallProfileGenerator:
             entity: Knowledge graph entity node
             user_id: User ID (for Wonderwall)
             use_llm: Whether to use LLM to generate detailed persona
+            demographic_seed: Optional Nemotron row used to anchor the persona
+                in a real demographic profile (age, sex, geography, occupation, ...).
 
         Returns:
             WonderwallAgentProfile
@@ -313,13 +328,17 @@ class WonderwallProfileGenerator:
         user_name = self._generate_username(name)
         context = self._build_entity_context(entity)
 
+        if demographic_seed is None:
+            demographic_seed = self._demographic_seeds_by_user_id.get(user_id)
+
         if use_llm:
             profile_data = self._generate_profile_with_llm(
                 entity_name=name,
                 entity_type=entity_type,
                 entity_summary=entity.summary,
                 entity_attributes=entity.attributes,
-                context=context
+                context=context,
+                demographic_seed=demographic_seed,
             )
         else:
             profile_data = self._generate_profile_rule_based(
@@ -328,6 +347,17 @@ class WonderwallProfileGenerator:
                 entity_summary=entity.summary,
                 entity_attributes=entity.attributes
             )
+
+        # Seed-derived fallbacks: when the LLM didn't pin down a field,
+        # carry the demographic value through so the agent is consistent
+        # with its anchor row.
+        if demographic_seed:
+            for key in ('age', 'gender', 'profession', 'country'):
+                if not profile_data.get(key):
+                    seed_key = {'gender': 'sex', 'profession': 'occupation'}.get(key, key)
+                    seed_val = demographic_seed.get(seed_key)
+                    if seed_val not in (None, '', 'nan'):
+                        profile_data[key] = seed_val
         
         # Derive risk_tolerance from entity type and MBTI if the LLM didn't provide one
         risk_tolerance = profile_data.get("risk_tolerance")
@@ -608,7 +638,8 @@ class WonderwallProfileGenerator:
         entity_type: str,
         entity_summary: str,
         entity_attributes: Dict[str, Any],
-        context: str
+        context: str,
+        demographic_seed: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Use LLM to generate very detailed persona
@@ -617,16 +648,18 @@ class WonderwallProfileGenerator:
         - Individual entity: Generate specific character profile
         - Group/institutional entity: Generate representative account profile
         """
-        
+
         is_individual = self._is_individual_entity(entity_type)
-        
+
         if is_individual:
             prompt = self._build_individual_persona_prompt(
-                entity_name, entity_type, entity_summary, entity_attributes, context
+                entity_name, entity_type, entity_summary, entity_attributes, context,
+                demographic_seed=demographic_seed,
             )
         else:
             prompt = self._build_group_persona_prompt(
-                entity_name, entity_type, entity_summary, entity_attributes, context
+                entity_name, entity_type, entity_summary, entity_attributes, context,
+                demographic_seed=demographic_seed,
             )
 
         # Try multiple times until success or max retries reached
@@ -781,19 +814,30 @@ class WonderwallProfileGenerator:
         entity_type: str,
         entity_summary: str,
         entity_attributes: Dict[str, Any],
-        context: str
+        context: str,
+        demographic_seed: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Build detailed persona prompt for individual entities"""
 
         attrs_str = json.dumps(entity_attributes, ensure_ascii=False) if entity_attributes else "None"
         context_str = context[:3000] if context else "No additional context"
 
+        anchor_block = ""
+        if demographic_seed:
+            anchor = demographic_sampler.format_seed_for_prompt(demographic_seed)
+            if anchor:
+                anchor_block = (
+                    "\nDEMOGRAPHIC ANCHOR (census-grounded row — use as the persona's "
+                    "real demographic baseline; the bio and worldview should be consistent with it):\n"
+                    f"{anchor}\n"
+                )
+
         return f"""Create a persona for this person to use in a social media simulation.
 
 ENTITY: {entity_name} ({entity_type})
 SUMMARY: {entity_summary}
 ATTRIBUTES: {attrs_str}
-
+{anchor_block}
 CONTEXT (from knowledge graph and research):
 {context_str}
 
@@ -825,19 +869,33 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
         entity_type: str,
         entity_summary: str,
         entity_attributes: Dict[str, Any],
-        context: str
+        context: str,
+        demographic_seed: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Build detailed persona prompt for group/institutional entities"""
 
         attrs_str = json.dumps(entity_attributes, ensure_ascii=False) if entity_attributes else "None"
         context_str = context[:3000] if context else "No additional context"
 
+        # Group entities pull a single demographic row as a "typical follower"
+        # anchor only — not as the org's identity itself. Keeps the institutional
+        # voice intact while still localizing the audience-facing tone.
+        anchor_block = ""
+        if demographic_seed:
+            anchor = demographic_sampler.format_seed_for_prompt(demographic_seed)
+            if anchor:
+                anchor_block = (
+                    "\nAUDIENCE ANCHOR (a typical follower in the target demographic — "
+                    "use to localize voice/tone, not as the org's own identity):\n"
+                    f"{anchor}\n"
+                )
+
         return f"""Create an official social media account persona for this organization.
 
 ENTITY: {entity_name} ({entity_type})
 SUMMARY: {entity_summary}
 ATTRIBUTES: {attrs_str}
-
+{anchor_block}
 CONTEXT (from knowledge graph and research):
 {context_str}
 
@@ -1030,6 +1088,34 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
         profiles = [None] * total  # Pre-allocate list to maintain order
         completed_count = [0]  # Use list so it can be modified in closure
         lock = Lock()
+
+        # When a country is configured, pull one Nemotron row per entity so
+        # the LLM persona generator can anchor each agent in a real demographic.
+        # Sampler returns [] on missing deps or unreachable dataset, in which
+        # case we silently fall back to graph-only generation.
+        if self.country_code:
+            filters = self.demographic_filters or {}
+            seeds = demographic_sampler.sample_seeds(
+                self.country_code,
+                limit=total,
+                seed=filters.get('seed', 42),
+                geography_values=filters.get('geography_values'),
+                min_age=filters.get('min_age'),
+                max_age=filters.get('max_age'),
+                sexes=filters.get('sexes'),
+                occupations=filters.get('occupations'),
+                education_levels=filters.get('education_levels'),
+                industries=filters.get('industries'),
+            )
+            paired = demographic_sampler.pair_entities_with_seeds(total, seeds)
+            # Workers look this up by user_id (== idx). Set before futures fan out.
+            self._demographic_seeds_by_user_id = {
+                idx: row for idx, row in enumerate(paired) if row is not None
+            }
+            logger.info(
+                f"Demographic grounding: paired {len(self._demographic_seeds_by_user_id)}/{total} "
+                f"entities with Nemotron rows from country='{self.country_code}'."
+            )
 
         # Helper function for real-time file writing
         def save_profiles_realtime():

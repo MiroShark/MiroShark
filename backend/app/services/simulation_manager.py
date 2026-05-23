@@ -91,6 +91,14 @@ class SimulationState:
     # their owner explicitly publishes.
     is_public: bool = False
 
+    # Demographic grounding (optional, per-run override of the
+    # DEMOGRAPHICS_COUNTRY env var). When set to a country code registered
+    # under backend/app/countries/, the persona generator pulls a Nemotron
+    # row per entity. demographic_filters narrows the sample
+    # (geography_values, min_age, max_age, occupations, ...).
+    country: Optional[str] = None
+    demographic_filters: Optional[Dict[str, Any]] = None
+
     def to_dict(self) -> Dict[str, Any]:
         """Full state dictionary (for internal use)"""
         return {
@@ -116,6 +124,8 @@ class SimulationState:
             "parent_simulation_id": self.parent_simulation_id,
             "config_diff": self.config_diff,
             "is_public": self.is_public,
+            "country": self.country,
+            "demographic_filters": self.demographic_filters,
         }
     
     def to_simple_dict(self) -> Dict[str, Any]:
@@ -213,6 +223,8 @@ class SimulationManager:
             parent_simulation_id=data.get("parent_simulation_id"),
             config_diff=data.get("config_diff"),
             is_public=data.get("is_public", False),
+            country=(data.get("country") or None),
+            demographic_filters=(data.get("demographic_filters") or None),
         )
         
         self._simulations[simulation_id] = state
@@ -226,6 +238,8 @@ class SimulationManager:
         enable_reddit: bool = True,
         enable_polymarket: bool = False,
         polymarket_market_count: int = 1,
+        country: Optional[str] = None,
+        demographic_filters: Optional[Dict[str, Any]] = None,
     ) -> SimulationState:
         """
         Create a new simulation
@@ -236,13 +250,20 @@ class SimulationManager:
             enable_twitter: Whether to enable Twitter simulation
             enable_reddit: Whether to enable Reddit simulation
             enable_polymarket: Whether to enable Polymarket simulation
+            country: Optional demographic country code (e.g. "sg", "us") —
+                when matching a pack under backend/app/countries/, the
+                persona generator anchors each agent in a Nemotron row.
+            demographic_filters: Optional sampler filters (geography_values,
+                min_age, max_age, occupations, ...).
 
         Returns:
             SimulationState
         """
         import uuid
         simulation_id = f"sim_{uuid.uuid4().hex[:12]}"
-        
+
+        normalized_country = (country or '').strip().lower() or None
+
         state = SimulationState(
             simulation_id=simulation_id,
             project_id=project_id,
@@ -252,6 +273,8 @@ class SimulationManager:
             enable_polymarket=enable_polymarket,
             polymarket_market_count=max(1, min(5, int(polymarket_market_count or 1))),
             status=SimulationStatus.CREATED,
+            country=normalized_country,
+            demographic_filters=demographic_filters,
         )
         
         self._save_simulation_state(state)
@@ -358,6 +381,8 @@ class SimulationManager:
                 storage=storage,
                 graph_id=state.graph_id,
                 simulation_requirement=simulation_requirement,
+                country_code=state.country,
+                demographic_filters=state.demographic_filters,
             )
             
             def profile_progress(current, total, msg):
@@ -725,6 +750,8 @@ class SimulationManager:
             config_reasoning=f"Forked from {parent_simulation_id}",
             parent_simulation_id=parent_simulation_id,
             config_diff=config_diff if config_diff else None,
+            country=parent.country,
+            demographic_filters=parent.demographic_filters,
         )
 
         self._save_simulation_state(state)

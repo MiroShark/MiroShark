@@ -187,6 +187,7 @@
                 </option>
               </select>
             </label>
+            <CountryPicker v-model="demographic" :disabled="creatingSimulation" />
           </div>
 
           <button
@@ -221,6 +222,7 @@
 import { computed, ref, watch, nextTick, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { createSimulation, listSimulations } from '../api/simulation'
+import CountryPicker from './CountryPicker.vue'
 import { tr } from '../i18n'
 
 const router = useRouter()
@@ -242,6 +244,7 @@ const dashboardCollapsed = ref(true)
 const creatingSimulation = ref(false)
 const existingSimulations = ref([])
 const marketCount = ref(3)
+const demographic = ref({ country: null, demographic_filters: null })
 
 // Check for existing simulations for this project
 const loadExistingSimulations = async () => {
@@ -280,6 +283,10 @@ const handleEnterEnvSetup = async () => {
       enable_reddit: true,
       enable_polymarket: true,
       polymarket_market_count: marketCount.value,
+      ...(demographic.value.country ? { country: demographic.value.country } : {}),
+      ...(demographic.value.demographic_filters
+        ? { demographic_filters: demographic.value.demographic_filters }
+        : {}),
     })
 
     if (res.success && res.data?.simulation_id) {

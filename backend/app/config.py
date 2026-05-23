@@ -253,6 +253,21 @@ class Config:
         os.environ.get('WAYBACKCLAW_AGENT_CATEGORY', '') or ''
     ).strip().lower()
 
+    # Demographic grounding — optional Nemotron-anchored persona generation.
+    # When ``DEMOGRAPHICS_COUNTRY`` matches an entry under
+    # ``backend/app/countries/`` (e.g. ``sg`` or ``us``), the persona
+    # generator pulls one census-grounded row per entity from the
+    # corresponding NVIDIA Nemotron-Personas parquet dataset and feeds it
+    # to the LLM as a demographic anchor — age, sex, geography, occupation,
+    # education, industry. Falls back to graph-only generation when:
+    #   * the env var is empty,
+    #   * the country code is unknown,
+    #   * ``duckdb`` / ``huggingface_hub`` aren't installed, or
+    #   * neither a local parquet glob nor an HF snapshot is reachable.
+    # The feature is purely additive: agents that don't get a seed still
+    # generate normally, so partial coverage degrades cleanly.
+    DEMOGRAPHICS_COUNTRY = (os.environ.get('DEMOGRAPHICS_COUNTRY', '') or '').strip().lower()
+
     # Whether ``GET /sitemap.xml`` is served and ``robots.txt`` advertises
     # it. Default ``true`` — the public sitemap is the search-engine
     # discovery surface for the public-simulation gallery, and a

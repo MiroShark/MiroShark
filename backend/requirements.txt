@@ -46,3 +46,11 @@ pywebpush>=2.0.0
 # ============= Game Theory (optional — report_agent.analyze_equilibrium) =============
 # Enables the Nash equilibrium tool on the ReACT report agent. Silent no-op if absent.
 nashpy>=0.0.41
+
+# ============= Demographic Grounding (optional) =============
+# Powers backend/app/services/demographic_sampler.py — pulls Nemotron
+# census-grounded persona seeds and feeds them to the LLM. Falls back to
+# graph-only persona generation when these aren't installed, so the
+# feature is purely additive.
+duckdb>=1.0.0
+huggingface_hub>=0.23.0

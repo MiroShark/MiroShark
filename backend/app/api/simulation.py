@@ -1368,7 +1368,14 @@ def create_simulation():
             "graph_id": "miroshark_xxxx",    // Optional, fetched from project if not provided
             "enable_twitter": true,          // Optional, default true
             "enable_reddit": true,           // Optional, default true
-            "enable_polymarket": false       // Optional, default false
+            "enable_polymarket": false,      // Optional, default false
+            "country": "sg",                 // Optional, demographic country pack code
+            "demographic_filters": {         // Optional, narrows the Nemotron sample
+                "geography_values": ["Tampines", "Bedok"],
+                "min_age": 21,
+                "max_age": 65,
+                "occupations": ["teacher"]
+            }
         }
 
     Returns:
@@ -1414,6 +1421,12 @@ def create_simulation():
                 )
             }), 400
 
+        # Demographic grounding (optional). Filter values are pass-through to
+        # the sampler — invalid keys are silently ignored there.
+        raw_filters = data.get('demographic_filters') or None
+        if raw_filters is not None and not isinstance(raw_filters, dict):
+            raw_filters = None
+
         manager = SimulationManager()
         state = manager.create_simulation(
             project_id=project_id,
@@ -1422,6 +1435,8 @@ def create_simulation():
             enable_reddit=data.get('enable_reddit', True),
             enable_polymarket=data.get('enable_polymarket', False),
             polymarket_market_count=data.get('polymarket_market_count', 1),
+            country=data.get('country'),
+            demographic_filters=raw_filters,
         )
         
         return jsonify({
@@ -3039,7 +3054,16 @@ def generate_profiles():
                 )
             }), 400
         
-        generator = WonderwallProfileGenerator()
+        # Preview endpoint also honours the optional country / demographic_filters
+        # payload so a caller can A/B the same graph with and without grounding.
+        raw_filters = data.get('demographic_filters') or None
+        if raw_filters is not None and not isinstance(raw_filters, dict):
+            raw_filters = None
+
+        generator = WonderwallProfileGenerator(
+            country_code=data.get('country'),
+            demographic_filters=raw_filters,
+        )
         profiles = generator.generate_profiles_from_entities(
             entities=filtered.entities,
             use_llm=use_llm

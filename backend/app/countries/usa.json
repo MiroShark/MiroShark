@@ -1,0 +1,47 @@
+{
+  "code": "us",
+  "name": "United States",
+  "flag_emoji": "🇺🇸",
+  "available": true,
+  "dataset": {
+    "repo_id": "nvidia/Nemotron-Personas",
+    "local_paths": [
+      "backend/data/nemotron/usa/data/train-*.parquet",
+      "backend/data/nemotron/data/train-*.parquet"
+    ],
+    "download_dir": "backend/data/nemotron/usa",
+    "allow_patterns": ["data/train-*", "README.md"],
+    "country_values": ["united states", "usa", "us"]
+  },
+  "geography": {
+    "field": "state",
+    "label": "State",
+    "values": [
+      "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
+      "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
+      "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
+      "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota", "Mississippi",
+      "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire", "New Jersey",
+      "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio", "Oklahoma",
+      "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
+      "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
+      "West Virginia", "Wisconsin", "Wyoming", "District of Columbia"
+    ],
+    "groups": {
+      "northeast": ["Connecticut", "Maine", "Massachusetts", "New Hampshire", "New Jersey", "New York", "Pennsylvania", "Rhode Island", "Vermont"],
+      "midwest":   ["Illinois", "Indiana", "Iowa", "Kansas", "Michigan", "Minnesota", "Missouri", "Nebraska", "North Dakota", "Ohio", "South Dakota", "Wisconsin"],
+      "south":     ["Alabama", "Arkansas", "Delaware", "Florida", "Georgia", "Kentucky", "Louisiana", "Maryland", "Mississippi", "North Carolina", "Oklahoma", "South Carolina", "Tennessee", "Texas", "Virginia", "West Virginia", "District of Columbia"],
+      "west":      ["Alaska", "Arizona", "California", "Colorado", "Hawaii", "Idaho", "Montana", "Nevada", "New Mexico", "Oregon", "Utah", "Washington", "Wyoming"]
+    }
+  },
+  "filter_fields": [
+    {"field": "age",            "type": "range",       "label": "Age Range",   "default_min": 18, "default_max": 70},
+    {"field": "state",          "type": "multi-chips", "label": "State"},
+    {"field": "occupation",     "type": "dropdown",    "label": "Occupation"},
+    {"field": "education_level","type": "dropdown",    "label": "Education"},
+    {"field": "industry",       "type": "dropdown",    "label": "Industry"},
+    {"field": "sex",            "type": "single-chips","label": "Gender"}
+  ],
+  "max_agents": 500,
+  "default_agents": 250
+}

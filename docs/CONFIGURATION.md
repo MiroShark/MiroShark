@@ -204,6 +204,7 @@ All retrieval and memory features are on by default. Disable individually:
 | `LLM_DISABLE_REASONING` | `true` | OpenRouter reasoning models emit CoT (~3× higher latency on Qwen3/Grok) |
 | `ORACLE_SEED_ENABLED` | `false` | Templates ignore `oracle_tools` |
 | `MCP_AGENT_TOOLS_ENABLED` | `false` | `tools_enabled` personas can't invoke MCP |
+| `DEMOGRAPHICS_COUNTRY` | `""` | Persona generator runs graph-only — no Nemotron demographic seed. Set to a code under `backend/app/countries/` (e.g. `sg`, `us`) to anchor each agent in a census-grounded row. See [DEMOGRAPHICS.md](DEMOGRAPHICS.md). |
 
 ## Observability
 

@@ -104,6 +104,19 @@ Each round the runner:
 
 Failed calls become `{"_error": "..."}` payloads rather than exceptions — agent prompts stay well-formed. The bridge has a 30-second per-call timeout (`MCP_CALL_TIMEOUT_SEC`) and tears down subprocesses on simulation end (or `atexit` on abnormal exit).
 
+## Demographic Grounding (Nemotron-Anchored Personas)
+
+Graph-grounded personas give every agent a real-world *narrative* anchor — the journalist character traces back to a journalist entity in the document. Demographic Grounding adds a *demographic* anchor on top: when `DEMOGRAPHICS_COUNTRY` is set to a registered country code (`sg`, `us`, …), the persona generator pulls one row per agent from the corresponding NVIDIA **Nemotron-Personas** parquet dataset and feeds it to the LLM as a `DEMOGRAPHIC ANCHOR` block alongside the graph context.
+
+The result is an agent that's still authored by the LLM and still grounded in the document's relationships, but whose age, sex, geography, occupation, education, and industry come from a census-like row rather than the model's defaults. For organizational entities the same row is reframed as an `AUDIENCE ANCHOR` so the institutional voice stays intact while the tone localizes to the target demographic.
+
+Country packs are JSON files under `backend/app/countries/` (Singapore and US ship by default). Each pack declares the HuggingFace repo id, geography field (`planning_area`, `state`), valid values, and named geography groups (`north-east`, `west`, …). To add a new country, drop a new JSON file in the directory — no code changes.
+
+The feature is purely additive: empty env var → behavior unchanged. Missing `duckdb`/`huggingface_hub` deps → silent skip. Partial sample coverage → first N agents get seeds, the rest use graph-only generation.
+
+- **Endpoint:** `GET /api/countries`, `GET /api/countries/<code>`
+- **Details:** [DEMOGRAPHICS.md](DEMOGRAPHICS.md)
+
 ## Custom Wonderwall Endpoint
 
 The simulation loop is the heaviest model consumer in MiroShark — 850–1650 calls per run, 7M+ tokens, all going through CAMEL-AI's per-agent action loop. The Wonderwall slot has its own `WONDERWALL_BASE_URL` + `WONDERWALL_API_KEY` env vars (and matching inputs in **Settings → Advanced → Wonderwall**) so you can route those volume hits to any OpenAI-compatible endpoint without touching the Default/Smart/NER slots — keep graph build, reports, and entity extraction on OpenRouter/Anthropic while the agents talk to a self-hosted vLLM, a Modal/Replicate deployment, an Ollama instance on a separate GPU, or a custom fine-tune of your own.
