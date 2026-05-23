@@ -188,6 +188,11 @@ ensure_env() {
 ensure_neo4j() {
     header "Neo4j"
 
+    if grep -qE '^NEO4J_URI=neo4j\+s://' "$SCRIPT_DIR/.env" 2>/dev/null; then
+        success "Remote Neo4j (Aura) configured in .env — skipping local startup"
+        return 0
+    fi
+
     if check_port "$NEO4J_BOLT_PORT"; then
         success "Neo4j already running on port $NEO4J_BOLT_PORT"
         return 0
