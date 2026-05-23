@@ -4,6 +4,7 @@ Used for server-side persistent project state, avoiding large data transfers bet
 """
 
 import os
+import re
 import json
 import uuid
 import shutil
@@ -12,6 +13,14 @@ from typing import Dict, Any, List, Optional
 from enum import Enum
 from dataclasses import dataclass, field
 from ..config import Config
+
+_SAFE_PROJECT_ID = re.compile(r'^[a-zA-Z0-9_-]{1,128}$')
+
+
+def _validate_project_id(project_id: str) -> None:
+    """Reject project_id values that could escape PROJECTS_DIR."""
+    if not _SAFE_PROJECT_ID.match(project_id):
+        raise ValueError(f"Invalid project_id: {project_id!r}")
 
 
 class ProjectStatus(str, Enum):
@@ -112,6 +121,7 @@ class ProjectManager:
     @classmethod
     def _get_project_dir(cls, project_id: str) -> str:
         """Get project directory path"""
+        _validate_project_id(project_id)
         return os.path.join(cls.PROJECTS_DIR, project_id)
 
     @classmethod
