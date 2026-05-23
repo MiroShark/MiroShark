@@ -643,6 +643,58 @@ export const getSignalJson = async (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the Polymarket-shaped prediction JSON for a
+ * completed, published simulation. The fifteenth machine-readable share
+ * surface and the first one shaped for a specific external integrator —
+ * a Polymarket trading bot.
+ *
+ * Returns a v1-schema JSON document with `yes_probability` /
+ * `no_probability` (summing to 1.0), `confidence_tier` (a four-bucket
+ * discrete scale on top of signal.json's continuous `confidence_pct`),
+ * the underlying belief percentages, and a `suggested_market_title`
+ * shaped as `"Will …?"` for Polymarket's display rail.
+ *
+ * Stricter publish gate than signal.json: only returns a payload for
+ * sims with `status == "completed"` (a Polymarket bot sizing positions
+ * against a mid-run signal would chase numbers that can still flip).
+ * Mid-run sims and freshly-published sims that haven't recorded any
+ * rounds yet both return 404.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getPolymarketJsonUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/polymarket.json`
+}
+
+/**
+ * Fetch the Polymarket-shaped prediction payload for a completed,
+ * published simulation.
+ *
+ * Returns the parsed JSON document on 200, `null` on 404 (sim not
+ * complete / no `belief.final`) or 403 (sim not published), and throws
+ * on transport errors.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<object|null>}
+ */
+export const getPolymarketJson = async (simulationId) => {
+  const res = await fetch(getPolymarketJsonUrl(simulationId), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (res.status === 403 || res.status === 404) {
+    return null
+  }
+  if (!res.ok) {
+    throw new Error(`polymarket.json fetch failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+/**
  * Build the absolute URL of the simulation archive bundle — a single
  * ZIP containing every published share surface (share-card.png,
  * chart.svg, trajectory.csv / jsonl, transcript.md, thread.txt,

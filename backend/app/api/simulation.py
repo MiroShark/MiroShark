@@ -5466,6 +5466,88 @@ def get_signal_json(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/polymarket.json', methods=['GET'])
+def get_polymarket_json(simulation_id: str):
+    """Polymarket-shaped binary-market prediction for a completed sim.
+
+    The fifteenth share surface — and the first one shaped for a
+    specific external integrator. ``signal.json`` (PR #91) emits a
+    generic action primitive (``direction`` + ``confidence_pct`` +
+    ``risk_tier``); this endpoint adapts that primitive into the
+    binary YES / NO probability shape a Polymarket trading bot
+    expects between "simulation result" and "actionable market
+    signal".
+
+    Pure derivation — every number is a re-shape of the
+    ``compute_signal`` output, which is itself a re-shape of the
+    embed-summary belief block. A "Bullish 62%" sim emits
+    ``yes_probability: 0.62`` here, ``confidence_pct: 43.4`` on
+    signal.json, and the same numbers on every visual surface
+    (gallery card, share card, badge).
+
+    Stricter publish gate than signal.json: this surface only
+    returns a payload for sims with ``status == "completed"`` (a
+    Polymarket bot sizing positions against a mid-run signal would
+    chase numbers that can still flip). Mid-run sims and freshly-
+    published sims that haven't recorded any rounds yet both return
+    ``404``.
+
+    Cache TTL matches ``signal.json``'s 5-minute window — for a
+    completed sim the underlying numbers are immutable, but the
+    ``polymarket_generated_at`` timestamp moves on every request so
+    bytewise determinism is not a property of this surface (same
+    posture as ``signal.json``).
+    """
+    from ..services import polymarket_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        payload = polymarket_service.compute_polymarket(summary, simulation_id)
+        if payload is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Polymarket signal not available yet — the simulation is not complete.",
+                    "尚无可用的 Polymarket 信号 — 模拟尚未完成。",
+                    locale,
+                ),
+            }), 404
+
+        body = json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        response = Response(body, mimetype="application/json; charset=utf-8")
+        response.headers["Cache-Control"] = "public, max-age=300"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-polymarket.json"'
+        )
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        surface_stats.increment_surface_stat(sim_dir, "polymarket_json")
+        return response
+
+    except Exception as e:
+        logger.error(f"polymarket.json: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/badge.svg', methods=['GET'])
 def get_status_badge_svg(simulation_id: str):
     """Flat Shields.io-style consensus-status badge for a published sim.

@@ -96,6 +96,7 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/frame-metadata` | Farcaster Frame v2 metadata — `frame_version`, `image_url` (chart SVG, falling back to share card), `image_aspect_ratio`, `share_url`, `buttons`, `has_trajectory`. The matching `fc:frame:*` meta tags are emitted by the share page so a Farcaster cast containing the share URL renders as an interactive Frame card |
 | `GET` | `/api/simulation/<id>/thread.txt` | Auto-formatted X / Twitter tweet thread (one tweet per belief inflection point, ≤280 chars each) |
 | `GET` | `/api/simulation/<id>/thread.json` | Same tweet thread as `thread.txt` but as `{tweets, total, inflections_recorded, truncated}` for programmatic consumers |
+| `GET` | `/api/simulation/<id>/polymarket.json` | Polymarket-shaped binary-market prediction — `yes_probability` / `no_probability` (sum to 1.0), `confidence_tier` (four-bucket discrete scale on top of signal.json's continuous `confidence_pct`), the underlying belief percentages, and a `suggested_market_title` shaped as `"Will …?"`. Stricter publish gate than `signal.json`: only completed sims emit a payload (a Polymarket bot acting on a mid-run signal would chase numbers that can still flip). Cached 5 minutes |
 | `GET` | `/api/simulation/<id>/surface-stats` | Per-share-surface request counters — share card / replay GIF / transcript / trajectory / chart.svg / thread / watch page / Atom / RSS / reproduce.json / lineage / notebook.ipynb, plus a synthetic `total` |
 | `GET` | `/api/simulation/<id>/reproduce.json` | Citation primitive — v1-schema reproducibility config blob carrying scenario, agent count, total rounds, platform toggles, time-config knobs, director events, and fork / counterfactual lineage. Identical exports of a finished sim are bytewise-identical (citation-hash friendly) |
 | `GET` | `/api/simulation/<id>/cite.bib` | Drop-in BibTeX `@misc{…}` academic citation entry. Imports cleanly into Zotero / Mendeley via "Import from URL"; the `note` field carries the reproduce.json SHA-256 (verifiable via `sha256sum --check`); the `annote` field carries the OriginTrail DKG UAL when the sim has been anchored on-chain. `text/plain; charset=utf-8` |
@@ -167,6 +168,25 @@ jupyter lab simulation.ipynb     # or: code simulation.ipynb, or upload to Colab
 ```
 
 The notebook is self-contained — the trajectory CSV is embedded as a Python string literal so the cells run in an air-gapped kernel. Identical exports of a finished simulation produce bytewise-identical notebooks (citation-hash friendly), same property the `reproduce.json` blob has. nbformat 4 spec: <https://nbformat.readthedocs.io/>.
+
+### Polymarket trading-bot quickstart
+
+A Polymarket bot can go from "simulation result" to "actionable YES / NO signal" in a single curl call — the `polymarket.json` endpoint is the adapter:
+
+```bash
+curl -s "https://your-host/api/simulation/<id>/polymarket.json" \
+  | jq '{yes: .yes_probability, no: .no_probability, tier: .confidence_tier}'
+```
+
+```python
+import requests
+sig = requests.get(f"https://your-host/api/simulation/{sim_id}/polymarket.json", timeout=10).json()
+if sig["confidence_tier"] in ("confident", "high-conviction") and sig["risk_tier"] != "high-risk":
+    place_order(market_id, side="YES" if sig["yes_probability"] > 0.5 else "NO",
+                size=POSITION_SIZE_BY_TIER[sig["confidence_tier"]])
+```
+
+Stricter publish gate than `signal.json`: only sims with `status == "completed"` emit a payload. A 404 means the simulation is still running or has no recorded rounds — a bot should treat it as "not ready" and skip, not retry. The `confidence_tier` field is the four-bucket discrete scale (`speculative` / `moderate` / `confident` / `high-conviction`) bots use for position-sizing logic; the underlying `confidence_pct` is also returned for callers that want the continuous value. `yes_probability + no_probability == 1.0` within float tolerance — the invariant a Polymarket order-book consumer expects.
 
 ### Search Engine Discoverability
 

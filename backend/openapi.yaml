@@ -1600,6 +1600,53 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/polymarket.json:
+    get:
+      tags: [Publish & Embed]
+      summary: Polymarket-shaped binary-market prediction for a completed sim.
+      description: |
+        Adapts the generic `signal.json` action primitive into the
+        binary YES / NO probability envelope a Polymarket trading bot
+        expects between *"simulation result"* and *"actionable market
+        signal"*. The first share surface shaped for a specific
+        external integrator.
+
+        Direction-aware `yes_probability`: a Bullish swarm emits
+        `bullish_pct / 100` (high YES); a Bearish swarm emits
+        `1 - bearish_pct / 100` (low YES — the residual probability);
+        a Neutral swarm lands exactly at `0.5` (coin-flip prior).
+        `yes_probability + no_probability == 1.0` within float
+        tolerance — the invariant a Polymarket order-book consumer
+        expects.
+
+        `confidence_tier` is a four-bucket discrete scale on top of
+        `signal.json`'s continuous `confidence_pct`:
+        `<25 → speculative`, `25-50 → moderate`,
+        `50-75 → confident`, `≥75 → high-conviction`. Upper bounds
+        are exclusive. Bots typically gate position size on this
+        tier rather than the raw continuous value.
+
+        Stricter publish gate than `signal.json`: this surface only
+        returns a payload for sims with `status == "completed"` (a
+        Polymarket bot acting on a mid-run signal would chase
+        numbers that can still flip). Mid-run sims and freshly-
+        published sims that haven't recorded any rounds yet both
+        return `404`. Same `is_public=true` requirement as every
+        other share surface. Cached for 5 minutes — matches the
+        `signal.json` cadence so a bot polling both surfaces sees
+        consistent values.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Polymarket prediction payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolymarketPrediction"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/thread.txt:
     get:
       tags: [Publish & Embed]
@@ -4315,6 +4362,151 @@ components:
             determinism is not a property of this surface (unlike
             reproduce.json / notebook.ipynb whose bytes need to be
             citation-hashable).
+
+    PolymarketPrediction:
+      type: object
+      description: |
+        Polymarket-shaped binary-market prediction returned by
+        `/api/simulation/{id}/polymarket.json`. Re-envelope of the
+        `signal.json` action primitive into the YES / NO probability
+        shape a Polymarket trading bot expects between *"simulation
+        result"* and *"actionable market signal"*.
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal.
+      required:
+        - schema_version
+        - simulation_id
+        - direction
+        - yes_probability
+        - no_probability
+        - confidence_pct
+        - confidence_tier
+        - risk_tier
+        - bullish_pct
+        - neutral_pct
+        - bearish_pct
+        - quality_health
+        - suggested_market_title
+        - source_sim_id
+        - polymarket_generated_at
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id (canonical key across every share surface).
+        direction:
+          type: string
+          enum: [Bullish, Neutral, Bearish]
+          description: |
+            Plurality stance from the final-round belief distribution.
+            Inherited from `signal.json` — same tie-break order
+            (`bullish > bearish > neutral`).
+        yes_probability:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: |
+            Direction-aware YES probability. Bullish → `bullish_pct / 100`
+            (high YES); Bearish → `1 - bearish_pct / 100` (low YES —
+            the residual probability the proposition is true); Neutral
+            → `0.5` exactly (coin-flip prior). Rounded to four decimal
+            places, matching Polymarket's display rail precision.
+        no_probability:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: |
+            Always `1 - yes_probability`. The pair sums to `1.0` within
+            float tolerance, the invariant a Polymarket order-book
+            consumer expects.
+        confidence_pct:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: |
+            Continuous confidence value inherited verbatim from
+            `signal.json` — `(leading_pct - 33.333) / 66.667 * 100`
+            clamped to `[0, 100]` and rounded to one decimal place.
+            Exposed alongside `confidence_tier` for callers that
+            want the raw value.
+        confidence_tier:
+          type: string
+          enum: [speculative, moderate, confident, high-conviction]
+          description: |
+            Four-bucket discrete scale on top of `confidence_pct`:
+            `<25 → speculative`, `25-50 → moderate`,
+            `50-75 → confident`, `≥75 → high-conviction`. Upper
+            bounds are exclusive (`25.0` is `moderate`, not
+            `speculative`). Bots typically gate position size on this
+            tier — different sizing for "speculative" vs.
+            "high-conviction" — rather than the raw continuous value.
+        risk_tier:
+          type: string
+          enum: [low-risk, medium-risk, high-risk]
+          description: |
+            Quality-health risk tier inherited from `signal.json`:
+            `excellent` → `low-risk`, `good` → `medium-risk`,
+            everything else (`fair`, `poor`, missing, `"N/A"`) →
+            `high-risk`. Default-to-high posture — an unknown-quality
+            signal is treated cautiously.
+        bullish_pct:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Final-round bullish share. Rounded to one decimal place.
+        neutral_pct:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Final-round neutral share. Rounded to one decimal place.
+        bearish_pct:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Final-round bearish share. Rounded to one decimal place.
+        quality_health:
+          type: string
+          description: |
+            Simulation quality health string echoed from
+            `quality.json` (typically `excellent` / `good` / `fair` /
+            `poor`). Falls back to `"N/A"` when the underlying field
+            is missing or empty.
+        suggested_market_title:
+          type: string
+          description: |
+            Polymarket-shaped market title synthesised from the
+            simulation scenario — starts with `"Will "`, ends with a
+            single `"?"`. A scenario that already starts with
+            `"Will "` is not double-prefixed; trailing punctuation is
+            stripped before truncation at 120 characters (with
+            `"…?"` when truncated). Missing / empty scenarios fall
+            back to `"Will resolve YES?"`. A *suggested* title — the
+            bot author is expected to massage the string.
+        source_sim_id:
+          type: string
+          description: |
+            Same value as `simulation_id`, exposed under the field
+            name a Polymarket bot expects when writing back to its
+            own audit log.
+        polymarket_generated_at:
+          type: string
+          format: date-time
+          description: |
+            UTC timestamp when the prediction was computed (ISO-8601
+            with trailing `Z`). Re-derived on every request — tracks
+            *computation time*, not the underlying simulation
+            completion time. Same posture as `signal.json` (bytewise
+            determinism is not a property of this surface).
 
     ArchiveManifestEntry:
       type: object

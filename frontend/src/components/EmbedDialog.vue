@@ -686,6 +686,115 @@
               </div>
             </div>
 
+            <!-- Polymarket-shaped prediction JSON — the first share
+                 surface adapted for a specific external integrator
+                 (a Polymarket trading bot). Reshapes the signal.json
+                 primitive into the YES / NO binary-market envelope
+                 a bot consumes between "simulation result" and
+                 "actionable market signal". Stricter publish gate:
+                 only completed sims emit a payload (a Polymarket
+                 bot acting on a mid-run signal would chase numbers
+                 that can still flip). Same publish gate + pure
+                 stdlib posture as every other surface; zero new
+                 deps. -->
+            <div class="transcript-section signal-section polymarket-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">🎯</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Polymarket prediction (JSON)', 'Polymarket 预测(JSON)') }}
+                    <span v-if="polymarketYesPct !== ''" class="signal-direction-badge polymarket-yes-badge">
+                      {{ $tr('YES', 'YES') }} · {{ polymarketYesPct }}%
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Binary YES / NO probability shape a Polymarket trading bot expects — one curl call between "simulation result" and "actionable market signal". Direction-aware: a Bullish swarm emits high yes_probability; Bearish swarm emits low; Neutral lands exactly at 0.5. Confidence tier (speculative / moderate / confident / high-conviction) for position-sizing logic.', '为 Polymarket 交易机器人量身的二元 YES / NO 概率结构 —「模拟结果」与「可执行市场信号」之间的一次 curl 调用。方向感知:看涨群体输出高 yes_probability;看跌输出低;中性恰好为 0.5。置信度等级(speculative / moderate / confident / high-conviction)用于仓位规模逻辑。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && polymarketPayload" class="signal-preview polymarket-preview">
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('YES probability', 'YES 概率') }}</span>
+                  <span class="signal-value signal-direction-bullish">
+                    {{ polymarketYesPct }}%
+                  </span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('NO probability', 'NO 概率') }}</span>
+                  <span class="signal-value signal-direction-bearish">
+                    {{ polymarketNoPct }}%
+                  </span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Confidence tier', '置信度等级') }}</span>
+                  <span :class="['signal-value', `polymarket-tier-${polymarketPayload.confidence_tier}`]">
+                    {{ polymarketPayload.confidence_tier }}
+                  </span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Risk tier', '风险等级') }}</span>
+                  <span :class="['signal-value', `signal-risk-${polymarketPayload.risk_tier}`]">
+                    {{ polymarketPayload.risk_tier }}
+                  </span>
+                </div>
+                <div class="signal-row signal-row-breakdown">
+                  <span class="signal-label">{{ $tr('Suggested title', '建议标题') }}</span>
+                  <span class="signal-value polymarket-title-value">
+                    {{ polymarketPayload.suggested_market_title }}
+                  </span>
+                </div>
+              </div>
+              <div v-else-if="isPublic && polymarketLoading" class="signal-loading">
+                {{ $tr('Loading Polymarket prediction…', '加载 Polymarket 预测中…') }}
+              </div>
+              <div v-else-if="isPublic && polymarketError" class="signal-empty">
+                {{ polymarketError }}
+              </div>
+              <div v-else-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable the Polymarket prediction.', '发布模拟以启用 Polymarket 预测。') }}
+              </div>
+
+              <div class="transcript-actions">
+                <a
+                  v-if="isPublic && polymarketJsonUrl"
+                  class="transcript-download-btn"
+                  :href="polymarketJsonUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-polymarket.json`"
+                >
+                  ↓ {{ $tr('Download polymarket.json', '下载 polymarket.json') }}
+                </a>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Polymarket URL', 'Polymarket URL') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('polymarketUrl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'polymarketUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ polymarketJsonUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('polymarketCurl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'polymarketCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ polymarketCurlSnippet }}</code></pre>
+              </div>
+            </div>
+
             <!-- Simulation archive bundle — every published share
                  surface collapsed into a single ZIP download plus a
                  manifest.json pairing each contained file with its
@@ -2156,6 +2265,8 @@ import {
   getBadgeUrl,
   getSignalJsonUrl,
   getSignalJson,
+  getPolymarketJsonUrl,
+  getPolymarketJson,
   getArchiveZipUrl,
   getArchiveSummary,
   getThreadTxtUrl,
@@ -2412,6 +2523,61 @@ const loadSignal = async () => {
     signalError.value = err?.message || tr('Signal fetch failed', '信号获取失败')
   } finally {
     signalLoading.value = false
+  }
+}
+
+// ── Polymarket prediction state ────────────────────────────────────────
+// The Polymarket-shaped re-envelope of signal.json. Stricter publish
+// gate than signal.json: only completed sims emit a payload. A bot
+// reading a 404 should treat the sim as "not ready" rather than
+// retry.
+
+const polymarketPayload = ref(null)
+const polymarketLoading = ref(false)
+const polymarketError = ref('')
+
+const polymarketJsonUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getPolymarketJsonUrl(props.simulationId, origin.value)
+})
+
+const polymarketYesPct = computed(() => {
+  const y = polymarketPayload.value?.yes_probability
+  return (typeof y === 'number') ? (y * 100).toFixed(2) : ''
+})
+const polymarketNoPct = computed(() => {
+  const n = polymarketPayload.value?.no_probability
+  return (typeof n === 'number') ? (n * 100).toFixed(2) : ''
+})
+
+const polymarketCurlSnippet = computed(() => {
+  const url = polymarketJsonUrl.value || 'https://your-host/api/simulation/<id>/polymarket.json'
+  return `curl -s "${url}" | jq '.yes_probability,.no_probability,.confidence_tier'`
+})
+
+const loadPolymarket = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    polymarketPayload.value = null
+    return
+  }
+  polymarketLoading.value = true
+  polymarketError.value = ''
+  try {
+    const payload = await getPolymarketJson(props.simulationId)
+    if (payload && typeof payload === 'object') {
+      polymarketPayload.value = payload
+    } else {
+      polymarketPayload.value = null
+      polymarketError.value = tr(
+        'Polymarket prediction not available yet — the simulation is not complete.',
+        '尚无可用的 Polymarket 预测 — 模拟尚未完成。',
+      )
+    }
+  } catch (err) {
+    polymarketPayload.value = null
+    polymarketError.value = err?.message || tr('Polymarket fetch failed', 'Polymarket 获取失败')
+  } finally {
+    polymarketLoading.value = false
   }
 }
 
@@ -3172,6 +3338,8 @@ const copy = async (which) => {
   else if (which === 'badgeHtml') text = badgeHtmlSnippet.value
   else if (which === 'signalUrl') text = signalJsonUrl.value
   else if (which === 'signalCurl') text = signalCurlSnippet.value
+  else if (which === 'polymarketUrl') text = polymarketJsonUrl.value
+  else if (which === 'polymarketCurl') text = polymarketCurlSnippet.value
   else if (which === 'archiveUrl') text = archiveZipUrl.value
   else if (which === 'archiveCurl') text = archiveCurlSnippet.value
   else if (which === 'farcasterShare') text = farcasterShareUrl.value || shareLandingUrl.value
@@ -3760,6 +3928,9 @@ watch(() => props.open, async (val) => {
   // tiny payload (~250 bytes), and the preview row needs the parsed
   // payload to render the direction / confidence / risk-tier chips.
   loadSignal()
+  // Polymarket prediction sits on the same gate as signal.json; load
+  // alongside so the YES/NO preview row renders without a manual refresh.
+  loadPolymarket()
   // HEAD the archive endpoint so the bundle section can show the file
   // count without downloading the ZIP. Same publish gate as every
   // other surface — a private sim resolves cleanly to "not available".
@@ -3803,6 +3974,8 @@ watch(isPublic, () => {
   loadThread()
   // Same publish-gate flip applies to the trading signal — re-fetch.
   loadSignal()
+  // Polymarket prediction sits on the same gate; re-fetch alongside.
+  loadPolymarket()
   // Same flip applies to the archive bundle — re-HEAD so the bundle
   // section reflects the now-available surface count.
   loadArchive()
@@ -4598,6 +4771,34 @@ watch(isPublic, () => {
 .signal-row-breakdown .signal-value {
   font-family: inherit;
   font-weight: 500;
+}
+
+.polymarket-tier-speculative {
+  color: #92400e;
+}
+
+.polymarket-tier-moderate {
+  color: #b45309;
+}
+
+.polymarket-tier-confident {
+  color: #15803d;
+}
+
+.polymarket-tier-high-conviction {
+  color: #166534;
+  font-weight: 700;
+}
+
+.polymarket-yes-badge {
+  background: rgba(34, 197, 94, 0.18);
+  color: #166534;
+}
+
+.polymarket-title-value {
+  font-family: inherit;
+  font-style: italic;
+  color: #374151;
 }
 
 .signal-loading,

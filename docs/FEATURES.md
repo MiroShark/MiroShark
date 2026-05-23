@@ -238,6 +238,45 @@ The Embed dialog exposes a `📡 Trading signal (JSON)` section beneath the traj
 
 Closes the gap between *"a sim produces data"* and *"a sim produces a signal"* — the last mile a quant audience needed before MiroShark output could land directly in an automation rather than a notebook.
 
+## Polymarket-Ready Prediction JSON
+
+The first share surface adapted for a specific external integrator. `signal.json` emits a generic action primitive (`direction` + `confidence_pct` + `risk_tier`); `GET /api/simulation/<id>/polymarket.json` re-shapes that primitive into the binary YES / NO probability envelope a Polymarket trading bot expects between *"simulation result"* and *"actionable market signal"*.
+
+Returns a stable v1-schema JSON document:
+
+```json
+{
+  "schema_version": "1",
+  "simulation_id": "<sim_id>",
+  "direction": "Bullish",
+  "yes_probability": 0.62,
+  "no_probability": 0.38,
+  "confidence_pct": 43.4,
+  "confidence_tier": "moderate",
+  "risk_tier": "low-risk",
+  "bullish_pct": 62.0,
+  "neutral_pct": 18.0,
+  "bearish_pct": 20.0,
+  "quality_health": "excellent",
+  "suggested_market_title": "Will Aave pass the safety-module change?",
+  "source_sim_id": "<sim_id>",
+  "polymarket_generated_at": "2026-05-23T14:22:01Z"
+}
+```
+
+- **`yes_probability` / `no_probability`** — direction-aware. A Bullish swarm emits a high `yes_probability` (`bullish_pct / 100`); a Bearish swarm emits a low one (`1 - bearish_pct / 100`); a Neutral swarm lands exactly at `0.5` (the coin-flip prior). `yes + no == 1.0` within float tolerance — the invariant a Polymarket order-book consumer expects. Both rounded to four decimal places, matching Polymarket's display rail precision.
+- **`confidence_tier`** — four-bucket discrete scale on top of `signal.json`'s continuous `confidence_pct`. `<25` → `speculative`, `25-50` → `moderate`, `50-75` → `confident`, `≥75` → `high-conviction`. Upper bounds are exclusive (`25.0` is `moderate`, not `speculative`). Bots typically gate position size on this tier — different sizing for "speculative" vs. "high-conviction" — rather than the raw continuous value.
+- **`suggested_market_title`** — synthesised as `"Will {scenario}?"` for Polymarket's display rail. A scenario that already starts with `"Will "` is not double-prefixed; trailing punctuation is stripped before truncation at 120 characters (with `"…?"` when truncated). Missing / empty scenarios fall back to `"Will resolve YES?"`. A *suggested* title — the bot author is expected to massage the string.
+- **`source_sim_id`** — echoes the simulation id under the field name a Polymarket bot expects when writing back to its own audit log. The canonical `simulation_id` key (every other share surface) carries the same value, so consumers can read either.
+
+Pure derivation, layered on `signal_service`. The `polymarket_service.py` module is ~230 LoC of stdlib Python — `compute_polymarket` calls `signal_service.compute_signal` and reshapes its output. Every property the signal payload guarantees (tie-break order, one-decimal rounding, ISO-8601 timestamp format) carries through. A "Bullish 62%" simulation emits identical underlying numbers across the gallery card, the share card, `signal.json`, `badge.svg`, and `polymarket.json` — only the *envelope* changes.
+
+Stricter publish gate than `signal.json`: only sims with `status == "completed"` emit a payload. A Polymarket bot sizing positions against a mid-run signal would chase numbers that can still flip; the completed-only posture prevents that footgun. Mid-run sims and freshly-published sims that haven't recorded any rounds yet both return `404`. Cached for 5 minutes — matches the `signal.json` cadence so a bot polling both surfaces sees consistent values.
+
+The Embed dialog exposes a `🎯 Polymarket prediction (JSON)` section beneath the trading-signal row: a live preview of the YES / NO probabilities, the confidence and risk tiers, the suggested market title, a "Download .json" anchor, a copyable URL, and a paste-ready `curl | jq` snippet. The `polymarket_json` counter joins the surface-stats schema so an operator can see how many Polymarket bots the prediction surface drove independently of the visual surfaces.
+
+Zero new dependencies (streak: 31 PRs). The first surface naming a specific external integrator — pairing with PR #83 ("Discord/Slack notifications" — first feature naming `@revaultdrops`) and continuing the explicit-audience pattern that drives external integrator adoption.
+
 ## Consensus Status Badge SVG
 
 The cheapest visible pointer back to a simulation. The previous twelve share surfaces describe a simulation in increasing depth (chart SVG, replay GIF, trajectory CSV / JSONL, transcript, notebook, signal.json, archive.zip, ...); `GET /api/simulation/<id>/badge.svg` is the *passive distribution lever* — a flat 20-pixel-tall Shields.io-compatible SVG that fits inside any `<img>` tag, Markdown image link, or `<link rel="alternate">` reference. Every researcher's GitHub README, every Notion page, every operator's personal site can embed a live consensus badge with one line of Markdown:

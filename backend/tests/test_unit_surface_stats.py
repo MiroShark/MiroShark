@@ -82,6 +82,7 @@ def test_surface_keys_includes_every_serve_handler():
         "archive_zip",
         "badge_svg",
         "cite_bib",
+        "polymarket_json",
     }
     assert set(surface_stats.SURFACE_KEYS) == expected
 
