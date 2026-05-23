@@ -84,6 +84,18 @@ def _clear_telegram(monkeypatch):
     monkeypatch.delenv("TELEGRAM_CHAT_ID", raising=False)
 
 
+def _clear_waybackclaw(monkeypatch):
+    """Reset ``WAYBACKCLAW_AGENT_TOKEN`` so the channel reads as unconfigured.
+
+    ``is_configured()`` returns True iff the agent token is set, so this
+    one env var is the entire surface. Keeping a helper (rather than an
+    inline delenv) matches the pattern used by the other channels and
+    makes it easy to extend if WaybackClaw ever grows additional
+    required vars.
+    """
+    monkeypatch.delenv("WAYBACKCLAW_AGENT_TOKEN", raising=False)
+
+
 def test_notifications_config_all_unset(monkeypatch, client):
     monkeypatch.delenv("DISCORD_WEBHOOK_URL", raising=False)
     monkeypatch.delenv("SLACK_WEBHOOK_URL", raising=False)
@@ -92,6 +104,7 @@ def test_notifications_config_all_unset(monkeypatch, client):
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -102,6 +115,7 @@ def test_notifications_config_all_unset(monkeypatch, client):
         "telegram_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
+        "waybackclaw_configured": False,
     }
 
 
@@ -113,6 +127,7 @@ def test_notifications_config_discord_only(monkeypatch, client):
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -123,6 +138,7 @@ def test_notifications_config_discord_only(monkeypatch, client):
         "telegram_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
+        "waybackclaw_configured": False,
     }
 
 
@@ -137,6 +153,7 @@ def test_notifications_config_slack_only(monkeypatch, client):
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -147,6 +164,7 @@ def test_notifications_config_slack_only(monkeypatch, client):
         "telegram_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
+        "waybackclaw_configured": False,
     }
 
 
@@ -159,6 +177,7 @@ def test_notifications_config_email_only(monkeypatch, client):
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -169,6 +188,7 @@ def test_notifications_config_email_only(monkeypatch, client):
         "telegram_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
+        "waybackclaw_configured": False,
     }
 
 
@@ -198,6 +218,7 @@ def test_notifications_config_telegram_only(monkeypatch, client):
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "", raising=False)
     _clear_dkg(monkeypatch)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -208,6 +229,7 @@ def test_notifications_config_telegram_only(monkeypatch, client):
         "telegram_configured": True,
         "dkg_configured": False,
         "dkg_network": None,
+        "waybackclaw_configured": False,
     }
 
 
@@ -241,6 +263,7 @@ def test_notifications_config_all_five_configured(monkeypatch, client):
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "https://example.com/hook", raising=False)
     _clear_dkg(monkeypatch)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -251,6 +274,7 @@ def test_notifications_config_all_five_configured(monkeypatch, client):
         "telegram_configured": True,
         "dkg_configured": False,
         "dkg_network": None,
+        "waybackclaw_configured": False,
     }
 
 
@@ -267,6 +291,7 @@ def test_notifications_config_blank_env_var_treated_as_unset(monkeypatch, client
     from app.config import Config
     monkeypatch.setattr(Config, "WEBHOOK_URL", "  ", raising=False)
     _clear_dkg(monkeypatch)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -277,6 +302,7 @@ def test_notifications_config_blank_env_var_treated_as_unset(monkeypatch, client
         "telegram_configured": False,
         "dkg_configured": False,
         "dkg_network": None,
+        "waybackclaw_configured": False,
     }
 
 
@@ -293,6 +319,7 @@ def test_notifications_config_dkg_configured(monkeypatch, client):
     monkeypatch.setattr(Config, "DKG_AUTH_TOKEN", "abc123def456", raising=False)
     monkeypatch.setattr(Config, "DKG_CONTEXT_GRAPH_ID", "cg-miroshark", raising=False)
     monkeypatch.setattr(Config, "DKG_NETWORK", "mainnet", raising=False)
+    _clear_waybackclaw(monkeypatch)
 
     data = _payload(client)
     assert data == {
@@ -303,6 +330,7 @@ def test_notifications_config_dkg_configured(monkeypatch, client):
         "telegram_configured": False,
         "dkg_configured": True,
         "dkg_network": "mainnet",
+        "waybackclaw_configured": False,
     }
 
 
