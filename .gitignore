@@ -11,11 +11,8 @@ design-system/
 
 # Environment variables (protect sensitive information)
 .env
-.env.local
-.env.*.local
-.env.development
-.env.test
-.env.production
+.env.*
+!.env.example
 
 # Python
 __pycache__/
