@@ -156,6 +156,22 @@
             </button>
           </div>
 
+          <!-- Regenerate Report - shown after completion -->
+          <button
+            v-if="isComplete"
+            class="regenerate-btn"
+            @click="regenerateReport"
+            :disabled="isRegenerating || !simulationId"
+            :title="$tr('Re-run the whole report from scratch', '从头重新生成整篇报告')"
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" :class="{ spinning: isRegenerating }">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <polyline points="1 20 1 14 7 14"></polyline>
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+            <span>{{ isRegenerating ? $tr('Regenerating...', '重新生成中...') : $tr('Regenerate Report', '重新生成报告') }}</span>
+          </button>
+
           <div class="workflow-divider"></div>
         </div>
 
@@ -412,7 +428,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted, nextTick, h, reactive } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAgentLog, getConsoleLog } from '../api/report'
+import { getAgentLog, getConsoleLog, generateReport } from '../api/report'
 import { exportSimulationData } from '../api/simulation'
 import { renderMarkdown } from '../utils/markdown'
 import { truncate as truncateText } from '../utils/text'
@@ -438,6 +454,45 @@ const copyReportId = () => {
 const goToInteraction = () => {
   if (props.reportId) {
     router.push({ name: 'Interaction', params: { reportId: props.reportId } })
+  }
+}
+
+// Regenerate the whole report from scratch (force_regenerate). The backend
+// mints a fresh report_id; routing to it triggers the reportId watch below,
+// which resets state and restarts polling.
+const isRegenerating = ref(false)
+const regenerateReport = async () => {
+  if (!props.simulationId || isRegenerating.value) return
+  isRegenerating.value = true
+  try {
+    addLog(`${tr('Regenerating report…', '正在重新生成报告…')}`)
+    const res = await generateReport({
+      simulation_id: props.simulationId,
+      force_regenerate: true
+    })
+    if (res.success && res.data?.report_id) {
+      const newId = res.data.report_id
+      addLog(`${tr('Report regeneration started', '报告重新生成已启动')}: ${newId}`)
+      if (newId === props.reportId) {
+        // Same id (shouldn't happen — backend mints a new one) — hard reset.
+        isComplete.value = false
+        stopPolling()
+        agentLogLine.value = 0
+        consoleLogLine.value = 0
+        agentLogs.value = []
+        consoleLogs.value = []
+        generatedSections.value = {}
+        startPolling()
+      } else {
+        router.push({ name: 'Report', params: { reportId: newId } })
+      }
+    } else {
+      addLog(`${tr('Failed to start regeneration', '重新生成启动失败')}: ${res.error || tr('Unknown error', '未知错误')}`)
+    }
+  } catch (err) {
+    addLog(`${tr('Regeneration error', '重新生成出错')}: ${err.message}`)
+  } finally {
+    isRegenerating.value = false
   }
 }
 
@@ -3424,6 +3479,46 @@ watch(() => props.reportId, (newId) => {
 .export-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Regenerate Report */
+.regenerate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: calc(100% - 40px);
+  margin: 8px 20px 0 20px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FF6B1A;
+  background: #FFF7F2;
+  border: 1px solid #FFD9C2;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.regenerate-btn:hover:not(:disabled) {
+  color: #FAFAFA;
+  background: #FF6B1A;
+  border-color: #FF6B1A;
+}
+
+.regenerate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.regenerate-btn svg.spinning {
+  animation: regen-spin 0.9s linear infinite;
+}
+
+@keyframes regen-spin {
+  to { transform: rotate(360deg); }
 }
 
 /* Workflow Empty */
