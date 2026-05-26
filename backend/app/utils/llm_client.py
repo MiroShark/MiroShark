@@ -365,6 +365,13 @@ class LLMClient:
             raise
 
         content = response.choices[0].message.content
+        # Reasoning-capable models (e.g. Gemini 3 Flash) intermittently return
+        # None content on a turn. Guard before the regex and return None so
+        # callers' empty-response handling (e.g. the report ReAct loop's retry)
+        # engages instead of crashing on a NoneType regex.
+        if content is None:
+            self._emit_llm_event(messages, None, t0, response=response, temperature=temperature)
+            return None
         # Some models (e.g., MiniMax M2.5) include <think> reasoning content in the content field, which needs to be removed
         content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
 
@@ -394,6 +401,10 @@ class LLMClient:
             max_tokens=max_tokens,
             response_format={"type": "json_object"}
         )
+        # chat() returns None on an empty/null-content response — surface a
+        # clear error rather than crashing on None.strip().
+        if response is None:
+            raise ValueError("LLM returned an empty response")
         # Clean up markdown code block markers
         cleaned_response = response.strip()
         cleaned_response = re.sub(r'^```(?:json)?\s*\n?', '', cleaned_response, flags=re.IGNORECASE)

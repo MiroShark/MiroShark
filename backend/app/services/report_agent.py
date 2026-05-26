@@ -2901,8 +2901,8 @@ class ReportAgent:
             response = self.llm.chat(
                 messages=messages,
                 temperature=0.5
-            )
-            
+            ) or ""
+
             # Parse tool calls
             tool_calls = self._parse_tool_calls(response)
             
@@ -2941,8 +2941,8 @@ class ReportAgent:
         final_response = self.llm.chat(
             messages=messages,
             temperature=0.5
-        )
-        
+        ) or ""
+
         # Clean response
         clean_response = re.sub(r'<tool_call>.*?</tool_call>', '', final_response, flags=re.DOTALL)
         clean_response = re.sub(r'\[TOOL_CALL\].*?\)', '', clean_response)
