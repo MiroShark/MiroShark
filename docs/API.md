@@ -68,6 +68,7 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/interaction-network` | Agent-to-agent graph |
 | `GET` | `/api/simulation/<id>/demographics` | Archetype distribution |
 | `GET` | `/api/simulation/<id>/quality` | Run health diagnostics |
+| `GET` | `/api/simulation/<id>/peak-round` | Machine-readable belief inflection points — the round each stance (`bullish` / `neutral` / `bearish`) peaked (`{round, pct}`), the `most_volatile_round` (largest summed round-over-round swing), `max_swing_pct`, and `total_rounds`. Pure O(n) derivation from the same ±0.2 stance split `trajectory.csv` uses; peak ties resolve to the earliest round. Publish-gated; `404` until trajectory data exists. Cached 5 minutes. `curl -s "https://your-host/api/simulation/<id>/peak-round"` |
 | `POST` | `/api/simulation/compare` | Side-by-side belief comparison |
 
 ## Interaction

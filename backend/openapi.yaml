@@ -1602,6 +1602,50 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/peak-round:
+    get:
+      tags: [Publish & Embed]
+      summary: Peak-round belief analytics for a published sim.
+      description: |
+        The analytical counterpart to `trajectory.csv` (raw per-round
+        data) and `chart.svg` (the visual). Collapses the whole belief
+        trajectory into a single O(n) summary of inflection points:
+        the round each stance reached its maximum (`bullish` /
+        `neutral` / `bearish` → `{round, pct}`), the
+        `most_volatile_round` (round with the largest summed
+        round-over-round swing), the `max_swing_pct` value itself, and
+        `total_rounds`.
+
+        Pure derivation — the per-round percentages come from the same
+        `compute_stance_split` (±0.2 threshold) that `trajectory.csv`
+        uses, so "bullish peaked at 71% on round 4" here matches row 4
+        of the CSV. The only new information is the *shape*: a
+        machine-readable inflection summary a quant tool or research
+        script can read without parsing every trajectory row.
+
+        Peak ties resolve to the *earliest* round (strict `>`
+        comparison), so the output is deterministic on a flat-topped
+        trajectory. `most_volatile_round` is likewise the earliest
+        round carrying the maximum swing; a single-round or fully flat
+        trajectory reports the first round with a `0.0` swing.
+
+        Same publish gate as every other share surface
+        (`is_public=true`). Returns `404` when the simulation has no
+        trajectory data yet so a consumer can tell a "not ready" sim
+        (404) apart from a "private" sim (403). Cached for 5 minutes —
+        matches the `chart.svg` / `trajectory` / `signal.json` cadence.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Peak-round analytics payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeakRoundResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/polymarket.json:
     get:
       tags: [Publish & Embed]
@@ -4821,6 +4865,80 @@ components:
             determinism is not a property of this surface (unlike
             reproduce.json / notebook.ipynb whose bytes need to be
             citation-hashable).
+
+    StancePeak:
+      type: object
+      description: |
+        The round at which one stance (bullish / neutral / bearish)
+        reached its maximum share, and that maximum percentage. Ties
+        resolve to the earliest round.
+      required:
+        - round
+        - pct
+      properties:
+        round:
+          type: integer
+          description: Round number at which this stance peaked.
+        pct:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: Peak share for this stance, rounded to two decimal places.
+
+    PeakRoundResponse:
+      type: object
+      description: |
+        Machine-readable peak-round analytics returned by
+        `/api/simulation/{id}/peak-round`. A single O(n) summary of the
+        belief trajectory's inflection points, derived from the same
+        per-round stance split (`±0.2` threshold) `trajectory.csv` uses.
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal.
+      required:
+        - schema_version
+        - simulation_id
+        - bullish
+        - neutral
+        - bearish
+        - most_volatile_round
+        - max_swing_pct
+        - total_rounds
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        bullish:
+          $ref: "#/components/schemas/StancePeak"
+        neutral:
+          $ref: "#/components/schemas/StancePeak"
+        bearish:
+          $ref: "#/components/schemas/StancePeak"
+        most_volatile_round:
+          type: integer
+          description: |
+            The round carrying the largest summed absolute
+            round-over-round belief swing
+            (`|Δbullish| + |Δneutral| + |Δbearish|`). The first round
+            has no predecessor so its swing is zero; ties resolve to
+            the earliest round.
+        max_swing_pct:
+          type: number
+          format: float
+          minimum: 0
+          description: |
+            The swing value at `most_volatile_round`, rounded to two
+            decimal places. `0.0` for a single-round or fully flat
+            trajectory.
+        total_rounds:
+          type: integer
+          minimum: 1
+          description: Number of usable rounds in the trajectory.
 
     PolymarketPrediction:
       type: object

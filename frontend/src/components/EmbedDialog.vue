@@ -686,6 +686,91 @@
               </div>
             </div>
 
+            <!-- Peak-round belief analytics — the analytical counterpart
+                 to trajectory.csv (raw per-round data) and chart.svg
+                 (the visual). Collapses the whole trajectory into a
+                 single O(n) inflection-point summary: when each stance
+                 peaked + the most volatile round. Same publish gate as
+                 every other surface; pure stdlib, zero new deps. -->
+            <div class="transcript-section signal-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">📊</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Peak beliefs (JSON)', '峰值信念(JSON)') }}
+                    <span v-if="peakPayload" class="signal-direction-badge signal-direction-bullish">
+                      {{ $tr('Most volatile: round', '最波动:回合') }} {{ peakPayload.most_volatile_round }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Machine-readable inflection points — the round each stance (bullish / neutral / bearish) peaked, the most volatile round, and the maximum round-over-round swing. The analytical summary quant tools need alongside trajectory.csv, in one O(n) pass.', '机器可读的拐点 — 每种立场(看涨 / 中性 / 看跌)达到峰值的回合、最波动的回合,以及最大的回合间摆动幅度。量化工具在 trajectory.csv 之外需要的分析摘要,一次 O(n) 遍历即可获得。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && peakPayload" class="signal-preview">
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Bullish peak', '看涨峰值') }}</span>
+                  <span class="signal-value signal-direction-bullish">
+                    {{ peakPayload.bullish.pct }}% · {{ $tr('round', '回合') }} {{ peakPayload.bullish.round }}
+                  </span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Bearish peak', '看跌峰值') }}</span>
+                  <span class="signal-value signal-direction-bearish">
+                    {{ peakPayload.bearish.pct }}% · {{ $tr('round', '回合') }} {{ peakPayload.bearish.round }}
+                  </span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Most volatile', '最波动') }}</span>
+                  <span class="signal-value">
+                    {{ $tr('round', '回合') }} {{ peakPayload.most_volatile_round }} (±{{ peakPayload.max_swing_pct }}%)
+                  </span>
+                </div>
+                <div class="signal-row signal-row-breakdown">
+                  <span class="signal-label">{{ $tr('Total rounds', '总回合数') }}</span>
+                  <span class="signal-value">{{ peakPayload.total_rounds }}</span>
+                </div>
+              </div>
+              <div v-else-if="isPublic && peakLoading" class="signal-loading">
+                {{ $tr('Loading peak beliefs…', '加载峰值信念中…') }}
+              </div>
+              <div v-else-if="isPublic && peakError" class="signal-empty">
+                {{ peakError }}
+              </div>
+              <div v-else-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable peak-round analytics.', '发布模拟以启用峰值回合分析。') }}
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Peak-round URL', '峰值回合 URL') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('peakUrl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'peakUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ peakRoundUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('peakCurl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'peakCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ peakCurlSnippet }}</code></pre>
+              </div>
+            </div>
+
             <!-- Polymarket-shaped prediction JSON — the first share
                  surface adapted for a specific external integrator
                  (a Polymarket trading bot). Reshapes the signal.json
@@ -2265,6 +2350,8 @@ import {
   getBadgeUrl,
   getSignalJsonUrl,
   getSignalJson,
+  getPeakRoundUrl,
+  getPeakRound,
   getPolymarketJsonUrl,
   getPolymarketJson,
   getArchiveZipUrl,
@@ -2523,6 +2610,51 @@ const loadSignal = async () => {
     signalError.value = err?.message || tr('Signal fetch failed', '信号获取失败')
   } finally {
     signalLoading.value = false
+  }
+}
+
+// ── Peak-round analytics state ─────────────────────────────────────────
+// The analytical counterpart to trajectory.csv / chart.svg: a single
+// O(n) summary of the belief trajectory's inflection points. Same
+// publish gate as signal.json; 404 means "no trajectory data yet".
+
+const peakPayload = ref(null)
+const peakLoading = ref(false)
+const peakError = ref('')
+
+const peakRoundUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getPeakRoundUrl(props.simulationId, origin.value)
+})
+
+const peakCurlSnippet = computed(() => {
+  const url = peakRoundUrl.value || 'https://your-host/api/simulation/<id>/peak-round'
+  return `curl -s "${url}"`
+})
+
+const loadPeakRound = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    peakPayload.value = null
+    return
+  }
+  peakLoading.value = true
+  peakError.value = ''
+  try {
+    const payload = await getPeakRound(props.simulationId)
+    if (payload && typeof payload === 'object') {
+      peakPayload.value = payload
+    } else {
+      peakPayload.value = null
+      peakError.value = tr(
+        'Peak-round analytics not available yet — the simulation has no trajectory data.',
+        '尚无可用的峰值回合分析 — 模拟还没有轨迹数据。',
+      )
+    }
+  } catch (err) {
+    peakPayload.value = null
+    peakError.value = err?.message || tr('Peak-round fetch failed', '峰值回合获取失败')
+  } finally {
+    peakLoading.value = false
   }
 }
 
@@ -3338,6 +3470,8 @@ const copy = async (which) => {
   else if (which === 'badgeHtml') text = badgeHtmlSnippet.value
   else if (which === 'signalUrl') text = signalJsonUrl.value
   else if (which === 'signalCurl') text = signalCurlSnippet.value
+  else if (which === 'peakUrl') text = peakRoundUrl.value
+  else if (which === 'peakCurl') text = peakCurlSnippet.value
   else if (which === 'polymarketUrl') text = polymarketJsonUrl.value
   else if (which === 'polymarketCurl') text = polymarketCurlSnippet.value
   else if (which === 'archiveUrl') text = archiveZipUrl.value
@@ -3928,6 +4062,9 @@ watch(() => props.open, async (val) => {
   // tiny payload (~250 bytes), and the preview row needs the parsed
   // payload to render the direction / confidence / risk-tier chips.
   loadSignal()
+  // Peak-round analytics sits on the same publish gate; load alongside
+  // so the inflection-point preview renders without a manual refresh.
+  loadPeakRound()
   // Polymarket prediction sits on the same gate as signal.json; load
   // alongside so the YES/NO preview row renders without a manual refresh.
   loadPolymarket()
@@ -3974,6 +4111,8 @@ watch(isPublic, () => {
   loadThread()
   // Same publish-gate flip applies to the trading signal — re-fetch.
   loadSignal()
+  // Same publish-gate flip applies to peak-round analytics — re-fetch.
+  loadPeakRound()
   // Polymarket prediction sits on the same gate; re-fetch alongside.
   loadPolymarket()
   // Same flip applies to the archive bundle — re-HEAD so the bundle

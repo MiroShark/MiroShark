@@ -84,6 +84,7 @@ def test_surface_keys_includes_every_serve_handler():
         "cite_bib",
         "polymarket_json",
         "oembed",
+        "peak_round",
     }
     assert set(surface_stats.SURFACE_KEYS) == expected
 
@@ -285,6 +286,7 @@ def test_surface_stats_route_decorator_registered():
         "chart_svg",
         "signal_json",
         "archive_zip",
+        "peak_round",
     ],
 )
 def test_serve_handlers_increment_their_surface_key(surface_key: str):

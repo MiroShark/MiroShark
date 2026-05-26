@@ -5490,6 +5490,91 @@ def get_signal_json(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/peak-round', methods=['GET'])
+def get_peak_round(simulation_id: str):
+    """Peak-round belief analytics for a published simulation.
+
+    The analytical counterpart to ``trajectory.csv`` (raw per-round
+    data) and ``chart.svg`` (the visual). Collapses the whole belief
+    trajectory into a single O(n) summary of inflection points: the
+    round each stance reached its maximum (``bullish`` / ``neutral`` /
+    ``bearish`` → ``{round, pct}``), the ``most_volatile_round`` (the
+    round with the largest summed round-over-round swing), the
+    ``max_swing_pct`` value itself, and ``total_rounds``.
+
+    Pure derivation — the per-round percentages come from the same
+    ``compute_stance_split`` (±0.2 threshold) that ``trajectory.csv``
+    uses, so "bullish peaked at 71% on round 4" here matches row 4 of
+    the CSV. The only new information is the *shape*: a machine-readable
+    inflection summary a quant tool or research script can read without
+    parsing 100 rows of trajectory.
+
+    Same publish gate as every other share surface (``is_public=true``).
+    Returns ``404`` when the simulation has no trajectory data yet so a
+    consumer can tell a "not ready" sim (404) apart from a "private"
+    sim (403).
+    """
+    from ..services import peak_round as peak_round_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        rounds = peak_round_service.load_trajectory_rounds(sim_dir)
+        peaks = peak_round_service.compute_peak_rounds(rounds)
+        if peaks is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Peak-round analytics not available yet — the simulation has no trajectory data.",
+                    "尚无可用的峰值回合分析 — 模拟还没有轨迹数据。",
+                    locale,
+                ),
+            }), 404
+
+        peaks["simulation_id"] = simulation_id
+
+        # Pretty-printed + sorted keys so ``curl > peak-round.json``
+        # produces a diff-friendly file. The underlying numbers are a
+        # pure read of the trajectory, but we don't claim bytewise
+        # determinism (key order aside) — same posture as signal.json.
+        payload = json.dumps(peaks, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        response = Response(payload, mimetype="application/json; charset=utf-8")
+        # 5-minute cache — matches the chart.svg / trajectory / signal
+        # cadence; a live sim's peaks shift round-to-round, so a short
+        # cache lets analytical tools see fresh inflection points while
+        # crawlers don't re-scan the trajectory on every hit.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-peak-round.json"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "peak_round")
+        return response
+
+    except Exception as e:
+        logger.error(f"peak-round: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/polymarket.json', methods=['GET'])
 def get_polymarket_json(simulation_id: str):
     """Polymarket-shaped binary-market prediction for a completed sim.

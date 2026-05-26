@@ -263,6 +263,38 @@ The Embed dialog exposes a `📡 Trading signal (JSON)` section beneath the traj
 
 Closes the gap between *"a sim produces data"* and *"a sim produces a signal"* — the last mile a quant audience needed before MiroShark output could land directly in an automation rather than a notebook.
 
+## Peak-Round Analytics
+
+`trajectory.csv` hands an analyst the raw per-round belief split; `chart.svg` draws the same numbers as a line. Neither answers the two questions a quant operator asks first — *"which round did bullish peak?"* and *"which round had the biggest swing?"* — without parsing every row. `GET /api/simulation/<id>/peak-round` collapses the whole trajectory into a single O(n) summary of inflection points.
+
+Returns a stable v1-schema JSON document:
+
+```json
+{
+  "schema_version": "1",
+  "simulation_id": "<sim_id>",
+  "bullish": { "round": 4, "pct": 71.4 },
+  "neutral": { "round": 1, "pct": 55.0 },
+  "bearish": { "round": 9, "pct": 48.2 },
+  "most_volatile_round": 4,
+  "max_swing_pct": 38.6,
+  "total_rounds": 12
+}
+```
+
+- **`bullish` / `neutral` / `bearish`** — `{round, pct}` for the round each stance reached its maximum share. Ties resolve to the *earliest* round (strict `>` comparison), so the output is deterministic on a flat-topped trajectory — it answers "when did bullish *first* peak."
+- **`most_volatile_round`** — the round carrying the largest summed absolute round-over-round belief swing (`|Δbullish| + |Δneutral| + |Δbearish|`). The first round has no predecessor so its swing is zero; ties resolve to the earliest round.
+- **`max_swing_pct`** — the swing value at `most_volatile_round`, rounded to two decimal places. `0.0` for a single-round or fully flat trajectory.
+- **`total_rounds`** — number of usable rounds in the trajectory.
+
+Pure derivation. The per-round percentages come from the same `trajectory_export.compute_stance_split` (±0.2 threshold) that `trajectory.csv` uses, so "bullish peaked at 71.4% on round 4" here matches row 4 of the CSV. The only new information is the *shape*: a machine-readable inflection summary, not a re-computation. Stdlib-only (`json` + `os`); `peak_round.py` is ~190 LoC with no new dependencies.
+
+Same publish gate as every other share surface (`is_public=true`). Returns `404` when the simulation has no trajectory data yet so a consumer can tell a "not ready" sim (404) apart from a "private" sim (403). Cached for 5 minutes — matches the `chart.svg` / `trajectory` / `signal.json` cadence.
+
+The Embed dialog exposes a `📊 Peak beliefs (JSON)` section beneath the trading-signal row: a live preview (bullish / bearish peaks, the most-volatile round, total rounds), a copyable URL, and a paste-ready `curl` snippet. The `peak_round` counter joins the surface-stats schema so an operator can see how often the analytical summary is pulled independently of the raw CSV.
+
+Completes the analytical quadrant alongside `trajectory.csv` (raw data), `chart.svg` (visual), and `signal.json` (final-state action primitive) — the inflection-point view those three left implicit.
+
 ## Polymarket-Ready Prediction JSON
 
 The first share surface adapted for a specific external integrator. `signal.json` emits a generic action primitive (`direction` + `confidence_pct` + `risk_tier`); `GET /api/simulation/<id>/polymarket.json` re-shapes that primitive into the binary YES / NO probability envelope a Polymarket trading bot expects between *"simulation result"* and *"actionable market signal"*.
