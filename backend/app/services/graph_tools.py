@@ -1382,7 +1382,11 @@ class GraphToolsService:
     @staticmethod
     def _clean_tool_call_response(response: str) -> str:
         """Clean JSON tool call wrappers in Agent responses and extract actual content"""
-        if not response or not response.strip().startswith('{'):
+        if not response:
+            # Coerce None / empty to "" — callers feed this straight into re.sub,
+            # and the simulation API can return an explicit "response": null.
+            return ""
+        if not response.strip().startswith('{'):
             return response
         text = response.strip()
         if 'tool_name' not in text[:80]:
