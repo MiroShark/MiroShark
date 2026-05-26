@@ -70,6 +70,11 @@ class Config:
     # Number of candidates to pull from hybrid fusion before reranking.
     # Must be >= final limit. Larger = better recall before rerank, slower inference.
     RERANKER_CANDIDATES = int(os.environ.get('RERANKER_CANDIDATES', '30'))
+    # Torch device for the reranker. Blank = auto (CUDA if available, else CPU).
+    # MPS (Apple-Silicon GPU) is intentionally avoided in auto mode — torch can
+    # hang compiling Metal shader pipelines for this cross-encoder. Set to
+    # 'cpu', 'cuda', or 'mps' to override.
+    RERANKER_DEVICE = os.environ.get('RERANKER_DEVICE', '').strip()
 
     # Graph-traversal retrieval (Zep/Graphiti-style BFS from seed entities).
     # A third retrieval strategy alongside vector + BM25 — catches multi-hop

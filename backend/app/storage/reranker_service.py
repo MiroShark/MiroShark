@@ -42,6 +42,25 @@ class RerankerService:
     def model_name(self) -> str:
         return self._model_name_override or Config.RERANKER_MODEL
 
+    @staticmethod
+    def _select_device() -> str:
+        """Pick a torch device for the cross-encoder.
+
+        Honors an explicit ``RERANKER_DEVICE`` override; otherwise prefers CUDA
+        and falls back to CPU. MPS (Apple-Silicon GPU) is intentionally skipped
+        in auto mode — torch can hang indefinitely compiling Metal shader
+        pipelines for this cross-encoder, pegging a core and stalling retrieval.
+        """
+        if Config.RERANKER_DEVICE:
+            return Config.RERANKER_DEVICE
+        try:
+            import torch
+            if torch.cuda.is_available():
+                return "cuda"
+        except Exception:
+            pass
+        return "cpu"
+
     def _ensure_loaded(self) -> bool:
         """Load the cross-encoder lazily. Returns False on failure."""
         if self._model is not None:
@@ -57,8 +76,11 @@ class RerankerService:
 
             try:
                 from sentence_transformers import CrossEncoder
-                logger.info(f"Loading cross-encoder reranker: {self.model_name}")
-                self._model = CrossEncoder(self.model_name, max_length=512)
+                device = self._select_device()
+                logger.info(
+                    f"Loading cross-encoder reranker: {self.model_name} (device={device})"
+                )
+                self._model = CrossEncoder(self.model_name, max_length=512, device=device)
                 logger.info(f"Reranker ready: {self.model_name}")
                 return True
             except Exception as e:
