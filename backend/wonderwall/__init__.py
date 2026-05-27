@@ -24,7 +24,7 @@ from wonderwall.social_platform.platform import Platform
 from wonderwall.social_platform.typing import ActionType, DefaultPlatformType
 from wonderwall.testing.show_db import print_db_contents
 
-# New: simulation framework
+# Generic simulation framework (MiroShark extension over upstream CAMEL)
 from wonderwall.simulations.base import (
     BasePlatform,
     BaseAction,

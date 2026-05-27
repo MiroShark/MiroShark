@@ -38,8 +38,8 @@ class SimulationStatus(str, Enum):
 # via the ``enable_twitter`` / ``enable_reddit`` / ``enable_polymarket`` flags
 # and via plain string fields (e.g. ``twitter_status``). The run scripts use
 # ``wonderwall.DefaultPlatformType`` when handing off to the Wonderwall framework.
-# A previous local ``PlatformType`` enum here was dead code and has been
-# removed — re-add only when MiroShark-side code actually needs an enum.
+# There is intentionally no local ``PlatformType`` enum here — add one only
+# when MiroShark-side code actually needs it.
 
 
 @dataclass
@@ -515,8 +515,8 @@ class SimulationManager:
                     total=3
                 )
 
-            # Note: run scripts remain in backend/scripts/ directory, no longer copied to simulation directory
-            # When starting simulation, simulation_runner will run scripts from the scripts/ directory
+            # Run scripts live in backend/scripts/ and are executed in place;
+            # they are not copied into the per-simulation directory.
 
             # Clear per-phase tags so a follow-up call (e.g., re-prepare,
             # report generation) doesn't inherit "setup" context.
