@@ -185,25 +185,21 @@ def _format_right_label(direction: Any, confidence_pct: Any) -> str:
     return f"{direction_label} {int(round(pct))}%"
 
 
-# ── Public renderer ───────────────────────────────────────────────────────
+def _build_badge_document(right_label: str, right_color: str, clip_id: str) -> str:
+    """Assemble the shared flat-badge SVG document.
 
+    Both the per-sim belief badge and the platform-stats badge render
+    the identical Shields.io flat structure — viewBox, rounded clip
+    path, two background rects, and a centred two-label text group —
+    differing only in the right-hand label, the right-half fill, and
+    the ``clipPath`` id. Sharing the body here keeps the two renderers
+    bytewise-consistent: a future tweak to dimensions / padding / font
+    can't drift one badge away from the other.
 
-def build_badge_svg(direction: Any, confidence_pct: Any) -> str:
-    """Render a flat Shields.io-style status badge as an SVG string.
-
-    Returns a complete SVG 1.1 document — XML declaration, namespace,
-    ``viewBox``, accessibility ``role="img"`` + ``aria-label``, and a
-    rounded ``clipPath`` so the pill ends render across every
-    `<img>`-tag consumer including older Notion / Substack / GitHub
-    Markdown previewers.
-
-    The output is bytewise-deterministic across calls with the same
-    inputs — useful for HTTP caching and a future hash-based ETag
-    layer.
+    Element insertion order and ``short_empty_elements=True`` are kept
+    exactly as before so the output stays bytewise-deterministic for
+    HTTP caching / hash-based ETags.
     """
-    right_label = _format_right_label(direction, confidence_pct)
-    right_color = _resolve_color(direction)
-
     left_text_width = _approx_text_width(LEFT_LABEL)
     right_text_width = _approx_text_width(right_label)
 
@@ -230,7 +226,7 @@ def build_badge_svg(direction: Any, confidence_pct: Any) -> str:
 
     # Rounded-corner clip — Shields.io's approach. ``rx=3`` matches the
     # flat-style standard exactly.
-    clip = ET.SubElement(svg, "clipPath", {"id": "miroshark-badge-clip"})
+    clip = ET.SubElement(svg, "clipPath", {"id": clip_id})
     ET.SubElement(
         clip,
         "rect",
@@ -245,7 +241,7 @@ def build_badge_svg(direction: Any, confidence_pct: Any) -> str:
     # Background rectangles — left grey, right stance-coloured. Clipped
     # by the rounded mask so the seam between the two halves never
     # bleeds outside the pill outline.
-    bg = ET.SubElement(svg, "g", {"clip-path": "url(#miroshark-badge-clip)"})
+    bg = ET.SubElement(svg, "g", {"clip-path": f"url(#{clip_id})"})
     ET.SubElement(
         bg,
         "rect",
@@ -308,6 +304,27 @@ def build_badge_svg(direction: Any, confidence_pct: Any) -> str:
     return ET.tostring(svg, encoding="unicode", short_empty_elements=True)
 
 
+# ── Public renderer ───────────────────────────────────────────────────────
+
+
+def build_badge_svg(direction: Any, confidence_pct: Any) -> str:
+    """Render a flat Shields.io-style status badge as an SVG string.
+
+    Returns a complete SVG 1.1 document — XML declaration, namespace,
+    ``viewBox``, accessibility ``role="img"`` + ``aria-label``, and a
+    rounded ``clipPath`` so the pill ends render across every
+    `<img>`-tag consumer including older Notion / Substack / GitHub
+    Markdown previewers.
+
+    The output is bytewise-deterministic across calls with the same
+    inputs — useful for HTTP caching and a future hash-based ETag
+    layer.
+    """
+    right_label = _format_right_label(direction, confidence_pct)
+    right_color = _resolve_color(direction)
+    return _build_badge_document(right_label, right_color, "miroshark-badge-clip")
+
+
 def render_badge_svg_bytes(direction: Any, confidence_pct: Any) -> bytes:
     """Convenience wrapper returning the SVG document as UTF-8 bytes.
 
@@ -365,96 +382,7 @@ def build_platform_badge_svg(count: Any) -> str:
     so HTTP caching layers can hash the body for an ETag.
     """
     right_label = _format_platform_right_label(count)
-
-    left_text_width = _approx_text_width(LEFT_LABEL)
-    right_text_width = _approx_text_width(right_label)
-
-    left_section_width = left_text_width + 2 * SIDE_PADDING
-    right_section_width = right_text_width + 2 * SIDE_PADDING
-    total_width = left_section_width + right_section_width
-
-    aria_label = f"MiroShark: {right_label}"
-
-    svg = ET.Element(
-        "svg",
-        {
-            "xmlns": "http://www.w3.org/2000/svg",
-            "width": str(total_width),
-            "height": str(BADGE_HEIGHT),
-            "viewBox": f"0 0 {total_width} {BADGE_HEIGHT}",
-            "role": "img",
-            "aria-label": aria_label,
-        },
-    )
-
-    title = ET.SubElement(svg, "title")
-    title.text = aria_label
-
-    clip = ET.SubElement(svg, "clipPath", {"id": "miroshark-platform-clip"})
-    ET.SubElement(
-        clip,
-        "rect",
-        {
-            "width": str(total_width),
-            "height": str(BADGE_HEIGHT),
-            "rx": "3",
-            "fill": "#fff",
-        },
-    )
-
-    bg = ET.SubElement(svg, "g", {"clip-path": "url(#miroshark-platform-clip)"})
-    ET.SubElement(
-        bg,
-        "rect",
-        {
-            "width": str(left_section_width),
-            "height": str(BADGE_HEIGHT),
-            "fill": LEFT_FILL,
-        },
-    )
-    ET.SubElement(
-        bg,
-        "rect",
-        {
-            "x": str(left_section_width),
-            "width": str(right_section_width),
-            "height": str(BADGE_HEIGHT),
-            "fill": PLATFORM_COLOR,
-        },
-    )
-
-    text_group = ET.SubElement(
-        svg,
-        "g",
-        {
-            "fill": TEXT_FILL,
-            "text-anchor": "middle",
-            "font-family": FONT_FAMILY,
-            "font-size": str(FONT_SIZE),
-        },
-    )
-
-    left_text = ET.SubElement(
-        text_group,
-        "text",
-        {
-            "x": str(left_section_width // 2),
-            "y": "14",
-        },
-    )
-    left_text.text = LEFT_LABEL
-
-    right_text = ET.SubElement(
-        text_group,
-        "text",
-        {
-            "x": str(left_section_width + right_section_width // 2),
-            "y": "14",
-        },
-    )
-    right_text.text = right_label
-
-    return ET.tostring(svg, encoding="unicode", short_empty_elements=True)
+    return _build_badge_document(right_label, PLATFORM_COLOR, "miroshark-platform-clip")
 
 
 def render_platform_badge_svg_bytes(count: Any) -> bytes:
