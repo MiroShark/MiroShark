@@ -26,7 +26,7 @@ These are the projects we know of that run MiroShark, extend it, or integrate wi
 | Signa | [@Signa_Agent](https://x.com/Signa_Agent) · [signa-miroshark-skills](https://github.com/codexvritra/signa-miroshark-skills) |
 | Supercompact | [supercompact-for-miroshark](https://github.com/JohnTammi/supercompact-for-miroshark) |
 | Xerg | [@xerg_AI](https://x.com/xerg_AI) · [xerg.ai](https://xerg.ai/) |
-
+| ZER0 | [@atzer0_BOT](https://x.com/atzer0_BOT) · [atzer0.xyz](https://www.atzer0.xyz/) |
 ---
 
 ## Add your project
