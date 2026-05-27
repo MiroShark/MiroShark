@@ -146,11 +146,9 @@ IPC_COMMANDS_DIR = "ipc_commands"
 IPC_RESPONSES_DIR = "ipc_responses"
 ENV_STATUS_FILE = "env_status.json"
 
-class CommandType:
-    """Command type constants"""
-    INTERVIEW = "interview"
-    BATCH_INTERVIEW = "batch_interview"
-    CLOSE_ENV = "close_env"
+# Canonical IPC command-type enum (str-valued, so ``CommandType.INTERVIEW``
+# compares equal to the raw "interview" string read from command files).
+from app.services.simulation_ipc import CommandType
 
 
 class IPCHandler:
