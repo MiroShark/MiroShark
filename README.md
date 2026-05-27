@@ -75,6 +75,16 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
 
 After launching, click the **中 / EN** toggle in the top-right of the navbar to switch between English and Chinese. Your choice is persisted in the browser, and the public gallery card titles + descriptions follow the active locale.
 
+### Use cases
+
+- **PR crisis testing** — simulate public reaction to a press release before publishing
+- **Market reaction** — feed financial news and observe simulated trader + investor sentiment
+- **Advertisement** — test a campaign, headline, or pitch against a simulated audience before spending
+- **Policy analysis** — test draft regulations against a simulated public
+- **Life decision** — frame a personal decision (job move, relocation, launch timing) as a scenario and watch diverse personas argue it out
+- **What-if history** — rewrite a historical event and see how a population of personas re-narrates the aftermath
+- **Creative experiments** — feed a novel with a lost ending; agents write a narratively consistent conclusion
+
 ### Features
 
 | Feature | What it does |
@@ -127,16 +137,6 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **WaybackClaw Archive** | Opt-in: pin the finished snapshot to IPFS and broadcast a Nostr note via WaybackClaw in one POST |
 
 Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
-
-### Use cases
-
-- **PR crisis testing** — simulate public reaction to a press release before publishing
-- **Market reaction** — feed financial news and observe simulated trader + investor sentiment
-- **Advertisement** — test a campaign, headline, or pitch against a simulated audience before spending
-- **Policy analysis** — test draft regulations against a simulated public
-- **Life decision** — frame a personal decision (job move, relocation, launch timing) as a scenario and watch diverse personas argue it out
-- **What-if history** — rewrite a historical event and see how a population of personas re-narrates the aftermath
-- **Creative experiments** — feed a novel with a lost ending; agents write a narratively consistent conclusion
 
 ### Screenshots
 
