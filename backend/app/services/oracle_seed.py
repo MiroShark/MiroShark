@@ -64,7 +64,7 @@ class _MCPClient:
         self.session_id: Optional[str] = None
         self.client = httpx.Client(timeout=_DEFAULT_TIMEOUT_SEC)
 
-    def _rpc(self, method: str, params: Optional[Dict] = None) -> Dict[str, Any]:
+    def _rpc(self, method: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
         if self.session_id:
             headers["Mcp-Session-Id"] = self.session_id
@@ -91,7 +91,7 @@ class _MCPClient:
             },
         )
 
-    def call_tool(self, name: str, arguments: Optional[Dict] = None) -> Any:
+    def call_tool(self, name: str, arguments: Optional[Dict[str, Any]] = None) -> Any:
         args: Dict[str, Any] = dict(arguments or {})
         if self.api_key:
             args.setdefault("api_key", self.api_key)

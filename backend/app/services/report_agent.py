@@ -2039,7 +2039,7 @@ class ReportAgent:
     
     def plan_outline(
         self,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable[[str, int, str], None]] = None
     ) -> ReportOutline:
         """
         Plan report outline
@@ -2127,7 +2127,7 @@ class ReportAgent:
         section: ReportSection,
         outline: ReportOutline,
         previous_sections: List[str],
-        progress_callback: Optional[Callable] = None,
+        progress_callback: Optional[Callable[[str, int, str], None]] = None,
         section_index: int = 0
     ) -> str:
         """
@@ -2654,7 +2654,7 @@ class ReportAgent:
             completed_count = 0
             lock = threading.Lock()
 
-            def _generate_one(idx: int, section) -> tuple:
+            def _generate_one(idx: int, section: ReportSection) -> tuple[int, str, str]:
                 """Runs in a worker thread. Returns (idx, title, content)."""
                 section_num = idx + 1
                 try:

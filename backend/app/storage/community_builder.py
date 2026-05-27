@@ -14,7 +14,7 @@ surfaces the right neighborhood far faster than scanning 200+ entities.
 import logging
 import uuid as uuid_mod
 from datetime import datetime, timezone
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from ..config import Config
 from ..utils.llm_client import LLMClient, create_ner_llm_client
@@ -128,7 +128,7 @@ class CommunityBuilder:
         graph_id: str,
         query: str,
         limit: int = 5,
-    ) -> List[Dict]:
+    ) -> List[Dict[str, Any]]:
         """Semantic search over community summaries."""
         query_vector = self._embedding.embed(query)
         with self._driver.session() as session:
@@ -153,7 +153,7 @@ class CommunityBuilder:
                 logger.warning(f"Community search failed (index may not exist): {e}")
                 return []
 
-    def list_all(self, graph_id: str) -> List[Dict]:
+    def list_all(self, graph_id: str) -> List[Dict[str, Any]]:
         """Return all communities for a graph, largest first."""
         with self._driver.session() as session:
             result = session.run(
@@ -167,7 +167,7 @@ class CommunityBuilder:
             )
             return [dict(rec) for rec in result]
 
-    def get_detail(self, community_uuid: str) -> Optional[Dict]:
+    def get_detail(self, community_uuid: str) -> Optional[Dict[str, Any]]:
         """Community + its member entities."""
         with self._driver.session() as session:
             row = session.run(

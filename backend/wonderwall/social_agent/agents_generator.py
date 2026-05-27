@@ -185,7 +185,7 @@ async def generate_agents_100w(
     recsys_type: str = "twitter",
     twitter: Platform = None,
     available_actions: list[ActionType] = None,
-) -> List:
+) -> list[SocialAgent]:
     """ TODO: need update the description of args.
     Generate and return a dictionary of agents from the agent
     information CSV file. Each agent is added to the database and

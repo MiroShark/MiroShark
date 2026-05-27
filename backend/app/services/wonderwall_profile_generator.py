@@ -1148,7 +1148,9 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
                 except Exception as e:
                     logger.warning(f"Failed to save profiles in real time: {e}")
         
-        def generate_single_profile(idx: int, entity: EntityNode) -> tuple:
+        def generate_single_profile(
+            idx: int, entity: EntityNode
+        ) -> tuple[int, WonderwallAgentProfile, str | None]:
             """Worker function to generate a single profile"""
             entity_type = entity.get_entity_type() or "Entity"
 

@@ -219,7 +219,7 @@ class GraphBuilderService:
         graph_id: str,
         chunks: List[str],
         max_workers: int = 6,
-        progress_callback: Optional[Callable] = None
+        progress_callback: Optional[Callable[[str, float], None]] = None
     ) -> List[str]:
         """Add text chunks to graph in parallel, return uuid list of all episodes.
 

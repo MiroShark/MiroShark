@@ -324,7 +324,7 @@ class RoundAnalyzer:
 
     # ── SQLite queries (batched for performance) ──────────────────
 
-    def _get_recent_posts(self, cursor, limit: int) -> List[Dict]:
+    def _get_recent_posts(self, cursor, limit: int) -> List[Dict[str, Any]]:
         try:
             cursor.execute(
                 "SELECT post_id, user_id, content, num_likes, num_dislikes "
@@ -362,11 +362,11 @@ class RoundAnalyzer:
 
     def _get_posts_seen_by_agent(
         self, cursor, agent_ids: List[int]
-    ) -> Dict[int, List[Dict]]:
+    ) -> Dict[int, List[Dict[str, Any]]]:
         """Get posts recommended to all active agents — single batched query."""
         if not agent_ids:
             return {}
-        result: Dict[int, List[Dict]] = {aid: [] for aid in agent_ids}
+        result: Dict[int, List[Dict[str, Any]]] = {aid: [] for aid in agent_ids}
         try:
             placeholders = ",".join("?" * len(agent_ids))
             cursor.execute(
@@ -386,9 +386,9 @@ class RoundAnalyzer:
 
     def _get_follow_graph(
         self, cursor, agent_ids: List[int]
-    ) -> Dict[int, set]:
+    ) -> Dict[int, set[int]]:
         """Load the follow graph for active agents (follower -> set of followees)."""
-        graph: Dict[int, set] = {aid: set() for aid in agent_ids}
+        graph: Dict[int, set[int]] = {aid: set() for aid in agent_ids}
         if not agent_ids:
             return graph
         try:
@@ -410,8 +410,8 @@ class RoundAnalyzer:
         self,
         actual_actions: List[Dict[str, Any]],
         active_agent_ids: List[int],
-        follow_graph: Dict[int, set],
-    ) -> Dict[int, List[Dict]]:
+        follow_graph: Dict[int, set[int]],
+    ) -> Dict[int, List[Dict[str, Any]]]:
         """Build posts_seen per agent from the round's actual actions.
 
         An agent "sees" a post if:
@@ -421,10 +421,10 @@ class RoundAnalyzer:
 
         This provides a fallback when the rec table is empty.
         """
-        result: Dict[int, List[Dict]] = {aid: [] for aid in active_agent_ids}
+        result: Dict[int, List[Dict[str, Any]]] = {aid: [] for aid in active_agent_ids}
 
         # Collect all posts created this round (from CREATE_POST actions)
-        round_posts: Dict[int, Dict] = {}  # keyed by agent_id (author)
+        round_posts: Dict[int, Dict[str, Any]] = {}  # keyed by agent_id (author)
         # Track which posts got engagement this round
         engaged_posts: Dict[int, int] = {}  # post_author_id -> engagement count
         # Track which agent interacted with which author's content
@@ -536,7 +536,7 @@ class RoundAnalyzer:
 
         return result
 
-    def _get_viral_posts(self, cursor, limit: int = 3) -> List[Dict]:
+    def _get_viral_posts(self, cursor, limit: int = 3) -> List[Dict[str, Any]]:
         try:
             cursor.execute(
                 "SELECT post_id, user_id, content, num_likes, num_dislikes "
@@ -551,7 +551,7 @@ class RoundAnalyzer:
 def update_trust_from_actions(
     belief_states: Dict[int, BeliefState],
     actions: List[Dict[str, Any]],
-):
+) -> None:
     """Update agent trust based on round actions.
 
     Args:

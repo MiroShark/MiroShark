@@ -84,7 +84,7 @@ class SimulationState:
 
     # Fork lineage
     parent_simulation_id: Optional[str] = None
-    config_diff: Optional[Dict] = None
+    config_diff: Optional[Dict[str, Any]] = None
 
     # Public-embed visibility. Embed endpoints require this to be True; otherwise
     # they 403. Defaults to False so existing simulations remain private until

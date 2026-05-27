@@ -12,7 +12,7 @@ import os
 import json
 import time
 import uuid
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Literal, Optional, List
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -309,17 +309,17 @@ class SimulationIPCServer:
 
         self._running = False
 
-    def start(self):
+    def start(self) -> None:
         """Mark server as running"""
         self._running = True
         self._update_env_status("alive")
-    
-    def stop(self):
+
+    def stop(self) -> None:
         """Mark server as stopped"""
         self._running = False
         self._update_env_status("stopped")
-    
-    def _update_env_status(self, status: str):
+
+    def _update_env_status(self, status: Literal["alive", "stopped"]) -> None:
         """Update environment status file"""
         status_file = os.path.join(self.simulation_dir, "env_status.json")
         with open(status_file, 'w', encoding='utf-8') as f:
@@ -357,7 +357,7 @@ class SimulationIPCServer:
         
         return None
     
-    def send_response(self, response: IPCResponse):
+    def send_response(self, response: IPCResponse) -> None:
         """
         Send a response
 
@@ -374,7 +374,7 @@ class SimulationIPCServer:
         except OSError:
             pass
     
-    def send_success(self, command_id: str, result: Dict[str, Any]):
+    def send_success(self, command_id: str, result: Dict[str, Any]) -> None:
         """Send a success response"""
         self.send_response(IPCResponse(
             command_id=command_id,
@@ -382,7 +382,7 @@ class SimulationIPCServer:
             result=result
         ))
     
-    def send_error(self, command_id: str, error: str):
+    def send_error(self, command_id: str, error: str) -> None:
         """Send an error response"""
         self.send_response(IPCResponse(
             command_id=command_id,
