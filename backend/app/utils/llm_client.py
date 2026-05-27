@@ -9,11 +9,14 @@ import json
 import os
 import re
 import time
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from openai import OpenAI
 
 from ..config import Config
 from .event_logger import EventLogger, LOG_PROMPTS
+
+if TYPE_CHECKING:
+    from .claude_code_client import ClaudeCodeClient
 
 
 # Map auto-detected `module.function` callers → friendly prompt_type labels
@@ -73,7 +76,7 @@ def create_llm_client(
     base_url: Optional[str] = None,
     model: Optional[str] = None,
     timeout: float = 300.0
-):
+) -> "LLMClient | ClaudeCodeClient":
     """
     Factory: returns ClaudeCodeClient when LLM_PROVIDER=claude-code,
     otherwise returns the standard LLMClient.
@@ -84,7 +87,7 @@ def create_llm_client(
     return LLMClient(api_key=api_key, base_url=base_url, model=model, timeout=timeout)
 
 
-def create_smart_llm_client(timeout: float = 300.0):
+def create_smart_llm_client(timeout: float = 300.0) -> "LLMClient | ClaudeCodeClient":
     """
     Factory for intelligence-sensitive workflows (reports, ontology, graph reasoning).
     Uses SMART_* config when set, otherwise falls back to the default LLM client.
@@ -106,7 +109,7 @@ def create_smart_llm_client(timeout: float = 300.0):
     )
 
 
-def create_ner_llm_client(timeout: float = 120.0):
+def create_ner_llm_client(timeout: float = 120.0) -> "LLMClient | ClaudeCodeClient":
     """
     Factory for NER extraction — a mechanical task that works fine on smaller/faster models.
     Uses NER_* config when set, otherwise falls back to the default LLM client.
@@ -250,8 +253,8 @@ class LLMClient:
         messages: List[Dict[str, str]],
         temperature: float = 0.7,
         max_tokens: int = 4096,
-        response_format: Optional[Dict] = None
-    ) -> str:
+        response_format: Optional[Dict[str, Any]] = None
+    ) -> Optional[str]:
         """
         Send a chat request
 

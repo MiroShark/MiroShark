@@ -7,7 +7,7 @@ import uuid
 import threading
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, Optional
+from typing import Dict, Any, List, Optional
 from dataclasses import dataclass, field
 
 
@@ -29,10 +29,10 @@ class Task:
     updated_at: datetime
     progress: int = 0              # Overall progress percentage 0-100
     message: str = ""              # Status message
-    result: Optional[Dict] = None  # Task result
+    result: Optional[Dict[str, Any]] = None  # Task result
     error: Optional[str] = None    # Error message
-    metadata: Dict = field(default_factory=dict)  # Additional metadata
-    progress_detail: Dict = field(default_factory=dict)  # Detailed progress info
+    metadata: Dict[str, Any] = field(default_factory=dict)  # Additional metadata
+    progress_detail: Dict[str, Any] = field(default_factory=dict)  # Detailed progress info
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary"""
@@ -70,7 +70,7 @@ class TaskManager:
                     cls._instance._task_lock = threading.Lock()
         return cls._instance
 
-    def create_task(self, task_type: str, metadata: Optional[Dict] = None) -> str:
+    def create_task(self, task_type: str, metadata: Optional[Dict[str, Any]] = None) -> str:
         """
         Create a new task
 
@@ -109,10 +109,10 @@ class TaskManager:
         status: Optional[TaskStatus] = None,
         progress: Optional[int] = None,
         message: Optional[str] = None,
-        result: Optional[Dict] = None,
+        result: Optional[Dict[str, Any]] = None,
         error: Optional[str] = None,
-        progress_detail: Optional[Dict] = None
-    ):
+        progress_detail: Optional[Dict[str, Any]] = None
+    ) -> None:
         """
         Update task status
 
@@ -142,7 +142,7 @@ class TaskManager:
                 if progress_detail is not None:
                     task.progress_detail = progress_detail
 
-    def complete_task(self, task_id: str, result: Dict):
+    def complete_task(self, task_id: str, result: Dict[str, Any]) -> None:
         """Mark task as completed"""
         self.update_task(
             task_id,
@@ -152,7 +152,7 @@ class TaskManager:
             result=result
         )
 
-    def fail_task(self, task_id: str, error: str):
+    def fail_task(self, task_id: str, error: str) -> None:
         """Mark task as failed"""
         self.update_task(
             task_id,
@@ -161,7 +161,7 @@ class TaskManager:
             error=error
         )
 
-    def list_tasks(self, task_type: Optional[str] = None) -> list:
+    def list_tasks(self, task_type: Optional[str] = None) -> List[Dict[str, Any]]:
         """List tasks"""
         with self._task_lock:
             tasks = list(self._tasks.values())

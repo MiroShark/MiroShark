@@ -44,7 +44,7 @@ Design notes
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 
 # ── Bucket thresholds ─────────────────────────────────────────────────────
@@ -60,7 +60,7 @@ _CONFIDENCE_DENOMINATOR = 100.0 - _EVEN_SPLIT_PCT  # ≈ 66.667
 
 # Stance label → emitted ``direction`` string. Mapped via a small dict
 # rather than the raw key so the API contract is one place to look.
-_DIRECTION_LABELS: dict[str, str] = {
+_DIRECTION_LABELS: dict[str, Literal["Bullish", "Neutral", "Bearish"]] = {
     "bullish": "Bullish",
     "neutral": "Neutral",
     "bearish": "Bearish",
@@ -71,13 +71,14 @@ _DIRECTION_LABELS: dict[str, str] = {
 # value that earns the low-risk badge; ``good`` earns medium; everything
 # else (including missing / ``"N/A"``) defaults to high so an unknown
 # quality is treated cautiously by downstream consumers.
-_RISK_TIER_BY_HEALTH: dict[str, str] = {
+_RiskTier = Literal["low-risk", "medium-risk", "high-risk"]
+_RISK_TIER_BY_HEALTH: dict[str, _RiskTier] = {
     "excellent": "low-risk",
     "good": "medium-risk",
     "fair": "high-risk",
     "poor": "high-risk",
 }
-_DEFAULT_RISK_TIER = "high-risk"
+_DEFAULT_RISK_TIER: _RiskTier = "high-risk"
 
 
 def _coerce_pct(value: Any) -> Optional[float]:
@@ -106,7 +107,7 @@ def _coerce_pct(value: Any) -> Optional[float]:
     return pct
 
 
-def _resolve_risk_tier(quality_health: Any) -> str:
+def _resolve_risk_tier(quality_health: Any) -> _RiskTier:
     """Map a quality-health string to one of the three risk tiers.
 
     Case-insensitive match on the leading word so ``"Excellent "`` and
@@ -120,7 +121,9 @@ def _resolve_risk_tier(quality_health: Any) -> str:
     return _RISK_TIER_BY_HEALTH.get(key, _DEFAULT_RISK_TIER)
 
 
-def _pick_leader(bullish: float, neutral: float, bearish: float) -> str:
+def _pick_leader(
+    bullish: float, neutral: float, bearish: float
+) -> Literal["bullish", "neutral", "bearish"]:
     """Return the plurality stance key.
 
     Tie-breaks in a fixed order: ``bullish`` > ``bearish`` > ``neutral``.

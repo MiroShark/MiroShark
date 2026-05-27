@@ -452,7 +452,7 @@ class Neo4jStorage(GraphStorage):
         graph_id: str,
         chunks: List[str],
         batch_size: int = 3,
-        progress_callback: Optional[Callable] = None,
+        progress_callback: Optional[Callable[[float], None]] = None,
     ) -> List[str]:
         """Batch-add text chunks with progress reporting."""
         episode_ids = []
@@ -475,7 +475,7 @@ class Neo4jStorage(GraphStorage):
     def wait_for_processing(
         self,
         episode_ids: List[str],
-        progress_callback: Optional[Callable] = None,
+        progress_callback: Optional[Callable[[float], None]] = None,
         timeout: int = 600,
     ) -> None:
         """No-op — processing is synchronous in Neo4j."""
@@ -583,7 +583,7 @@ class Neo4jStorage(GraphStorage):
         as_of: Optional[str] = None,
         include_invalidated: bool = False,
         kinds: Optional[List[str]] = None,
-    ):
+    ) -> Dict[str, Any]:
         """
         Hybrid search — returns results matching the scope.
 
