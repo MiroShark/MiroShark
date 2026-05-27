@@ -47,11 +47,9 @@ so the test surface mirrors the on-disk contract:
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 
-import pytest
 
 
 _BACKEND = Path(__file__).resolve().parent.parent

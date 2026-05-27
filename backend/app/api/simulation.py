@@ -10402,7 +10402,6 @@ def get_demographic_breakdown(simulation_id: str):
             # that has only a handle.
             display_name = p.get('name') or ''
             handle = p.get('user_name') or p.get('username') or ''
-            user_name = display_name or handle
 
             age_bucket = _demo_age_bucket(p.get('age'))
             gender_raw = p.get('gender') or 'unknown'

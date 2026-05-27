@@ -42,7 +42,6 @@ import zipfile
 from hashlib import sha256
 from pathlib import Path
 
-import pytest
 
 
 _BACKEND = Path(__file__).resolve().parent.parent

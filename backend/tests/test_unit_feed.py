@@ -30,7 +30,6 @@ import sys
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-import pytest
 
 
 _BACKEND = Path(__file__).resolve().parent.parent

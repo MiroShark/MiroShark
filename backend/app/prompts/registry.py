@@ -9,7 +9,6 @@ becomes ``zh_CN``).
 from __future__ import annotations
 
 import importlib
-import os
 import pkgutil
 from threading import Lock
 from typing import Any

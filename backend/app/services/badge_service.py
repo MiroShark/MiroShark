@@ -65,7 +65,7 @@ Design notes
 from __future__ import annotations
 
 import xml.etree.ElementTree as ET
-from typing import Any, Optional
+from typing import Any
 
 
 # ── Visual tokens ─────────────────────────────────────────────────────────

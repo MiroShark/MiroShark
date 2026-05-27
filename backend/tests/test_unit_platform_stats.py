@@ -28,7 +28,6 @@ Covers the properties ``/api/stats`` + ``/api/stats/badge.svg`` depend on:
 from __future__ import annotations
 
 import json
-import os
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
