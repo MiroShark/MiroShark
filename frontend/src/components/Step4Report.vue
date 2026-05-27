@@ -3337,8 +3337,6 @@ watch(() => props.reportId, (newId) => {
   color: rgba(10,10,10,0.5);
 }
 
-/* Legacy toggle-raw removed - using unified .action-btn */
-
 /* LLM Response */
 .llm-meta {
   display: flex;
