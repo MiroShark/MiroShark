@@ -39,6 +39,38 @@ def should_log(level: str) -> bool:
     return _LEVEL_RANK.get(level, 1) >= _LEVEL_RANK.get(LOG_LEVEL, 1)
 
 
+def _build_event(
+    event_type: str,
+    data: Dict[str, Any],
+    *,
+    simulation_id: Optional[str] = None,
+    round_num: Optional[int] = None,
+    agent_id: Optional[int] = None,
+    agent_name: Optional[str] = None,
+    platform: Optional[str] = None,
+    trace_id: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Assemble one structured event dict (fresh id + UTC millisecond timestamp).
+
+    Single source of truth for the on-disk event shape — both the
+    standalone subprocess writer and the in-process ``EventLogger.emit``
+    serialize the dict this returns, so the JSONL schema stays identical
+    across both paths.
+    """
+    return {
+        'event_id': f'evt_{uuid.uuid4().hex[:12]}',
+        'event_type': event_type,
+        'timestamp': datetime.utcnow().isoformat(timespec='milliseconds') + 'Z',
+        'simulation_id': simulation_id,
+        'trace_id': trace_id,
+        'round_num': round_num,
+        'agent_id': agent_id,
+        'agent_name': agent_name,
+        'platform': platform,
+        'data': data,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Standalone helper for subprocess usage (no singleton, no SSE bus)
 # ---------------------------------------------------------------------------
@@ -59,18 +91,16 @@ def write_simulation_event(
     if not should_log(level):
         return
 
-    event = {
-        'event_id': f'evt_{uuid.uuid4().hex[:12]}',
-        'event_type': event_type,
-        'timestamp': datetime.utcnow().isoformat(timespec='milliseconds') + 'Z',
-        'simulation_id': simulation_id,
-        'trace_id': trace_id,
-        'round_num': round_num,
-        'agent_id': agent_id,
-        'agent_name': agent_name,
-        'platform': platform,
-        'data': data,
-    }
+    event = _build_event(
+        event_type,
+        data,
+        simulation_id=simulation_id,
+        round_num=round_num,
+        agent_id=agent_id,
+        agent_name=agent_name,
+        platform=platform,
+        trace_id=trace_id,
+    )
 
     path = os.path.join(sim_dir, 'events.jsonl')
     os.makedirs(sim_dir, exist_ok=True)
@@ -146,18 +176,16 @@ class EventLogger:
         platform = platform or ctx.get('platform')
         trace_id = trace_id or ctx.get('trace_id')
 
-        event = {
-            'event_id': f'evt_{uuid.uuid4().hex[:12]}',
-            'event_type': event_type,
-            'timestamp': datetime.utcnow().isoformat(timespec='milliseconds') + 'Z',
-            'simulation_id': simulation_id,
-            'trace_id': trace_id,
-            'round_num': round_num,
-            'agent_id': agent_id,
-            'agent_name': agent_name,
-            'platform': platform,
-            'data': data,
-        }
+        event = _build_event(
+            event_type,
+            data,
+            simulation_id=simulation_id,
+            round_num=round_num,
+            agent_id=agent_id,
+            agent_name=agent_name,
+            platform=platform,
+            trace_id=trace_id,
+        )
 
         try:
             self._queue.put_nowait(event)
