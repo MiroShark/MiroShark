@@ -28,27 +28,36 @@ sibling docs (`01`–`08`).
 | 7 | Legacy / fallback | Removed 1 dead CSS tombstone comment; proved several "legacy"-labelled branches are actually live and must stay |
 | 8 | AI slop / comments | Rewrote 6 change-history comments into durable "why"; dropped 2 stale TODOs above working code |
 
-## Deferred — needs human decision (NOT applied)
+## Resolved in follow-up (commit `fb40a77`)
 
-1. **Dead module `backend/app/utils/retry.py` (238 lines)** — `retry_with_backoff`,
-   `retry_with_backoff_async`, `RetryableAPIClient`, `call_batch_with_retry`. Zero references
-   repo-wide (verified). Likely safe to delete; held back because deleting a whole
-   intended-reusable utility module is a judgment call. *(Task 3)*
-2. **`report_agent.py:1401-1433` "backward compatible legacy tools" redirect** — removable
+After review, four deferred items were implemented (tests still 971-pass, ruff 158→156):
+
+1. **Deleted dead `backend/app/utils/retry.py` (238 lines)** — confirmed zero references
+   repo-wide. *(Task 3)*
+2. **Fixed the `'GraphStorage'` F821 latent bug** — added a `TYPE_CHECKING` import in
+   `simulation_manager.py` and `simulation_runner.py`. *(found by Task 5)*
+3. **Added the `WebhookPayload` TypedDict** and typed the webhook/notify `state` param as
+   `Optional[SimulationRunState]` (was `Optional[Any]`) via `TYPE_CHECKING`. Chose the
+   concrete type over a Protocol — it's the only non-`None` value any caller passes, and the
+   `getattr(..., default)` reads for `profiles_count`/`created_at`/`parent_simulation_id` are
+   deliberate "live object lacks these → fall back to state.json" probes. *(Task 2 + Task 5)*
+4. **Narrowed 5 hot-path `except Exception: pass`** — `simulation_runner.py` (clear
+   director-events write, error-log read) and `simulation.py` (quality.json read, and *both*
+   cache-write sites) now catch `(OSError[, JSONDecodeError | UnicodeDecodeError])` + a
+   `debug` log, so I/O failures surface instead of hiding. *(Task 6)*
+
+## Still deferred — needs human decision (NOT applied)
+
+1. **`report_agent.py:1401-1433` "backward compatible legacy tools" redirect** — removable
    only as a set, *with* the `browse_clusters` prompt (line 714) and frontend tool badges
    (Step4Report.vue:629/635) updated together; also doubles as a guard against
    LLM-hallucinated tool names. *(Task 7 + Task 3 + Task 6)*
-3. **Broad `except Exception: pass` on the hot path** — `simulation.py` (~7334, ~10078),
-   `simulation_runner.py` (375, 723, 1683) wrap multi-line file/JSON I/O. Could narrow to
-   `(OSError, json.JSONDecodeError)` + a debug log, but that is behavior-adjacent. *(Task 6)*
-4. **Pre-existing latent bug — `'GraphStorage'` forward ref** in `simulation_manager.py:294`
-   and `simulation_runner.py:337`: annotation references a name never imported (ruff F821).
-   Harmless today (never evaluated), breaks on `get_type_hints()`. *(found by Task 5)*
-5. **Type-consolidation follow-ups** *(Task 2 + Task 5)* — a shared `WebhookPayload` TypedDict
-   and a `Protocol` for the duck-typed `SimulationRunState` passed to notify/webhook services;
-   ~5 fixed-shape `Dict[str, Any]` returns are TypedDict candidates. Intentionally not done to
-   avoid creating a parallel type fleet.
-6. **Frontend dead-code pass** — `npx knip` could not resolve imports without `node_modules`,
+2. **Remaining broad `except Exception` blocks** — the ~890 handlers Task 6 kept (and the
+   `simulation.py:7317` run-state read, left untouched because it wraps a method call, not
+   pure I/O). Most genuinely guard external input; a fuller narrowing pass is a separate effort.
+3. **More TypedDict candidates** — ~5 other fixed-shape `Dict[str, Any]` returns flagged by
+   Task 5; not done to avoid a large parallel type fleet in one pass. *(Task 2 + Task 5)*
+4. **Frontend dead-code pass** — `npx knip` could not resolve imports without `node_modules`,
    so no frontend deletions were made. A real pass needs `cd frontend && npm install` first.
 
 ## Explicitly preserved (intentional, do NOT "clean up")
