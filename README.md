@@ -28,6 +28,10 @@
 > **Simulate anything, for $1 & less than 10 min — Universal Swarm Intelligence Engine**
 > Drop in anything — a press release, a news headline, a policy draft, a question you can't answer, a historical what-if — and MiroShark spawns hundreds of agents that react to it hour by hour. Posting, arguing, trading, changing their minds.
 
+<p align="center">
+  <img src="./docs/images/simulate-anything.jpg" alt="Simulate anything — $1 per simulation, 10 min first result, 100 agents: input → build world → swarm → report" width="100%" />
+</p>
+
 ### What it does
 
 - You bring a scenario. MiroShark builds the world around it.
@@ -76,31 +80,31 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | Feature | What it does |
 |---|---|
 | **Smart Setup** | Drop in a doc → three auto-generated Bull / Bear / Neutral scenarios in ~2s |
-| **What's Trending** | Pick a live news item from RSS feeds; pre-fills the scenario in one click |
+| **What's Trending** | Pick a live RSS news item to pre-fill the scenario in one click |
 | **Just Ask** | Type a question with no document — MiroShark researches and writes the seed briefing |
-| **Shareable Scenario Links** | Drop a `?scenario=...&url=...` URL into a tweet or blog post — readers land on the New Sim form already pre-filled. `?template=<slug>` auto-launches one of the preset templates. The un-run-scenario counterpart to "Fork this scenario" on `/watch` and `/share` |
-| **Counterfactual Branching** | Fork a running simulation with an injected event ("what if the CEO resigns in round 24?") |
+| **Shareable Scenario Links** | `?scenario=…&url=…` / `?template=<slug>` URLs land readers on a pre-filled New Sim form |
+| **Counterfactual Branching** | Fork a running simulation with an injected event ("CEO resigns in round 24?") |
 | **Director Mode** | Inject breaking news into the *current* timeline without forking |
 | **Preset Templates** | 6 benchmarked scenarios: crypto launch, corporate crisis, political debate, product announcement, campus controversy, historical what-if |
 | **Live Oracle Data** | Opt-in grounded seeds from the [FeedOracle](https://mcp.feedoracle.io/mcp) MCP (484 tools) |
 | **Per-Agent MCP Tools** | Personas can invoke real MCP tools (web search, APIs) during simulation |
-| **Custom Wonderwall Endpoint** | Point the simulation loop at any OpenAI-compatible endpoint (self-hosted vLLM, Modal, fine-tunes…) without affecting Default/Smart/NER. Set `WONDERWALL_BASE_URL` + `WONDERWALL_API_KEY` |
+| **Custom Wonderwall Endpoint** | Point the sim loop at any OpenAI-compatible endpoint via `WONDERWALL_BASE_URL` + `WONDERWALL_API_KEY` |
 | **Embed & Publish** | Public/private toggle + embed URLs for sharing finished runs |
-| **Social Share Card** | 1200×630 PNG that auto-unfurls scenario, status, quality, and belief split on Twitter/X, Discord, Slack, LinkedIn |
-| **Animated Belief Replay** | 1200×630 GIF — one frame per round, belief bars sliding to each round's distribution. Discord and Slack auto-play GIFs from the direct URL |
-| **Transcript Export** | Per-round agent posts + stance labels as Markdown (YAML front matter for Notion / Obsidian / Substack) or structured JSON (for SDKs and LLM-as-judge pipelines) |
-| **Trajectory Export** | One row per round as RFC 4180 CSV or JSONL — `pandas.read_csv("…/trajectory.csv")` lands ready for Pandas / Excel / Tableau / R / Observable. Same ±0.2 stance threshold as every other surface |
-| **Trajectory Chart SVG** | `GET /api/simulation/<id>/chart.svg` — scalable-vector belief chart (bullish / neutral / bearish polylines, 800×400 viewBox, grid, legend, scenario title) for `<img>` embeds in Notion / Substack / Ghost / GitHub READMEs / LaTeX. Same colour scheme as the share card; pure stdlib `xml.etree.ElementTree`, zero new deps |
-| **Trading Signal JSON** | `GET /api/simulation/<id>/signal.json` — machine-readable action primitive a quant tool, Zapier / Make / n8n workflow, or alert pipeline can consume directly. `direction` (Bullish / Neutral / Bearish) + `confidence_pct` (0 = pure three-way split, 100 = unanimous) + `risk_tier` (low / medium / high, mapped from quality health) + the three component percentages. Same ±0.2 stance threshold as every other surface; pure stdlib, zero new deps |
-| **Archive Bundle** | `GET /api/simulation/<id>/archive.zip` — every published share surface (share card, chart SVG, trajectory CSV / JSONL, transcript, thread, reproduce.json, notebook, signal.json) collapsed into one timestamped ZIP plus a `manifest.json` pairing each contained file with its SHA-256, byte size, MIME type, and canonical source URL. Compositional — files inside the ZIP are byte-for-byte identical to the standalone-route response, so citation hashes line up across both distribution paths. Pure stdlib `zipfile`, zero new deps |
-| **Farcaster Frame** | Share-page `<head>` emits Frame v2 `fc:frame:*` meta tags so a `/share/<id>` URL pasted into a Farcaster cast renders as an interactive belief-chart card in Warpcast / Supercast / the in-wallet Frame in Coinbase Wallet. Chart SVG as the Frame image (2:1) with share-card PNG fallback (1.91:1) for sims pre-first-round. `GET /api/simulation/<id>/frame-metadata` for SDK consumers + the EmbedDialog Warpcast-composer link. Closes the Base-chain audience surface; zero new deps |
-| **Tweet Thread Export** | `GET /api/simulation/<id>/thread.txt` — auto-formatted X / Twitter thread, intro tweet + one tweet per belief inflection point + close tweet (with watch + share URLs). Each tweet ≤280 chars; copy individual tweets or the whole thread. Pairs with the share card / replay GIF / transcript / trajectory / watch page as the sixth share format |
-| **Live Watch Page** | `/watch/<sim_id>` — minimal full-viewport broadcast page with a vanilla-JS poller that refreshes the belief bar, round counter, and progress bar every 15 s while the simulation runs. Auto-unfurls as a 1200×630 image card when tweeted; the "tweet a sim mid-run" format alongside the finished-result share card |
-| **Public Gallery** | `/explore` browses every published simulation as a card grid — preview the share card, consensus split, and quality health; click to open or one-click fork |
-| **Gallery Search & Filter** | Keyword search + bullish/neutral/bearish + excellent/good/fair/poor + sort by date/rounds/agents/trending on `/explore` and `/verified`. `trending` ranks by cumulative share-surface serves so the most-distributed sims float to the top. URL-encoded so `?q=aave&consensus=bearish` is bookmarkable. Same ±0.2 stance threshold as every other surface |
-| **Verified Predictions** | Annotate any public sim with the real-world outcome (called it / partial / called wrong + URL). `/verified` is the dedicated hall of calls that landed |
-| **RSS / Atom Feeds** | `/api/feed.atom` + `/api/feed.rss` — every newly published simulation lands in Feedly / Readwise / Inoreader / NetNewsWire / Obsidian RSS without anyone curating it. `?verified=1` for the verified-only stream |
-| **Search Engine Sitemap** | Auto-generated `/sitemap.xml` (sitemaps.org 0.9) lists every public sim's `/share/<id>` + `/watch/<id>` URLs; companion `/robots.txt` advertises it via the standard `Sitemap:` directive. Submit once to Google Search Console — every newly published sim becomes searchable. Pure stdlib `xml.etree.ElementTree`, opt-out via `ENABLE_SITEMAP=false` |
+| **Social Share Card** | 1200×630 PNG auto-unfurling scenario, status, quality, and belief split on Twitter/X, Discord, Slack, LinkedIn |
+| **Animated Belief Replay** | 1200×630 GIF, one frame per round with belief bars sliding per distribution (Discord/Slack auto-play) |
+| **Transcript Export** | Per-round posts + stance labels as Markdown (YAML front matter) or structured JSON |
+| **Trajectory Export** | One row per round as RFC 4180 CSV or JSONL — Pandas / Excel / Tableau / R / Observable ready |
+| **Trajectory Chart SVG** | `chart.svg` scalable belief chart for `<img>` embeds in Notion / Substack / Ghost / READMEs; pure stdlib |
+| **Trading Signal JSON** | `signal.json` machine-readable `direction` + `confidence_pct` + `risk_tier` for quant / Zapier / alert pipelines |
+| **Archive Bundle** | `archive.zip` bundles every share surface plus a SHA-256 `manifest.json`; pure stdlib |
+| **Farcaster Frame** | Share page emits Frame v2 meta tags so `/share/<id>` renders as an interactive belief card in Warpcast |
+| **Tweet Thread Export** | `thread.txt` auto-formatted X thread — intro + one tweet per belief inflection + close, each ≤280 chars |
+| **Live Watch Page** | `/watch/<sim_id>` full-viewport broadcast page polling belief / round / progress every 15 s |
+| **Public Gallery** | `/explore` card grid of every published sim — preview, open, or one-click fork |
+| **Gallery Search & Filter** | Keyword + consensus + quality filters and date / rounds / agents / trending sort, bookmarkable URLs |
+| **Verified Predictions** | Annotate public sims with the real-world outcome; `/verified` is the hall of calls that landed |
+| **RSS / Atom Feeds** | `/api/feed.atom` + `/api/feed.rss` auto-publish every new sim (`?verified=1` for verified-only) |
+| **Search Engine Sitemap** | Auto-generated `/sitemap.xml` + `/robots.txt` make every public sim crawlable; opt-out via `ENABLE_SITEMAP=false` |
 | **Article Generation** | Substack-style write-up of what happened, grounded in actual posts and trades |
 | **Interaction Network** | Force-directed agent-to-agent graph with echo-chamber metrics |
 | **Demographics** | Archetype clustering (analyst / influencer / retail / observer…) |
@@ -108,19 +112,19 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 | **History Database** | Search, clone, export, or delete any past simulation |
 | **Trace Interview** | See the full reasoning chain behind an agent's reply, not just the reply |
 | **Push Notifications** | Web-push alerts when long-running graph / sim / report jobs finish |
-| **Completion Webhook** | POST a JSON summary the moment a sim finishes — wires Slack, Discord, Zapier, Make, n8n, or any custom endpoint with one URL field |
-| **Discord Rich Embed** | Set `DISCORD_WEBHOOK_URL` and MiroShark POSTs a Discord-native embed alongside the generic webhook: consensus-coloured border, scenario title, belief percentage fields, share-card thumbnail, link. Operators no longer have to teach Discord how to render a raw JSON blob — pure stdlib, opt-in, fire-and-forget. See [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
-| **Slack Block Kit** | Set `SLACK_WEBHOOK_URL` and MiroShark POSTs a Slack-native Block Kit message: scenario header, Unicode block-bar belief percentages, Quality + Scale + Resolution fields, "View simulation" action button. Channel-native rendering instead of a JSON code-block dump — pure stdlib, opt-in, fire-and-forget |
-| **SMTP Completion Emails** | Set `SMTP_HOST` and `SMTP_TO` (comma-separated recipients) and every terminal-state transition ships a `multipart/alternative` email — plain text with Unicode belief bars + HTML with inline-CSS swatches and a consensus-coloured "View simulation →" CTA. Subject `[MiroShark] Bullish: <scenario>` so inbox filters can triage on direction alone. `SMTP_USER`/`SMTP_PASSWORD` optional (unauthenticated relays supported); STARTTLS attempted on port 587 with credential-leak refusal on STARTTLS failure. The one notification channel with zero platform dependency — every operator already has a mailbox. See [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
-| **Telegram Bot** | Set `TELEGRAM_BOT_TOKEN` (from `@BotFather`) and `TELEGRAM_CHAT_ID` and every terminal-state transition fires a Bot API `sendMessage` call rendered with HTML parse mode: bold scenario header, Unicode block-bar belief percentages, quality / scale / outcome fields, and a single "View simulation" inline-keyboard button. Covers the messaging surface most of MiroShark's crypto-launch / political-debate audience lives in. Pure stdlib, opt-in, fire-and-forget. See [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md) |
-| **Webhook Signature Verification** | Optional `WEBHOOK_SECRET` HMAC-signs every dispatched payload with an `X-MiroShark-Signature: sha256=<hex>` header. Recipients verify in three lines of stdlib `hmac` — same scheme Stripe and GitHub use. Empty secret = no header, fully backward compatible |
-| **Webhook Delivery Log** | Per-sim `webhook-log.jsonl` records every dispatch attempt (status code, latency, error). Inspect from the EmbedDialog and re-fire any failed delivery with a "Retry" button — closes the operational blindspot every Zapier / n8n integration eventually hits |
-| **Surface Usage Analytics** | `GET /api/simulation/<id>/surface-stats` — per-share-surface request counters (share card / replay GIF / transcript / trajectory / chart.svg / signal.json / archive.zip / thread / watch page / Atom / RSS / reproduce.json / lineage / notebook.ipynb) with a synthetic `total`. Inbound observability for the distribution loop the webhook log tracks on the outbound side |
-| **Reproducibility Config** | `GET /api/simulation/<id>/reproduce.json` — citation primitive for the share surfaces. A v1-schema JSON blob carrying every parameter another operator needs to re-run the same simulation: scenario, agent count, total rounds, platform toggles, time-config knobs, director events, and fork / counterfactual lineage. Identical exports of a finished sim are bytewise-identical, so the file hash is a stable citation key |
-| **Jupyter Notebook Export** | `GET /api/simulation/<id>/notebook.ipynb` — analysis-ready companion to the reproducibility config. The trajectory CSV is embedded directly inside the notebook so it runs air-gapped; cells scaffold imports, the belief-evolution line chart, the final-consensus bar chart, and a quality summary DataFrame. Opens in JupyterLab, VS Code, or Google Colab in one click. Bytewise-stable, same citation-hash property as reproduce.json |
-| **Lineage Navigator** | `GET /api/simulation/<id>/lineage` — turn the `parent_simulation_id` pointer into a navigable graph. Surfaces the parent a sim was forked / branched from plus every public child whose parent points back at it. Trace the intellectual ancestry of a result without remembering each child sim id |
-| **OriginTrail DKG Citation** | Opt-in: set `DKG_API_URL` + `DKG_AUTH_TOKEN` + `DKG_CONTEXT_GRAPH_ID` and the EmbedDialog grows a "Publish to DKG" button. Anchors the scenario, agent count, final consensus, quality, lineage, and `reproduce.json` SHA-256 on the OriginTrail Decentralized Knowledge Graph as a cryptographically verifiable Knowledge Asset. Returned UAL + Merkle root + transaction hash become a permanent, un-rewritable citation key — provenance property that survives the MiroShark host going away. Idempotent (one publish per sim) and stdlib-only. See [docs/DKG.md](docs/DKG.md) |
-| **WaybackClaw Archive** | Opt-in: set `WAYBACKCLAW_AGENT_TOKEN` (one curl to register against `api.waybackclaw.space`) and the EmbedDialog grows a "Submit to WaybackClaw" card. Submits the finished snapshot — scenario, agent count, consensus, quality, lineage, `reproduce.json` SHA-256 — to the WaybackClaw AI Agent Archive, which pins it to IPFS for content-addressed storage and broadcasts a NIP-01 note to Nostr relays in one POST. Returns snapshot id + IPFS CID + Nostr event id. Agent-archive sibling of the DKG citation — DKG anchors on-chain, WaybackClaw anchors to IPFS + Nostr. Free for agents, no on-chain cost. Idempotent and stdlib-only. See [docs/WAYBACKCLAW.md](docs/WAYBACKCLAW.md) |
+| **Completion Webhook** | POST a JSON summary on sim finish — wires Slack, Discord, Zapier, Make, n8n with one URL field |
+| **Discord Rich Embed** | `DISCORD_WEBHOOK_URL` posts a consensus-coloured Discord-native embed; opt-in, pure stdlib |
+| **Slack Block Kit** | `SLACK_WEBHOOK_URL` posts a Slack-native Block Kit message with belief bars + action button; opt-in |
+| **SMTP Completion Emails** | `SMTP_HOST` + `SMTP_TO` ship a multipart email with belief bars and a consensus-coloured CTA on completion |
+| **Telegram Bot** | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID` fire a Bot API message with belief bars + button on completion |
+| **Webhook Signature Verification** | Optional `WEBHOOK_SECRET` HMAC-signs payloads with `X-MiroShark-Signature` — Stripe / GitHub scheme |
+| **Webhook Delivery Log** | Per-sim `webhook-log.jsonl` logs every dispatch; inspect and retry failures from the EmbedDialog |
+| **Surface Usage Analytics** | `surface-stats` per-share-surface request counters for inbound distribution observability |
+| **Reproducibility Config** | `reproduce.json` v1 blob with every parameter to re-run a sim; bytewise-stable citation hash |
+| **Jupyter Notebook Export** | `notebook.ipynb` with embedded trajectory CSV + charting cells; runs air-gapped, bytewise-stable |
+| **Lineage Navigator** | `lineage` turns the `parent_simulation_id` pointer into a navigable parent/child graph |
+| **OriginTrail DKG Citation** | Opt-in: anchor scenario, consensus, and `reproduce.json` SHA-256 on the OriginTrail DKG as a verifiable Knowledge Asset |
+| **WaybackClaw Archive** | Opt-in: pin the finished snapshot to IPFS and broadcast a Nostr note via WaybackClaw in one POST |
 
 Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 
@@ -149,6 +153,10 @@ Each feature is documented in **[docs/FEATURES.md](docs/FEATURES.md)**.
 <tr>
 <td><img src="./docs/images/diagram1.jpg" alt="Diagram 1" width="100%"/></td>
 <td><img src="./docs/images/diagram2.jpg" alt="Diagram 2" width="100%"/></td>
+</tr>
+<tr>
+<td><img src="./docs/images/grounding.jpg" alt="Five layers of grounding per agent: demographic seed, web enrichment, semantic search, relationships, graph attributes" width="100%"/></td>
+<td><img src="./docs/images/graph-memory.jpg" alt="Graph memory pipeline: ingestion (NER, embed, entity resolution, contradiction check, temporal edges) and retrieval (vector + BM25 + BFS, fused, reranked)" width="100%"/></td>
 </tr>
 </table>
 </div>
