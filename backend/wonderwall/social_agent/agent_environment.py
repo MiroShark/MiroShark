@@ -78,7 +78,6 @@ class SocialEnvironment(Environment):
         return posts_env
 
     async def get_followers_env(self) -> str:
-        # TODO: Implement followers env
         agent_id = self.action.agent_id
         db_path = get_db_path()
         try:
@@ -95,7 +94,6 @@ class SocialEnvironment(Environment):
             {"num_followers": num_followers})
 
     async def get_follows_env(self) -> str:
-        # TODO: Implement follows env
         agent_id = self.action.agent_id
         try:
             db_path = get_db_path()

@@ -64,7 +64,7 @@ class WonderwallEnv:
                          "SimulationConfig"] = None,
         database_path: str = None,
         semaphore: int = 128,
-        # New: accept a SimulationConfig for generic simulations
+        # Accepts a SimulationConfig for generic (non-social) simulations
         simulation=None,
     ) -> None:
         r"""Init the wonderwall environment.

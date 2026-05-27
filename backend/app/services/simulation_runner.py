@@ -539,7 +539,7 @@ class SimulationRunner:
             
             # Save file handles for later closing
             cls._stdout_files[simulation_id] = main_log_file
-            cls._stderr_files[simulation_id] = None  # No longer need separate stderr
+            cls._stderr_files[simulation_id] = None  # stderr is merged into the main log
             
             state.process_pid = process.pid
             state.runner_status = RunnerStatus.RUNNING

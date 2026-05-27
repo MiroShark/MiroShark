@@ -71,14 +71,12 @@ class SocialAgent(ChatAgent):
                  agent_graph: "AgentGraph" = None,
                  available_actions: list[ActionType] = None,
                  tools: Optional[List[Union[FunctionTool, Callable]]] = None,
-                 # CAMEL ReAct iteration cap. Previously this attribute
-                 # was stored but never plumbed to CAMEL, so runtime was
-                 # unbounded (and idempotent tool errors looped 4+ times).
-                 # 3 covers observe → tool → synthesize while bounding the
-                 # blast radius of any future loop bug.
+                 # CAMEL ReAct iteration cap — must be plumbed through to
+                 # CAMEL or runtime is unbounded. 3 covers observe → tool →
+                 # synthesize while bounding the blast radius of a loop bug.
                  max_iteration: int = 3,
                  interview_record: bool = False,
-                 # --- New: generic simulation support ---
+                 # Generic-simulation support (MiroShark extension)
                  simulation=None):
         self.social_agent_id = agent_id
         self.user_info = user_info
