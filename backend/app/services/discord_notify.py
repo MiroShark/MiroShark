@@ -60,9 +60,12 @@ import os
 import threading
 import urllib.error
 import urllib.request
-from typing import Any, Dict, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
 
 from ..utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from .simulation_runner import SimulationRunState
 
 logger = get_logger('miroshark.discord_notify')
 
@@ -345,7 +348,7 @@ def notify_if_configured(
     status: str,
     *,
     sim_dir: Optional[str] = None,
-    state: Optional[Any] = None,
+    state: Optional[SimulationRunState] = None,
     completed_at: Optional[str] = None,
     error: Optional[str] = None,
     base_url: Optional[str] = None,

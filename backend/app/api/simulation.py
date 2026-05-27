@@ -7335,8 +7335,8 @@ def _build_gallery_card_payload(state, sim_dir: str) -> dict:
             with open(quality_path, 'r', encoding='utf-8') as f:
                 q = json.load(f)
             quality_health = q.get("health")
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError) as e:
+            logger.debug(f"Could not read {quality_path}: {e}")
 
     final_consensus = None
     trajectory_path = os.path.join(sim_dir, "trajectory.json")
@@ -10078,8 +10078,8 @@ def get_interaction_network(simulation_id: str):
         try:
             with open(cache_path, 'w', encoding='utf-8') as f:
                 json.dump(result, f, indent=2)
-        except Exception:
-            pass
+        except OSError as e:
+            logger.debug(f"Could not write interaction-network cache {cache_path}: {e}")
 
         return jsonify({"success": True, "data": result})
 
@@ -10528,8 +10528,8 @@ def get_demographic_breakdown(simulation_id: str):
         try:
             with open(cache_path, 'w', encoding='utf-8') as f:
                 json.dump(result, f, indent=2)
-        except Exception:
-            pass
+        except OSError as e:
+            logger.debug(f"Could not write demographic-breakdown cache {cache_path}: {e}")
 
         return jsonify({"success": True, "data": result})
 

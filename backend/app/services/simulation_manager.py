@@ -7,10 +7,13 @@ Uses preset scripts + LLM-powered configuration parameter generation
 import os
 import json
 import shutil
-from typing import Dict, Any, List, Optional
+from typing import TYPE_CHECKING, Dict, Any, List, Optional
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+
+if TYPE_CHECKING:
+    from ..storage.graph_storage import GraphStorage
 
 from ..utils.logger import get_logger
 from ..utils.trace_context import TraceContext

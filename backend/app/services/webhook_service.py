@@ -59,9 +59,15 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypedDict
 
 from ..utils.logger import get_logger
+
+if TYPE_CHECKING:
+    # Type-only: avoids a runtime import cycle (simulation_runner imports this
+    # module to fire webhooks). The runner's live state is the sole non-None
+    # value ever passed as ``state``.
+    from .simulation_runner import SimulationRunState
 
 logger = get_logger('miroshark.webhook')
 
@@ -69,6 +75,37 @@ logger = get_logger('miroshark.webhook')
 WEBHOOK_USER_AGENT = "MiroShark-Webhook/1.0"
 WEBHOOK_TIMEOUT_SECONDS = 5.0
 WEBHOOK_MAX_SCENARIO_CHARS = 280
+
+
+class WebhookPayload(TypedDict, total=False):
+    """The outbound webhook JSON body assembled by :func:`build_payload`.
+
+    The first block of fields is always present; ``error``/``share_url``/
+    ``share_card_url`` are added conditionally, and ``retry`` is set by the
+    manual replay path.
+    """
+
+    event: str
+    sim_id: str
+    scenario: str
+    status: str
+    current_round: int
+    total_rounds: int
+    agent_count: int
+    quality_health: Optional[str]
+    final_consensus: Optional[Dict[str, float]]
+    resolution_outcome: Optional[str]
+    share_path: str
+    share_card_path: str
+    created_at: Optional[str]
+    completed_at: Optional[str]
+    parent_simulation_id: Optional[str]
+    fired_at: str
+    # Conditional:
+    error: str
+    share_url: str
+    share_card_url: str
+    retry: bool
 
 # ---- HMAC signing -----------------------------------------------------
 #
@@ -502,11 +539,11 @@ def build_payload(
     status: str,
     sim_dir: str,
     *,
-    state: Optional[Any] = None,
+    state: Optional[SimulationRunState] = None,
     base_url: Optional[str] = None,
     completed_at: Optional[str] = None,
     error: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> WebhookPayload:
     """Assemble the webhook JSON payload for one simulation.
 
     Reads ``simulation_config.json``, ``quality.json``, ``trajectory.json``,
@@ -569,7 +606,7 @@ def build_payload(
     share_path = f"/share/{simulation_id}"
     share_card_path = f"/api/simulation/{simulation_id}/share-card.png"
 
-    payload: Dict[str, Any] = {
+    payload: WebhookPayload = {
         "event": f"simulation.{status}",
         "sim_id": simulation_id,
         "scenario": scenario,
@@ -669,7 +706,7 @@ def fire_webhook_for_simulation(
     status: str,
     *,
     sim_dir: Optional[str] = None,
-    state: Optional[Any] = None,
+    state: Optional[SimulationRunState] = None,
     completed_at: Optional[str] = None,
     error: Optional[str] = None,
     base_url: Optional[str] = None,
@@ -783,7 +820,7 @@ def retry_webhook_for_simulation(
     status: str,
     *,
     sim_dir: Optional[str] = None,
-    state: Optional[Any] = None,
+    state: Optional[SimulationRunState] = None,
     completed_at: Optional[str] = None,
     error: Optional[str] = None,
     base_url: Optional[str] = None,
