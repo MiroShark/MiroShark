@@ -21,7 +21,6 @@ import argparse
 import json
 import os
 import sys
-import time
 from typing import Any, Optional
 from urllib import error as urlerror
 from urllib import request as urlrequest

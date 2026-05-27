@@ -5,7 +5,6 @@ not spawn subprocesses.
 
 from __future__ import annotations
 
-import pytest
 
 from mcp_agent_bridge import MCPCallResult, parse_tool_calls
 from mcp_agent_injection import (

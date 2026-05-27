@@ -26,13 +26,10 @@ We cover:
 
 from __future__ import annotations
 
-import json
 import re
 import sys
 from pathlib import Path
-from typing import Iterable
 
-import pytest
 
 
 _BACKEND = Path(__file__).resolve().parent.parent

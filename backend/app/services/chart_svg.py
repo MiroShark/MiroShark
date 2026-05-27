@@ -37,7 +37,7 @@ from __future__ import annotations
 import math
 import os
 import xml.etree.ElementTree as ET
-from typing import Iterable, Optional
+from typing import Optional
 
 
 # ── Canvas geometry ───────────────────────────────────────────────────────
@@ -195,7 +195,7 @@ def _add_axes_and_grid(svg: ET.Element, max_round: int) -> None:
     # Y-axis grid lines + labels at 0, 25, 50, 75, 100 percent.
     for pct in (0, 25, 50, 75, 100):
         y = _scale_y(pct)
-        grid = ET.SubElement(svg, "line", {
+        ET.SubElement(svg, "line", {
             "x1": _format_float(PAD_LEFT),
             "y1": _format_float(y),
             "x2": _format_float(PAD_LEFT + PLOT_W),

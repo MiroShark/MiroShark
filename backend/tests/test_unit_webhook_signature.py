@@ -18,11 +18,8 @@ daemon thread with a bounded ``Event``.
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json
 import sys
-import threading
 import time
 from contextlib import contextmanager
 from pathlib import Path

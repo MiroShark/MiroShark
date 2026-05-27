@@ -25,7 +25,6 @@ from email.mime.multipart import MIMEMultipart
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
 
 
 _BACKEND = Path(__file__).resolve().parent.parent

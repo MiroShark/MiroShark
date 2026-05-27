@@ -19,14 +19,10 @@ the tests cover:
 
 from __future__ import annotations
 
-import os
 import sys
-import threading
 import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 
 _BACKEND = Path(__file__).resolve().parent.parent

@@ -16,16 +16,10 @@ from __future__ import annotations
 import json
 import sqlite3
 from abc import ABC, abstractmethod
-from datetime import datetime
 from string import Template
 
 from lib.env_compact import (
-    _MAX_COMMENTS_PER_POST,
-    _compact_comment,
-    _compact_post_for_agent,
     _compact_posts_for_agent,
-    _comment_score,
-    _parse_ts,
 )
 from wonderwall.social_agent.agent_action import SocialAction
 from wonderwall.social_platform.database import get_db_path
