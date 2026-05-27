@@ -295,6 +295,48 @@ The Embed dialog exposes a `📊 Peak beliefs (JSON)` section beneath the tradin
 
 Completes the analytical quadrant alongside `trajectory.csv` (raw data), `chart.svg` (visual), and `signal.json` (final-state action primitive) — the inflection-point view those three left implicit.
 
+## Per-Agent Belief Sparklines
+
+`chart.svg` and the embed-summary draw the *aggregate* belief curve — what the swarm concluded, round by round. `peak-round` collapses that aggregate into inflection points. Neither exposes the layer underneath: *each individual agent's* belief path. A researcher studying swarm convergence — *"which agent anchored the consensus? did the financial-analyst cohort align before the retail traders?"* — had no surface for it short of parsing `transcript.md` by hand. `GET /api/simulation/<id>/agents/sparklines` is the agent-level companion: one belief trajectory per agent.
+
+Returns a stable v1-schema JSON document:
+
+```json
+{
+  "schema_version": "1",
+  "simulation_id": "<sim_id>",
+  "agent_count": 24,
+  "round_count": 12,
+  "has_per_agent_data": true,
+  "agents": [
+    {
+      "agent_id": 7,
+      "name": "Skeptical Quant",
+      "final_stance": "bullish",
+      "final_position": 0.612,
+      "color": "#22c55e",
+      "trajectory": [
+        { "round": 1, "position": 0.05 },
+        { "round": 2, "position": 0.31 },
+        { "round": 3, "position": 0.612 }
+      ]
+    }
+  ]
+}
+```
+
+- **`agents`** — one entry per agent that holds a usable belief position, ordered most-bullish-first by `final_position` (ties broken by `agent_id`), so the list reads top-to-bottom from the strongest bull to the strongest bear.
+- **`trajectory`** — the agent's scalar belief position per round, sorted ascending by round. Each `position` is the mean of that agent's per-topic `belief_positions` (roughly `[-1, 1]`), rounded to three decimals — the exact `_avg_position` every other surface averages before bucketing.
+- **`final_stance` / `color`** — the stance of the agent's last-round position under the same ±0.2 threshold, plus the matching hex color (`#22c55e` bullish, `#6b7280` neutral, `#ef4444` bearish) so a sparkline is the same green as a bullish `chart.svg` line.
+- **`name`** — display name from `reddit_profiles.json` (then `polymarket_profiles.json`); `"Agent <id>"` when no profile row exists, so a sparkline is never anonymous.
+- **`has_per_agent_data`** — `true` only when at least one agent has a 2-point trajectory (enough to draw a line). A single-round simulation returns the agents as single dots with this flag `false`, so a consumer can show a "needs ≥2 rounds" note instead of a row of meaningless dots.
+
+Pure derivation, transposed: instead of bucketing all agents into one per-round percentage (the aggregate view), it tracks one scalar per agent per round. Stdlib-only (`json` + `os`); `agent_sparklines_service.py` has no new dependencies.
+
+Same publish gate as every other share surface (`is_public=true`). Returns `404` when no agent holds a usable belief position yet — a "not ready" sim (404) apart from a "private" sim (403). Cached for 5 minutes — matches the `chart.svg` / `trajectory` / `peak-round` cadence.
+
+The Embed dialog exposes a `🤖 Agent trajectories (JSON)` section beneath the peak-round row: a scrollable list of agents, each a name chip + an inline SVG sparkline (belief position over rounds, stroked in the agent's stance color) + the final-stance label, plus a copyable URL and a paste-ready `curl` snippet. The `agent_sparklines` counter joins the surface-stats schema so an operator can see how often the agent-level view is pulled.
+
 ## Polymarket-Ready Prediction JSON
 
 The first share surface adapted for a specific external integrator. `signal.json` emits a generic action primitive (`direction` + `confidence_pct` + `risk_tier`); `GET /api/simulation/<id>/polymarket.json` re-shapes that primitive into the binary YES / NO probability envelope a Polymarket trading bot expects between *"simulation result"* and *"actionable market signal"*.

@@ -741,6 +741,54 @@ export const getPeakRound = async (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the per-agent belief sparklines endpoint for
+ * a published simulation. The agent-level companion to chart.svg /
+ * embed-summary (which draw the aggregate swarm curve) and peak-round
+ * (which collapses that curve into inflection points).
+ *
+ * Returns a v1-schema JSON document with `agent_count`, `round_count`,
+ * `has_per_agent_data`, and an `agents` array — each entry an agent's
+ * `{agent_id, name, final_stance, final_position, color}` plus a
+ * `trajectory` of `{round, position}` points the frontend draws as a
+ * compact SVG sparkline. Agents are ordered most-bullish-first.
+ *
+ * Same publish gate as every other share surface. Returns 404 when no
+ * agent holds a usable belief position yet.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getAgentSparklinesUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/agents/sparklines`
+}
+
+/**
+ * Fetch the per-agent sparklines payload for a published simulation.
+ *
+ * Returns the parsed JSON document on 200, `null` on 404 (no per-agent
+ * trajectory data yet) or 403 (sim not published), and throws on
+ * transport errors.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<object|null>}
+ */
+export const getAgentSparklines = async (simulationId) => {
+  const res = await fetch(getAgentSparklinesUrl(simulationId), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (res.status === 403 || res.status === 404) {
+    return null
+  }
+  if (!res.ok) {
+    throw new Error(`agent-sparklines fetch failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+/**
  * Build the absolute URL of the oEmbed provider endpoint for a published
  * simulation's share URL. The discovery half of the oEmbed 1.0 spec —
  * writing platforms (Notion, Ghost, Substack, WordPress) that find the

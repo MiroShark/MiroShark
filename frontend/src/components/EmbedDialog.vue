@@ -771,6 +771,107 @@
               </div>
             </div>
 
+            <!-- Per-agent belief sparklines — the agent-level companion
+                 to chart.svg (aggregate curve) and peak-round
+                 (inflection points). Each agent's belief position over
+                 rounds, drawn as a compact SVG polyline colored by final
+                 stance. Answers the swarm-convergence question ("which
+                 agent anchored the consensus? did one cohort align
+                 first?") without parsing the transcript. Same publish
+                 gate + pure-stdlib derivation as every other surface;
+                 zero new deps. -->
+            <div class="transcript-section signal-section sparklines-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">🤖</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Agent trajectories (JSON)', '智能体轨迹(JSON)') }}
+                    <span v-if="sparklinesPayload" class="signal-direction-badge signal-direction-bullish">
+                      {{ sparklinesPayload.agent_count }} {{ $tr('agents', '个智能体') }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('Per-agent belief sparklines — each agent\'s position across rounds, colored by final stance (bullish / neutral / bearish). The agent-level layer under chart.svg\'s aggregate curve: which agent anchored the consensus, which cohort aligned first. Same ±0.2 threshold every surface uses.', '单智能体信念迷你趋势图 — 每个智能体在各回合的立场,按最终立场着色(看涨 / 中性 / 看跌)。chart.svg 聚合曲线之下的智能体层:哪个智能体锚定了共识,哪个群体最先对齐。与所有界面一致的 ±0.2 阈值。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && sparklinesPayload && sparklinesPayload.agents.length" class="sparklines-list">
+                <div
+                  v-for="agent in sparklinesPayload.agents"
+                  :key="agent.agent_id"
+                  class="sparkline-row"
+                >
+                  <span class="sparkline-name" :title="agent.name">{{ agent.name }}</span>
+                  <svg
+                    class="sparkline-svg"
+                    :viewBox="`0 0 ${SPARK_W} ${SPARK_H}`"
+                    :width="SPARK_W"
+                    :height="SPARK_H"
+                    preserveAspectRatio="none"
+                    role="img"
+                    :aria-label="`${agent.name}: ${agent.final_stance}`"
+                  >
+                    <line
+                      :x1="0" :y1="SPARK_H / 2" :x2="SPARK_W" :y2="SPARK_H / 2"
+                      class="sparkline-axis"
+                    />
+                    <polyline
+                      :points="sparklinePoints(agent.trajectory)"
+                      fill="none"
+                      :stroke="agent.color"
+                      stroke-width="1.3"
+                      stroke-linejoin="round"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                  <span class="sparkline-stance" :style="{ color: agent.color }">
+                    {{ agent.final_stance }}
+                  </span>
+                </div>
+                <div v-if="!sparklinesPayload.has_per_agent_data" class="sparkline-note">
+                  {{ $tr('Only one round of data — sparklines need ≥2 rounds to show a trend.', '只有一个回合的数据 — 迷你趋势图需要 ≥2 个回合才能显示趋势。') }}
+                </div>
+              </div>
+              <div v-else-if="isPublic && sparklinesLoading" class="signal-loading">
+                {{ $tr('Loading agent trajectories…', '加载智能体轨迹中…') }}
+              </div>
+              <div v-else-if="isPublic && sparklinesError" class="signal-empty">
+                {{ sparklinesError }}
+              </div>
+              <div v-else-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable agent trajectories.', '发布模拟以启用智能体轨迹。') }}
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Sparklines URL', '迷你趋势图 URL') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('sparkUrl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'sparkUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ agentSparklinesUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('sparkCurl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'sparkCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ sparklinesCurlSnippet }}</code></pre>
+              </div>
+            </div>
+
             <!-- Polymarket-shaped prediction JSON — the first share
                  surface adapted for a specific external integrator
                  (a Polymarket trading bot). Reshapes the signal.json
@@ -2352,6 +2453,8 @@ import {
   getSignalJson,
   getPeakRoundUrl,
   getPeakRound,
+  getAgentSparklinesUrl,
+  getAgentSparklines,
   getPolymarketJsonUrl,
   getPolymarketJson,
   getArchiveZipUrl,
@@ -2655,6 +2758,79 @@ const loadPeakRound = async () => {
     peakError.value = err?.message || tr('Peak-round fetch failed', '峰值回合获取失败')
   } finally {
     peakLoading.value = false
+  }
+}
+
+// ── Per-agent sparklines state ─────────────────────────────────────────
+// The agent-level companion to chart.svg / peak-round. Each agent's
+// belief position over rounds, drawn as a compact SVG polyline colored
+// by final stance. Same publish gate; 404 means "no per-agent
+// trajectory data yet".
+
+const sparklinesPayload = ref(null)
+const sparklinesLoading = ref(false)
+const sparklinesError = ref('')
+
+// Sparkline viewBox — small enough to render inline next to a name chip,
+// large enough that a multi-round trajectory reads as a curve.
+const SPARK_W = 60
+const SPARK_H = 16
+
+const agentSparklinesUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getAgentSparklinesUrl(props.simulationId, origin.value)
+})
+
+const sparklinesCurlSnippet = computed(() => {
+  const url = agentSparklinesUrl.value || 'https://your-host/api/simulation/<id>/agents/sparklines'
+  return `curl -s "${url}"`
+})
+
+// Project one agent's trajectory into an SVG polyline `points` string.
+// Belief position (clamped to [-1, 1]) maps to y so +1 sits at the top
+// and -1 at the bottom; round index maps to x across the full width. A
+// single-point trajectory renders a centered dot via two identical
+// coordinates so the <polyline> still paints.
+const sparklinePoints = (trajectory) => {
+  const pts = Array.isArray(trajectory) ? trajectory : []
+  if (pts.length === 0) return ''
+  const n = pts.length
+  const toXY = (p, i) => {
+    const x = n === 1 ? SPARK_W / 2 : (i / (n - 1)) * SPARK_W
+    const pos = Math.max(-1, Math.min(1, Number(p.position) || 0))
+    const y = (SPARK_H * (1 - pos)) / 2
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }
+  if (n === 1) {
+    const xy = toXY(pts[0], 0)
+    return `${xy} ${xy}`
+  }
+  return pts.map(toXY).join(' ')
+}
+
+const loadAgentSparklines = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    sparklinesPayload.value = null
+    return
+  }
+  sparklinesLoading.value = true
+  sparklinesError.value = ''
+  try {
+    const payload = await getAgentSparklines(props.simulationId)
+    if (payload && Array.isArray(payload.agents)) {
+      sparklinesPayload.value = payload
+    } else {
+      sparklinesPayload.value = null
+      sparklinesError.value = tr(
+        'Per-agent sparklines not available yet — the simulation has no per-agent trajectory data.',
+        '尚无可用的单智能体迷你趋势图 — 模拟还没有单智能体轨迹数据。',
+      )
+    }
+  } catch (err) {
+    sparklinesPayload.value = null
+    sparklinesError.value = err?.message || tr('Agent sparklines fetch failed', '单智能体迷你趋势图获取失败')
+  } finally {
+    sparklinesLoading.value = false
   }
 }
 
@@ -3472,6 +3648,8 @@ const copy = async (which) => {
   else if (which === 'signalCurl') text = signalCurlSnippet.value
   else if (which === 'peakUrl') text = peakRoundUrl.value
   else if (which === 'peakCurl') text = peakCurlSnippet.value
+  else if (which === 'sparkUrl') text = agentSparklinesUrl.value
+  else if (which === 'sparkCurl') text = sparklinesCurlSnippet.value
   else if (which === 'polymarketUrl') text = polymarketJsonUrl.value
   else if (which === 'polymarketCurl') text = polymarketCurlSnippet.value
   else if (which === 'archiveUrl') text = archiveZipUrl.value
@@ -4065,6 +4243,9 @@ watch(() => props.open, async (val) => {
   // Peak-round analytics sits on the same publish gate; load alongside
   // so the inflection-point preview renders without a manual refresh.
   loadPeakRound()
+  // Per-agent sparklines sit on the same publish gate; load alongside so
+  // the agent-trajectory rows render without a manual refresh.
+  loadAgentSparklines()
   // Polymarket prediction sits on the same gate as signal.json; load
   // alongside so the YES/NO preview row renders without a manual refresh.
   loadPolymarket()
@@ -4113,6 +4294,8 @@ watch(isPublic, () => {
   loadSignal()
   // Same publish-gate flip applies to peak-round analytics — re-fetch.
   loadPeakRound()
+  // Same publish-gate flip applies to per-agent sparklines — re-fetch.
+  loadAgentSparklines()
   // Polymarket prediction sits on the same gate; re-fetch alongside.
   loadPolymarket()
   // Same flip applies to the archive bundle — re-HEAD so the bundle
@@ -4945,6 +5128,67 @@ watch(isPublic, () => {
   margin-top: 10px;
   padding: 8px 12px;
   font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* Per-agent sparklines — a scrollable list of agent rows, each a name
+   chip + inline SVG belief trajectory + final-stance label. Capped
+   height so a 100-agent swarm scrolls within the dialog instead of
+   pushing the snippet blocks off-screen. */
+.sparklines-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: rgba(10, 10, 10, 0.03);
+  border-radius: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.sparkline-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.sparkline-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #374151;
+  font-weight: 500;
+}
+
+.sparkline-svg {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.sparkline-axis {
+  stroke: rgba(10, 10, 10, 0.12);
+  stroke-width: 0.5;
+}
+
+.sparkline-stance {
+  flex: 0 0 auto;
+  width: 56px;
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.sparkline-note {
+  margin-top: 4px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(10, 10, 10, 0.06);
+  font-size: 12px;
   color: #6b7280;
   font-style: italic;
 }

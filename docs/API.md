@@ -69,6 +69,7 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 | `GET` | `/api/simulation/<id>/demographics` | Archetype distribution |
 | `GET` | `/api/simulation/<id>/quality` | Run health diagnostics |
 | `GET` | `/api/simulation/<id>/peak-round` | Machine-readable belief inflection points — the round each stance (`bullish` / `neutral` / `bearish`) peaked (`{round, pct}`), the `most_volatile_round` (largest summed round-over-round swing), `max_swing_pct`, and `total_rounds`. Pure O(n) derivation from the same ±0.2 stance split `trajectory.csv` uses; peak ties resolve to the earliest round. Publish-gated; `404` until trajectory data exists. Cached 5 minutes. `curl -s "https://your-host/api/simulation/<id>/peak-round"` |
+| `GET` | `/api/simulation/<id>/agents/sparklines` | Per-agent belief sparklines — for each agent, a `{round, position}` series the frontend draws as a compact SVG line, plus `final_stance` / `final_position` / `color`. The agent-level layer under `chart.svg`'s aggregate curve. Same `_avg_position` mean + ±0.2 threshold every surface uses; agent names from `reddit_profiles.json`. Agents ordered most-bullish-first; `has_per_agent_data` is `false` for single-round sims. Publish-gated; `404` until per-agent data exists. Cached 5 minutes. `curl -s "https://your-host/api/simulation/<id>/agents/sparklines"` |
 | `POST` | `/api/simulation/compare` | Side-by-side belief comparison |
 
 ## Interaction

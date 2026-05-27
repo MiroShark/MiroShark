@@ -51,7 +51,8 @@ Schema::
       "cite_bib": 0,
       "polymarket_json": 0,
       "oembed": 0,
-      "peak_round": 0
+      "peak_round": 0,
+      "agent_sparklines": 0
     }
 
 The ``read_surface_stats`` helper returns the same dict with every key
@@ -97,6 +98,7 @@ SURFACE_KEYS: frozenset[str] = frozenset(
         "polymarket_json",
         "oembed",
         "peak_round",
+        "agent_sparklines",
     }
 )
 

@@ -5575,6 +5575,83 @@ def get_peak_round(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/agents/sparklines', methods=['GET'])
+def get_agent_sparklines(simulation_id: str):
+    """Per-agent belief sparklines for a published simulation.
+
+    The agent-level companion to the aggregate surfaces. ``chart.svg``
+    and the embed-summary draw what the *swarm* concluded round by round;
+    ``peak-round`` collapses that into inflection points. This surface
+    exposes the layer underneath — *each individual agent's* belief path
+    as a scalar position per round, the series a 40×15px SVG sparkline
+    draws. Researchers studying convergence ("which agent anchored the
+    consensus? did one cohort align before another?") get the data
+    without parsing the transcript.
+
+    Pure derivation — each per-agent scalar is the same
+    ``_avg_position`` mean of per-topic ``belief_positions`` every other
+    surface averages, and the final stance uses the same ±0.2 threshold,
+    so an agent tagged "bullish" here is "bullish" in the transcript.
+    Agent names come from ``reddit_profiles.json``.
+
+    Same publish gate as every other share surface (``is_public=true``).
+    Returns ``404`` when no agent holds a usable belief position yet so a
+    consumer can tell a "not ready" sim (404) apart from a "private" one
+    (403). Cached for 5 minutes — matches the chart.svg / trajectory /
+    peak-round cadence.
+    """
+    from ..services import agent_sparklines_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        payload = agent_sparklines_service.build_agent_sparklines(sim_dir)
+        if payload is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Per-agent sparklines not available yet — the simulation has no per-agent trajectory data.",
+                    "尚无可用的单智能体迷你趋势图 — 模拟还没有单智能体轨迹数据。",
+                    locale,
+                ),
+            }), 404
+
+        payload["simulation_id"] = simulation_id
+
+        body = json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        response = Response(body, mimetype="application/json; charset=utf-8")
+        response.headers["Cache-Control"] = "public, max-age=300"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-agent-sparklines.json"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "agent_sparklines")
+        return response
+
+    except Exception as e:
+        logger.error(f"agent-sparklines: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/polymarket.json', methods=['GET'])
 def get_polymarket_json(simulation_id: str):
     """Polymarket-shaped binary-market prediction for a completed sim.

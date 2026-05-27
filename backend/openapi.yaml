@@ -1646,6 +1646,52 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/agents/sparklines:
+    get:
+      tags: [Publish & Embed]
+      summary: Per-agent belief sparklines for a published sim.
+      description: |
+        The agent-level companion to `chart.svg` / the embed-summary
+        (which draw the *aggregate* swarm belief curve) and `peak-round`
+        (which collapses that curve into inflection points). This surface
+        exposes the layer underneath — *each individual agent's* belief
+        path as a scalar position per round, the series a 40×15px SVG
+        sparkline draws. Answers the swarm-convergence question a
+        researcher asks first ("which agent anchored the consensus? did
+        one cohort align before another?") without parsing the
+        transcript.
+
+        Pure derivation — each per-agent scalar is the same
+        `_avg_position` mean of per-topic `belief_positions` every other
+        surface averages, and the final stance uses the same `±0.2`
+        threshold, so an agent tagged "bullish" here is "bullish" in the
+        transcript. Agent names come from `reddit_profiles.json`; an id
+        with no profile row falls back to `"Agent <id>"`.
+
+        Agents are ordered most-bullish-first by final position (ties
+        broken by `agent_id`). `round_count` is the number of distinct
+        rounds carrying per-agent data; `has_per_agent_data` is `true`
+        only when at least one agent has a 2-point trajectory (enough to
+        draw a line) — a single-round sim returns the agents as single
+        dots with the flag `false`.
+
+        Same publish gate as every other share surface
+        (`is_public=true`). Returns `404` when no agent holds a usable
+        belief position yet, so a consumer can tell a "not ready" sim
+        (404) apart from a "private" sim (403). Cached for 5 minutes —
+        matches the `chart.svg` / `trajectory` / `peak-round` cadence.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Per-agent sparklines payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentSparklinesResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/polymarket.json:
     get:
       tags: [Publish & Embed]
@@ -4939,6 +4985,114 @@ components:
           type: integer
           minimum: 1
           description: Number of usable rounds in the trajectory.
+
+    SparklinePoint:
+      type: object
+      description: One point on an agent's belief sparkline.
+      required:
+        - round
+        - position
+      properties:
+        round:
+          type: integer
+          description: Round number this position was recorded in.
+        position:
+          type: number
+          format: float
+          minimum: -1
+          maximum: 1
+          description: |
+            The agent's scalar belief position for the round — the mean
+            of its per-topic `belief_positions`, in roughly `[-1, 1]`,
+            rounded to three decimal places. `> +0.2` is bullish,
+            `< -0.2` is bearish, between is neutral.
+
+    AgentSparkline:
+      type: object
+      description: One agent's belief trajectory + final-stance metadata.
+      required:
+        - agent_id
+        - name
+        - final_stance
+        - final_position
+        - color
+        - trajectory
+      properties:
+        agent_id:
+          type: integer
+          description: The agent's integer user id.
+        name:
+          type: string
+          description: |
+            Display name from `reddit_profiles.json`
+            (then `polymarket_profiles.json`); `"Agent <id>"` when no
+            profile row exists.
+        final_stance:
+          type: string
+          enum: [bullish, neutral, bearish]
+          description: Stance bucket of the agent's last-round position (±0.2).
+        final_position:
+          type: number
+          format: float
+          minimum: -1
+          maximum: 1
+          description: The agent's position in the final round, rounded to 3 dp.
+        color:
+          type: string
+          description: |
+            Hex stance color matching every other surface — `#22c55e`
+            (bullish), `#6b7280` (neutral), `#ef4444` (bearish).
+        trajectory:
+          type: array
+          description: Per-round belief positions, sorted ascending by round.
+          items:
+            $ref: "#/components/schemas/SparklinePoint"
+
+    AgentSparklinesResponse:
+      type: object
+      description: |
+        Per-agent belief sparklines returned by
+        `/api/simulation/{id}/agents/sparklines`. The agent-level layer
+        under the aggregate `chart.svg` curve — one belief trajectory per
+        agent, derived from the same per-topic `belief_positions` and the
+        same `±0.2` stance threshold every other surface uses.
+
+        Agents are ordered most-bullish-first by `final_position` (ties
+        broken by `agent_id`). Schema is versioned via `schema_version`;
+        v1 is the only published version.
+      required:
+        - schema_version
+        - simulation_id
+        - agent_count
+        - round_count
+        - has_per_agent_data
+        - agents
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        agent_count:
+          type: integer
+          minimum: 1
+          description: Number of agents with at least one usable belief position.
+        round_count:
+          type: integer
+          minimum: 1
+          description: Number of distinct rounds carrying per-agent data.
+        has_per_agent_data:
+          type: boolean
+          description: |
+            `true` only when at least one agent has a 2-point trajectory
+            (enough to draw a line). A single-round simulation returns
+            the agents as single dots with this flag `false`.
+        agents:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentSparkline"
 
     PolymarketPrediction:
       type: object
