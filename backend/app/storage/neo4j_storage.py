@@ -97,8 +97,6 @@ class Neo4jStorage(GraphStorage):
                     f"retrying in {wait}s: {e}"
                 )
                 time.sleep(wait)
-            except Exception:
-                raise
 
         raise last_error  # type: ignore
 
