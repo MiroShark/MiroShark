@@ -295,7 +295,7 @@ onMounted(() => {
   --neutral: #9aa0a6;
   --bearish: #f07867;
   --consensus-line: rgba(10, 10, 10, 0.45);
-  --link-color: #ea580c;
+  --link-color: #a78bfa;
 
   box-sizing: border-box;
   width: 100%;

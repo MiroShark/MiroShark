@@ -643,7 +643,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .net-header-actions {
@@ -660,7 +660,7 @@ onBeforeUnmount(() => {
   font-size: 11px;
   letter-spacing: 1px;
   cursor: pointer;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   transition: all 0.15s ease;
 }
 
@@ -690,7 +690,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
 }
 
@@ -705,7 +705,7 @@ onBeforeUnmount(() => {
 .bearish-dot { background: rgba(239,68,68,0.8); }
 
 .legend-sep {
-  color: rgba(10,10,10,0.15);
+  color: rgba(244, 241, 255,0.15);
   font-size: 10px;
 }
 
@@ -733,7 +733,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 1px;
   cursor: pointer;
 }
@@ -752,7 +752,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 40px;
   font-size: 13px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
   text-align: center;
 }
@@ -761,7 +761,7 @@ onBeforeUnmount(() => {
 
 .net-hint {
   font-size: 11px;
-  color: rgba(10,10,10,0.25);
+  color: rgba(244, 241, 255,0.25);
 }
 
 .pulse-ring {
@@ -850,7 +850,7 @@ onBeforeUnmount(() => {
   text-align: right;
   padding: 0 6px;
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   letter-spacing: 0.5px;
 }
 
@@ -881,12 +881,12 @@ onBeforeUnmount(() => {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
 }
 
 .insight-text {
   font-size: 11px;
-  color: rgba(10,10,10,0.6);
+  color: rgba(244, 241, 255,0.6);
   line-height: 1.4;
   letter-spacing: 0.3px;
 }
@@ -900,7 +900,7 @@ onBeforeUnmount(() => {
 
 .insight-stat {
   font-size: 10px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   letter-spacing: 1px;
 }
 </style>

@@ -379,7 +379,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .bd-header-actions {
@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
   font-size: 11px;
   letter-spacing: 1px;
   cursor: pointer;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   transition: all 0.15s ease;
 }
 
@@ -424,7 +424,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
 }
 
@@ -447,7 +447,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 40px;
   font-size: 13px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
   text-align: center;
 }
@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
 
 .bd-hint {
   font-size: 11px;
-  color: rgba(10,10,10,0.25);
+  color: rgba(244, 241, 255,0.25);
 }
 
 .pulse-ring {
@@ -493,7 +493,7 @@ onBeforeUnmount(() => {
 .bd-summary {
   padding: 10px 16px 4px;
   font-size: 12px;
-  color: rgba(10,10,10,0.55);
+  color: rgba(244, 241, 255,0.55);
   letter-spacing: 0.5px;
   line-height: 1.5;
   border-top: 1px solid rgba(10,10,10,0.05);
@@ -504,7 +504,7 @@ onBeforeUnmount(() => {
 .bd-topics {
   padding: 4px 16px 10px;
   font-size: 10px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   letter-spacing: 1px;
   flex-shrink: 0;
 }

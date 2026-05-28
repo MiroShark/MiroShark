@@ -158,7 +158,7 @@
                     :cy="yScale(selected.points[hoverPoint].price_yes)"
                     r="4"
                     :fill="lineColor"
-                    stroke="#FAFAFA" stroke-width="2"
+                    stroke="#110a26" stroke-width="2"
                   />
                 </g>
               </svg>
@@ -238,9 +238,9 @@ const priceDelta = computed(() => {
 
 const lineColor = computed(() => {
   const p = latestPrice.value
-  if (p >= 0.55) return '#43C165'
+  if (p >= 0.55) return '#c4b5fd'
   if (p <= 0.45) return '#FF4444'
-  return '#FF6B1A'
+  return '#a78bfa'
 })
 
 const tradeVolume = computed(() => {
@@ -377,9 +377,9 @@ const PX = 32 // header horizontal padding
 
 // Colour matching `priceClass` / `deltaClass` used in the live panel.
 const _priceColor = (p) => {
-  if (p >= 0.55) return '#43C165'
+  if (p >= 0.55) return '#c4b5fd'
   if (p <= 0.45) return '#FF4444'
-  return '#FF6B1A'
+  return '#a78bfa'
 }
 
 const _buildExportCanvas = async () => {
@@ -397,7 +397,7 @@ const _buildExportCanvas = async () => {
   const deltaStr = delta != null ? `${delta >= 0 ? '▲' : '▼'} ${(Math.abs(delta) * 100).toFixed(1)}%` : null
   const deltaColor = delta == null
     ? null
-    : (delta > 0.005 ? '#43C165' : (delta < -0.005 ? '#FF4444' : '#FF6B1A'))
+    : (delta > 0.005 ? '#c4b5fd' : (delta < -0.005 ? '#FF4444' : '#a78bfa'))
 
   const stats = [
     { k: 'TRADES', v: String(Math.max(pts.length - 1, 0)) },
@@ -608,7 +608,7 @@ onBeforeUnmount(() => {
 .pm-export-btn {
   background: none;
   border: 1px solid rgba(10, 10, 10, 0.15);
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   padding: 4px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -638,7 +638,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
 }
 
 .pm-live-dot {
@@ -742,7 +742,7 @@ onBeforeUnmount(() => {
 .pm-neutral { color: var(--color-orange); }
 
 .pm-market-trades {
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -762,7 +762,7 @@ onBeforeUnmount(() => {
 .pm-empty {
   padding: 36px 20px;
   text-align: center;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   font-family: var(--font-mono);
   font-size: 12px;
   display: flex;
@@ -780,7 +780,7 @@ onBeforeUnmount(() => {
 
 .pm-empty-hint {
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   line-height: 1.5;
 }
 
@@ -805,7 +805,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: rgba(10, 10, 10, 0.35);
+  color: rgba(244, 241, 255, 0.35);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 2px;
@@ -851,7 +851,7 @@ onBeforeUnmount(() => {
 .pm-chart-outcome-label {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   margin-left: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -867,7 +867,7 @@ onBeforeUnmount(() => {
 }
 
 .pm-chart-delta.pm-up {
-  background: rgba(67, 193, 101, 0.12);
+  background: rgba(196, 181, 253, 0.12);
 }
 
 .pm-chart-delta.pm-down {
@@ -875,7 +875,7 @@ onBeforeUnmount(() => {
 }
 
 .pm-chart-delta.pm-neutral {
-  background: rgba(255, 107, 26, 0.12);
+  background: rgba(167, 139, 250, 0.12);
 }
 
 .pm-chart-stats {
@@ -895,7 +895,7 @@ onBeforeUnmount(() => {
 .pm-stat-k {
   font-size: 9px;
   letter-spacing: 2px;
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -957,7 +957,7 @@ onBeforeUnmount(() => {
 
 .pm-tooltip-trade {
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.65);
+  color: rgba(244, 241, 255, 0.65);
   margin-top: 4px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -965,7 +965,7 @@ onBeforeUnmount(() => {
 
 .pm-tooltip-time {
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   margin-top: 2px;
   font-family: var(--font-mono);
 }

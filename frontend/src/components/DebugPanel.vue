@@ -502,8 +502,8 @@ onUnmounted(() => {
   color: #E0E0E0;
   font-family: 'Space Mono', 'Courier New', monospace;
   font-size: 11px;
-  border-top: 3px solid var(--color-orange, #FF6B1A);
-  border-left: 3px solid var(--color-orange, #FF6B1A);
+  border-top: 3px solid var(--color-orange, #a78bfa);
+  border-left: 3px solid var(--color-orange, #a78bfa);
   z-index: 9999;
   display: flex;
   flex-direction: column;
@@ -540,14 +540,14 @@ onUnmounted(() => {
 
 .debug-header__icon {
   font-size: 13px;
-  color: var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
 }
 
 .debug-header__title {
   font-size: 10px;
   font-weight: bold;
   letter-spacing: 2px;
-  color: var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
 }
 
 .debug-header__status {
@@ -559,9 +559,9 @@ onUnmounted(() => {
 }
 
 .debug-header__status--live {
-  background: rgba(67, 193, 101, 0.2);
-  color: #43C165;
-  border: 1px solid rgba(67, 193, 101, 0.4);
+  background: rgba(196, 181, 253, 0.2);
+  color: #c4b5fd;
+  border: 1px solid rgba(196, 181, 253, 0.4);
 }
 
 .debug-header__status--off {
@@ -590,7 +590,7 @@ onUnmounted(() => {
 }
 
 .debug-btn--copied {
-  color: #43C165 !important;
+  color: #c4b5fd !important;
 }
 
 /* ── Body ── */
@@ -627,8 +627,8 @@ onUnmounted(() => {
 }
 
 .debug-tab--active {
-  color: var(--color-orange, #FF6B1A);
-  border-bottom-color: var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
+  border-bottom-color: var(--color-orange, #a78bfa);
 }
 
 .debug-tab__badge {
@@ -677,7 +677,7 @@ onUnmounted(() => {
 }
 
 .debug-checkbox input {
-  accent-color: var(--color-orange, #FF6B1A);
+  accent-color: var(--color-orange, #a78bfa);
 }
 
 /* ── Content area ── */
@@ -733,7 +733,7 @@ onUnmounted(() => {
 }
 
 .debug-badge--llm_call { background: rgba(99,102,241,0.2); color: #818cf8; }
-.debug-badge--agent_decision { background: rgba(67,193,101,0.2); color: #43C165; }
+.debug-badge--agent_decision { background: rgba(196, 181, 253,0.2); color: #c4b5fd; }
 .debug-badge--round_boundary { background: rgba(255,179,71,0.2); color: #FFB347; }
 .debug-badge--graph_build { background: rgba(59,130,246,0.2); color: #60a5fa; }
 .debug-badge--graph_ner { background: rgba(59,130,246,0.15); color: #93c5fd; }
@@ -746,7 +746,7 @@ onUnmounted(() => {
 }
 
 .debug-event__agent {
-  color: #43C165;
+  color: #c4b5fd;
   font-size: 10px;
   max-width: 120px;
   overflow: hidden;
@@ -801,7 +801,7 @@ onUnmounted(() => {
 .debug-stat-card__value {
   font-size: 16px;
   font-weight: bold;
-  color: var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
 }
 
 .debug-stat-card__label {
@@ -838,7 +838,7 @@ onUnmounted(() => {
 .debug-col--tokens { width: 70px; flex-shrink: 0; text-align: right; color: #aaa; }
 .debug-col--latency { width: 65px; flex-shrink: 0; text-align: right; }
 
-.debug-latency--fast { color: #43C165; }
+.debug-latency--fast { color: #c4b5fd; }
 .debug-latency--medium { color: #FFB347; }
 .debug-latency--slow { color: #FF4444; }
 
@@ -904,7 +904,7 @@ onUnmounted(() => {
 }
 
 .debug-agent-card__name {
-  color: #43C165;
+  color: #c4b5fd;
   font-size: 10px;
   max-width: 150px;
   overflow: hidden;
@@ -919,8 +919,8 @@ onUnmounted(() => {
 }
 
 .debug-agent-card__action--ok {
-  background: rgba(67,193,101,0.15);
-  color: #43C165;
+  background: rgba(196, 181, 253,0.15);
+  color: #c4b5fd;
 }
 
 .debug-agent-card__action--fail {

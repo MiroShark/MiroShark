@@ -367,7 +367,7 @@ onMounted(() => { if (props.visible) load() })
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .export-btn {
@@ -378,7 +378,7 @@ onMounted(() => { if (props.visible) load() })
   font-size: 11px;
   letter-spacing: 1px;
   cursor: pointer;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   transition: all 0.15s ease;
 }
 
@@ -406,7 +406,7 @@ onMounted(() => { if (props.visible) load() })
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
 }
 
@@ -433,7 +433,7 @@ onMounted(() => { if (props.visible) load() })
   gap: 12px;
   padding: 40px;
   font-size: 13px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
 }
 
@@ -481,13 +481,13 @@ onMounted(() => { if (props.visible) load() })
   width: 28px;
   font-size: 13px;
   font-weight: 700;
-  color: rgba(10,10,10,0.2);
+  color: rgba(244, 241, 255,0.2);
   flex-shrink: 0;
   text-align: right;
 }
 
 .lb-rank.rank-1 { color: #f59e0b; }
-.lb-rank.rank-2 { color: rgba(10,10,10,0.5); }
+.lb-rank.rank-2 { color: rgba(244, 241, 255,0.5); }
 .lb-rank.rank-3 { color: #b45309; }
 
 /* ── Identity ── */
@@ -508,7 +508,7 @@ onMounted(() => { if (props.visible) load() })
   justify-content: center;
   font-size: 12px;
   font-weight: 700;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   flex-shrink: 0;
 }
 
@@ -538,7 +538,7 @@ onMounted(() => { if (props.visible) load() })
   text-transform: uppercase;
 }
 
-.platform-pill.twitter { background: rgba(10,10,10,0.07); color: rgba(10,10,10,0.5); }
+.platform-pill.twitter { background: rgba(10,10,10,0.07); color: rgba(244, 241, 255,0.5); }
 .platform-pill.reddit { background: rgba(255,69,0,0.1); color: #c44b00; }
 .platform-pill.polymarket { background: rgba(99,102,241,0.1); color: #4f46e5; }
 
@@ -565,7 +565,7 @@ onMounted(() => { if (props.visible) load() })
 
 .bd-label.engage { color: var(--color-orange); }
 .bd-label.follow { color: var(--color-green); }
-.bd-label.post   { color: rgba(10,10,10,0.5); }
+.bd-label.post   { color: rgba(244, 241, 255,0.5); }
 
 .bd-value {
   font-size: 13px;
@@ -605,7 +605,7 @@ onMounted(() => { if (props.visible) load() })
 .lb-footer {
   padding: 8px 16px;
   font-size: 11px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   letter-spacing: 1px;
   text-align: center;
   border-top: 1px solid rgba(10,10,10,0.05);
@@ -622,14 +622,14 @@ onMounted(() => { if (props.visible) load() })
   font-size: 10px;
   letter-spacing: 1px;
   cursor: pointer;
-  color: rgba(10,10,10,0.45);
+  color: rgba(244, 241, 255,0.45);
   transition: all 0.15s ease;
   white-space: nowrap;
 }
 
 .iv-btn:hover {
-  border-color: var(--color-green, #43C165);
-  color: var(--color-green, #43C165);
+  border-color: var(--color-green, #c4b5fd);
+  color: var(--color-green, #c4b5fd);
 }
 
 /* ── Interview Overlay ── */
@@ -645,7 +645,7 @@ onMounted(() => { if (props.visible) load() })
 }
 
 .iv-modal {
-  background: #FAFAFA;
+  background: #110a26;
   border: 1px solid rgba(10,10,10,0.12);
   width: 100%;
   max-width: 580px;
@@ -681,7 +681,7 @@ onMounted(() => { if (props.visible) load() })
   justify-content: center;
   font-size: 14px;
   font-weight: 700;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   flex-shrink: 0;
 }
 
@@ -693,7 +693,7 @@ onMounted(() => { if (props.visible) load() })
 
 .iv-meta {
   font-size: 10px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
   margin-top: 2px;
 }
@@ -703,14 +703,14 @@ onMounted(() => { if (props.visible) load() })
   border: none;
   font-size: 16px;
   cursor: pointer;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   padding: 4px 8px;
   line-height: 1;
   transition: color 0.15s;
 }
 
 .iv-close:hover {
-  color: rgba(10,10,10,0.8);
+  color: rgba(244, 241, 255,0.8);
 }
 
 /* ── Chat Thread ── */
@@ -727,7 +727,7 @@ onMounted(() => { if (props.visible) load() })
 
 .iv-empty {
   font-size: 12px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 0.5px;
   line-height: 1.6;
   text-align: center;
@@ -751,25 +751,25 @@ onMounted(() => { if (props.visible) load() })
   font-size: 9px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   font-weight: 600;
 }
 
 .iv-role.agent {
-  color: var(--color-green, #43C165);
+  color: var(--color-green, #c4b5fd);
 }
 
 .iv-text {
   font-size: 12px;
   line-height: 1.65;
-  color: rgba(10,10,10,0.8);
+  color: rgba(244, 241, 255,0.8);
   white-space: pre-wrap;
   word-break: break-word;
 }
 
 .iv-answer {
   background: rgba(10,10,10,0.02);
-  border-left: 2px solid var(--color-green, #43C165);
+  border-left: 2px solid var(--color-green, #c4b5fd);
   padding: 8px 10px;
 }
 
@@ -780,7 +780,7 @@ onMounted(() => { if (props.visible) load() })
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 1px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   cursor: pointer;
   padding: 2px 0;
   margin-top: 2px;
@@ -788,7 +788,7 @@ onMounted(() => { if (props.visible) load() })
 }
 
 .iv-share-btn:hover {
-  color: var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
 }
 
 /* ── Loading dots ── */
@@ -797,7 +797,7 @@ onMounted(() => { if (props.visible) load() })
   align-items: center;
   gap: 10px;
   font-size: 11px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
   padding: 4px 0;
 }
@@ -811,7 +811,7 @@ onMounted(() => { if (props.visible) load() })
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--color-orange, #FF6B1A);
+  background: var(--color-orange, #a78bfa);
   animation: iv-bounce 1.2s ease-in-out infinite;
 }
 
@@ -845,7 +845,7 @@ onMounted(() => { if (props.visible) load() })
 }
 
 .iv-input:focus {
-  border-color: var(--color-green, #43C165);
+  border-color: var(--color-green, #c4b5fd);
 }
 
 .iv-input:disabled {
@@ -854,7 +854,7 @@ onMounted(() => { if (props.visible) load() })
 }
 
 .iv-send {
-  background: var(--color-green, #43C165);
+  background: var(--color-green, #c4b5fd);
   border: none;
   padding: 8px 16px;
   font-family: var(--font-mono);

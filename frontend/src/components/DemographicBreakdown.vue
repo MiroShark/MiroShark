@@ -303,7 +303,7 @@ onMounted(() => { if (props.visible) load() })
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .demo-header-actions {
@@ -315,7 +315,7 @@ onMounted(() => { if (props.visible) load() })
 .demo-meta {
   font-size: 10px;
   letter-spacing: 1px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
 }
 
 .demo-export-btn {
@@ -326,7 +326,7 @@ onMounted(() => { if (props.visible) load() })
   font-size: 11px;
   letter-spacing: 1px;
   cursor: pointer;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   transition: all 0.15s ease;
 }
 
@@ -358,7 +358,7 @@ onMounted(() => { if (props.visible) load() })
   font-size: 11px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
@@ -368,7 +368,7 @@ onMounted(() => { if (props.visible) load() })
 }
 
 .demo-tab:hover {
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
 }
 
 .demo-tab.active {
@@ -398,7 +398,7 @@ onMounted(() => { if (props.visible) load() })
   justify-content: center;
   flex: 1;
   gap: 8px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-size: 12px;
   letter-spacing: 1px;
 }
@@ -409,7 +409,7 @@ onMounted(() => { if (props.visible) load() })
 
 .demo-hint {
   font-size: 10px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
 }
 
 .pulse-ring {
@@ -445,7 +445,7 @@ onMounted(() => { if (props.visible) load() })
 
 .demo-highlight-muted {
   background: rgba(10,10,10,0.04);
-  border-left-color: rgba(10,10,10,0.2);
+  border-left-color: rgba(244, 241, 255,0.2);
 }
 
 .demo-highlight-label {
@@ -456,12 +456,12 @@ onMounted(() => { if (props.visible) load() })
 }
 
 .demo-highlight-muted .demo-highlight-label {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
 }
 
 .demo-highlight-text {
   font-size: 12px;
-  color: rgba(10,10,10,0.8);
+  color: rgba(244, 241, 255,0.8);
   line-height: 1.5;
 }
 
@@ -471,7 +471,7 @@ onMounted(() => { if (props.visible) load() })
   flex-wrap: wrap;
   align-items: center;
   font-size: 10px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 1px;
 }
 
@@ -492,7 +492,7 @@ onMounted(() => { if (props.visible) load() })
 .bearish-dot { background: rgba(239,68,68,0.8); }
 
 .legend-sep {
-  color: rgba(10,10,10,0.15);
+  color: rgba(244, 241, 255,0.15);
 }
 
 .demo-segments {
@@ -518,13 +518,13 @@ onMounted(() => { if (props.visible) load() })
 
 .demo-row-label {
   font-size: 12px;
-  color: rgba(10,10,10,0.8);
+  color: rgba(244, 241, 255,0.8);
   letter-spacing: 0.5px;
 }
 
 .demo-row-count {
   font-size: 10px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 1px;
 }
 
@@ -567,12 +567,12 @@ onMounted(() => { if (props.visible) load() })
   font-size: 9px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
 }
 
 .metric-value {
   font-size: 13px;
-  color: rgba(10,10,10,0.85);
+  color: rgba(244, 241, 255,0.85);
   letter-spacing: 0.5px;
 }
 
@@ -582,7 +582,7 @@ onMounted(() => { if (props.visible) load() })
 
 .demo-footer-hint {
   font-size: 10px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   line-height: 1.6;
   border-top: 1px solid rgba(10,10,10,0.05);
   padding-top: 10px;

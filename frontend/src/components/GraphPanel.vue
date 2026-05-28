@@ -408,7 +408,7 @@ const entityTypes = computed(() => {
   if (!props.graphData?.nodes) return []
   const typeMap = {}
   // Aesthetic color palette
-  const colors = ['#FF6B1A', '#43C165', '#0A0A0A', '#FFB347', '#FF4444', '#FF8C42', '#2D9B5E', '#D45B1A', '#7A7A7A', '#B8522E']
+  const colors = ['#a78bfa', '#c4b5fd', '#0A0A0A', '#FFB347', '#FF4444', '#FF8C42', '#2D9B5E', '#D45B1A', '#7A7A7A', '#B8522E']
   
   props.graphData.nodes.forEach(node => {
     const type = node.labels?.find(l => l !== 'Entity') || 'Entity'
@@ -731,7 +731,7 @@ const renderGraph = () => {
       linkLabelBg.attr('fill', 'rgba(10,10,10,0.85)')
       linkLabels.attr('fill', 'rgba(250,250,250,0.5)')
       // Highlight currently selected edge
-      d3.select(event.target).attr('stroke', '#FF6B1A').attr('stroke-width', 3)
+      d3.select(event.target).attr('stroke', '#a78bfa').attr('stroke-width', 3)
       
       selectedItem.value = {
         type: 'edge',
@@ -755,8 +755,8 @@ const renderGraph = () => {
       linkLabelBg.attr('fill', 'rgba(10,10,10,0.85)')
       linkLabels.attr('fill', 'rgba(250,250,250,0.5)')
       // Highlight corresponding edge
-      link.filter(l => l === d).attr('stroke', '#FF6B1A').attr('stroke-width', 3)
-      d3.select(event.target).attr('fill', 'rgba(255, 107, 26, 0.1)')
+      link.filter(l => l === d).attr('stroke', '#a78bfa').attr('stroke-width', 3)
+      d3.select(event.target).attr('fill', 'rgba(167, 139, 250, 0.1)')
       
       selectedItem.value = {
         type: 'edge',
@@ -783,8 +783,8 @@ const renderGraph = () => {
       linkLabelBg.attr('fill', 'rgba(10,10,10,0.85)')
       linkLabels.attr('fill', 'rgba(250,250,250,0.5)')
       // Highlight corresponding edge
-      link.filter(l => l === d).attr('stroke', '#FF6B1A').attr('stroke-width', 3)
-      d3.select(event.target).attr('fill', '#FF6B1A')
+      link.filter(l => l === d).attr('stroke', '#a78bfa').attr('stroke-width', 3)
+      d3.select(event.target).attr('fill', '#a78bfa')
 
       selectedItem.value = {
         type: 'edge',
@@ -851,10 +851,10 @@ const renderGraph = () => {
       node.attr('stroke', 'rgba(10,10,10,0.6)').attr('stroke-width', 2.5)
       linkGroup.selectAll('path').attr('stroke', 'rgba(250,250,250,0.15)').attr('stroke-width', 1.5)
       // Highlight selected node
-      d3.select(event.target).attr('stroke', '#FF6B1A').attr('stroke-width', 4)
+      d3.select(event.target).attr('stroke', '#a78bfa').attr('stroke-width', 4)
       // Highlight edges connected to this node
       link.filter(l => l.source.id === d.id || l.target.id === d.id)
-        .attr('stroke', '#FF6B1A')
+        .attr('stroke', '#a78bfa')
         .attr('stroke-width', 2.5)
       
       selectedItem.value = {
@@ -1035,38 +1035,20 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: #0A0A0A;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(139,92,246,0.10) 0%, transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(76,29,149,0.14) 0%, transparent 60%),
+    linear-gradient(180deg, #05030a 0%, #0a0518 100%);
   background-image:
-    linear-gradient(rgba(67,193,101,0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(67,193,101,0.06) 1px, transparent 1px);
+    linear-gradient(rgba(167,139,250,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167,139,250,0.05) 1px, transparent 1px);
   background-size: 70px 70px;
+  color: #f4f1ff;
   overflow: hidden;
 }
 
-/* Corner markers */
-.graph-panel::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #FF6B1A 40px, transparent 40px, transparent calc(100% - 40px), #FF6B1A calc(100% - 40px));
-  z-index: 30;
-  pointer-events: none;
-}
-
-.graph-panel::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #43C165 40px, transparent 40px, transparent calc(100% - 40px), #43C165 calc(100% - 40px));
-  z-index: 30;
-  pointer-events: none;
-}
+.graph-panel::before { content: none; }
+.graph-panel::after { content: none; }
 
 .panel-header {
   position: absolute;
@@ -1078,7 +1060,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: linear-gradient(to bottom, rgba(10,10,10,0.95), rgba(10,10,10,0));
+  background: linear-gradient(to bottom, rgba(5,3,10,0.85), rgba(5,3,10,0));
   pointer-events: none;
 }
 
@@ -1086,7 +1068,7 @@ onUnmounted(() => {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  color: rgba(250,250,250,0.5);
+  color: rgba(228,222,255,0.65);
   text-transform: uppercase;
   letter-spacing: 3px;
   pointer-events: auto;
@@ -1102,8 +1084,11 @@ onUnmounted(() => {
 .tool-btn {
   height: 32px;
   padding: 0 12px;
-  border: 2px solid rgba(250,250,250,0.12);
-  background: rgba(10,10,10,0.6);
+  border: 1px solid rgba(167,139,250,0.22);
+  background: linear-gradient(180deg, rgba(40,30,70,0.55) 0%, rgba(18,12,38,0.85) 100%);
+  border-radius: 9999px;
+  color: rgba(228,222,255,0.85);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1119,8 +1104,8 @@ onUnmounted(() => {
 
 .tool-btn:hover {
   background: rgba(250,250,250,0.1);
-  color: #FAFAFA;
-  border-color: #FF6B1A;
+  color: #110a26;
+  border-color: #a78bfa;
 }
 
 .tool-btn .btn-text {
@@ -1180,7 +1165,7 @@ onUnmounted(() => {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  color: #FF6B1A;
+  color: #a78bfa;
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 3px;
@@ -1284,7 +1269,7 @@ onUnmounted(() => {
 }
 
 input:checked + .slider {
-  background-color: #FF6B1A;
+  background-color: #a78bfa;
 }
 
 input:checked + .slider:before {
@@ -1306,7 +1291,7 @@ input:checked + .slider:before {
   right: 20px;
   width: 320px;
   max-height: calc(100% - 100px);
-  background: #FAFAFA;
+  background: #110a26;
   border: 2px solid rgba(10,10,10,0.08);
   overflow: hidden;
   font-family: var(--font-mono);
@@ -1329,7 +1314,7 @@ input:checked + .slider:before {
 .detail-title {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 3px;
@@ -1351,14 +1336,14 @@ input:checked + .slider:before {
   border: none;
   font-size: 20px;
   cursor: pointer;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   line-height: 1;
   padding: 0;
   transition: color 0.2s;
 }
 
 .detail-close:hover {
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
 }
 
 .detail-content {
@@ -1375,7 +1360,7 @@ input:checked + .slider:before {
 }
 
 .detail-label {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 500;
@@ -1385,7 +1370,7 @@ input:checked + .slider:before {
 }
 
 .detail-value {
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   flex: 1;
   word-break: break-word;
 }
@@ -1393,7 +1378,7 @@ input:checked + .slider:before {
 .detail-value.uuid-text {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .detail-value.uuid-text.copyable {
@@ -1401,17 +1386,17 @@ input:checked + .slider:before {
 }
 
 .detail-value.uuid-text.copyable:hover {
-  color: #0A0A0A;
+  color: #f4f1ff;
   text-decoration: underline;
 }
 
 .detail-value.uuid-text.copyable:active {
-  color: #43C165;
+  color: #c4b5fd;
 }
 
 .detail-value.fact-text {
   line-height: 1.5;
-  color: rgba(10,10,10,0.6);
+  color: rgba(244, 241, 255,0.6);
 }
 
 .detail-section {
@@ -1424,7 +1409,7 @@ input:checked + .slider:before {
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   margin-bottom: 10px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -1442,20 +1427,20 @@ input:checked + .slider:before {
 }
 
 .property-key {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-family: var(--font-mono);
   font-weight: 500;
   min-width: 90px;
 }
 
 .property-value {
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   flex: 1;
 }
 
 .summary-text {
   line-height: 1.6;
-  color: rgba(10,10,10,0.6);
+  color: rgba(244, 241, 255,0.6);
   font-size: 12px;
 }
 
@@ -1472,7 +1457,7 @@ input:checked + .slider:before {
   border: 2px solid rgba(10,10,10,0.12);
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -1487,13 +1472,13 @@ input:checked + .slider:before {
 
 .actions-toggle {
   font-size: 9px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   width: 12px;
 }
 
 .actions-loading {
   font-size: 10px;
-  color: #FF6B1A;
+  color: #a78bfa;
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
@@ -1504,8 +1489,8 @@ input:checked + .slider:before {
 
 .actions-count {
   font-size: 10px;
-  background: #FF6B1A;
-  color: #FAFAFA;
+  background: #a78bfa;
+  color: #110a26;
   padding: 1px 6px;
   font-family: var(--font-mono);
 }
@@ -1525,17 +1510,17 @@ input:checked + .slider:before {
 .action-item {
   padding: 10px;
   border: 2px solid rgba(10,10,10,0.06);
-  background: #FAFAFA;
+  background: #110a26;
   transition: border-color 0.15s;
   cursor: pointer;
 }
 
 .action-item:hover {
-  border-color: rgba(10,10,10,0.15);
+  border-color: rgba(244, 241, 255,0.15);
 }
 
 .action-item.expanded {
-  border-color: #FF6B1A;
+  border-color: #a78bfa;
 }
 
 .action-header {
@@ -1551,18 +1536,18 @@ input:checked + .slider:before {
   padding: 2px 6px;
   text-transform: uppercase;
   letter-spacing: 2px;
-  color: #FAFAFA;
+  color: #110a26;
   background: #0A0A0A;
 }
 
 .action-platform.twitter { background: #0A0A0A; }
-.action-platform.reddit { background: #FF6B1A; }
-.action-platform.polymarket { background: #43C165; }
+.action-platform.reddit { background: #a78bfa; }
+.action-platform.polymarket { background: #c4b5fd; }
 
 .action-type {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -1570,7 +1555,7 @@ input:checked + .slider:before {
 .action-round {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: #FF6B1A;
+  color: #a78bfa;
   font-weight: 700;
 }
 
@@ -1578,14 +1563,14 @@ input:checked + .slider:before {
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: 14px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   width: 16px;
   text-align: center;
 }
 
 .action-content {
   font-size: 12px;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   line-height: 1.5;
   margin-top: 6px;
   display: -webkit-box;
@@ -1619,7 +1604,7 @@ input:checked + .slider:before {
 .action-detail-label {
   font-family: var(--font-mono);
   font-size: 9px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   text-transform: uppercase;
   letter-spacing: 2px;
   min-width: 70px;
@@ -1627,7 +1612,7 @@ input:checked + .slider:before {
 }
 
 .action-detail-value {
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   word-break: break-all;
 }
 
@@ -1636,20 +1621,20 @@ input:checked + .slider:before {
   font-size: 10px;
 }
 
-.action-detail-value.text-green { color: #43C165; font-weight: 700; }
-.action-detail-value.text-orange { color: #FF6B1A; font-weight: 700; }
+.action-detail-value.text-green { color: #c4b5fd; font-weight: 700; }
+.action-detail-value.text-orange { color: #a78bfa; font-weight: 700; }
 
 .reasoning-text {
   font-size: 11px;
   line-height: 1.5;
-  color: rgba(10,10,10,0.6);
+  color: rgba(244, 241, 255,0.6);
   font-style: italic;
 }
 
 .actions-empty {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   text-transform: uppercase;
   letter-spacing: 1px;
   padding: 16px 0;
@@ -1668,7 +1653,7 @@ input:checked + .slider:before {
   border: 2px solid rgba(10,10,10,0.08);
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   word-break: break-all;
 }
 
@@ -1681,7 +1666,7 @@ input:checked + .slider:before {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   line-height: 1.5;
   word-break: break-word;
 }
@@ -1694,7 +1679,7 @@ input:checked + .slider:before {
   transform: translateX(-50%);
   background: #0A0A0A;
   backdrop-filter: blur(8px);
-  color: #FAFAFA;
+  color: #110a26;
   padding: 10px 20px;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -1730,12 +1715,12 @@ input:checked + .slider:before {
 .memory-icon {
   width: 18px;
   height: 18px;
-  color: #43C165;
+  color: #c4b5fd;
 }
 
 @keyframes breathe {
-  0%, 100% { opacity: 0.7; transform: scale(1); filter: drop-shadow(0 0 2px rgba(67, 193, 101, 0.3)); }
-  50% { opacity: 1; transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(67, 193, 101, 0.6)); }
+  0%, 100% { opacity: 0.7; transform: scale(1); filter: drop-shadow(0 0 2px rgba(196, 181, 253, 0.3)); }
+  50% { opacity: 1; transform: scale(1.15); filter: drop-shadow(0 0 8px rgba(196, 181, 253, 0.6)); }
 }
 
 /* Post-simulation hint styles */
@@ -1753,7 +1738,7 @@ input:checked + .slider:before {
 .finished-hint .hint-icon {
   width: 18px;
   height: 18px;
-  color: #FF6B1A;
+  color: #a78bfa;
 }
 
 .finished-hint .hint-text {
@@ -1770,7 +1755,7 @@ input:checked + .slider:before {
   background: rgba(250, 250, 250, 0.2);
   border: none;
   cursor: pointer;
-  color: #FAFAFA;
+  color: #110a26;
   transition: all 0.2s;
   margin-left: 8px;
   flex-shrink: 0;
@@ -1785,7 +1770,7 @@ input:checked + .slider:before {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(250,250,250,0.12);
-  border-top-color: #FF6B1A;
+  border-top-color: #a78bfa;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px;
@@ -1796,15 +1781,15 @@ input:checked + .slider:before {
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(67, 193, 101, 0.08);
-  border: 2px solid rgba(67, 193, 101, 0.2);
+  background: rgba(196, 181, 253, 0.08);
+  border: 2px solid rgba(196, 181, 253, 0.2);
 }
 
 .self-loop-count {
   margin-left: auto;
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   background: rgba(250,250,250,0.8);
   padding: 2px 8px;
   text-transform: uppercase;
@@ -1818,7 +1803,7 @@ input:checked + .slider:before {
 }
 
 .self-loop-item {
-  background: #FAFAFA;
+  background: #110a26;
   border: 2px solid rgba(10,10,10,0.08);
 }
 
@@ -1844,7 +1829,7 @@ input:checked + .slider:before {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   background: rgba(10,10,10,0.12);
   padding: 2px 6px;
 }
@@ -1853,7 +1838,7 @@ input:checked + .slider:before {
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 500;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   flex: 1;
 }
 
@@ -1865,14 +1850,14 @@ input:checked + .slider:before {
   justify-content: center;
   font-size: 14px;
   font-weight: 600;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   background: rgba(10,10,10,0.12);
   transition: all 0.2s;
 }
 
 .self-loop-item.expanded .self-loop-toggle {
   background: rgba(10,10,10,0.15);
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .self-loop-item-content {

@@ -441,19 +441,22 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-/* Hyperstitions Design System v2.0 — Local Tokens */
+/* MiroShark deep-space-violet — Process shell.
+   Local tokens kept for the few rules below that still reference them,
+   but flipped to match the App.vue palette so descendants inherit the
+   correct semantics. */
 .main-view {
-  --color-orange: #FF6B1A;
-  --color-green: #43C165;
-  --color-black: #0A0A0A;
-  --color-white: #FAFAFA;
-  --color-gray: #F5F5F5;
-  --color-red: #FF4444;
-  --color-amber: #FFB347;
-  --font-display: 'Young Serif', Georgia, serif;
-  --font-mono: 'Space Mono', 'Courier New', monospace;
-  --border-light: 2px solid rgba(10,10,10,0.08);
-  --border-medium: 2px solid rgba(10,10,10,0.12);
+  --color-orange: #a78bfa;
+  --color-green:  #c4b5fd;
+  --color-white:  #110a26;
+  --color-black:  #f4f1ff;
+  --color-gray:   #1a0f3a;
+  --color-red:    #f0abfc;
+  --color-amber:  #fcd34d;
+  --font-display: 'Geist', system-ui, -apple-system, sans-serif;
+  --font-mono:    'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --border-light: 1px solid rgba(255,255,255,0.08);
+  --border-medium: 1px solid rgba(167,139,250,0.18);
   --space-xs: 6px;
   --space-sm: 11px;
   --space-md: 22px;
@@ -465,23 +468,30 @@ onUnmounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--color-white);
+  background:
+    radial-gradient(circle at 18% 12%, rgba(139,92,246,0.18) 0%, transparent 55%),
+    radial-gradient(circle at 82% 88%, rgba(76,29,149,0.22) 0%, transparent 60%),
+    linear-gradient(180deg, #05030a 0%, #0a0518 100%);
+  color: #f4f1ff;
   overflow: hidden;
   font-family: var(--font-display);
 }
 
-/* Header */
+/* Header — sticky glossy bar matching Home navbar. */
 .app-header {
   height: 60px;
-  border-bottom: var(--border-medium);
+  border-bottom: 1px solid rgba(167,139,250,0.16);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-md);
-  background: var(--color-black);
-  color: var(--color-white);
+  background: linear-gradient(180deg, rgba(20,14,42,0.85) 0%, rgba(8,5,20,0.92) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #f4f1ff;
   z-index: 100;
   position: relative;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.04), 0 8px 32px -16px rgba(0,0,0,0.6);
 }
 
 .header-center {
@@ -497,34 +507,46 @@ onUnmounted(() => {
   letter-spacing: 3px;
   cursor: pointer;
   text-transform: uppercase;
-  color: var(--color-white);
+  background: linear-gradient(180deg, #ffffff 0%, #e4ddff 45%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .view-switcher {
   display: flex;
-  background: rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(40,30,70,0.55) 0%, rgba(18,12,38,0.75) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 9999px;
   padding: 4px;
-  gap: 4px;
+  gap: 2px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .switch-btn {
   border: none;
   background: transparent;
-  padding: var(--space-xs) 16px;
+  padding: 6px 14px;
   font-family: var(--font-mono);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 600;
-  color: rgba(250,250,250,0.5);
+  color: rgba(228,222,255,0.55);
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
   cursor: pointer;
-  transition: all 0.2s;
+  border-radius: 9999px;
+  transition: color 180ms ease, background 180ms ease;
+}
+
+.switch-btn:hover {
+  color: #ffffff;
 }
 
 .switch-btn.active {
-  background: var(--color-white);
-  color: var(--color-black);
-  border: var(--border-light);
+  background: linear-gradient(180deg, rgba(167,139,250,0.35) 0%, rgba(76,29,149,0.55) 100%);
+  color: #ffffff;
+  border: 1px solid rgba(167,139,250,0.45);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 16px -10px rgba(139,92,246,0.7);
 }
 
 .status-indicator {
@@ -532,11 +554,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(250,250,250,0.5);
+  font-size: 11px;
+  color: rgba(228,222,255,0.6);
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 3px;
+  letter-spacing: 2px;
 }
 
 .header-right {
@@ -555,24 +577,30 @@ onUnmounted(() => {
 .step-num {
   font-family: var(--font-mono);
   font-weight: 700;
-  color: rgba(250,250,250,0.4);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(196,181,253,0.65);
 }
 
 .step-name {
-  font-weight: 700;
-  color: var(--color-white);
+  font-weight: 600;
+  font-size: 13px;
+  color: #f4f1ff;
 }
 
 .step-divider {
   width: 1px;
   height: 14px;
-  background-color: rgba(250,250,250,0.2);
+  background-color: rgba(255,255,255,0.12);
 }
 
 .dot {
   width: 8px;
   height: 8px;
-  background: rgba(250,250,250,0.2);
+  border-radius: 50%;
+  background: rgba(228,222,255,0.25);
+  box-shadow: 0 0 8px rgba(228,222,255,0.2);
 }
 
 .status-indicator.processing .dot { background: var(--color-orange); animation: pulse 1s infinite; }
@@ -598,6 +626,6 @@ onUnmounted(() => {
 }
 
 .panel-wrapper.left {
-  border-right: var(--border-light);
+  border-right: 1px solid rgba(167,139,250,0.14);
 }
 </style>

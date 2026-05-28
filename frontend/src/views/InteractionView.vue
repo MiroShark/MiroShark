@@ -230,7 +230,11 @@ onMounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #FAFAFA;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(139,92,246,0.18) 0%, transparent 55%),
+    radial-gradient(circle at 82% 88%, rgba(76,29,149,0.22) 0%, transparent 60%),
+    linear-gradient(180deg, #05030a 0%, #0a0518 100%);
+  color: #f4f1ff;
   overflow: hidden;
   font-family: var(--font-display);
 }
@@ -238,14 +242,18 @@ onMounted(() => {
 /* Header */
 .app-header {
   height: 60px;
-  border-bottom: 2px solid rgba(10,10,10,0.08);
+  border-bottom: 1px solid rgba(167,139,250,0.16);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 22px;
-  background: #0A0A0A;
+  background: linear-gradient(180deg, rgba(20,14,42,0.85) 0%, rgba(8,5,20,0.92) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #f4f1ff;
   z-index: 100;
   position: relative;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.04), 0 8px 32px -16px rgba(0,0,0,0.6);
 }
 
 .header-center {
@@ -261,7 +269,10 @@ onMounted(() => {
   letter-spacing: 3px;
   text-transform: uppercase;
   cursor: pointer;
-  color: #FAFAFA;
+  background: linear-gradient(180deg, #ffffff 0%, #e4ddff 45%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .view-switcher {
@@ -287,8 +298,8 @@ onMounted(() => {
 
 .switch-btn.active {
   background: #0A0A0A;
-  color: #FAFAFA;
-  border: 2px solid #FF6B1A;
+  color: #110a26;
+  border: 2px solid #a78bfa;
 }
 
 .header-right {
@@ -312,7 +323,7 @@ onMounted(() => {
 
 .step-name {
   font-weight: 700;
-  color: #FAFAFA;
+  color: #110a26;
 }
 
 .step-divider {
@@ -340,9 +351,9 @@ onMounted(() => {
   background: rgba(250,250,250,0.2);
 }
 
-.status-indicator.ready .dot { background: #43C165; }
-.status-indicator.processing .dot { background: #FF6B1A; animation: pulse 1s infinite; }
-.status-indicator.completed .dot { background: #43C165; }
+.status-indicator.ready .dot { background: #c4b5fd; }
+.status-indicator.processing .dot { background: #a78bfa; animation: pulse 1s infinite; }
+.status-indicator.completed .dot { background: #c4b5fd; }
 .status-indicator.idle .dot { background: #FFB347; }
 .status-indicator.error .dot { background: #FF4444; }
 
