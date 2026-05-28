@@ -379,29 +379,36 @@ onUnmounted(() => {
 
 .view-switcher {
   display: flex;
-  background: rgba(250,250,250,0.08);
+  background: linear-gradient(180deg, rgba(40,30,70,0.55) 0%, rgba(18,12,38,0.75) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 9999px;
   padding: 4px;
-  gap: 4px;
+  gap: 2px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
 .switch-btn {
-  border: 2px solid transparent;
+  border: 1px solid transparent;
   background: transparent;
-  padding: 6px 16px;
+  padding: 6px 14px;
   font-family: var(--font-mono);
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 3px;
-  color: rgba(250,250,250,0.5);
+  letter-spacing: 2px;
+  color: rgba(228,222,255,0.55);
   cursor: pointer;
-  transition: all 0.2s;
+  border-radius: 9999px;
+  transition: color 180ms ease, background 180ms ease;
 }
+.switch-btn:hover { color: #ffffff; }
 
 .switch-btn.active {
-  background: #0A0A0A;
-  color: #110a26;
-  border: 2px solid #a78bfa;
+  background: linear-gradient(180deg, rgba(167,139,250,0.35) 0%, rgba(76,29,149,0.55) 100%);
+  color: #ffffff;
+  border: 1px solid rgba(167,139,250,0.55);
+  border-radius: 9999px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 6px 16px -10px rgba(139,92,246,0.7);
 }
 
 .header-right {
@@ -420,12 +427,16 @@ onUnmounted(() => {
 .step-num {
   font-family: var(--font-mono);
   font-weight: 700;
-  color: rgba(250,250,250,0.4);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(196,181,253,0.65);
 }
 
 .step-name {
-  font-weight: 700;
-  color: #110a26;
+  font-weight: 600;
+  font-size: 13px;
+  color: #f4f1ff;
 }
 
 .step-divider {
