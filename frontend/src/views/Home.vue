@@ -334,12 +334,8 @@
         </section>
       </section>
 
-      <!-- TemplateGallery + HistoryDatabase are intentionally hidden in
-           this iteration — their internal light-theme styles clash with
-           the dark frame. Reinstate once they have a matching reskin:
-        <section class="ms-section"><TemplateGallery /></section>
-        <section class="ms-section"><HistoryDatabase /></section>
-      -->
+      <section class="ms-section"><TemplateGallery /></section>
+      <section class="ms-section"><HistoryDatabase /></section>
     </main>
   </div>
 </template>
@@ -347,11 +343,8 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-// HistoryDatabase + TemplateGallery hidden in this iteration — see
-// the template for context. Keep imports out so the bundle doesn't
-// drag in their light-theme CSS.
-// import HistoryDatabase from '../components/HistoryDatabase.vue'
-// import TemplateGallery from '../components/TemplateGallery.vue'
+import HistoryDatabase from '../components/HistoryDatabase.vue'
+import TemplateGallery from '../components/TemplateGallery.vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
 import ScenarioSuggestions from '../components/ScenarioSuggestions.vue'
 import TrendingTopics from '../components/TrendingTopics.vue'

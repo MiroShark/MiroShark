@@ -210,10 +210,18 @@ const launchTemplate = async (template) => {
 </script>
 
 <style scoped>
+/* MiroShark deep-space-violet — Template Gallery */
 .template-gallery {
-  border: 1px solid #E5E5E5;
+  border: 1px solid rgba(167,139,250,0.18);
+  border-radius: 18px;
   padding: 30px;
   margin-top: 60px;
+  background: linear-gradient(180deg, rgba(40,30,70,0.45) 0%, rgba(18,12,38,0.7) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 16px 36px -20px rgba(0,0,0,0.7);
+  color: #f4f1ff;
+  font-family: 'Geist', system-ui, -apple-system, sans-serif;
 }
 
 .gallery-header {
@@ -226,55 +234,89 @@ const launchTemplate = async (template) => {
 .header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  color: #999;
+  gap: 10px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(196,181,253,0.85);
 }
 
 .header-icon {
-  font-size: 1.2rem;
-  color: #FF4500;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #a78bfa 60%, #4c1d95 100%);
+  box-shadow: 0 0 10px rgba(167,139,250,0.8);
+  font-size: 0;
+  color: transparent;
 }
 
 .header-meta {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.75rem;
-  color: #BBB;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(228,222,255,0.55);
 }
 
 .gallery-loading,
 .gallery-empty {
   text-align: center;
   padding: 40px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  color: #999;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 13px;
+  color: rgba(228,222,255,0.55);
 }
 
 .template-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  gap: 18px;
 }
 
 .template-card {
-  border: 1px solid #E5E5E5;
-  padding: 24px;
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: linear-gradient(180deg, rgba(40,30,70,0.65) 0%, rgba(18,12,38,0.85) 100%);
+  border-radius: 14px;
+  padding: 22px;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   flex-direction: column;
-  position: relative;
+  color: #f4f1ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    inset 0 -1px 0 rgba(0,0,0,0.4);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.template-card::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: 0;
+  width: 2px;
+  height: 28px;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(180deg, #a78bfa 0%, #c4b5fd 100%);
+  box-shadow: 0 0 10px rgba(167,139,250,0.6);
 }
 
 .template-card:hover {
-  border-color: #999;
+  border-color: rgba(167,139,250,0.55);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.12),
+    0 16px 36px -16px rgba(139,92,246,0.5);
 }
 
 .template-card.selected {
-  border-color: #FF4500;
-  box-shadow: 0 0 0 1px #FF4500;
+  border-color: rgba(167,139,250,0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    0 0 0 1px rgba(167,139,250,0.5),
+    0 16px 36px -16px rgba(139,92,246,0.7);
 }
 
 .card-top {
@@ -289,23 +331,25 @@ const launchTemplate = async (template) => {
 }
 
 .card-category {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  color: #999;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  color: rgba(196,181,253,0.7);
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.18em;
 }
 
 .card-title {
-  font-size: 1.1rem;
+  font-family: 'Geist', system-ui, sans-serif;
+  font-size: 1.05rem;
   font-weight: 600;
   margin: 0 0 8px 0;
   line-height: 1.3;
+  color: #ffffff;
 }
 
 .card-desc {
   font-size: 0.85rem;
-  color: #666;
+  color: rgba(228,222,255,0.7);
   line-height: 1.6;
   margin: 0 0 16px 0;
   flex: 1;
@@ -316,69 +360,68 @@ const launchTemplate = async (template) => {
   align-items: center;
   gap: 6px;
   margin-bottom: 12px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: #999;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: rgba(228,222,255,0.55);
 }
 
 .meta-dot {
-  color: #DDD;
+  color: rgba(196,181,253,0.4);
 }
 
-.difficulty.easy { color: #22c55e; }
-.difficulty.medium { color: #f59e0b; }
-.difficulty.hard { color: #ef4444; }
+.difficulty.easy { color: #c4b5fd; }
+.difficulty.medium { color: #fcd34d; }
+.difficulty.hard { color: #f0abfc; }
 
 .card-platforms {
   display: flex;
   gap: 6px;
   margin-bottom: 16px;
-}
-
-.platform-badge {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.65rem;
-  padding: 2px 8px;
-  border: 1px solid #E5E5E5;
-  color: #666;
-  text-transform: lowercase;
-  white-space: nowrap;
-}
-
-.card-platforms {
   flex-wrap: wrap;
   row-gap: 6px;
 }
 
+.platform-badge {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 10px;
+  padding: 3px 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(40,30,70,0.55) 0%, rgba(18,12,38,0.7) 100%);
+  border-radius: 9999px;
+  color: rgba(228,222,255,0.8);
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
 .platform-badge--cf {
-  border-color: rgba(167, 139, 250, 0.3);
-  color: #a78bfa;
+  border-color: rgba(167,139,250,0.35);
+  color: #c4b5fd;
 }
 
 .platform-badge--oracle {
-  border-color: rgba(196, 181, 253, 0.3);
-  color: #2d8a3f;
+  border-color: rgba(196,181,253,0.35);
+  color: #c4b5fd;
 }
 
 .oracle-toggle {
   display: flex;
   align-items: center;
   gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: #2d8a3f;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: rgba(196,181,253,0.85);
   margin-bottom: 10px;
   cursor: pointer;
   user-select: none;
 }
 
 .oracle-toggle input[type="checkbox"] {
-  accent-color: #2d8a3f;
+  accent-color: #a78bfa;
   cursor: pointer;
 }
 
 .oracle-toggle.disabled {
-  color: #aaa;
+  color: rgba(228,222,255,0.35);
   cursor: not-allowed;
 }
 
@@ -389,55 +432,69 @@ const launchTemplate = async (template) => {
 .card-actions {
   display: flex;
   align-items: stretch;
-  gap: 6px;
+  gap: 8px;
 }
 
 .launch-btn {
   flex: 1;
-  padding: 10px;
-  background: #000;
-  color: #fff;
-  border: none;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.8rem;
-  font-weight: 600;
+  padding: 11px;
+  background: linear-gradient(180deg, rgba(167,139,250,0.55) 0%, rgba(76,29,149,0.75) 100%);
+  color: #ffffff;
+  border: 1px solid rgba(167,139,250,0.55);
+  border-radius: 9999px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    0 8px 22px -10px rgba(139,92,246,0.7);
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .launch-btn:hover:not(:disabled) {
-  background: #FF4500;
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    0 12px 28px -10px rgba(139,92,246,0.85);
 }
 
 .launch-btn:disabled {
-  background: #CCC;
+  background: linear-gradient(180deg, rgba(40,30,70,0.4) 0%, rgba(18,12,38,0.6) 100%);
+  color: rgba(228,222,255,0.35);
+  border-color: rgba(255,255,255,0.06);
   cursor: not-allowed;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
 }
 
 .copy-link-btn {
   flex-shrink: 0;
-  width: 38px;
-  background: transparent;
-  color: #666;
-  border: 1px solid #E5E5E5;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.95rem;
+  width: 42px;
+  background: linear-gradient(180deg, rgba(40,30,70,0.55) 0%, rgba(18,12,38,0.85) 100%);
+  color: rgba(228,222,255,0.7);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 9999px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 1rem;
   cursor: pointer;
-  transition: all 0.2s;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .copy-link-btn:hover {
-  border-color: #FF4500;
-  color: #FF4500;
+  color: #ffffff;
+  border-color: rgba(167,139,250,0.55);
+  transform: translateY(-1px);
 }
 
 .copy-link-btn.copied {
-  border-color: #c4b5fd;
   color: #c4b5fd;
+  border-color: rgba(196,181,253,0.55);
 }
 
 @media (max-width: 1024px) {
