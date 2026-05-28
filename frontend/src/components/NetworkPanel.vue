@@ -623,35 +623,23 @@ onUnmounted(() => {
   position: relative;
   width: 100%;
   height: 100%;
-  background-color: #f4f1ff;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(139,92,246,0.10) 0%, transparent 55%),
+    radial-gradient(circle at 80% 80%, rgba(76,29,149,0.14) 0%, transparent 60%),
+    linear-gradient(180deg, #05030a 0%, #0a0518 100%);
   background-image:
-    linear-gradient(rgba(167, 139, 250,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(167, 139, 250,0.04) 1px, transparent 1px);
+    linear-gradient(rgba(167, 139, 250,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(167, 139, 250,0.05) 1px, transparent 1px);
   background-size: 70px 70px;
+  color: #f4f1ff;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.network-panel::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #a78bfa 40px, transparent 40px, transparent calc(100% - 40px), #a78bfa calc(100% - 40px));
-  z-index: 30;
-  pointer-events: none;
-}
+.network-panel::before { content: none; }
 
-.network-panel::after {
-  content: '';
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  height: 3px;
-  background: linear-gradient(90deg, #c4b5fd 40px, transparent 40px, transparent calc(100% - 40px), #c4b5fd calc(100% - 40px));
-  z-index: 30;
-  pointer-events: none;
-}
+.network-panel::after { content: none; }
 
 .panel-header {
   position: absolute;
