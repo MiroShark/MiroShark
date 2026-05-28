@@ -6,7 +6,7 @@
  */
 
 const FOOTER_HEIGHT = 86
-const BACKGROUND = '#FAFAFA'
+const BACKGROUND = '#110a26'
 const LOGO_URL = '/miroshark-nobg.png'
 
 // Cache the loaded logo so exports after the first don't re-fetch.
@@ -50,7 +50,7 @@ export function buildTitledHeader({ title, subtitle = '', width }) {
 
   const drawHeader = (ctx) => {
     let y = 32
-    ctx.fillStyle = '#0A0A0A'
+    ctx.fillStyle = '#f4f1ff'
     ctx.font = TITLE_FONT
     ctx.textAlign = 'left'
     ctx.textBaseline = 'top'
@@ -60,7 +60,7 @@ export function buildTitledHeader({ title, subtitle = '', width }) {
     }
     if (subtitle) {
       y += 8
-      ctx.fillStyle = 'rgba(10, 10, 10, 0.5)'
+      ctx.fillStyle = 'rgba(244, 241, 255, 0.5)'
       ctx.font = SUBTITLE_FONT
       ctx.fillText(subtitle, PX, y)
     }
@@ -174,7 +174,7 @@ export async function renderSvgToCanvas(svgEl, {
     drawHeader(ctx, { width, headerHeight })
     ctx.restore()
     // Thin divider between header and chart
-    ctx.fillStyle = 'rgba(10, 10, 10, 0.08)'
+    ctx.fillStyle = 'rgba(244, 241, 255, 0.08)'
     ctx.fillRect(0, headerHeight, width, 1)
   }
 
@@ -197,7 +197,7 @@ export async function renderSvgToCanvas(svgEl, {
   const footerY = headerHeight + height
   const midY = footerY + FOOTER_HEIGHT / 2
   // Thin top divider
-  ctx.fillStyle = 'rgba(10, 10, 10, 0.08)'
+  ctx.fillStyle = 'rgba(244, 241, 255, 0.08)'
   ctx.fillRect(0, footerY, width, 1)
 
   // Logo — kept in the same spot the accent squares used, sized to fit the
@@ -213,7 +213,7 @@ export async function renderSvgToCanvas(svgEl, {
   }
 
   // Big wordmark — "SIMULATED BY MIROSHARK"
-  ctx.fillStyle = '#0A0A0A'
+  ctx.fillStyle = '#f4f1ff'
   ctx.font = '700 24px "Space Mono", "JetBrains Mono", ui-monospace, monospace'
   ctx.textBaseline = 'middle'
   ctx.textAlign = 'left'
@@ -229,7 +229,7 @@ export async function renderSvgToCanvas(svgEl, {
 
   // Fallback title in the footer (only if there's no dedicated header zone)
   if (!drawHeader && title) {
-    ctx.fillStyle = 'rgba(10, 10, 10, 0.9)'
+    ctx.fillStyle = 'rgba(244, 241, 255, 0.9)'
     ctx.font = '700 13px "Space Mono", "JetBrains Mono", ui-monospace, monospace'
     ctx.textAlign = 'center'
     const titleStr = title.length > 60 ? title.slice(0, 57) + '…' : title
@@ -238,7 +238,7 @@ export async function renderSvgToCanvas(svgEl, {
 
   // Subtitle / provenance (right)
   if (subtitle) {
-    ctx.fillStyle = 'rgba(10, 10, 10, 0.4)'
+    ctx.fillStyle = 'rgba(244, 241, 255, 0.4)'
     ctx.font = '400 12px "Space Mono", "JetBrains Mono", ui-monospace, monospace'
     ctx.textAlign = 'right'
     const subStr = subtitle.length > 44 ? subtitle.slice(0, 41) + '…' : subtitle

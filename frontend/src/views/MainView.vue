@@ -443,17 +443,17 @@ onUnmounted(() => {
 <style scoped>
 /* Hyperstitions Design System v2.0 — Local Tokens */
 .main-view {
-  --color-orange: #FF6B1A;
-  --color-green: #43C165;
-  --color-black: #0A0A0A;
-  --color-white: #FAFAFA;
-  --color-gray: #F5F5F5;
-  --color-red: #FF4444;
-  --color-amber: #FFB347;
+  --color-orange: #a78bfa;
+  --color-green: #c4b5fd;
+  --color-black: #f4f1ff;
+  --color-white: #110a26;
+  --color-gray: #1a0f3a;
+  --color-red: #f0abfc;
+  --color-amber: #fcd34d;
   --font-display: 'Young Serif', Georgia, serif;
   --font-mono: 'Space Mono', 'Courier New', monospace;
-  --border-light: 2px solid rgba(10,10,10,0.08);
-  --border-medium: 2px solid rgba(10,10,10,0.12);
+  --border-light: 2px solid rgba(244, 241, 255,0.08);
+  --border-medium: 2px solid rgba(244, 241, 255,0.12);
   --space-xs: 6px;
   --space-sm: 11px;
   --space-md: 22px;

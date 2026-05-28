@@ -108,14 +108,14 @@
           <circle
             :r="nodeRadius(n)"
             :fill="nodeColor(n)"
-            :stroke="n.id === hoveredNode ? 'rgba(10,10,10,0.7)' : 'rgba(10,10,10,0.15)'"
+            :stroke="n.id === hoveredNode ? 'rgba(244, 241, 255,0.7)' : 'rgba(244, 241, 255,0.15)'"
             :stroke-width="n.id === hoveredNode ? 2 : 1"
           />
           <text
             v-if="nodeRadius(n) >= 6 || n.id === hoveredNode"
             :y="nodeRadius(n) + 10"
             text-anchor="middle"
-            fill="rgba(10,10,10,0.5)"
+            fill="rgba(244, 241, 255,0.5)"
             :font-size="n.id === hoveredNode ? 10 : 8"
             font-family="monospace"
           >{{ n.name.length > 12 ? n.name.slice(0, 11) + '…' : n.name }}</text>
@@ -129,16 +129,16 @@
             height="52"
             rx="4"
             fill="rgba(250,250,250,0.95)"
-            stroke="rgba(10,10,10,0.15)"
+            stroke="rgba(244, 241, 255,0.15)"
             stroke-width="1"
           />
-          <text x="0" y="0" font-size="10" font-family="monospace" fill="rgba(10,10,10,0.8)" font-weight="bold">
+          <text x="0" y="0" font-size="10" font-family="monospace" fill="rgba(244, 241, 255,0.8)" font-weight="bold">
             {{ hoveredNodeData?.name }}
           </text>
-          <text x="0" y="13" font-size="9" font-family="monospace" fill="rgba(10,10,10,0.5)">
+          <text x="0" y="13" font-size="9" font-family="monospace" fill="rgba(244, 241, 255,0.5)">
             {{ translateStance(hoveredNodeData?.stance) }} · {{ hoveredNodeData?.platforms?.join(', ') }}
           </text>
-          <text x="0" y="26" font-size="9" font-family="monospace" fill="rgba(10,10,10,0.5)">
+          <text x="0" y="26" font-size="9" font-family="monospace" fill="rgba(244, 241, 255,0.5)">
             {{ $tr('In:', '入度:') }} {{ hoveredNodeData?.in_degree }} · {{ $tr('Out:', '出度:') }} {{ hoveredNodeData?.out_degree }} · {{ $tr('Rank', '排名') }} #{{ hoveredNodeData?.rank }}
           </text>
           <text x="0" y="34" font-size="0" fill="transparent">pad</text>
@@ -624,7 +624,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(10,10,10,0.08);
+  border-bottom: 1px solid rgba(244, 241, 255,0.08);
   flex-shrink: 0;
 }
 
@@ -643,7 +643,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .net-header-actions {
@@ -654,13 +654,13 @@ onBeforeUnmount(() => {
 
 .net-export-btn {
   background: none;
-  border: 1px solid rgba(10,10,10,0.15);
+  border: 1px solid rgba(244, 241, 255,0.15);
   padding: 4px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 1px;
   cursor: pointer;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   transition: all 0.15s ease;
 }
 
@@ -679,7 +679,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   padding: 8px 16px;
-  border-bottom: 1px solid rgba(10,10,10,0.05);
+  border-bottom: 1px solid rgba(244, 241, 255,0.05);
   flex-shrink: 0;
   flex-wrap: wrap;
   align-items: center;
@@ -690,7 +690,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
 }
 
@@ -705,7 +705,7 @@ onBeforeUnmount(() => {
 .bearish-dot { background: rgba(239,68,68,0.8); }
 
 .legend-sep {
-  color: rgba(10,10,10,0.15);
+  color: rgba(244, 241, 255,0.15);
   font-size: 10px;
 }
 
@@ -724,7 +724,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   padding: 6px 16px;
-  border-bottom: 1px solid rgba(10,10,10,0.05);
+  border-bottom: 1px solid rgba(244, 241, 255,0.05);
   flex-shrink: 0;
 }
 
@@ -733,7 +733,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 1px;
   cursor: pointer;
 }
@@ -752,7 +752,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 40px;
   font-size: 13px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
   text-align: center;
 }
@@ -761,7 +761,7 @@ onBeforeUnmount(() => {
 
 .net-hint {
   font-size: 11px;
-  color: rgba(10,10,10,0.25);
+  color: rgba(244, 241, 255,0.25);
 }
 
 .pulse-ring {
@@ -811,7 +811,7 @@ onBeforeUnmount(() => {
   gap: 4px;
   padding: 4px;
   background: rgba(250, 250, 250, 0.9);
-  border: 1px solid rgba(10, 10, 10, 0.12);
+  border: 1px solid rgba(244, 241, 255, 0.12);
   border-radius: 2px;
   font-family: var(--font-mono);
   user-select: none;
@@ -824,7 +824,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   background: var(--color-white);
-  border: 1px solid rgba(10, 10, 10, 0.15);
+  border: 1px solid rgba(244, 241, 255, 0.15);
   color: var(--color-black);
   font-family: var(--font-mono);
   font-size: 14px;
@@ -850,7 +850,7 @@ onBeforeUnmount(() => {
   text-align: right;
   padding: 0 6px;
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   letter-spacing: 0.5px;
 }
 
@@ -865,7 +865,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 6px;
   padding: 10px 16px;
-  border-top: 1px solid rgba(10,10,10,0.06);
+  border-top: 1px solid rgba(244, 241, 255,0.06);
   flex-shrink: 0;
   overflow-y: auto;
   max-height: 140px;
@@ -881,12 +881,12 @@ onBeforeUnmount(() => {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
 }
 
 .insight-text {
   font-size: 11px;
-  color: rgba(10,10,10,0.6);
+  color: rgba(244, 241, 255,0.6);
   line-height: 1.4;
   letter-spacing: 0.3px;
 }
@@ -895,12 +895,12 @@ onBeforeUnmount(() => {
   flex-direction: row;
   gap: 16px;
   padding-top: 4px;
-  border-top: 1px solid rgba(10,10,10,0.05);
+  border-top: 1px solid rgba(244, 241, 255,0.05);
 }
 
 .insight-stat {
   font-size: 10px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   letter-spacing: 1px;
 }
 </style>

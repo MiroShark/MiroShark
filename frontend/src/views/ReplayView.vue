@@ -470,7 +470,7 @@ onUnmounted(() => {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #FAFAFA;
+  background: #110a26;
   overflow: hidden;
   font-family: var(--font-display);
 }
@@ -478,12 +478,12 @@ onUnmounted(() => {
 /* Header */
 .app-header {
   height: 60px;
-  border-bottom: 2px solid rgba(10,10,10,0.08);
+  border-bottom: 2px solid rgba(244, 241, 255,0.08);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 22px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   z-index: 100;
 }
 
@@ -498,10 +498,10 @@ onUnmounted(() => {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 4px;
-  color: #FF6B1A;
-  background: rgba(255,107,26,0.1);
+  color: #a78bfa;
+  background: rgba(167, 139, 250,0.1);
   padding: 4px 16px;
-  border: 1px solid rgba(255,107,26,0.3);
+  border: 1px solid rgba(167, 139, 250,0.3);
 }
 
 .brand {
@@ -511,7 +511,7 @@ onUnmounted(() => {
   letter-spacing: 3px;
   text-transform: uppercase;
   cursor: pointer;
-  color: #FAFAFA;
+  color: #110a26;
 }
 
 .back-btn {
@@ -529,7 +529,7 @@ onUnmounted(() => {
 }
 
 .back-btn:hover {
-  color: #FAFAFA;
+  color: #110a26;
   border-color: rgba(250,250,250,0.4);
 }
 
@@ -541,7 +541,7 @@ onUnmounted(() => {
   justify-content: center;
   flex: 1;
   gap: 16px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   font-family: var(--font-mono);
   font-size: 12px;
   text-transform: uppercase;
@@ -551,7 +551,7 @@ onUnmounted(() => {
 .pulse-ring {
   width: 32px;
   height: 32px;
-  border: 2px solid #FF6B1A;
+  border: 2px solid #a78bfa;
   animation: ripple 2s infinite;
 }
 
@@ -562,12 +562,12 @@ onUnmounted(() => {
 
 /* Playback Bar */
 .playback-bar {
-  background: #0A0A0A;
+  background: #f4f1ff;
   padding: 12px 20px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-bottom: 2px solid rgba(10,10,10,0.08);
+  border-bottom: 2px solid rgba(244, 241, 255,0.08);
   z-index: 10;
 }
 
@@ -580,8 +580,8 @@ onUnmounted(() => {
 .control-btn.play {
   width: 36px;
   height: 36px;
-  background: #FF6B1A;
-  color: #FAFAFA;
+  background: #a78bfa;
+  color: #110a26;
   border: none;
   display: flex;
   align-items: center;
@@ -614,9 +614,9 @@ onUnmounted(() => {
 }
 
 .speed-btn.active {
-  background: rgba(255,107,26,0.15);
-  color: #FF6B1A;
-  border-color: rgba(255,107,26,0.4);
+  background: rgba(167, 139, 250,0.15);
+  color: #a78bfa;
+  border-color: rgba(167, 139, 250,0.4);
 }
 
 .speed-btn:hover:not(.active) {
@@ -644,7 +644,7 @@ onUnmounted(() => {
 .round-current {
   font-size: 20px;
   font-weight: 700;
-  color: #FF6B1A;
+  color: #a78bfa;
 }
 
 .round-separator {
@@ -678,7 +678,7 @@ onUnmounted(() => {
   -webkit-appearance: none;
   width: 14px;
   height: 14px;
-  background: #FF6B1A;
+  background: #a78bfa;
   border: none;
   cursor: pointer;
   margin-top: -4px;
@@ -687,7 +687,7 @@ onUnmounted(() => {
 .scrubber::-moz-range-thumb {
   width: 14px;
   height: 14px;
-  background: #FF6B1A;
+  background: #a78bfa;
   border: none;
   cursor: pointer;
 }
@@ -707,7 +707,7 @@ onUnmounted(() => {
   top: 0;
   left: 0;
   height: 100%;
-  background: #FF6B1A;
+  background: #a78bfa;
   pointer-events: none;
   z-index: 1;
   transition: width 0.1s linear;
@@ -758,7 +758,7 @@ onUnmounted(() => {
 .main-content-area {
   flex: 1;
   overflow-y: auto;
-  background: #FAFAFA;
+  background: #110a26;
 }
 
 /* Timeline (reused from Step3) */
@@ -776,7 +776,7 @@ onUnmounted(() => {
   top: 0;
   bottom: 0;
   width: 1px;
-  background: rgba(10,10,10,0.08);
+  background: rgba(244, 241, 255,0.08);
   transform: translateX(-50%);
 }
 
@@ -801,9 +801,9 @@ onUnmounted(() => {
   font-size: 9px;
   font-weight: 700;
   letter-spacing: 3px;
-  color: #FF6B1A;
-  background: rgba(255,107,26,0.08);
-  border: 1px solid rgba(255,107,26,0.2);
+  color: #a78bfa;
+  background: rgba(167, 139, 250,0.08);
+  border: 1px solid rgba(167, 139, 250,0.2);
   padding: 2px 10px;
   text-transform: uppercase;
 }
@@ -814,8 +814,8 @@ onUnmounted(() => {
   top: 24px;
   width: 10px;
   height: 10px;
-  background: #FAFAFA;
-  border: 1px solid rgba(10,10,10,0.2);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255,0.2);
   transform: translateX(-50%);
   z-index: 2;
   display: flex;
@@ -826,30 +826,30 @@ onUnmounted(() => {
 .marker-dot {
   width: 4px;
   height: 4px;
-  background: rgba(10,10,10,0.2);
+  background: rgba(244, 241, 255,0.2);
 }
 
-.timeline-item.twitter .marker-dot { background: #0A0A0A; }
-.timeline-item.reddit .marker-dot { background: #FF6B1A; }
-.timeline-item.polymarket .marker-dot { background: #FF6B1A; }
-.timeline-item.twitter .timeline-marker { border-color: #0A0A0A; }
-.timeline-item.reddit .timeline-marker { border-color: #FF6B1A; }
-.timeline-item.polymarket .timeline-marker { border-color: #FF6B1A; }
+.timeline-item.twitter .marker-dot { background: #f4f1ff; }
+.timeline-item.reddit .marker-dot { background: #a78bfa; }
+.timeline-item.polymarket .marker-dot { background: #a78bfa; }
+.timeline-item.twitter .timeline-marker { border-color: #f4f1ff; }
+.timeline-item.reddit .timeline-marker { border-color: #a78bfa; }
+.timeline-item.polymarket .timeline-marker { border-color: #a78bfa; }
 
 .timeline-card {
   width: calc(100% - 48px);
   margin-left: 32px;
-  background: #FAFAFA;
+  background: #110a26;
   padding: 16px 20px;
-  border: 2px solid rgba(10,10,10,0.08);
+  border: 2px solid rgba(244, 241, 255,0.08);
   position: relative;
   transition: all 0.2s;
 }
 
-.timeline-card:hover { border-color: #FF6B1A; }
-.timeline-item.twitter .timeline-card { border-left: 2px solid #0A0A0A; }
-.timeline-item.reddit .timeline-card { border-left: 2px solid #FF6B1A; }
-.timeline-item.polymarket .timeline-card { border-left: 2px solid #FF6B1A; }
+.timeline-card:hover { border-color: #a78bfa; }
+.timeline-item.twitter .timeline-card { border-left: 2px solid #f4f1ff; }
+.timeline-item.reddit .timeline-card { border-left: 2px solid #a78bfa; }
+.timeline-item.polymarket .timeline-card { border-left: 2px solid #a78bfa; }
 
 .card-header {
   display: flex;
@@ -857,7 +857,7 @@ onUnmounted(() => {
   align-items: flex-start;
   margin-bottom: 11px;
   padding-bottom: 11px;
-  border-bottom: 1px solid rgba(10,10,10,0.08);
+  border-bottom: 1px solid rgba(244, 241, 255,0.08);
 }
 
 .agent-info {
@@ -870,8 +870,8 @@ onUnmounted(() => {
   width: 24px;
   height: 24px;
   min-width: 24px;
-  background: #0A0A0A;
-  color: #FAFAFA;
+  background: #f4f1ff;
+  color: #110a26;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -885,7 +885,7 @@ onUnmounted(() => {
   font-family: var(--font-mono);
   font-size: 13px;
   font-weight: 600;
-  color: #0A0A0A;
+  color: #f4f1ff;
 }
 
 .header-meta {
@@ -902,7 +902,7 @@ onUnmounted(() => {
   height: 22px;
 }
 
-.platform-indicator.twitter { background: #0A0A0A; color: #FAFAFA; }
+.platform-indicator.twitter { background: #f4f1ff; color: #110a26; }
 .platform-logo { width: 20px; height: 20px; object-fit: contain; }
 
 .action-badge {
@@ -915,49 +915,49 @@ onUnmounted(() => {
   border: 1px solid transparent;
 }
 
-.badge-post { background: rgba(10,10,10,0.06); color: rgba(10,10,10,0.7); border-color: rgba(10,10,10,0.12); }
-.badge-comment { background: rgba(10,10,10,0.06); color: rgba(10,10,10,0.5); border-color: rgba(10,10,10,0.12); }
-.badge-action { background: #FAFAFA; color: rgba(10,10,10,0.5); border: 1px solid rgba(10,10,10,0.12); }
-.badge-meta { background: #FAFAFA; color: rgba(10,10,10,0.4); border: 1px dashed rgba(10,10,10,0.2); }
+.badge-post { background: rgba(244, 241, 255,0.06); color: rgba(244, 241, 255,0.7); border-color: rgba(244, 241, 255,0.12); }
+.badge-comment { background: rgba(244, 241, 255,0.06); color: rgba(244, 241, 255,0.5); border-color: rgba(244, 241, 255,0.12); }
+.badge-action { background: #110a26; color: rgba(244, 241, 255,0.5); border: 1px solid rgba(244, 241, 255,0.12); }
+.badge-meta { background: #110a26; color: rgba(244, 241, 255,0.4); border: 1px dashed rgba(244, 241, 255,0.2); }
 .badge-idle { opacity: 0.5; }
-.badge-trade-buy { background: rgba(67,193,101,0.1); color: #43C165; border-color: rgba(67,193,101,0.2); }
-.badge-trade-sell { background: rgba(255,68,68,0.1); color: #FF4444; border-color: rgba(255,68,68,0.2); }
+.badge-trade-buy { background: rgba(196, 181, 253,0.1); color: #c4b5fd; border-color: rgba(196, 181, 253,0.2); }
+.badge-trade-sell { background: rgba(240, 171, 252,0.1); color: #f0abfc; border-color: rgba(240, 171, 252,0.2); }
 
 .content-text {
   font-size: 13px;
   line-height: 1.6;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   margin-bottom: 11px;
 }
 
-.content-text.main-text { font-size: 14px; color: #0A0A0A; }
+.content-text.main-text { font-size: 14px; color: #f4f1ff; }
 
 .quoted-block, .repost-content {
-  background: var(--color-gray, #F5F5F5);
-  border: 2px solid rgba(10,10,10,0.08);
+  background: var(--color-gray, #1a0f3a);
+  border: 2px solid rgba(244, 241, 255,0.08);
   padding: 11px 12px;
   margin-top: 8px;
   font-size: 12px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
-.quote-label { font-size: 11px; color: rgba(10,10,10,0.4); margin-bottom: 4px; }
+.quote-label { font-size: 11px; color: rgba(244, 241, 255,0.4); margin-bottom: 4px; }
 
 .repost-info, .like-info, .search-info, .follow-info, .idle-info, .comment-context {
   font-size: 11px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   margin-bottom: 6px;
 }
 
 .liked-content {
   font-size: 12px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-style: italic;
 }
 
 .search-query {
   font-family: var(--font-mono);
-  background: rgba(10,10,10,0.06);
+  background: rgba(244, 241, 255,0.06);
   padding: 0 4px;
 }
 
@@ -967,7 +967,7 @@ onUnmounted(() => {
   gap: 8px;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
 }
 
 .trade-direction {
@@ -977,12 +977,12 @@ onUnmounted(() => {
   padding: 1px 6px;
   letter-spacing: 3px;
 }
-.trade-direction.buy { background: rgba(67,193,101,0.1); color: #43C165; }
-.trade-direction.sell { background: rgba(255,68,68,0.1); color: #FF4444; }
+.trade-direction.buy { background: rgba(196, 181, 253,0.1); color: #c4b5fd; }
+.trade-direction.sell { background: rgba(240, 171, 252,0.1); color: #f0abfc; }
 
 .market-question {
   font-size: 12px;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   font-style: italic;
 }
 
@@ -991,7 +991,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   font-size: 10px;
-  color: rgba(10,10,10,0.2);
+  color: rgba(244, 241, 255,0.2);
   font-family: var(--font-mono);
 }
 
@@ -1020,9 +1020,9 @@ onUnmounted(() => {
   text-transform: uppercase;
   letter-spacing: 3px;
   padding: 5px 12px;
-  border: 2px solid rgba(10,10,10,0.12);
-  background: #FAFAFA;
-  color: rgba(10,10,10,0.7);
+  border: 2px solid rgba(244, 241, 255,0.12);
+  background: #110a26;
+  color: rgba(244, 241, 255,0.7);
   cursor: pointer;
 }
 </style>

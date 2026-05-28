@@ -62,11 +62,11 @@
           <line
             :x1="ML" :y1="yS(pct)"
             :x2="W - MR" :y2="yS(pct)"
-            stroke="rgba(10,10,10,0.06)" stroke-width="1"
+            stroke="rgba(244, 241, 255,0.06)" stroke-width="1"
           />
           <text
             :x="ML - 5" :y="yS(pct) + 4"
-            fill="rgba(10,10,10,0.35)" font-size="9"
+            fill="rgba(244, 241, 255,0.35)" font-size="9"
             font-family="monospace" text-anchor="end"
           >{{ pct }}%</text>
         </g>
@@ -100,13 +100,13 @@
           v-if="driftData.consensus_round != null"
           :x1="xS(driftData.consensus_round)" :y1="MT"
           :x2="xS(driftData.consensus_round)" :y2="H - MB"
-          stroke="rgba(10,10,10,0.5)" stroke-width="1.5"
+          stroke="rgba(244, 241, 255,0.5)" stroke-width="1.5"
           stroke-dasharray="4,3"
         />
         <text
           v-if="driftData.consensus_round != null"
           :x="xS(driftData.consensus_round) + 4" :y="MT + 12"
-          fill="rgba(10,10,10,0.5)" font-size="9" font-family="monospace"
+          fill="rgba(244, 241, 255,0.5)" font-size="9" font-family="monospace"
         >{{ $tr('consensus r', '共识 r') }}{{ driftData.consensus_round }}</text>
 
         <!-- Director event injection markers -->
@@ -129,14 +129,14 @@
           v-for="r in xTicks"
           :key="'xt' + r"
           :x="xS(r)" :y="H - MB + 13"
-          fill="rgba(10,10,10,0.35)" font-size="9"
+          fill="rgba(244, 241, 255,0.35)" font-size="9"
           font-family="monospace" text-anchor="middle"
         >{{ r }}</text>
 
         <!-- X axis title -->
         <text
           :x="ML + (W - ML - MR) / 2" :y="H - 2"
-          fill="rgba(10,10,10,0.3)" font-size="9"
+          fill="rgba(244, 241, 255,0.3)" font-size="9"
           font-family="monospace" text-anchor="middle"
         >{{ $tr('Round', '轮次') }}</text>
       </svg>
@@ -360,7 +360,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(10,10,10,0.08);
+  border-bottom: 1px solid rgba(244, 241, 255,0.08);
   flex-shrink: 0;
 }
 
@@ -379,7 +379,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 .bd-header-actions {
@@ -390,13 +390,13 @@ onBeforeUnmount(() => {
 
 .bd-export-btn {
   background: none;
-  border: 1px solid rgba(10,10,10,0.15);
+  border: 1px solid rgba(244, 241, 255,0.15);
   padding: 4px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 1px;
   cursor: pointer;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   transition: all 0.15s ease;
 }
 
@@ -415,7 +415,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 16px;
   padding: 8px 16px;
-  border-bottom: 1px solid rgba(10,10,10,0.05);
+  border-bottom: 1px solid rgba(244, 241, 255,0.05);
   flex-shrink: 0;
 }
 
@@ -424,7 +424,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 4px;
   font-size: 10px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
 }
 
@@ -447,7 +447,7 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding: 40px;
   font-size: 13px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   letter-spacing: 1px;
   text-align: center;
 }
@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
 
 .bd-hint {
   font-size: 11px;
-  color: rgba(10,10,10,0.25);
+  color: rgba(244, 241, 255,0.25);
 }
 
 .pulse-ring {
@@ -493,10 +493,10 @@ onBeforeUnmount(() => {
 .bd-summary {
   padding: 10px 16px 4px;
   font-size: 12px;
-  color: rgba(10,10,10,0.55);
+  color: rgba(244, 241, 255,0.55);
   letter-spacing: 0.5px;
   line-height: 1.5;
-  border-top: 1px solid rgba(10,10,10,0.05);
+  border-top: 1px solid rgba(244, 241, 255,0.05);
   flex-shrink: 0;
 }
 
@@ -504,7 +504,7 @@ onBeforeUnmount(() => {
 .bd-topics {
   padding: 4px 16px 10px;
   font-size: 10px;
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
   letter-spacing: 1px;
   flex-shrink: 0;
 }

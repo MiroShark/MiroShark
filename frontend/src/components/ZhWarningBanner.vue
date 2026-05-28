@@ -68,7 +68,7 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   align-items: center;
   justify-content: center;
   padding: var(--space-md, 22px);
-  background: rgba(10, 10, 10, 0.55);
+  background: rgba(244, 241, 255, 0.55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
@@ -77,9 +77,9 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   position: relative;
   width: 100%;
   max-width: 520px;
-  background: var(--color-white, #FAFAFA);
-  border: 3px solid var(--color-orange, #FF6B1A);
-  box-shadow: 0 18px 48px rgba(10, 10, 10, 0.35);
+  background: var(--color-white, #110a26);
+  border: 3px solid var(--color-orange, #a78bfa);
+  box-shadow: 0 18px 48px rgba(244, 241, 255, 0.35);
   overflow: hidden;
   animation: zh-warning-pop 0.25s ease-out;
 }
@@ -93,10 +93,10 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   height: 7px;
   background: repeating-linear-gradient(
     -45deg,
-    var(--color-orange, #FF6B1A),
-    var(--color-orange, #FF6B1A) 11px,
-    var(--color-amber, #FFB347) 11px,
-    var(--color-amber, #FFB347) 22px
+    var(--color-orange, #a78bfa),
+    var(--color-orange, #a78bfa) 11px,
+    var(--color-amber, #fcd34d) 11px,
+    var(--color-amber, #fcd34d) 22px
   );
 }
 
@@ -105,7 +105,7 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   align-items: center;
   gap: 12px;
   padding: 18px 22px 12px 22px;
-  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+  border-bottom: 1px solid rgba(244, 241, 255, 0.08);
 }
 
 .zh-warning-icon {
@@ -115,9 +115,9 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   width: 32px;
   height: 32px;
   font-size: 18px;
-  color: var(--color-orange, #FF6B1A);
-  background: rgba(255, 107, 26, 0.12);
-  border: 2px solid var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
+  background: rgba(167, 139, 250, 0.12);
+  border: 2px solid var(--color-orange, #a78bfa);
   border-radius: 0;
   flex-shrink: 0;
 }
@@ -128,15 +128,15 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   font-family: var(--font-display, 'Young Serif', Georgia, serif);
   font-size: 18px;
   font-weight: 600;
-  color: var(--color-black, #0A0A0A);
+  color: var(--color-black, #f4f1ff);
   letter-spacing: 0.3px;
 }
 
 .zh-warning-close {
   appearance: none;
   background: transparent;
-  border: 1px solid rgba(10, 10, 10, 0.15);
-  color: rgba(10, 10, 10, 0.55);
+  border: 1px solid rgba(244, 241, 255, 0.15);
+  color: rgba(244, 241, 255, 0.55);
   width: 28px;
   height: 28px;
   font-size: 13px;
@@ -147,8 +147,8 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
 }
 
 .zh-warning-close:hover {
-  color: var(--color-orange, #FF6B1A);
-  border-color: var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
+  border-color: var(--color-orange, #a78bfa);
 }
 
 .zh-warning-body {
@@ -156,7 +156,7 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   font-family: var(--font-display, 'Young Serif', Georgia, serif);
   font-size: 14.5px;
   line-height: 1.65;
-  color: rgba(10, 10, 10, 0.82);
+  color: rgba(244, 241, 255, 0.82);
 }
 
 .zh-warning-body p {
@@ -168,7 +168,7 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
 }
 
 .zh-warning-body strong {
-  color: var(--color-orange, #FF6B1A);
+  color: var(--color-orange, #a78bfa);
   font-weight: 600;
 }
 
@@ -177,7 +177,7 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   justify-content: flex-end;
   gap: 10px;
   padding: 14px 22px 20px 22px;
-  border-top: 1px solid rgba(10, 10, 10, 0.06);
+  border-top: 1px solid rgba(244, 241, 255, 0.06);
 }
 
 .zh-warning-confirm {
@@ -187,21 +187,21 @@ const { showZhWarning, dismissZhWarning, tr } = useI18n()
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: var(--color-white, #FAFAFA);
-  background: var(--color-orange, #FF6B1A);
-  border: 2px solid var(--color-orange, #FF6B1A);
+  color: var(--color-white, #110a26);
+  background: var(--color-orange, #a78bfa);
+  border: 2px solid var(--color-orange, #a78bfa);
   border-radius: 0;
   cursor: pointer;
   transition: var(--transition-fast, all 0.1s ease);
 }
 
 .zh-warning-confirm:hover {
-  background: var(--color-black, #0A0A0A);
-  border-color: var(--color-black, #0A0A0A);
+  background: var(--color-black, #f4f1ff);
+  border-color: var(--color-black, #f4f1ff);
 }
 
 .zh-warning-confirm:focus-visible {
-  outline: 2px solid var(--color-green, #43C165);
+  outline: 2px solid var(--color-green, #c4b5fd);
   outline-offset: 2px;
 }
 

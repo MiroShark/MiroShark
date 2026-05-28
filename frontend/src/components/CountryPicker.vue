@@ -223,7 +223,7 @@ watch(() => props.modelValue?.country, (next) => {
 .cp-chip.active {
   background: var(--color-accent, #76f);
   border-color: var(--color-accent, #76f);
-  color: #fff;
+  color: #f4f1ff;
 }
 .cp-chip:disabled { opacity: 0.5; cursor: not-allowed; }
 .cp-hint, .cp-foot-hint {

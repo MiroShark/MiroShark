@@ -158,8 +158,8 @@ onMounted(() => {
 .tt-wrap {
   margin-top: var(--space-md);
   padding: var(--space-sm) var(--space-md);
-  background: rgba(67, 193, 101, 0.04);
-  border: 2px dashed rgba(67, 193, 101, 0.3);
+  background: rgba(196, 181, 253, 0.04);
+  border: 2px dashed rgba(196, 181, 253, 0.3);
   border-radius: 4px;
   font-family: var(--font-mono);
   position: relative;
@@ -188,7 +188,7 @@ onMounted(() => {
 }
 
 .tt-sub {
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   font-size: 10px;
   letter-spacing: 1px;
   font-weight: normal;
@@ -197,8 +197,8 @@ onMounted(() => {
 
 .tt-refresh {
   background: none;
-  border: 1px solid rgba(10, 10, 10, 0.15);
-  color: rgba(10, 10, 10, 0.45);
+  border: 1px solid rgba(244, 241, 255, 0.15);
+  color: rgba(244, 241, 255, 0.45);
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
@@ -214,7 +214,7 @@ onMounted(() => {
 
 .tt-loading {
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   letter-spacing: 0.5px;
   display: flex;
   align-items: center;
@@ -225,7 +225,7 @@ onMounted(() => {
 .tt-spinner {
   width: 10px;
   height: 10px;
-  border: 2px solid rgba(67, 193, 101, 0.25);
+  border: 2px solid rgba(196, 181, 253, 0.25);
   border-top-color: var(--color-green);
   border-radius: 50%;
   display: inline-block;
@@ -244,7 +244,7 @@ onMounted(() => {
 
 .tt-card {
   background: var(--color-white);
-  border: 2px solid rgba(10, 10, 10, 0.08);
+  border: 2px solid rgba(244, 241, 255, 0.08);
   border-left: 4px solid var(--color-green);
   border-radius: 4px;
   padding: 10px 12px;
@@ -277,7 +277,7 @@ onMounted(() => {
   font-size: 9px;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
 }
 
 .tt-source {
@@ -290,7 +290,7 @@ onMounted(() => {
 
 .tt-time {
   font-size: 9px;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
   letter-spacing: 0.5px;
   text-transform: none;
   flex-shrink: 0;

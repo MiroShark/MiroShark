@@ -995,7 +995,7 @@ const copyScenarioShareLink = async () => {
   font-family: var(--font-display);
   font-size: 22px;
   line-height: 1.5;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   max-width: 640px;
   margin-bottom: var(--space-xl);
 }
@@ -1014,7 +1014,7 @@ const copyScenarioShareLink = async () => {
 }
 
 .highlight-code {
-  background: rgba(10,10,10,0.05);
+  background: rgba(244, 241, 255,0.05);
   padding: 2px var(--space-xs);
   font-family: var(--font-mono);
   font-size: 0.85em;
@@ -1102,7 +1102,7 @@ const copyScenarioShareLink = async () => {
 .panel-header {
   font-family: var(--font-mono);
   font-size: 14px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   display: flex;
   align-items: center;
   gap: var(--space-xs);
@@ -1124,7 +1124,7 @@ const copyScenarioShareLink = async () => {
 }
 
 .section-desc {
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   font-family: var(--font-display);
   font-size: 22px;
   margin-bottom: var(--space-md);
@@ -1156,7 +1156,7 @@ const copyScenarioShareLink = async () => {
 .metric-label {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 1px;
 }
 
@@ -1190,7 +1190,7 @@ const copyScenarioShareLink = async () => {
 .steps-header {
   font-family: var(--font-mono);
   font-size: 14px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   margin-bottom: var(--space-md);
   display: flex;
   align-items: center;
@@ -1235,7 +1235,7 @@ const copyScenarioShareLink = async () => {
 .step-desc {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   line-height: 1.6;
 }
 
@@ -1277,7 +1277,7 @@ const copyScenarioShareLink = async () => {
   margin-bottom: var(--space-sm);
   font-family: var(--font-mono);
   font-size: 13px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 1px;
 }
 
@@ -1286,7 +1286,7 @@ const copyScenarioShareLink = async () => {
 
 /* ── Upload Zone ── */
 .upload-zone {
-  border: 2px dashed rgba(10,10,10,0.12);
+  border: 2px dashed rgba(244, 241, 255,0.12);
   height: 200px;
   overflow-y: auto;
   display: flex;
@@ -1306,7 +1306,7 @@ const copyScenarioShareLink = async () => {
 
 .upload-zone.drag-over {
   border-color: var(--color-green);
-  background: rgba(67,193,101,0.05);
+  background: rgba(196, 181, 253,0.05);
 }
 
 .upload-placeholder { text-align: center; }
@@ -1332,7 +1332,7 @@ const copyScenarioShareLink = async () => {
 .upload-hint {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
 }
 
 /* ── File List ── */
@@ -1361,7 +1361,7 @@ const copyScenarioShareLink = async () => {
   border: none;
   cursor: pointer;
   font-size: 1.2rem;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   transition: var(--transition-fast);
 }
 
@@ -1379,14 +1379,14 @@ const copyScenarioShareLink = async () => {
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(10,10,10,0.08);
+  background: rgba(244, 241, 255,0.08);
 }
 
 .console-divider span {
   padding: 0 var(--space-sm);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10,10,10,0.25);
+  color: rgba(244, 241, 255,0.25);
   letter-spacing: 3px;
   text-transform: uppercase;
 }
@@ -1418,7 +1418,7 @@ const copyScenarioShareLink = async () => {
 }
 
 .code-input::placeholder {
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
 }
 
 .model-badge {
@@ -1427,7 +1427,7 @@ const copyScenarioShareLink = async () => {
   right: var(--space-sm);
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10,10,10,0.25);
+  color: rgba(244, 241, 255,0.25);
   letter-spacing: 1px;
 }
 
@@ -1467,9 +1467,9 @@ const copyScenarioShareLink = async () => {
 
 .start-engine-btn:disabled {
   background: var(--color-gray);
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   cursor: not-allowed;
-  border-color: rgba(10,10,10,0.08);
+  border-color: rgba(244, 241, 255,0.08);
 }
 
 @keyframes btn-pulse {
@@ -1506,7 +1506,7 @@ const copyScenarioShareLink = async () => {
 }
 
 .url-input::placeholder {
-  color: rgba(10,10,10,0.3);
+  color: rgba(244, 241, 255,0.3);
 }
 
 .url-input:disabled {
@@ -1565,7 +1565,7 @@ const copyScenarioShareLink = async () => {
 }
 .url-doc-item:hover,
 .url-doc-item:focus-visible {
-  background: rgba(67, 193, 101, 0.06);
+  background: rgba(196, 181, 253, 0.06);
   border-left-color: var(--color-orange);
   outline: none;
 }
@@ -1593,7 +1593,7 @@ const copyScenarioShareLink = async () => {
 .url-doc-meta {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1605,12 +1605,12 @@ const copyScenarioShareLink = async () => {
   padding: var(--space-lg) 0;
   font-family: var(--font-mono);
   font-size: 13px;
-  color: rgba(10,10,10,0.25);
+  color: rgba(244, 241, 255,0.25);
   letter-spacing: 1px;
 }
 
 .attribution-footer a {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   text-decoration: none;
 }
 
@@ -1622,7 +1622,7 @@ const copyScenarioShareLink = async () => {
 .doc-preview-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 10, 0.65);
+  background: rgba(244, 241, 255, 0.65);
   z-index: 1050;
   display: flex;
   align-items: center;
@@ -1635,13 +1635,13 @@ const copyScenarioShareLink = async () => {
   to   { opacity: 1; }
 }
 .doc-preview-modal {
-  background: #FAFAFA;
+  background: #110a26;
   width: 760px;
   max-width: 100%;
   max-height: 100%;
   display: flex;
   flex-direction: column;
-  border: 2px solid rgba(10,10,10,0.12);
+  border: 2px solid rgba(244, 241, 255,0.12);
   font-family: 'Space Mono', 'Courier New', monospace;
 }
 .doc-preview-header {
@@ -1650,8 +1650,8 @@ const copyScenarioShareLink = async () => {
   justify-content: space-between;
   gap: 12px;
   padding: 16px 20px;
-  background: #0A0A0A;
-  color: #FAFAFA;
+  background: #f4f1ff;
+  color: #110a26;
 }
 .doc-preview-title {
   display: flex;
@@ -1665,7 +1665,7 @@ const copyScenarioShareLink = async () => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.doc-preview-icon { color: #43C165; flex-shrink: 0; }
+.doc-preview-icon { color: #c4b5fd; flex-shrink: 0; }
 .doc-preview-close {
   background: none;
   border: none;
@@ -1675,27 +1675,27 @@ const copyScenarioShareLink = async () => {
   padding: 4px 8px;
   flex-shrink: 0;
 }
-.doc-preview-close:hover { color: #FAFAFA; }
+.doc-preview-close:hover { color: #110a26; }
 .doc-preview-warning {
   height: 6px;
   background: repeating-linear-gradient(
     -45deg,
-    #FF6B1A,
-    #FF6B1A 10px,
-    #FAFAFA 10px,
-    #FAFAFA 20px
+    #a78bfa,
+    #a78bfa 10px,
+    #110a26 10px,
+    #110a26 20px
   );
 }
 .doc-preview-meta {
   padding: 12px 20px;
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: rgba(10,10,10,0.45);
-  border-bottom: 2px solid rgba(10,10,10,0.08);
+  color: rgba(244, 241, 255,0.45);
+  border-bottom: 2px solid rgba(244, 241, 255,0.08);
   overflow-wrap: anywhere;
 }
 .doc-preview-meta-sep { margin: 0 6px; }
-.doc-preview-url { color: #FF6B1A; }
+.doc-preview-url { color: #a78bfa; }
 .doc-preview-body {
   margin: 0;
   padding: 18px 20px;
@@ -1704,10 +1704,10 @@ const copyScenarioShareLink = async () => {
   font-family: 'Space Mono', 'Courier New', monospace;
   font-size: 12.5px;
   line-height: 1.6;
-  color: #0A0A0A;
+  color: #f4f1ff;
   white-space: pre-wrap;
   word-break: break-word;
-  background: #FAFAFA;
+  background: #110a26;
 }
 
 /* ── Pre-fill banner (?scenario / ?url / ?ask) ── */
@@ -1717,7 +1717,7 @@ const copyScenarioShareLink = async () => {
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   margin-bottom: var(--space-sm);
-  background: rgba(255, 107, 26, 0.08);
+  background: rgba(167, 139, 250, 0.08);
   border-left: 3px solid var(--color-orange);
   font-family: var(--font-mono);
   font-size: 12.5px;
@@ -1738,7 +1738,7 @@ const copyScenarioShareLink = async () => {
 .prefill-banner-close {
   background: none;
   border: none;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -1806,7 +1806,7 @@ const copyScenarioShareLink = async () => {
   gap: var(--space-xs);
   background: transparent;
   color: var(--foreground);
-  border: 1px solid rgba(10, 10, 10, 0.18);
+  border: 1px solid rgba(244, 241, 255, 0.18);
   padding: 6px var(--space-sm);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -1833,7 +1833,7 @@ const copyScenarioShareLink = async () => {
 .share-scenario-hint {
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
   line-height: 1.4;
 }
 

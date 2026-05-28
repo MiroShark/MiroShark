@@ -286,15 +286,15 @@ onMounted(() => {
 <style scoped>
 .embed-widget {
   --bg: #ffffff;
-  --fg: #0a0a0a;
+  --fg: #f4f1ff;
   --muted: #6b6b6b;
-  --border: rgba(10, 10, 10, 0.08);
-  --pill-bg: rgba(10, 10, 10, 0.05);
-  --pill-fg: #0a0a0a;
+  --border: rgba(244, 241, 255, 0.08);
+  --pill-bg: rgba(244, 241, 255, 0.05);
+  --pill-fg: #f4f1ff;
   --bullish: #0ea5a0;
   --neutral: #9aa0a6;
   --bearish: #f07867;
-  --consensus-line: rgba(10, 10, 10, 0.45);
+  --consensus-line: rgba(244, 241, 255, 0.45);
   --link-color: #ea580c;
 
   box-sizing: border-box;

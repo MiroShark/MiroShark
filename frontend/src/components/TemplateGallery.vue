@@ -351,12 +351,12 @@ const launchTemplate = async (template) => {
 }
 
 .platform-badge--cf {
-  border-color: rgba(255, 107, 26, 0.3);
-  color: #FF6B1A;
+  border-color: rgba(167, 139, 250, 0.3);
+  color: #a78bfa;
 }
 
 .platform-badge--oracle {
-  border-color: rgba(67, 193, 101, 0.3);
+  border-color: rgba(196, 181, 253, 0.3);
   color: #2d8a3f;
 }
 
@@ -396,7 +396,7 @@ const launchTemplate = async (template) => {
   flex: 1;
   padding: 10px;
   background: #000;
-  color: #fff;
+  color: #f4f1ff;
   border: none;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.8rem;
@@ -436,8 +436,8 @@ const launchTemplate = async (template) => {
 }
 
 .copy-link-btn.copied {
-  border-color: #43C165;
-  color: #43C165;
+  border-color: #c4b5fd;
+  color: #c4b5fd;
 }
 
 @media (max-width: 1024px) {

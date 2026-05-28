@@ -4342,7 +4342,7 @@ watch(isPublic, () => {
 .embed-dialog-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 10, 0.55);
+  background: rgba(244, 241, 255, 0.55);
   backdrop-filter: blur(4px);
   z-index: 1100;
   display: flex;
@@ -4353,13 +4353,13 @@ watch(isPublic, () => {
 }
 
 .embed-dialog {
-  background: #ffffff;
-  color: #0a0a0a;
+  background: #110a26;
+  color: #f4f1ff;
   width: min(720px, 100%);
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   border-radius: 14px;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  border: 1px solid rgba(244, 241, 255, 0.08);
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.25);
   padding: 22px 24px 20px;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -4400,7 +4400,7 @@ watch(isPublic, () => {
   color: #6b6b6b;
   letter-spacing: 0.04em;
   padding: 2px 8px;
-  background: rgba(10, 10, 10, 0.04);
+  background: rgba(244, 241, 255, 0.04);
   border-radius: 999px;
 }
 
@@ -4417,8 +4417,8 @@ watch(isPublic, () => {
 }
 
 .embed-dialog-close:hover {
-  background: rgba(10, 10, 10, 0.05);
-  color: #0a0a0a;
+  background: rgba(244, 241, 255, 0.05);
+  color: #f4f1ff;
 }
 
 .embed-dialog-desc {
@@ -4456,9 +4456,9 @@ watch(isPublic, () => {
   align-items: flex-start;
   gap: 2px;
   padding: 6px 12px;
-  border: 1px solid rgba(10, 10, 10, 0.12);
-  background: #ffffff;
-  color: #0a0a0a;
+  border: 1px solid rgba(244, 241, 255, 0.12);
+  background: #110a26;
+  color: #f4f1ff;
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
@@ -4467,13 +4467,13 @@ watch(isPublic, () => {
 }
 
 .embed-size-btn:hover {
-  border-color: rgba(10, 10, 10, 0.3);
+  border-color: rgba(244, 241, 255, 0.3);
 }
 
 .embed-size-btn.active {
-  background: #0a0a0a;
-  color: #ffffff;
-  border-color: #0a0a0a;
+  background: #f4f1ff;
+  color: #f4f1ff;
+  border-color: #f4f1ff;
 }
 
 .embed-size-dim {
@@ -4494,9 +4494,9 @@ watch(isPublic, () => {
 }
 
 .embed-theme-select {
-  background: #ffffff;
-  color: #0a0a0a;
-  border: 1px solid rgba(10, 10, 10, 0.12);
+  background: #110a26;
+  color: #f4f1ff;
+  border: 1px solid rgba(244, 241, 255, 0.12);
   border-radius: 6px;
   padding: 4px 8px;
   font-size: 12px;
@@ -4506,12 +4506,12 @@ watch(isPublic, () => {
 .embed-preview-wrap {
   background: repeating-linear-gradient(
     45deg,
-    rgba(10, 10, 10, 0.03),
-    rgba(10, 10, 10, 0.03) 10px,
-    rgba(10, 10, 10, 0.06) 10px,
-    rgba(10, 10, 10, 0.06) 20px
+    rgba(244, 241, 255, 0.03),
+    rgba(244, 241, 255, 0.03) 10px,
+    rgba(244, 241, 255, 0.06) 10px,
+    rgba(244, 241, 255, 0.06) 20px
   );
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 10px;
   padding: 14px;
   display: flex;
@@ -4521,7 +4521,7 @@ watch(isPublic, () => {
 
 .embed-preview-frame {
   width: 100%;
-  background: #ffffff;
+  background: #110a26;
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
@@ -4535,10 +4535,10 @@ watch(isPublic, () => {
 }
 
 .snippet-block {
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(10, 10, 10, 0.02);
+  background: rgba(244, 241, 255, 0.02);
 }
 
 .snippet-head {
@@ -4546,7 +4546,7 @@ watch(isPublic, () => {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: rgba(10, 10, 10, 0.04);
+  background: rgba(244, 241, 255, 0.04);
   font-size: 11px;
   font-weight: 600;
   color: #6b6b6b;
@@ -4555,8 +4555,8 @@ watch(isPublic, () => {
 }
 
 .snippet-copy-btn {
-  background: #0a0a0a;
-  color: #ffffff;
+  background: #f4f1ff;
+  color: #f4f1ff;
   border: none;
   padding: 4px 12px;
   border-radius: 6px;
@@ -4604,7 +4604,7 @@ watch(isPublic, () => {
 .embed-dialog-hint code {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   padding: 1px 6px;
-  background: rgba(10, 10, 10, 0.06);
+  background: rgba(244, 241, 255, 0.06);
   border-radius: 4px;
   font-size: 11px;
 }
@@ -4626,7 +4626,7 @@ watch(isPublic, () => {
 .share-card-divider .divider-line {
   flex: 1;
   height: 1px;
-  background: rgba(10, 10, 10, 0.08);
+  background: rgba(244, 241, 255, 0.08);
 }
 
 .share-card-divider .divider-text {
@@ -4646,12 +4646,12 @@ watch(isPublic, () => {
 .share-card-preview-wrap {
   background: repeating-linear-gradient(
     45deg,
-    rgba(10, 10, 10, 0.03),
-    rgba(10, 10, 10, 0.03) 10px,
-    rgba(10, 10, 10, 0.06) 10px,
-    rgba(10, 10, 10, 0.06) 20px
+    rgba(244, 241, 255, 0.03),
+    rgba(244, 241, 255, 0.03) 10px,
+    rgba(244, 241, 255, 0.06) 10px,
+    rgba(244, 241, 255, 0.06) 20px
   );
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 10px;
   padding: 14px;
   display: flex;
@@ -4665,7 +4665,7 @@ watch(isPublic, () => {
   max-width: 560px;
   aspect-ratio: 1200 / 630;
   border-radius: 8px;
-  background: #fafafa;
+  background: #110a26;
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
   object-fit: contain;
   display: block;
@@ -4695,8 +4695,8 @@ watch(isPublic, () => {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #0a0a0a;
-  color: #ffffff;
+  background: #f4f1ff;
+  color: #f4f1ff;
   text-decoration: none;
   border-radius: 8px;
   font-size: 12px;
@@ -4713,8 +4713,8 @@ watch(isPublic, () => {
 .replay-section {
   margin-top: 18px;
   padding: 14px 16px;
-  background: #0a0a0a;
-  color: #fafafa;
+  background: #f4f1ff;
+  color: #110a26;
   border-radius: 10px;
   border: 1px solid rgba(250, 250, 250, 0.08);
   display: flex;
@@ -4752,7 +4752,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #fafafa;
+  color: #110a26;
   margin-bottom: 4px;
 }
 
@@ -4798,12 +4798,12 @@ watch(isPublic, () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  color: #fafafa;
+  color: #110a26;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  background: linear-gradient(180deg, rgba(10, 10, 10, 0.15), rgba(10, 10, 10, 0.4));
+  background: linear-gradient(180deg, rgba(244, 241, 255, 0.15), rgba(244, 241, 255, 0.4));
   pointer-events: none;
 }
 
@@ -4815,7 +4815,7 @@ watch(isPublic, () => {
   height: 56px;
   border-radius: 50%;
   background: rgba(234, 88, 12, 0.92);
-  color: #fff;
+  color: #f4f1ff;
   font-size: 22px;
   box-shadow: 0 6px 18px rgba(234, 88, 12, 0.4);
 }
@@ -4857,8 +4857,8 @@ watch(isPublic, () => {
 .transcript-section {
   margin-top: 18px;
   padding: 14px 16px;
-  background: #fafafa;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -4887,7 +4887,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: #f4f1ff;
   margin-bottom: 4px;
 }
 
@@ -4909,8 +4909,8 @@ watch(isPublic, () => {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #0a0a0a;
-  color: #ffffff;
+  background: #f4f1ff;
+  color: #f4f1ff;
   text-decoration: none;
   border-radius: 8px;
   font-size: 12px;
@@ -4923,13 +4923,13 @@ watch(isPublic, () => {
 .transcript-download-btn:hover { background: #2a2a2a; }
 
 .transcript-download-btn-secondary {
-  background: #fff;
-  color: #0a0a0a;
-  border: 1px solid rgba(10, 10, 10, 0.18);
+  background: #110a26;
+  color: #f4f1ff;
+  border: 1px solid rgba(244, 241, 255, 0.18);
 }
 
 .transcript-download-btn-secondary:hover {
-  background: rgba(10, 10, 10, 0.04);
+  background: rgba(244, 241, 255, 0.04);
 }
 
 .transcript-empty {
@@ -4950,8 +4950,8 @@ watch(isPublic, () => {
   margin: 8px 0 0;
   font-size: 12px;
   color: #555;
-  background: #f5f5f5;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background: #1a0f3a;
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 6px;
   padding: 8px 10px;
   overflow-x: auto;
@@ -4970,8 +4970,8 @@ watch(isPublic, () => {
    view, so opening the dialog stays snappy on slow networks. */
 .chart-svg-preview {
   margin-top: 10px;
-  background: #fafafa;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 6px;
   padding: 8px;
   overflow: hidden;
@@ -4997,8 +4997,8 @@ watch(isPublic, () => {
 .badge-preview {
   margin-top: 10px;
   padding: 12px;
-  background: #fafafa;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -5030,7 +5030,7 @@ watch(isPublic, () => {
   letter-spacing: 0.02em;
   vertical-align: middle;
   text-transform: none;
-  background: rgba(10, 10, 10, 0.08);
+  background: rgba(244, 241, 255, 0.08);
   color: #2a2a2a;
 }
 
@@ -5055,7 +5055,7 @@ watch(isPublic, () => {
   gap: 6px;
   margin-top: 10px;
   padding: 10px 12px;
-  background: rgba(10, 10, 10, 0.03);
+  background: rgba(244, 241, 255, 0.03);
   border-radius: 8px;
   font-size: 13px;
 }
@@ -5142,7 +5142,7 @@ watch(isPublic, () => {
   gap: 4px;
   margin-top: 10px;
   padding: 8px 10px;
-  background: rgba(10, 10, 10, 0.03);
+  background: rgba(244, 241, 255, 0.03);
   border-radius: 8px;
   max-height: 240px;
   overflow-y: auto;
@@ -5171,7 +5171,7 @@ watch(isPublic, () => {
 }
 
 .sparkline-axis {
-  stroke: rgba(10, 10, 10, 0.12);
+  stroke: rgba(244, 241, 255, 0.12);
   stroke-width: 0.5;
 }
 
@@ -5187,7 +5187,7 @@ watch(isPublic, () => {
 .sparkline-note {
   margin-top: 4px;
   padding-top: 6px;
-  border-top: 1px solid rgba(10, 10, 10, 0.06);
+  border-top: 1px solid rgba(244, 241, 255, 0.06);
   font-size: 12px;
   color: #6b7280;
   font-style: italic;
@@ -5223,7 +5223,7 @@ watch(isPublic, () => {
   gap: 6px;
   margin-top: 10px;
   padding: 10px 12px;
-  background: rgba(10, 10, 10, 0.03);
+  background: rgba(244, 241, 255, 0.03);
   border-radius: 8px;
   font-size: 13px;
 }
@@ -5259,7 +5259,7 @@ watch(isPublic, () => {
   display: inline-block;
   margin-left: 8px;
   padding: 1px 7px;
-  background: rgba(10, 10, 10, 0.08);
+  background: rgba(244, 241, 255, 0.08);
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
@@ -5286,8 +5286,8 @@ watch(isPublic, () => {
 .thread-tweet {
   position: relative;
   padding: 10px 12px 10px 44px;
-  background: #ffffff;
-  border: 1px solid rgba(10, 10, 10, 0.1);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.1);
   border-radius: 8px;
 }
 
@@ -5311,7 +5311,7 @@ watch(isPublic, () => {
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid rgba(10, 10, 10, 0.12);
+  border: 1px solid rgba(244, 241, 255, 0.12);
   border-radius: 6px;
   font-size: 12px;
   cursor: pointer;
@@ -5320,8 +5320,8 @@ watch(isPublic, () => {
 }
 
 .thread-tweet-copy:hover {
-  background: rgba(10, 10, 10, 0.04);
-  border-color: rgba(10, 10, 10, 0.24);
+  background: rgba(244, 241, 255, 0.04);
+  border-color: rgba(244, 241, 255, 0.24);
 }
 
 .thread-tweet-body {
@@ -5330,7 +5330,7 @@ watch(isPublic, () => {
   font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
   font-size: 13px;
   line-height: 1.5;
-  color: #0a0a0a;
+  color: #f4f1ff;
   white-space: pre-wrap;
   word-break: break-word;
 }
@@ -5369,7 +5369,7 @@ watch(isPublic, () => {
 }
 
 .surface-stats-head:hover .surface-stats-chevron {
-  color: #0a0a0a;
+  color: #f4f1ff;
 }
 
 .surface-stats-total-badge {
@@ -5379,7 +5379,7 @@ watch(isPublic, () => {
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  color: #0a0a0a;
+  color: #f4f1ff;
   background: #f4ecd8;
   border-radius: 999px;
   vertical-align: middle;
@@ -5398,7 +5398,7 @@ watch(isPublic, () => {
 
 .surface-stats-chevron-open {
   transform: rotate(180deg);
-  color: #0a0a0a;
+  color: #f4f1ff;
 }
 
 .surface-stats-body {
@@ -5489,7 +5489,7 @@ watch(isPublic, () => {
 
 .surface-stats-refresh {
   border: 1px solid #d4d4d4;
-  background: #ffffff;
+  background: #110a26;
   color: #1a1a1a;
   padding: 6px 12px;
   font-size: 11px;
@@ -5595,8 +5595,8 @@ watch(isPublic, () => {
   column-gap: 16px;
   row-gap: 6px;
   font-size: 12px;
-  background: #fafafa;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 8px;
   padding: 10px 12px;
 }
@@ -5643,7 +5643,7 @@ watch(isPublic, () => {
   font-size: 11px;
   line-height: 1.5;
   color: #6b6b6b;
-  background: #f5f5f5;
+  background: #1a0f3a;
   border-left: 3px solid rgba(99, 102, 241, 0.4);
   padding: 8px 10px;
   border-radius: 4px;
@@ -5665,7 +5665,7 @@ watch(isPublic, () => {
   letter-spacing: 0.04em;
   border-radius: 6px;
   background: linear-gradient(180deg, #1a1a1a 0%, #2a2a2a 100%);
-  color: #ffffff;
+  color: #f4f1ff;
   text-decoration: none;
   border: 1px solid #1a1a1a;
   transition: background 0.15s;
@@ -5748,8 +5748,8 @@ watch(isPublic, () => {
   gap: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(10, 10, 10, 0.07);
-  background: #ffffff;
+  border: 1px solid rgba(244, 241, 255, 0.07);
+  background: #110a26;
   text-decoration: none;
   color: inherit;
   transition: border-color 0.15s, background 0.15s;
@@ -5944,7 +5944,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: #f4f1ff;
   margin-bottom: 4px;
 }
 
@@ -5967,7 +5967,7 @@ watch(isPublic, () => {
   gap: 6px;
   padding: 8px 16px;
   background: #ea580c;
-  color: #ffffff;
+  color: #f4f1ff;
   text-decoration: none;
   border-radius: 8px;
   font-size: 12px;
@@ -5992,8 +5992,8 @@ watch(isPublic, () => {
 .outcome-section {
   margin-top: 18px;
   padding: 14px 16px;
-  background: #fafafa;
-  border: 1px dashed rgba(10, 10, 10, 0.18);
+  background: #110a26;
+  border: 1px dashed rgba(244, 241, 255, 0.18);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -6002,8 +6002,8 @@ watch(isPublic, () => {
 }
 
 .outcome-section-live {
-  background: rgba(255, 107, 26, 0.04);
-  border-color: rgba(255, 107, 26, 0.3);
+  background: rgba(167, 139, 250, 0.04);
+  border-color: rgba(167, 139, 250, 0.3);
   border-style: solid;
 }
 
@@ -6029,7 +6029,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: #f4f1ff;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -6041,8 +6041,8 @@ watch(isPublic, () => {
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: none;
-  color: var(--color-orange, #ff6b1a);
-  background: rgba(255, 107, 26, 0.1);
+  color: var(--color-orange, #a78bfa);
+  background: rgba(167, 139, 250, 0.1);
   padding: 2px 8px;
   border-radius: 999px;
 }
@@ -6055,7 +6055,7 @@ watch(isPublic, () => {
 }
 
 .outcome-sub a {
-  color: var(--color-orange, #ff6b1a);
+  color: var(--color-orange, #a78bfa);
   text-decoration: none;
   font-weight: 600;
 }
@@ -6084,12 +6084,12 @@ watch(isPublic, () => {
   align-items: center;
   gap: 6px;
   padding: 6px 10px;
-  border: 1px solid rgba(10, 10, 10, 0.16);
+  border: 1px solid rgba(244, 241, 255, 0.16);
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
   font-weight: 600;
-  background: #fff;
+  background: #110a26;
   transition: border-color 0.15s, background 0.15s;
 }
 
@@ -6098,19 +6098,19 @@ watch(isPublic, () => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  border: 1.5px solid rgba(10, 10, 10, 0.35);
+  border: 1.5px solid rgba(244, 241, 255, 0.35);
   position: relative;
 }
 
 .outcome-radio input:checked {
-  border-color: var(--color-orange, #ff6b1a);
-  background: var(--color-orange, #ff6b1a);
+  border-color: var(--color-orange, #a78bfa);
+  background: var(--color-orange, #a78bfa);
   box-shadow: inset 0 0 0 2px #fff;
 }
 
 .outcome-radio-active {
-  border-color: var(--color-orange, #ff6b1a);
-  background: rgba(255, 107, 26, 0.08);
+  border-color: var(--color-orange, #a78bfa);
+  background: rgba(167, 139, 250, 0.08);
 }
 
 .outcome-radio-icon { font-family: sans-serif; }
@@ -6119,25 +6119,25 @@ watch(isPublic, () => {
 .outcome-textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid rgba(10, 10, 10, 0.14);
+  border: 1px solid rgba(244, 241, 255, 0.14);
   border-radius: 8px;
   font-size: 12.5px;
   font-family: inherit;
-  background: #fff;
-  color: #0a0a0a;
+  background: #110a26;
+  color: #f4f1ff;
   resize: vertical;
 }
 
 .outcome-input:focus,
 .outcome-textarea:focus {
   outline: none;
-  border-color: var(--color-orange, #ff6b1a);
-  box-shadow: 0 0 0 3px rgba(255, 107, 26, 0.12);
+  border-color: var(--color-orange, #a78bfa);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.12);
 }
 
 .outcome-input:disabled,
 .outcome-textarea:disabled {
-  background: rgba(10, 10, 10, 0.03);
+  background: rgba(244, 241, 255, 0.03);
   color: #6b6b6b;
   cursor: not-allowed;
 }
@@ -6159,8 +6159,8 @@ watch(isPublic, () => {
 
 .outcome-submit {
   padding: 8px 16px;
-  background: var(--color-orange, #ff6b1a);
-  color: #fff;
+  background: var(--color-orange, #a78bfa);
+  color: #f4f1ff;
   border: none;
   border-radius: 8px;
   font-size: 12px;
@@ -6172,7 +6172,7 @@ watch(isPublic, () => {
 }
 
 .outcome-submit:hover:not(:disabled) {
-  background: #0a0a0a;
+  background: #f4f1ff;
 }
 
 .outcome-submit:disabled {
@@ -6183,7 +6183,7 @@ watch(isPublic, () => {
 .outcome-link {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11.5px;
-  color: var(--color-orange, #ff6b1a);
+  color: var(--color-orange, #a78bfa);
   text-decoration: none;
   font-weight: 600;
 }
@@ -6199,20 +6199,20 @@ watch(isPublic, () => {
 }
 
 .outcome-message-success {
-  background: rgba(67, 193, 101, 0.12);
+  background: rgba(196, 181, 253, 0.12);
   color: #1f6b35;
 }
 
 .outcome-message-error {
-  background: rgba(255, 68, 68, 0.12);
+  background: rgba(240, 171, 252, 0.12);
   color: #b22020;
 }
 
 .gallery-callout {
   margin-top: 18px;
   padding: 14px 16px;
-  background: #fafafa;
-  border: 1px dashed rgba(10, 10, 10, 0.18);
+  background: #110a26;
+  border: 1px dashed rgba(244, 241, 255, 0.18);
   border-radius: 10px;
   display: flex;
   align-items: flex-start;
@@ -6221,15 +6221,15 @@ watch(isPublic, () => {
 }
 
 .gallery-callout-live {
-  background: rgba(255, 107, 26, 0.06);
-  border-color: rgba(255, 107, 26, 0.45);
+  background: rgba(167, 139, 250, 0.06);
+  border-color: rgba(167, 139, 250, 0.45);
   border-style: solid;
 }
 
 .gallery-callout-icon {
   font-size: 22px;
   line-height: 1;
-  color: var(--color-orange, #ff6b1a);
+  color: var(--color-orange, #a78bfa);
   padding-top: 2px;
 }
 
@@ -6243,7 +6243,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: #f4f1ff;
   margin-bottom: 4px;
 }
 
@@ -6254,7 +6254,7 @@ watch(isPublic, () => {
 }
 
 .gallery-callout-desc a {
-  color: var(--color-orange, #ff6b1a);
+  color: var(--color-orange, #a78bfa);
   text-decoration: none;
   font-weight: 600;
 }
@@ -6265,8 +6265,8 @@ watch(isPublic, () => {
   flex-shrink: 0;
   align-self: center;
   padding: 6px 12px;
-  background: var(--color-orange, #ff6b1a);
-  color: #fff;
+  background: var(--color-orange, #a78bfa);
+  color: #f4f1ff;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -6278,7 +6278,7 @@ watch(isPublic, () => {
 }
 
 .gallery-callout-link:hover {
-  background: #0a0a0a;
+  background: #f4f1ff;
 }
 
 /* RSS / Atom feed callout — same anatomy as the gallery callout but
@@ -6288,8 +6288,8 @@ watch(isPublic, () => {
 .feed-callout {
   margin-top: 12px;
   padding: 14px 16px;
-  background: #fafafa;
-  border: 1px dashed rgba(10, 10, 10, 0.18);
+  background: #110a26;
+  border: 1px dashed rgba(244, 241, 255, 0.18);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -6305,7 +6305,7 @@ watch(isPublic, () => {
 .feed-callout-icon {
   font-size: 22px;
   line-height: 1;
-  color: var(--color-orange, #ff6b1a);
+  color: var(--color-orange, #a78bfa);
   padding-top: 2px;
 }
 
@@ -6319,7 +6319,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: #f4f1ff;
   margin-bottom: 4px;
 }
 
@@ -6338,8 +6338,8 @@ watch(isPublic, () => {
 
 .feed-callout-link {
   padding: 6px 12px;
-  background: var(--color-orange, #ff6b1a);
-  color: #fff;
+  background: var(--color-orange, #a78bfa);
+  color: #f4f1ff;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -6351,19 +6351,19 @@ watch(isPublic, () => {
 }
 
 .feed-callout-link:hover {
-  background: #0a0a0a;
+  background: #f4f1ff;
 }
 
 .feed-callout-link-secondary {
   background: transparent;
-  color: var(--color-orange, #ff6b1a);
-  border: 1px solid rgba(255, 107, 26, 0.45);
+  color: var(--color-orange, #a78bfa);
+  border: 1px solid rgba(167, 139, 250, 0.45);
 }
 
 .feed-callout-link-secondary:hover {
-  background: var(--color-orange, #ff6b1a);
-  color: #fff;
-  border-color: var(--color-orange, #ff6b1a);
+  background: var(--color-orange, #a78bfa);
+  color: #f4f1ff;
+  border-color: var(--color-orange, #a78bfa);
 }
 
 /* Notifications callout — three status chips track WEBHOOK_URL /
@@ -6385,8 +6385,8 @@ watch(isPublic, () => {
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(10, 10, 10, 0.12);
-  background: #ffffff;
+  border: 1px solid rgba(244, 241, 255, 0.12);
+  background: #110a26;
   color: #6a6a6a;
   font-size: 11.5px;
   font-weight: 600;
@@ -6404,7 +6404,7 @@ watch(isPublic, () => {
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
-  background: rgba(10, 10, 10, 0.08);
+  background: rgba(244, 241, 255, 0.08);
   color: #6a6a6a;
 }
 
@@ -6416,14 +6416,14 @@ watch(isPublic, () => {
 
 .notifications-chip-on .notifications-chip-dot {
   background: #22c55e;
-  color: #ffffff;
+  color: #f4f1ff;
 }
 
 .feed-filter-builder {
   margin-top: 4px;
   padding: 12px 14px;
-  background: #ffffff;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 8px;
   display: flex;
   flex-direction: column;
@@ -6435,7 +6435,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: #f4f1ff;
 }
 
 .feed-filter-builder-controls {
@@ -6463,17 +6463,17 @@ watch(isPublic, () => {
 .feed-filter-select {
   padding: 6px 8px;
   font-size: 12.5px;
-  border: 1px solid rgba(10, 10, 10, 0.16);
+  border: 1px solid rgba(244, 241, 255, 0.16);
   border-radius: 6px;
-  background: #fafafa;
-  color: #0a0a0a;
+  background: #110a26;
+  color: #f4f1ff;
   font-family: inherit;
 }
 
 .feed-filter-select:focus {
   outline: none;
-  border-color: var(--color-orange, #ff6b1a);
-  background: #ffffff;
+  border-color: var(--color-orange, #a78bfa);
+  background: #110a26;
 }
 
 .feed-filter-builder-actions {
@@ -6489,10 +6489,10 @@ watch(isPublic, () => {
   padding: 6px 10px;
   font-size: 11.5px;
   font-family: 'SFMono-Regular', 'Menlo', monospace;
-  border: 1px solid rgba(10, 10, 10, 0.16);
+  border: 1px solid rgba(244, 241, 255, 0.16);
   border-radius: 6px;
-  background: #fafafa;
-  color: #0a0a0a;
+  background: #110a26;
+  color: #f4f1ff;
 }
 
 .feed-filter-copy {
@@ -6502,8 +6502,8 @@ watch(isPublic, () => {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   background: transparent;
-  color: var(--color-orange, #ff6b1a);
-  border: 1px solid rgba(255, 107, 26, 0.45);
+  color: var(--color-orange, #a78bfa);
+  border: 1px solid rgba(167, 139, 250, 0.45);
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
@@ -6511,13 +6511,13 @@ watch(isPublic, () => {
 }
 
 .feed-filter-copy:hover {
-  background: var(--color-orange, #ff6b1a);
-  color: #fff;
+  background: var(--color-orange, #a78bfa);
+  color: #f4f1ff;
 }
 
 .feed-filter-copy-active {
-  background: var(--color-orange, #ff6b1a);
-  color: #fff;
+  background: var(--color-orange, #a78bfa);
+  color: #f4f1ff;
 }
 
 .feed-filter-builder-note {
@@ -6538,8 +6538,8 @@ watch(isPublic, () => {
 .webhook-log-section {
   margin-top: 12px;
   padding: 14px 16px;
-  background: #fafafa;
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.08);
   border-radius: 10px;
   display: flex;
   flex-direction: column;
@@ -6568,7 +6568,7 @@ watch(isPublic, () => {
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #0a0a0a;
+  color: #f4f1ff;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -6581,7 +6581,7 @@ watch(isPublic, () => {
   text-transform: none;
   color: #4a4a4a;
   padding: 2px 7px;
-  background: rgba(10, 10, 10, 0.06);
+  background: rgba(244, 241, 255, 0.06);
   border-radius: 999px;
 }
 
@@ -6595,8 +6595,8 @@ watch(isPublic, () => {
 .webhook-log-toggle {
   flex-shrink: 0;
   background: transparent;
-  border: 1px solid rgba(10, 10, 10, 0.18);
-  color: #0a0a0a;
+  border: 1px solid rgba(244, 241, 255, 0.18);
+  color: #f4f1ff;
   font-size: 13px;
   font-weight: 600;
   width: 28px;
@@ -6607,7 +6607,7 @@ watch(isPublic, () => {
 }
 
 .webhook-log-toggle:hover {
-  background: rgba(10, 10, 10, 0.05);
+  background: rgba(244, 241, 255, 0.05);
 }
 
 .webhook-log-body {
@@ -6625,7 +6625,7 @@ watch(isPublic, () => {
   color: #4a4a4a;
   padding: 8px 10px;
   border-radius: 6px;
-  background: rgba(10, 10, 10, 0.04);
+  background: rgba(244, 241, 255, 0.04);
 }
 
 .webhook-log-config-hint {
@@ -6634,7 +6634,7 @@ watch(isPublic, () => {
 }
 
 .webhook-log-error {
-  background: rgba(255, 68, 68, 0.10);
+  background: rgba(240, 171, 252, 0.10);
   color: #b22020;
 }
 
@@ -6658,8 +6658,8 @@ watch(isPublic, () => {
   border-radius: 6px;
   font-size: 12px;
   line-height: 1.4;
-  background: #fff;
-  border: 1px solid rgba(10, 10, 10, 0.06);
+  background: #110a26;
+  border: 1px solid rgba(244, 241, 255, 0.06);
 }
 
 .webhook-log-row-icon {
@@ -6674,7 +6674,7 @@ watch(isPublic, () => {
 
 .webhook-log-row-code {
   font-weight: 600;
-  color: #0a0a0a;
+  color: #f4f1ff;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -6718,18 +6718,18 @@ watch(isPublic, () => {
   letter-spacing: 0.04em;
   text-transform: uppercase;
   border-radius: 6px;
-  border: 1px solid rgba(10, 10, 10, 0.18);
-  background: #fff;
-  color: #0a0a0a;
+  border: 1px solid rgba(244, 241, 255, 0.18);
+  background: #110a26;
+  color: #f4f1ff;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .webhook-log-refresh:hover,
 .webhook-log-retry:hover {
-  background: #0a0a0a;
-  color: #fff;
-  border-color: #0a0a0a;
+  background: #f4f1ff;
+  color: #f4f1ff;
+  border-color: #f4f1ff;
 }
 
 .webhook-log-refresh:disabled,
@@ -6746,20 +6746,20 @@ watch(isPublic, () => {
 }
 
 .webhook-log-message-ok {
-  background: rgba(67, 193, 101, 0.12);
+  background: rgba(196, 181, 253, 0.12);
   color: #1f6b35;
 }
 
 .webhook-log-message-error {
-  background: rgba(255, 68, 68, 0.12);
+  background: rgba(240, 171, 252, 0.12);
   color: #b22020;
 }
 
 .signature-hint {
   margin-top: 4px;
-  border: 1px solid rgba(10, 10, 10, 0.10);
+  border: 1px solid rgba(244, 241, 255, 0.10);
   border-radius: 6px;
-  background: rgba(10, 10, 10, 0.025);
+  background: rgba(244, 241, 255, 0.025);
 }
 
 .signature-hint-toggle {
@@ -6772,7 +6772,7 @@ watch(isPublic, () => {
   border: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #0a0a0a;
+  color: #f4f1ff;
   cursor: pointer;
   text-align: left;
 }
@@ -6786,7 +6786,7 @@ watch(isPublic, () => {
 }
 
 .signature-hint-chevron {
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   font-size: 12px;
 }
 
@@ -6801,21 +6801,21 @@ watch(isPublic, () => {
   margin: 0;
   font-size: 11.5px;
   line-height: 1.5;
-  color: rgba(10, 10, 10, 0.78);
+  color: rgba(244, 241, 255, 0.78);
 }
 
 .signature-hint-line a {
-  color: #0a0a0a;
+  color: #f4f1ff;
   text-decoration: underline;
 }
 
 .signature-hint-code {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: 11px;
-  background: rgba(10, 10, 10, 0.06);
+  background: rgba(244, 241, 255, 0.06);
   padding: 6px 8px;
   border-radius: 4px;
-  color: #0a0a0a;
+  color: #f4f1ff;
   user-select: all;
 }
 
@@ -6876,7 +6876,7 @@ watch(isPublic, () => {
 
 .dkg-card-empty {
   align-items: flex-start;
-  background: #ffffff;
+  background: #110a26;
   border-style: dashed;
 }
 
@@ -6913,7 +6913,7 @@ watch(isPublic, () => {
 .dkg-row-mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   padding: 3px 6px;
-  background: #ffffff;
+  background: #110a26;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
 }
@@ -6937,7 +6937,7 @@ watch(isPublic, () => {
 
 .dkg-publish-btn {
   background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: #ffffff;
+  color: #f4f1ff;
   border: none;
 }
 

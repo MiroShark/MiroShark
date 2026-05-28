@@ -105,12 +105,12 @@
                   <line
                     :x1="ML" :y1="yScale(pct / 100)"
                     :x2="W - MR" :y2="yScale(pct / 100)"
-                    stroke="rgba(10,10,10,0.08)" stroke-width="1"
+                    stroke="rgba(244, 241, 255,0.08)" stroke-width="1"
                     :stroke-dasharray="pct === 50 ? '' : '2,3'"
                   />
                   <text
                     :x="W - MR + 8" :y="yScale(pct / 100) + 4"
-                    fill="rgba(10,10,10,0.45)" font-size="10"
+                    fill="rgba(244, 241, 255,0.45)" font-size="10"
                     font-family="'Space Mono', ui-monospace, monospace"
                   >{{ pct }}%</text>
                 </g>
@@ -151,14 +151,14 @@
                   <line
                     :x1="xScale(hoverPoint)" :y1="MT"
                     :x2="xScale(hoverPoint)" :y2="H - MB"
-                    stroke="rgba(10,10,10,0.25)" stroke-width="1" stroke-dasharray="2,3"
+                    stroke="rgba(244, 241, 255,0.25)" stroke-width="1" stroke-dasharray="2,3"
                   />
                   <circle
                     :cx="xScale(hoverPoint)"
                     :cy="yScale(selected.points[hoverPoint].price_yes)"
                     r="4"
                     :fill="lineColor"
-                    stroke="#FAFAFA" stroke-width="2"
+                    stroke="#110a26" stroke-width="2"
                   />
                 </g>
               </svg>
@@ -238,9 +238,9 @@ const priceDelta = computed(() => {
 
 const lineColor = computed(() => {
   const p = latestPrice.value
-  if (p >= 0.55) return '#43C165'
-  if (p <= 0.45) return '#FF4444'
-  return '#FF6B1A'
+  if (p >= 0.55) return '#c4b5fd'
+  if (p <= 0.45) return '#f0abfc'
+  return '#a78bfa'
 })
 
 const tradeVolume = computed(() => {
@@ -377,9 +377,9 @@ const PX = 32 // header horizontal padding
 
 // Colour matching `priceClass` / `deltaClass` used in the live panel.
 const _priceColor = (p) => {
-  if (p >= 0.55) return '#43C165'
-  if (p <= 0.45) return '#FF4444'
-  return '#FF6B1A'
+  if (p >= 0.55) return '#c4b5fd'
+  if (p <= 0.45) return '#f0abfc'
+  return '#a78bfa'
 }
 
 const _buildExportCanvas = async () => {
@@ -397,7 +397,7 @@ const _buildExportCanvas = async () => {
   const deltaStr = delta != null ? `${delta >= 0 ? '▲' : '▼'} ${(Math.abs(delta) * 100).toFixed(1)}%` : null
   const deltaColor = delta == null
     ? null
-    : (delta > 0.005 ? '#43C165' : (delta < -0.005 ? '#FF4444' : '#FF6B1A'))
+    : (delta > 0.005 ? '#c4b5fd' : (delta < -0.005 ? '#f0abfc' : '#a78bfa'))
 
   const stats = [
     { k: 'TRADES', v: String(Math.max(pts.length - 1, 0)) },
@@ -423,7 +423,7 @@ const _buildExportCanvas = async () => {
     let y = 36
 
     // ── Title ── Young Serif, largest element
-    ctx.fillStyle = '#0A0A0A'
+    ctx.fillStyle = '#f4f1ff'
     ctx.font = titleFont
     ctx.textAlign = 'left'
     ctx.textBaseline = 'top'
@@ -442,7 +442,7 @@ const _buildExportCanvas = async () => {
     const priceWidth = ctx.measureText(priceStr).width
 
     // "CHANCE YES" label next to the price
-    ctx.fillStyle = 'rgba(10, 10, 10, 0.5)'
+    ctx.fillStyle = 'rgba(244, 241, 255, 0.5)'
     ctx.font = '400 13px "Space Mono", "JetBrains Mono", ui-monospace, monospace'
     ctx.fillText(`CHANCE ${outcomeLabel}`, PX + priceWidth + 18, priceBaseline - 4)
 
@@ -470,13 +470,13 @@ const _buildExportCanvas = async () => {
     stats.forEach((s, i) => {
       const cx = PX + i * colW
       // Label (uppercase small)
-      ctx.fillStyle = 'rgba(10, 10, 10, 0.45)'
+      ctx.fillStyle = 'rgba(244, 241, 255, 0.45)'
       ctx.font = '700 10px "Space Mono", "JetBrains Mono", ui-monospace, monospace'
       ctx.textAlign = 'left'
       ctx.textBaseline = 'top'
       ctx.fillText(s.k, cx, y)
       // Value
-      ctx.fillStyle = '#0A0A0A'
+      ctx.fillStyle = '#f4f1ff'
       ctx.font = '700 14px "Space Mono", "JetBrains Mono", ui-monospace, monospace'
       ctx.fillText(s.v, cx, y + 16)
     })
@@ -588,7 +588,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+  border-bottom: 1px solid rgba(244, 241, 255, 0.08);
   flex-shrink: 0;
 }
 
@@ -607,8 +607,8 @@ onBeforeUnmount(() => {
 
 .pm-export-btn {
   background: none;
-  border: 1px solid rgba(10, 10, 10, 0.15);
-  color: rgba(10, 10, 10, 0.5);
+  border: 1px solid rgba(244, 241, 255, 0.15);
+  color: rgba(244, 241, 255, 0.5);
   padding: 4px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -638,7 +638,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
 }
 
 .pm-live-dot {
@@ -679,7 +679,7 @@ onBeforeUnmount(() => {
 
 /* Market list — subtler separator, rows match .lb-row treatment */
 .pm-market-list {
-  border-right: 1px solid rgba(10, 10, 10, 0.08);
+  border-right: 1px solid rgba(244, 241, 255, 0.08);
   overflow-y: auto;
   padding: 0;
   background: var(--background);
@@ -690,7 +690,7 @@ onBeforeUnmount(() => {
   text-align: left;
   background: transparent;
   border: none;
-  border-bottom: 1px solid rgba(10, 10, 10, 0.04);
+  border-bottom: 1px solid rgba(244, 241, 255, 0.04);
   border-left: 3px solid transparent;
   padding: 10px 14px;
   cursor: pointer;
@@ -703,12 +703,12 @@ onBeforeUnmount(() => {
 }
 
 .pm-market-row:hover {
-  background: rgba(10, 10, 10, 0.02);
+  background: rgba(244, 241, 255, 0.02);
 }
 
 /* Active row — same orange left-accent pattern as .lb-row.top-three */
 .pm-market-row-active {
-  background: rgba(10, 10, 10, 0.02);
+  background: rgba(244, 241, 255, 0.02);
   border-left-color: var(--color-orange);
 }
 
@@ -742,7 +742,7 @@ onBeforeUnmount(() => {
 .pm-neutral { color: var(--color-orange); }
 
 .pm-market-trades {
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   font-size: 10px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -762,7 +762,7 @@ onBeforeUnmount(() => {
 .pm-empty {
   padding: 36px 20px;
   text-align: center;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   font-family: var(--font-mono);
   font-size: 12px;
   display: flex;
@@ -780,7 +780,7 @@ onBeforeUnmount(() => {
 
 .pm-empty-hint {
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   line-height: 1.5;
 }
 
@@ -805,7 +805,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: rgba(10, 10, 10, 0.35);
+  color: rgba(244, 241, 255, 0.35);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 2px;
@@ -823,7 +823,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 10px;
   padding-bottom: 14px;
-  border-bottom: 1px solid rgba(10, 10, 10, 0.12);
+  border-bottom: 1px solid rgba(244, 241, 255, 0.12);
 }
 
 .pm-chart-q {
@@ -851,7 +851,7 @@ onBeforeUnmount(() => {
 .pm-chart-outcome-label {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   margin-left: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
@@ -867,15 +867,15 @@ onBeforeUnmount(() => {
 }
 
 .pm-chart-delta.pm-up {
-  background: rgba(67, 193, 101, 0.12);
+  background: rgba(196, 181, 253, 0.12);
 }
 
 .pm-chart-delta.pm-down {
-  background: rgba(255, 68, 68, 0.12);
+  background: rgba(240, 171, 252, 0.12);
 }
 
 .pm-chart-delta.pm-neutral {
-  background: rgba(255, 107, 26, 0.12);
+  background: rgba(167, 139, 250, 0.12);
 }
 
 .pm-chart-stats {
@@ -895,7 +895,7 @@ onBeforeUnmount(() => {
 .pm-stat-k {
   font-size: 9px;
   letter-spacing: 2px;
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -923,8 +923,8 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 320px;
   position: relative;
-  background: rgba(10, 10, 10, 0.02);
-  border: 1px solid rgba(10, 10, 10, 0.06);
+  background: rgba(244, 241, 255, 0.02);
+  border: 1px solid rgba(244, 241, 255, 0.06);
   padding: 4px;
 }
 
@@ -941,7 +941,7 @@ onBeforeUnmount(() => {
   min-width: 150px;
   padding: 8px 10px;
   background: var(--color-white);
-  border: 1px solid rgba(10, 10, 10, 0.12);
+  border: 1px solid rgba(244, 241, 255, 0.12);
   pointer-events: none;
   z-index: 5;
   font-family: var(--font-mono);
@@ -957,7 +957,7 @@ onBeforeUnmount(() => {
 
 .pm-tooltip-trade {
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.65);
+  color: rgba(244, 241, 255, 0.65);
   margin-top: 4px;
   letter-spacing: 1px;
   text-transform: uppercase;
@@ -965,7 +965,7 @@ onBeforeUnmount(() => {
 
 .pm-tooltip-time {
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   margin-top: 2px;
   font-family: var(--font-mono);
 }
@@ -981,6 +981,6 @@ onBeforeUnmount(() => {
 }
 .pm-market-list::-webkit-scrollbar-thumb,
 .pm-chart-section::-webkit-scrollbar-thumb {
-  background: rgba(10, 10, 10, 0.2);
+  background: rgba(244, 241, 255, 0.2);
 }
 </style>

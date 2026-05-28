@@ -337,10 +337,10 @@ watch(() => props.systemLogs.length, () => {
 <style scoped>
 .workbench-panel {
   height: 100%;
-  background-color: #FAFAFA;
+  background-color: #110a26;
   background-image:
-    linear-gradient(rgba(10,10,10,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(10,10,10,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(244, 241, 255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244, 241, 255,0.03) 1px, transparent 1px);
   background-size: 22px 22px;
   display: flex;
   flex-direction: column;
@@ -358,9 +358,9 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .step-card {
-  background: #FAFAFA;
+  background: #110a26;
   padding: 22px;
-  border: 2px solid rgba(10,10,10,0.08);
+  border: 2px solid rgba(244, 241, 255,0.08);
   transition: all 0.3s ease;
   position: relative;
 }
@@ -373,8 +373,8 @@ watch(() => props.systemLogs.length, () => {
   left: 0;
   width: 16px;
   height: 16px;
-  border-top: 3px solid #FF6B1A;
-  border-left: 3px solid #FF6B1A;
+  border-top: 3px solid #a78bfa;
+  border-left: 3px solid #a78bfa;
 }
 
 .step-card::after {
@@ -384,12 +384,12 @@ watch(() => props.systemLogs.length, () => {
   right: 0;
   width: 16px;
   height: 16px;
-  border-bottom: 3px solid #43C165;
-  border-right: 3px solid #43C165;
+  border-bottom: 3px solid #c4b5fd;
+  border-right: 3px solid #c4b5fd;
 }
 
 .step-card.active {
-  border-color: #FF6B1A;
+  border-color: #a78bfa;
 }
 
 .card-header {
@@ -409,12 +409,12 @@ watch(() => props.systemLogs.length, () => {
   font-family: var(--font-mono);
   font-size: 20px;
   font-weight: 700;
-  color: rgba(10,10,10,0.12);
+  color: rgba(244, 241, 255,0.12);
 }
 
 .step-card.active .step-num,
 .step-card.completed .step-num {
-  color: #0A0A0A;
+  color: #f4f1ff;
 }
 
 .step-title {
@@ -433,21 +433,21 @@ watch(() => props.systemLogs.length, () => {
   letter-spacing: 3px;
 }
 
-.badge.success { background: #43C165; color: #FAFAFA; }
-.badge.processing { background: #FF6B1A; color: #FAFAFA; }
-.badge.accent { background: #FF6B1A; color: #FAFAFA; }
-.badge.pending { background: #F5F5F5; color: rgba(10,10,10,0.4); }
+.badge.success { background: #c4b5fd; color: #110a26; }
+.badge.processing { background: #a78bfa; color: #110a26; }
+.badge.accent { background: #a78bfa; color: #110a26; }
+.badge.pending { background: #1a0f3a; color: rgba(244, 241, 255,0.4); }
 
 .api-note {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   margin-bottom: 8px;
 }
 
 .description {
   font-size: 12px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   line-height: 1.5;
   margin-bottom: 22px;
 }
@@ -467,7 +467,7 @@ watch(() => props.systemLogs.length, () => {
   display: block;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   margin-bottom: 8px;
   font-weight: 600;
   text-transform: uppercase;
@@ -481,11 +481,11 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .entity-tag {
-  background: #F5F5F5;
-  border: 1px solid rgba(10,10,10,0.08);
+  background: #1a0f3a;
+  border: 1px solid rgba(244, 241, 255,0.08);
   padding: 4px 10px;
   font-size: 11px;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   font-family: var(--font-mono);
   transition: all 0.2s;
 }
@@ -495,8 +495,8 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .entity-tag.clickable:hover {
-    background: rgba(10,10,10,0.12);
-    border-color: rgba(10,10,10,0.2);
+    background: rgba(244, 241, 255,0.12);
+    border-color: rgba(244, 241, 255,0.2);
 }
 
 /* Ontology Detail Overlay */
@@ -509,7 +509,7 @@ watch(() => props.systemLogs.length, () => {
     background: rgba(250, 250, 250, 0.98);
     backdrop-filter: blur(4px);
     z-index: 10;
-    border: 2px solid rgba(10,10,10,0.08);
+    border: 2px solid rgba(244, 241, 255,0.08);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -523,8 +523,8 @@ watch(() => props.systemLogs.length, () => {
     justify-content: space-between;
     align-items: center;
     padding: 11px 22px;
-    border-bottom: 2px solid rgba(10,10,10,0.08);
-    background: #FAFAFA;
+    border-bottom: 2px solid rgba(244, 241, 255,0.08);
+    background: #110a26;
 }
 
 .detail-title-group {
@@ -537,8 +537,8 @@ watch(() => props.systemLogs.length, () => {
     font-family: var(--font-mono);
     font-size: 9px;
     font-weight: 700;
-    color: #FAFAFA;
-    background: #0A0A0A;
+    color: #110a26;
+    background: #f4f1ff;
     padding: 2px 6px;
     text-transform: uppercase;
     letter-spacing: 3px;
@@ -554,13 +554,13 @@ watch(() => props.systemLogs.length, () => {
     background: none;
     border: none;
     font-size: 18px;
-    color: rgba(10,10,10,0.4);
+    color: rgba(244, 241, 255,0.4);
     cursor: pointer;
     line-height: 1;
 }
 
 .close-btn:hover {
-    color: rgba(10,10,10,0.7);
+    color: rgba(244, 241, 255,0.7);
 }
 
 .detail-body {
@@ -571,11 +571,11 @@ watch(() => props.systemLogs.length, () => {
 
 .detail-desc {
     font-size: 12px;
-    color: rgba(10,10,10,0.6);
+    color: rgba(244, 241, 255,0.6);
     line-height: 1.5;
     margin-bottom: 22px;
     padding-bottom: 11px;
-    border-bottom: 1px dashed rgba(10,10,10,0.08);
+    border-bottom: 1px dashed rgba(244, 241, 255,0.08);
 }
 
 .detail-section {
@@ -587,7 +587,7 @@ watch(() => props.systemLogs.length, () => {
     font-family: var(--font-mono);
     font-size: 11px;
     font-weight: 600;
-    color: rgba(10,10,10,0.4);
+    color: rgba(244, 241, 255,0.4);
     margin-bottom: 8px;
     text-transform: uppercase;
     letter-spacing: 3px;
@@ -606,22 +606,22 @@ watch(() => props.systemLogs.length, () => {
     gap: 6px;
     align-items: baseline;
     padding: 4px;
-    background: #F5F5F5;
+    background: #1a0f3a;
 }
 
 .attr-name {
     font-family: var(--font-mono);
     font-weight: 600;
-    color: #0A0A0A;
+    color: #f4f1ff;
 }
 
 .attr-type {
-    color: rgba(10,10,10,0.4);
+    color: rgba(244, 241, 255,0.4);
     font-size: 10px;
 }
 
 .attr-desc {
-    color: rgba(10,10,10,0.5);
+    color: rgba(244, 241, 255,0.5);
     flex: 1;
     min-width: 150px;
 }
@@ -634,10 +634,10 @@ watch(() => props.systemLogs.length, () => {
 
 .example-tag {
     font-size: 11px;
-    background: #FAFAFA;
-    border: 1px solid rgba(10,10,10,0.12);
+    background: #110a26;
+    border: 1px solid rgba(244, 241, 255,0.12);
     padding: 3px 8px;
-    color: rgba(10,10,10,0.5);
+    color: rgba(244, 241, 255,0.5);
 }
 
 .conn-item {
@@ -646,17 +646,17 @@ watch(() => props.systemLogs.length, () => {
     gap: 8px;
     font-size: 11px;
     padding: 6px;
-    background: #F5F5F5;
+    background: #1a0f3a;
     font-family: var(--font-mono);
 }
 
 .conn-node {
     font-weight: 600;
-    color: rgba(10,10,10,0.7);
+    color: rgba(244, 241, 255,0.7);
 }
 
 .conn-arrow {
-    color: rgba(10,10,10,0.2);
+    color: rgba(244, 241, 255,0.2);
 }
 
 /* Step 02 Stats */
@@ -664,7 +664,7 @@ watch(() => props.systemLogs.length, () => {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 11px;
-  background: #F5F5F5;
+  background: #1a0f3a;
   padding: 22px;
 }
 
@@ -676,14 +676,14 @@ watch(() => props.systemLogs.length, () => {
   display: block;
   font-size: 20px;
   font-weight: 700;
-  color: #0A0A0A;
+  color: #f4f1ff;
   font-family: var(--font-mono);
 }
 
 .stat-label {
   font-family: var(--font-mono);
   font-size: 9px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   text-transform: uppercase;
   letter-spacing: 3px;
   margin-top: 4px;
@@ -694,8 +694,8 @@ watch(() => props.systemLogs.length, () => {
 .sim-settings {
   margin-bottom: 10px;
   padding: 10px 12px;
-  border: 1px solid rgba(10, 10, 10, 0.08);
-  background: rgba(10, 10, 10, 0.015);
+  border: 1px solid rgba(244, 241, 255, 0.08);
+  background: rgba(244, 241, 255, 0.015);
   font-family: var(--font-mono);
 }
 
@@ -710,13 +710,13 @@ watch(() => props.systemLogs.length, () => {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   font-weight: 600;
 }
 
 .sim-setting-select {
   background: var(--color-white);
-  border: 1px solid rgba(10, 10, 10, 0.15);
+  border: 1px solid rgba(244, 241, 255, 0.15);
   padding: 4px 8px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -738,8 +738,8 @@ watch(() => props.systemLogs.length, () => {
 /* Step 03 Button */
 .action-btn {
   width: 100%;
-  background: #0A0A0A;
-  color: #FAFAFA;
+  background: #f4f1ff;
+  color: #110a26;
   border: none;
   padding: 14px;
   font-family: var(--font-mono);
@@ -756,7 +756,7 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .action-btn:disabled {
-  background: rgba(10,10,10,0.2);
+  background: rgba(244, 241, 255,0.2);
   cursor: not-allowed;
 }
 
@@ -772,20 +772,20 @@ watch(() => props.systemLogs.length, () => {
   align-items: center;
   gap: 8px;
   padding: 8px 11px;
-  border: 2px solid rgba(10,10,10,0.12);
+  border: 2px solid rgba(244, 241, 255,0.12);
   cursor: pointer;
   transition: all 0.15s;
   font-size: 11px;
 }
 
 .sim-entry:hover {
-  background: #F5F5F5;
-  border-color: rgba(10,10,10,0.7);
+  background: #1a0f3a;
+  border-color: rgba(244, 241, 255,0.7);
 }
 
 .sim-id {
   flex: 1;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   font-weight: 500;
 }
 
@@ -796,17 +796,17 @@ watch(() => props.systemLogs.length, () => {
   text-transform: uppercase;
   letter-spacing: 3px;
   padding: 2px 6px;
-  background: #F5F5F5;
-  color: rgba(10,10,10,0.5);
+  background: #1a0f3a;
+  color: rgba(244, 241, 255,0.5);
 }
 
-.sim-status.ready, .sim-status.completed { color: #FAFAFA; background: #43C165; }
-.sim-status.running { color: #FAFAFA; background: #FF6B1A; }
-.sim-status.failed { color: #FAFAFA; background: #FF4444; }
-.sim-status.paused, .sim-status.stopped { color: #0A0A0A; background: #FFB347; }
+.sim-status.ready, .sim-status.completed { color: #110a26; background: #c4b5fd; }
+.sim-status.running { color: #110a26; background: #a78bfa; }
+.sim-status.failed { color: #110a26; background: #f0abfc; }
+.sim-status.paused, .sim-status.stopped { color: #f4f1ff; background: #fcd34d; }
 
 .sim-arrow {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-size: 12px;
 }
 
@@ -815,15 +815,15 @@ watch(() => props.systemLogs.length, () => {
   align-items: center;
   gap: 11px;
   font-size: 12px;
-  color: #FF6B1A;
+  color: #a78bfa;
   margin-bottom: 11px;
 }
 
 .spinner-sm {
   width: 14px;
   height: 14px;
-  border: 2px solid rgba(255,107,26,0.3);
-  border-top-color: #FF6B1A;
+  border: 2px solid rgba(167, 139, 250,0.3);
+  border-top-color: #a78bfa;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -832,7 +832,7 @@ watch(() => props.systemLogs.length, () => {
 
 /* System Logs */
 .system-logs {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: rgba(250,250,250,0.8);
   padding: 22px;
   font-family: var(--font-mono);
@@ -892,7 +892,7 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .log-time {
-  color: #FF6B1A;
+  color: #a78bfa;
   min-width: 75px;
 }
 
@@ -902,6 +902,6 @@ watch(() => props.systemLogs.length, () => {
 }
 
 .log-id {
-  color: #43C165;
+  color: #c4b5fd;
 }
 </style>

@@ -192,7 +192,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 0;
   background: var(--background);
-  border: 1px solid rgba(10, 10, 10, 0.08);
+  border: 1px solid rgba(244, 241, 255, 0.08);
   font-family: var(--font-mono);
 }
 
@@ -202,7 +202,7 @@ onMounted(() => {
   flex-direction: column;
   gap: 6px;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
+  border-bottom: 1px solid rgba(244, 241, 255, 0.08);
   flex-shrink: 0;
 }
 
@@ -221,13 +221,13 @@ onMounted(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
 }
 
 .cf-hint {
   font-size: 11px;
   line-height: 1.5;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   letter-spacing: 0.3px;
 }
 
@@ -238,7 +238,7 @@ onMounted(() => {
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  border-bottom: 1px solid rgba(10, 10, 10, 0.05);
+  border-bottom: 1px solid rgba(244, 241, 255, 0.05);
 }
 
 .cf-form-row--stack {
@@ -253,7 +253,7 @@ onMounted(() => {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
   width: 120px;
   flex-shrink: 0;
 }
@@ -268,8 +268,8 @@ onMounted(() => {
   font-family: var(--font-mono);
   font-size: 12px;
   padding: 6px 10px;
-  border: 1px solid rgba(10, 10, 10, 0.12);
-  background: #fff;
+  border: 1px solid rgba(244, 241, 255, 0.12);
+  background: #110a26;
   color: var(--foreground);
   outline: none;
   flex: 1;
@@ -297,7 +297,7 @@ onMounted(() => {
 .cf-form-meta {
   font-family: var(--font-mono);
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
   letter-spacing: 1px;
 }
 
@@ -314,7 +314,7 @@ onMounted(() => {
   font-size: 11px;
   line-height: 1.5;
   color: var(--color-red);
-  background: rgba(255, 68, 68, 0.06);
+  background: rgba(240, 171, 252, 0.06);
   border-left: 2px solid var(--color-red);
   letter-spacing: 0.3px;
 }
@@ -324,8 +324,8 @@ onMounted(() => {
   padding: 8px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.8);
-  background: rgba(67, 193, 101, 0.06);
+  color: rgba(244, 241, 255, 0.8);
+  background: rgba(196, 181, 253, 0.06);
   border-left: 2px solid var(--color-green);
   display: flex;
   align-items: center;
@@ -335,7 +335,7 @@ onMounted(() => {
 }
 
 .cf-result code {
-  background: rgba(10, 10, 10, 0.04);
+  background: rgba(244, 241, 255, 0.04);
   padding: 1px 4px;
   font-size: 10px;
   color: var(--foreground);
@@ -366,7 +366,7 @@ onMounted(() => {
   gap: 10px;
   justify-content: flex-end;
   padding: 12px 16px;
-  border-top: 1px solid rgba(10, 10, 10, 0.05);
+  border-top: 1px solid rgba(244, 241, 255, 0.05);
 }
 
 .cf-cancel,
@@ -377,7 +377,7 @@ onMounted(() => {
   letter-spacing: 2.5px;
   text-transform: uppercase;
   padding: 8px 16px;
-  border: 2px solid rgba(10, 10, 10, 0.12);
+  border: 2px solid rgba(244, 241, 255, 0.12);
   cursor: pointer;
   transition: all 0.1s ease;
   display: inline-flex;
@@ -387,12 +387,12 @@ onMounted(() => {
 
 .cf-cancel {
   background: transparent;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
 }
 
 .cf-cancel:hover:not(:disabled) {
-  border-color: rgba(10, 10, 10, 0.3);
-  color: rgba(10, 10, 10, 0.7);
+  border-color: rgba(244, 241, 255, 0.3);
+  color: rgba(244, 241, 255, 0.7);
 }
 
 .cf-submit {

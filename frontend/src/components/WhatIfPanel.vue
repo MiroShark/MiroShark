@@ -104,11 +104,11 @@
               <line
                 :x1="ML" :y1="yS(pct)"
                 :x2="W - MR" :y2="yS(pct)"
-                stroke="rgba(10,10,10,0.06)" stroke-width="1"
+                stroke="rgba(244, 241, 255,0.06)" stroke-width="1"
               />
               <text
                 :x="ML - 5" :y="yS(pct) + 4"
-                fill="rgba(10,10,10,0.35)" font-size="9"
+                fill="rgba(244, 241, 255,0.35)" font-size="9"
                 font-family="'Space Mono', monospace" text-anchor="end"
               >{{ pct }}%</text>
             </g>
@@ -117,7 +117,7 @@
             <line
               :x1="ML" :y1="yS(50)"
               :x2="W - MR" :y2="yS(50)"
-              stroke="rgba(10,10,10,0.18)" stroke-width="1"
+              stroke="rgba(244, 241, 255,0.18)" stroke-width="1"
               stroke-dasharray="2,3"
             />
 
@@ -125,7 +125,7 @@
             <path
               :d="originalPath"
               fill="none"
-              stroke="rgba(10,10,10,0.35)"
+              stroke="rgba(244, 241, 255,0.35)"
               stroke-width="1.5"
               stroke-dasharray="5,3"
             />
@@ -134,7 +134,7 @@
             <path
               :d="counterfactualPath"
               fill="none"
-              stroke="#FF6B1A"
+              stroke="#a78bfa"
               stroke-width="2.2"
             />
 
@@ -143,14 +143,14 @@
               v-if="origEnd"
               :cx="origEnd.x" :cy="origEnd.y"
               r="3"
-              fill="rgba(10,10,10,0.35)"
+              fill="rgba(244, 241, 255,0.35)"
             />
             <circle
               v-if="cfEnd"
               :cx="cfEnd.x" :cy="cfEnd.y"
               r="4"
-              fill="#FF6B1A"
-              stroke="#FAFAFA" stroke-width="1.5"
+              fill="#a78bfa"
+              stroke="#110a26" stroke-width="1.5"
             />
 
             <!-- Consensus markers — orig in gray, cf in green (design bicolor) -->
@@ -158,12 +158,12 @@
               <line
                 :x1="xS(origData.consensus_round)" :y1="MT"
                 :x2="xS(origData.consensus_round)" :y2="H - MB"
-                stroke="rgba(10,10,10,0.3)" stroke-width="1"
+                stroke="rgba(244, 241, 255,0.3)" stroke-width="1"
                 stroke-dasharray="3,3"
               />
               <text
                 :x="xS(origData.consensus_round) + 4" :y="MT + 10"
-                fill="rgba(10,10,10,0.45)" font-size="9"
+                fill="rgba(244, 241, 255,0.45)" font-size="9"
                 font-family="'Space Mono', monospace"
               >{{ $tr('orig r', '原 r') }}{{ origData.consensus_round }}</text>
             </g>
@@ -171,12 +171,12 @@
               <line
                 :x1="xS(cfData.consensus_round)" :y1="MT"
                 :x2="xS(cfData.consensus_round)" :y2="H - MB"
-                stroke="#43C165" stroke-width="1.2"
+                stroke="#c4b5fd" stroke-width="1.2"
                 stroke-dasharray="3,3"
               />
               <text
                 :x="xS(cfData.consensus_round) + 4" :y="MT + 22"
-                fill="#43C165" font-size="9"
+                fill="#c4b5fd" font-size="9"
                 font-family="'Space Mono', monospace"
               >{{ $tr('cf r', '反 r') }}{{ cfData.consensus_round }}</text>
             </g>
@@ -186,12 +186,12 @@
               v-for="r in xTicks"
               :key="'xt' + r"
               :x="xS(r)" :y="H - MB + 13"
-              fill="rgba(10,10,10,0.35)" font-size="9"
+              fill="rgba(244, 241, 255,0.35)" font-size="9"
               font-family="'Space Mono', monospace" text-anchor="middle"
             >{{ r }}</text>
             <text
               :x="ML + (W - ML - MR) / 2" :y="H - 2"
-              fill="rgba(10,10,10,0.3)" font-size="9"
+              fill="rgba(244, 241, 255,0.3)" font-size="9"
               font-family="'Space Mono', monospace" text-anchor="middle"
             >{{ $tr('Round — bullish %', '轮次 — 看涨 %') }}</text>
           </svg>
@@ -534,7 +534,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(10,10,10,0.08);
+  border-bottom: 1px solid rgba(244, 241, 255,0.08);
   flex-shrink: 0;
 }
 
@@ -553,7 +553,7 @@ onBeforeUnmount(() => {
   font-size: 12px;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 
 /* Header action cluster */
@@ -566,8 +566,8 @@ onBeforeUnmount(() => {
 /* ── Export button — mirrors .export-btn ── */
 .wi-export-btn {
   background: none;
-  border: 1px solid rgba(10,10,10,0.15);
-  color: rgba(10,10,10,0.5);
+  border: 1px solid rgba(244, 241, 255,0.15);
+  color: rgba(244, 241, 255,0.5);
   padding: 4px 10px;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -585,8 +585,8 @@ onBeforeUnmount(() => {
   padding: 8px 16px;
   font-size: 11px;
   line-height: 1.5;
-  color: rgba(10,10,10,0.5);
-  border-bottom: 1px solid rgba(10,10,10,0.05);
+  color: rgba(244, 241, 255,0.5);
+  border-bottom: 1px solid rgba(244, 241, 255,0.05);
   letter-spacing: 0.3px;
 }
 
@@ -599,7 +599,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 40px;
   text-align: center;
-  color: rgba(10,10,10,0.35);
+  color: rgba(244, 241, 255,0.35);
   font-size: 13px;
   letter-spacing: 1px;
 }
@@ -619,7 +619,7 @@ onBeforeUnmount(() => {
 
 .wi-picker {
   padding: 12px 16px;
-  border-bottom: 1px solid rgba(10,10,10,0.05);
+  border-bottom: 1px solid rgba(244, 241, 255,0.05);
 }
 
 .wi-picker-header {
@@ -632,7 +632,7 @@ onBeforeUnmount(() => {
   font-size: 10px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
 }
 .wi-clear {
   background: none;
@@ -640,7 +640,7 @@ onBeforeUnmount(() => {
   font-family: var(--font-mono);
   font-size: 10px;
   letter-spacing: 1px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   cursor: pointer;
   padding: 2px 6px;
   transition: color 0.15s;
@@ -660,18 +660,18 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   padding: 8px 10px;
-  border: 1px solid rgba(10,10,10,0.12);
+  border: 1px solid rgba(244, 241, 255,0.12);
   cursor: pointer;
   font-size: 11px;
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   transition: background-color 0.12s, border-color 0.12s;
 }
 .wi-agent-card:hover:not(.disabled) {
-  background: rgba(10,10,10,0.02);
-  border-color: rgba(255, 107, 26, 0.35);
+  background: rgba(244, 241, 255,0.02);
+  border-color: rgba(167, 139, 250, 0.35);
 }
 .wi-agent-card.selected {
-  background: rgba(255, 107, 26, 0.06);
+  background: rgba(167, 139, 250, 0.06);
   border-color: var(--color-orange);
   color: var(--foreground);
 }
@@ -684,7 +684,7 @@ onBeforeUnmount(() => {
 
 .wi-rank {
   font-size: 10px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   min-width: 24px;
   font-weight: 700;
 }
@@ -747,8 +747,8 @@ onBeforeUnmount(() => {
 }
 
 .wi-chart-wrap {
-  background: rgba(10,10,10,0.02);
-  border: 1px solid rgba(10,10,10,0.06);
+  background: rgba(244, 241, 255,0.02);
+  border: 1px solid rgba(244, 241, 255,0.06);
   padding: 10px 6px 4px;
 }
 
@@ -760,7 +760,7 @@ onBeforeUnmount(() => {
   padding: 6px 8px 0;
   font-size: 10px;
   letter-spacing: 1px;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
 }
 .wi-legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .wi-legend-swatch {
@@ -772,8 +772,8 @@ onBeforeUnmount(() => {
 .wi-legend-swatch.orig {
   background: repeating-linear-gradient(
     90deg,
-    rgba(10, 10, 10, 0.35) 0,
-    rgba(10, 10, 10, 0.35) 4px,
+    rgba(244, 241, 255, 0.35) 0,
+    rgba(244, 241, 255, 0.35) 4px,
     transparent 4px,
     transparent 7px
   );
@@ -789,7 +789,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 8px;
   padding: 12px 14px;
-  border: 1px solid rgba(10,10,10,0.08);
+  border: 1px solid rgba(244, 241, 255,0.08);
   background: var(--color-white);
 }
 
@@ -801,7 +801,7 @@ onBeforeUnmount(() => {
   gap: 12px;
 }
 .wi-impact-label {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 2px;
   text-transform: uppercase;
   font-size: 10px;
@@ -812,9 +812,9 @@ onBeforeUnmount(() => {
   gap: 8px;
   font-family: var(--font-mono);
 }
-.wi-val.orig { color: rgba(10,10,10,0.5); }
+.wi-val.orig { color: rgba(244, 241, 255,0.5); }
 .wi-val.cf { color: var(--foreground); font-weight: 700; }
-.wi-arrow { color: rgba(10,10,10,0.3); }
+.wi-arrow { color: rgba(244, 241, 255,0.3); }
 
 /* ── Delta pill — orange = positive shift, red = negative, neutral gray ── */
 .wi-delta {
@@ -826,15 +826,15 @@ onBeforeUnmount(() => {
 }
 .wi-delta.positive {
   color: var(--color-orange);
-  border-color: rgba(255, 107, 26, 0.35);
+  border-color: rgba(167, 139, 250, 0.35);
 }
 .wi-delta.negative {
   color: var(--color-red);
-  border-color: rgba(255, 68, 68, 0.35);
+  border-color: rgba(240, 171, 252, 0.35);
 }
 .wi-delta.neutral {
-  color: rgba(10,10,10,0.4);
-  border-color: rgba(10,10,10,0.12);
+  color: rgba(244, 241, 255,0.4);
+  border-color: rgba(244, 241, 255,0.12);
 }
 
 .wi-impact-badge-row { margin-top: 4px; }
@@ -849,8 +849,8 @@ onBeforeUnmount(() => {
 }
 .wi-impact-badge.impact-strong {
   color: var(--color-orange);
-  background: rgba(255, 107, 26, 0.08);
-  border-color: rgba(255, 107, 26, 0.4);
+  background: rgba(167, 139, 250, 0.08);
+  border-color: rgba(167, 139, 250, 0.4);
 }
 .wi-impact-badge.impact-moderate {
   color: var(--color-amber);
@@ -858,17 +858,17 @@ onBeforeUnmount(() => {
   border-color: rgba(255, 179, 71, 0.45);
 }
 .wi-impact-badge.impact-minimal {
-  color: rgba(10,10,10,0.45);
-  background: rgba(10,10,10,0.04);
-  border-color: rgba(10,10,10,0.12);
+  color: rgba(244, 241, 255,0.45);
+  background: rgba(244, 241, 255,0.04);
+  border-color: rgba(244, 241, 255,0.12);
 }
 
 .wi-summary {
   font-size: 11px;
   line-height: 1.55;
-  color: rgba(10,10,10,0.75);
+  color: rgba(244, 241, 255,0.75);
   padding-top: 8px;
-  border-top: 1px solid rgba(10,10,10,0.06);
+  border-top: 1px solid rgba(244, 241, 255,0.06);
   letter-spacing: 0.2px;
 }
 

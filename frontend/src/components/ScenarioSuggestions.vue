@@ -199,8 +199,8 @@ onBeforeUnmount(() => {
 .ss-wrap {
   margin-top: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
-  background: rgba(255, 107, 26, 0.05);
-  border: 2px dashed rgba(255, 107, 26, 0.35);
+  background: rgba(167, 139, 250, 0.05);
+  border: 2px dashed rgba(167, 139, 250, 0.35);
   border-radius: 4px;
   font-family: var(--font-mono);
   position: relative;
@@ -229,7 +229,7 @@ onBeforeUnmount(() => {
 }
 
 .ss-sub {
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   font-size: 10px;
   letter-spacing: 1px;
   font-weight: normal;
@@ -238,7 +238,7 @@ onBeforeUnmount(() => {
 .ss-close {
   background: none;
   border: none;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
   font-size: 18px;
   line-height: 1;
   cursor: pointer;
@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
 
 .ss-loading {
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   letter-spacing: 0.5px;
   display: flex;
   align-items: center;
@@ -261,7 +261,7 @@ onBeforeUnmount(() => {
 .ss-spinner {
   width: 10px;
   height: 10px;
-  border: 2px solid rgba(255, 107, 26, 0.25);
+  border: 2px solid rgba(167, 139, 250, 0.25);
   border-top-color: var(--color-orange);
   border-radius: 50%;
   display: inline-block;
@@ -280,7 +280,7 @@ onBeforeUnmount(() => {
 
 .ss-card {
   background: var(--color-white);
-  border: 2px solid rgba(10, 10, 10, 0.08);
+  border: 2px solid rgba(244, 241, 255, 0.08);
   border-radius: 4px;
   padding: 10px 12px;
   display: flex;
@@ -320,7 +320,7 @@ onBeforeUnmount(() => {
 
 .ss-range {
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   letter-spacing: 0.5px;
 }
 
@@ -333,7 +333,7 @@ onBeforeUnmount(() => {
 
 .ss-rationale {
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   line-height: 1.4;
   letter-spacing: 0.2px;
 }
