@@ -76,6 +76,55 @@ WEBHOOK_USER_AGENT = "MiroShark-Webhook/1.0"
 WEBHOOK_TIMEOUT_SECONDS = 5.0
 WEBHOOK_MAX_SCENARIO_CHARS = 280
 
+# ---- Event filtering (WEBHOOK_EVENTS) ---------------------------------
+#
+# ECOSYSTEM.md now lists 10+ integrators and counting. Not every
+# integrator wants a fire on every simulation: a Polymarket bot only
+# cares about directional, high-confidence signals; a research pipeline
+# only about excellent-quality outcomes; an alert system only about
+# Bearish flips. ``WEBHOOK_EVENTS`` is a comma-separated allow-list:
+# blank → fire on everything (existing behavior, backward-compatible);
+# populated → only fire when the payload matches the filter.
+#
+# Tokens are case-insensitive and split on commas. Within a category
+# (direction / confidence / quality) tokens combine with OR — the value
+# only has to satisfy one. Across categories they combine with AND — a
+# payload must pass every category that has at least one token set, so
+# ``WEBHOOK_EVENTS=bullish,bearish,high_confidence`` means "directional
+# AND high-confidence". Unknown tokens are silently ignored so a typo
+# never silently disables the filter.
+WEBHOOK_EVENTS_ENV_VAR = "WEBHOOK_EVENTS"
+
+EVENT_TOKEN_BULLISH = "bullish"
+EVENT_TOKEN_NEUTRAL = "neutral"
+EVENT_TOKEN_BEARISH = "bearish"
+EVENT_TOKEN_HIGH_CONFIDENCE = "high_confidence"
+EVENT_TOKEN_MEDIUM_CONFIDENCE = "medium_confidence"
+EVENT_TOKEN_GOOD_QUALITY = "good_quality"
+EVENT_TOKEN_EXCELLENT_QUALITY = "excellent_quality"
+
+_DIRECTION_TOKENS = frozenset({
+    EVENT_TOKEN_BULLISH,
+    EVENT_TOKEN_NEUTRAL,
+    EVENT_TOKEN_BEARISH,
+})
+_CONFIDENCE_TOKENS = frozenset({
+    EVENT_TOKEN_HIGH_CONFIDENCE,
+    EVENT_TOKEN_MEDIUM_CONFIDENCE,
+})
+_QUALITY_TOKENS = frozenset({
+    EVENT_TOKEN_GOOD_QUALITY,
+    EVENT_TOKEN_EXCELLENT_QUALITY,
+})
+RECOGNIZED_EVENT_TOKENS = _DIRECTION_TOKENS | _CONFIDENCE_TOKENS | _QUALITY_TOKENS
+
+# High = leading-stance pct >= 75; Medium = 50 .. 75. Matches the
+# four-bucket scale ``polymarket_service`` already exposes so a
+# downstream filter rule and a downstream polymarket signal stay in
+# sync byte-for-byte.
+_HIGH_CONFIDENCE_FLOOR = 75.0
+_MEDIUM_CONFIDENCE_FLOOR = 50.0
+
 
 class WebhookPayload(TypedDict, total=False):
     """The outbound webhook JSON body assembled by :func:`build_payload`.
@@ -420,6 +469,185 @@ def _resolve_webhook_secret() -> str:
     return (os.environ.get(WEBHOOK_SECRET_ENV_VAR, "") or "").strip()
 
 
+def _resolve_event_filter() -> set[str]:
+    """Parse ``WEBHOOK_EVENTS`` into a normalised lowercase token set.
+
+    Late-bound (matches :func:`_resolve_webhook_url` /
+    :func:`_resolve_webhook_secret`) so an operator can flip filter rules
+    via ``os.environ`` without restarting. Empty / unset env var returns
+    an empty set, which the dispatch path treats as "fire on everything".
+    Unrecognized tokens are preserved verbatim so the caller can log them
+    — :func:`payload_passes_event_filter` simply ignores them.
+    """
+    raw = (os.environ.get(WEBHOOK_EVENTS_ENV_VAR, "") or "").strip()
+    if not raw:
+        return set()
+    return {tok.strip().lower() for tok in raw.split(",") if tok.strip()}
+
+
+def _payload_direction(payload: Dict[str, Any]) -> Optional[str]:
+    """Pick the dominant stance bucket from ``final_consensus``.
+
+    Returns ``"bullish"`` / ``"neutral"`` / ``"bearish"`` using the same
+    ``>=`` plurality rule the Discord embed colour helper uses, so a
+    ``bullish`` filter rule matches the same simulations the share-card
+    colour reports as bullish — no drift between filter outcome and the
+    visual surfaces operators are already watching.
+
+    Returns ``None`` when ``final_consensus`` is missing or all-zero,
+    which the filter treats as "no direction asserted" (fails any
+    direction-set rule).
+    """
+    consensus = payload.get("final_consensus")
+    if not isinstance(consensus, dict):
+        return None
+    try:
+        bullish = float(consensus.get("bullish") or 0.0)
+        neutral = float(consensus.get("neutral") or 0.0)
+        bearish = float(consensus.get("bearish") or 0.0)
+    except (TypeError, ValueError):
+        return None
+    if bullish == 0.0 and neutral == 0.0 and bearish == 0.0:
+        return None
+    if bullish >= bearish and bullish >= neutral:
+        return EVENT_TOKEN_BULLISH
+    if bearish >= bullish and bearish >= neutral:
+        return EVENT_TOKEN_BEARISH
+    return EVENT_TOKEN_NEUTRAL
+
+
+def _payload_confidence_pct(payload: Dict[str, Any]) -> Optional[float]:
+    """Return the leading-stance percentage from ``final_consensus``.
+
+    Used as the confidence proxy for the high/medium-confidence filter
+    tokens. ``max(bullish, neutral, bearish)`` matches what every other
+    surface reports as the "winning %", so a ``high_confidence`` rule
+    fires on the same sims a reader would call high-confidence by eye.
+    """
+    consensus = payload.get("final_consensus")
+    if not isinstance(consensus, dict):
+        return None
+    try:
+        bullish = float(consensus.get("bullish") or 0.0)
+        neutral = float(consensus.get("neutral") or 0.0)
+        bearish = float(consensus.get("bearish") or 0.0)
+    except (TypeError, ValueError):
+        return None
+    if bullish == 0.0 and neutral == 0.0 and bearish == 0.0:
+        return None
+    return max(bullish, neutral, bearish)
+
+
+def _payload_quality_key(payload: Dict[str, Any]) -> Optional[str]:
+    """Return the normalised lowercase quality bucket — ``"excellent"`` /
+    ``"good"`` / etc — or ``None`` if no quality is recorded.
+
+    ``quality_health`` in the payload comes straight from
+    ``quality.json``; the canonical values are ``"excellent" | "good" |
+    "fair" | "poor"`` but historical files sometimes capitalise it. Lower-
+    casing here means a filter rule works regardless of casing on disk.
+    """
+    raw = payload.get("quality_health")
+    if not isinstance(raw, str):
+        return None
+    stripped = raw.strip().lower()
+    return stripped or None
+
+
+def payload_passes_event_filter(
+    payload: Dict[str, Any],
+    events: Optional[set[str]] = None,
+) -> Tuple[bool, Dict[str, Any]]:
+    """Decide whether ``payload`` should be dispatched under ``events``.
+
+    Returns ``(passes, trace)``. ``trace`` is a small dict captured for
+    the log entry / debug output so an operator can read why a webhook
+    was suppressed without re-deriving the values from the payload.
+
+    Semantics:
+      * ``events`` empty (caller passed nothing or ``WEBHOOK_EVENTS``
+        is unset) → ``passes=True`` unconditionally, ``trace`` empty.
+        Backward-compatible existing behavior.
+      * Tokens partition into three categories — direction, confidence,
+        quality. **Within** a category tokens OR (any one satisfies it);
+        **across** categories with at least one token they AND (every
+        active category must be satisfied).
+      * Unknown tokens are recorded in ``trace["ignored_tokens"]`` but
+        don't affect the verdict — a typo never silently disables the
+        filter.
+      * Failed sims (``status == "failed"``) bypass every category
+        check — operators relying on a webhook for failure visibility
+        shouldn't have a filter swallow the alert that mattered most.
+    """
+    if events is None:
+        events = _resolve_event_filter()
+    trace: Dict[str, Any] = {}
+    if not events:
+        return True, trace
+
+    ignored = sorted(events - RECOGNIZED_EVENT_TOKENS)
+    if ignored:
+        trace["ignored_tokens"] = ignored
+
+    # Always let failed-sim alerts through — a filter that hides the
+    # one event an operator needed to see would be worse than no filter.
+    status = payload.get("status")
+    if status == "failed":
+        trace["bypass"] = "failed_status"
+        return True, trace
+
+    direction_rules = events & _DIRECTION_TOKENS
+    confidence_rules = events & _CONFIDENCE_TOKENS
+    quality_rules = events & _QUALITY_TOKENS
+
+    # If the operator only set unknown tokens, dispatch (matches the
+    # blank-filter case): a typo-only filter shouldn't silently turn
+    # the webhook off.
+    if not direction_rules and not confidence_rules and not quality_rules:
+        trace["no_recognized_tokens"] = True
+        return True, trace
+
+    if direction_rules:
+        direction = _payload_direction(payload)
+        trace["direction"] = direction
+        if direction is None or direction not in direction_rules:
+            trace["failed_on"] = "direction"
+            return False, trace
+
+    if confidence_rules:
+        conf = _payload_confidence_pct(payload)
+        trace["confidence_pct"] = conf
+        if conf is None:
+            trace["failed_on"] = "confidence"
+            return False, trace
+        passed = False
+        if EVENT_TOKEN_HIGH_CONFIDENCE in confidence_rules and conf >= _HIGH_CONFIDENCE_FLOOR:
+            passed = True
+        if (EVENT_TOKEN_MEDIUM_CONFIDENCE in confidence_rules
+                and _MEDIUM_CONFIDENCE_FLOOR <= conf < _HIGH_CONFIDENCE_FLOOR):
+            passed = True
+        if not passed:
+            trace["failed_on"] = "confidence"
+            return False, trace
+
+    if quality_rules:
+        quality = _payload_quality_key(payload)
+        trace["quality_health"] = quality
+        if quality is None:
+            trace["failed_on"] = "quality"
+            return False, trace
+        passed = False
+        if EVENT_TOKEN_EXCELLENT_QUALITY in quality_rules and quality == "excellent":
+            passed = True
+        if EVENT_TOKEN_GOOD_QUALITY in quality_rules and quality in ("excellent", "good"):
+            passed = True
+        if not passed:
+            trace["failed_on"] = "quality"
+            return False, trace
+
+    return True, trace
+
+
 def compute_signature(
     payload_bytes: bytes,
     secret: Optional[str] = None,
@@ -749,6 +977,15 @@ def fire_webhook_for_simulation(
         completed_at=completed_at,
         error=error,
     )
+
+    events = _resolve_event_filter()
+    passes, trace = payload_passes_event_filter(payload, events)
+    if not passes:
+        logger.info(
+            f"Webhook suppressed for {simulation_id} ({status}) "
+            f"by WEBHOOK_EVENTS={sorted(events)}: {trace}"
+        )
+        return
 
     _start_dispatch_thread(
         url=url,

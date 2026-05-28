@@ -28,6 +28,7 @@ Either set environment variables before launching MiroShark:
 WEBHOOK_URL=https://hooks.slack.com/services/T0XXX/B0YYY/abcSECRETxyz
 PUBLIC_BASE_URL=https://miroshark.app           # optional, see below
 WEBHOOK_SECRET=                                  # optional, see "Verifying webhook signatures" below
+WEBHOOK_EVENTS=                                  # optional, see "Filtering events" below
 ```
 
 …or open **Settings → Integrations · Webhook** and paste the URL there. Settings changes apply at runtime — no restart.
@@ -35,6 +36,8 @@ WEBHOOK_SECRET=                                  # optional, see "Verifying webh
 `PUBLIC_BASE_URL` is the publicly-reachable base of your MiroShark deployment (e.g. `https://miroshark.app`). When set, the payload contains absolute `share_url` and `share_card_url` fields so Slack / Discord auto-unfurl with the simulation card. Leave it blank if you only need relative paths and your consumer can build absolute URLs itself.
 
 `WEBHOOK_SECRET` is the shared secret used to HMAC-sign every dispatched payload — see [Verifying webhook signatures](#verifying-webhook-signatures) below. Leave it blank to skip signing (existing integrations continue working unchanged). Generate a fresh value with `python -c 'import secrets; print(secrets.token_hex(32))'` and paste it into both the MiroShark `.env` and your consumer's environment.
+
+`WEBHOOK_EVENTS` is an optional allow-list — comma-separated tokens like `bullish,high_confidence` that filter dispatch to the slice of events you care about. See [Filtering events](#filtering-events) below for the token reference and AND/OR semantics. Blank fires on every completion (existing behavior, backward-compatible).
 
 ---
 
@@ -111,6 +114,49 @@ WEBHOOK_SECRET=                                  # optional, see "Verifying webh
 - **2xx = success** — anything else is logged as a delivery failure but never raised.
 - **Delivery log** — every dispatch attempt (auto-fired *or* manually replayed) appends one JSON line to `<sim_dir>/webhook-log.jsonl` with timestamp, masked URL, HTTP status code, latency, and trigger label. Bounded to 50 rows on disk; `GET /api/simulation/<id>/webhook-log` (admin-token gated) returns the last 10 entries newest-first plus the all-time `total_attempts` counter.
 - **Manual retry** — `POST /api/simulation/<id>/webhook-retry` (admin-token gated) re-fires the completion webhook for a sim already in a terminal state. Useful when the original delivery hit a transient 5xx, the URL was misconfigured at the time, or the consuming integration was down. The retry payload carries an extra top-level `retry: true` so downstream consumers can dedupe replays. The replay bypasses the per-process `(sim_id, status)` dedup gate that auto-fires honour (that gate exists only to prevent the runner's two terminal code paths from double-firing automatically; an explicit retry should always go through). Returns 400 when no webhook URL is configured, 409 when the simulation has not reached a terminal state.
+
+---
+
+## Filtering events
+
+`WEBHOOK_EVENTS` is an optional comma-separated allow-list that filters dispatch at the source. The default — unset or blank — fires on every `simulation.completed` and `simulation.failed`, matching the original behavior. When set, MiroShark evaluates the rules against each payload before sending; failed evaluations are logged and skipped.
+
+Useful when an integrator only cares about a slice of the stream — a Polymarket bot that only wants directional, high-confidence signals; a research pipeline that only wants excellent-quality runs; an alert channel that only wants Bearish flips.
+
+### Tokens
+
+| Category | Tokens | Meaning |
+|---|---|---|
+| Direction | `bullish`, `neutral`, `bearish` | The dominant stance in the final consensus, using the same `>=` plurality rule the share card / Discord embed colour uses |
+| Confidence | `high_confidence` | Leading-stance percentage `>=` 75% |
+| Confidence | `medium_confidence` | Leading-stance percentage in `[50%, 75%)` |
+| Quality | `excellent_quality` | `quality_health == "excellent"` |
+| Quality | `good_quality` | `quality_health` is `"excellent"` or `"good"` |
+
+### Logic
+
+- **OR within a category** — `bullish,bearish` means "any directional consensus" (skip neutral).
+- **AND across categories** — `bullish,high_confidence` means "directional AND high confidence". A payload must satisfy every category that has at least one token set.
+- **Failed sims always fire** — `simulation.failed` bypasses the filter so the alert an operator most needs to see never gets swallowed.
+- **Unknown tokens are ignored** — a typo like `WEBHOOK_EVENTS=bulish` does not silently disable the webhook; the filter falls through to "no recognized rules" and dispatches normally.
+
+### Examples
+
+```bash
+# Skip neutral consensus — only fire on directional outcomes:
+WEBHOOK_EVENTS=bullish,bearish
+
+# Polymarket bot — only fire on high-confidence directional signals:
+WEBHOOK_EVENTS=bullish,bearish,high_confidence
+
+# Research pipeline — only fire on excellent-quality runs:
+WEBHOOK_EVENTS=excellent_quality
+
+# Strict — directional, high-confidence, excellent quality, all three:
+WEBHOOK_EVENTS=bullish,bearish,high_confidence,excellent_quality
+```
+
+Suppressed deliveries are logged at `info` level with the parsed token set, the payload's derived direction / confidence / quality, and the category that failed — so an operator can see exactly why a webhook didn't fire. They are **not** written to the per-sim `webhook-log.jsonl` (only attempted deliveries are).
 
 ---
 

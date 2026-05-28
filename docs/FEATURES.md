@@ -760,6 +760,19 @@ When `WEBHOOK_SECRET` is set, every outbound webhook payload is HMAC-signed and 
 
 Implementation: `compute_signature(payload_bytes, secret=None)` reads `WEBHOOK_SECRET` at call time (so a Settings change or env mutation takes effect immediately), returns `"sha256=" + hmac.sha256(secret, body).hexdigest()` or `None` when blank. `_post_json` injects the header only when `compute_signature` returns non-None — auto-fire, retry, and the `Send test event` button all share the same dispatch path, so all three paths sign consistently. Zero new dependencies (pure stdlib `hmac` + `hashlib`).
 
+## Webhook Event Filtering
+
+When `WEBHOOK_EVENTS` is set, MiroShark filters dispatch at the source — every completion payload is evaluated against the comma-separated allow-list before the daemon thread is spawned, and non-matching payloads are logged and dropped. Useful when an integrator only cares about a slice of the stream: a Polymarket bot subscribed to `bullish,bearish,high_confidence`, a research pipeline subscribed to `excellent_quality`, a Bearish-flip alerter subscribed to `bearish`. The original behavior is preserved — blank or unset `WEBHOOK_EVENTS` fires on every completion exactly as before.
+
+- **Three categories.** Direction tokens (`bullish` / `neutral` / `bearish`) OR within themselves; confidence tokens (`high_confidence` >= 75%, `medium_confidence` 50–75%) OR within themselves; quality tokens (`excellent_quality`, `good_quality` = good OR excellent) OR within themselves. Categories combine with AND: `bullish,high_confidence,excellent_quality` means all three must hold.
+- **Direction derived consistently.** The dominant-stance rule matches the share-card colour, the Discord embed border, and every other surface that reports "bullish / neutral / bearish" — `bullish` here means the same sims a viewer would call bullish.
+- **Failed sims always fire.** `simulation.failed` bypasses every rule. A filter that swallows the one alert an operator added the webhook to catch would be worse than no filter at all.
+- **Unknown tokens are ignored.** A typo like `WEBHOOK_EVENTS=bulish` falls through as "no recognized rules" and dispatches normally — the filter never silently disables itself.
+- **Late-bound.** `WEBHOOK_EVENTS` is read on every dispatch attempt (same `os.environ` late-binding as `WEBHOOK_URL` and `WEBHOOK_SECRET`) so an operator can flip filter rules without restarting.
+- **Suppressed deliveries log, don't persist.** Filtered-out fires emit one `info` line with the parsed token set, the payload's derived values, and the failing category — but no row is written to `webhook-log.jsonl` (only attempted deliveries are; an operator inspecting the log sees only what actually shipped).
+
+Implementation: `_resolve_event_filter()` parses `WEBHOOK_EVENTS` into a lowercase token set; `payload_passes_event_filter(payload, events)` returns `(bool, trace_dict)` evaluating direction / confidence / quality rules using helpers (`_payload_direction`, `_payload_confidence_pct`, `_payload_quality_key`) that share semantics with the existing share-card / Discord-embed renderers. `fire_webhook_for_simulation` calls the filter between `_mark_fired` and `_start_dispatch_thread`; the manual retry endpoint deliberately bypasses the filter (operator-driven, like the dedup bypass). Zero new dependencies. Backward-compatible — blank `WEBHOOK_EVENTS` returns the original code path byte-for-byte.
+
 ## Channel-Native Completion Notifications (Discord + Slack + Email)
 
 The generic webhook (`WEBHOOK_URL`) posts a raw JSON blob — perfect for Zapier / Make / n8n, but Discord renders nothing from JSON and Slack inlines it as an ugly code block. Three channel-native paths land formatted cards (or emails) in the platform's own format:
