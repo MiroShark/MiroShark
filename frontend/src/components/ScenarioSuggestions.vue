@@ -196,13 +196,21 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Smart Setup — reskinned to match the dark MiroShark Home.
+   Bull / Bear / Neutral are remapped onto two distinguishable
+   violets + a soft fuchsia so the semantic colour cues survive. */
+
 .ss-wrap {
-  margin-top: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  background: rgba(255, 107, 26, 0.05);
-  border: 2px dashed rgba(255, 107, 26, 0.35);
-  border-radius: 4px;
-  font-family: var(--font-mono);
+  margin-top: 0.65rem;
+  padding: 0.95rem 1.1rem 1.05rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(48, 36, 84, 0.45) 0%, rgba(20, 14, 42, 0.65) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 28px -16px rgba(0, 0, 0, 0.7);
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color: #f4f1ff;
   position: relative;
 }
 
@@ -210,48 +218,65 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0.7rem;
+  gap: 0.75rem;
 }
 
 .ss-label {
   font-size: 11px;
-  letter-spacing: 2px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--color-orange);
-  display: flex;
+  color: #c4b5fd;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .ss-dot {
-  color: var(--color-orange);
-  font-size: 12px;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #a78bfa 60%, #4c1d95 100%);
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.9), 0 0 16px rgba(139, 92, 246, 0.6);
+  font-size: 0;
+  color: transparent;
 }
 
 .ss-sub {
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(228, 222, 255, 0.55);
   font-size: 10px;
-  letter-spacing: 1px;
+  letter-spacing: 0.04em;
   font-weight: normal;
 }
 
 .ss-close {
-  background: none;
-  border: none;
-  color: rgba(10, 10, 10, 0.4);
-  font-size: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(70, 55, 120, 0.5) 0%, rgba(20, 14, 42, 0.75) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(228, 222, 255, 0.7);
+  font-size: 14px;
   line-height: 1;
   cursor: pointer;
-  padding: 0 4px;
-  transition: var(--transition-fast);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
-.ss-close:hover { color: var(--color-orange); }
+.ss-close:hover {
+  color: #ffffff;
+  border-color: rgba(167, 139, 250, 0.55);
+  transform: translateY(-1px);
+}
 
 .ss-loading {
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.55);
-  letter-spacing: 0.5px;
+  color: rgba(228, 222, 255, 0.6);
+  letter-spacing: 0.04em;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -259,13 +284,14 @@ onBeforeUnmount(() => {
 }
 
 .ss-spinner {
-  width: 10px;
-  height: 10px;
-  border: 2px solid rgba(255, 107, 26, 0.25);
-  border-top-color: var(--color-orange);
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(167, 139, 250, 0.22);
+  border-top-color: #c4b5fd;
   border-radius: 50%;
   display: inline-block;
   animation: ss-spin 0.8s linear infinite;
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.4);
 }
 
 @keyframes ss-spin {
@@ -275,24 +301,49 @@ onBeforeUnmount(() => {
 .ss-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 10px;
+  gap: 0.6rem;
 }
 
 .ss-card {
-  background: var(--color-white);
-  border: 2px solid rgba(10, 10, 10, 0.08);
-  border-radius: 4px;
-  padding: 10px 12px;
+  position: relative;
+  background: linear-gradient(180deg, rgba(40, 30, 70, 0.65) 0%, rgba(18, 12, 38, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  transition: var(--transition-fast);
+  gap: 0.45rem;
+  color: #f4f1ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+  overflow: hidden;
 }
 
-.ss-card:hover { border-color: var(--color-orange); }
-.ss-card-bull { border-left: 4px solid var(--color-green); }
-.ss-card-bear { border-left: 4px solid var(--color-red); }
-.ss-card-neutral { border-left: 4px solid var(--color-amber); }
+.ss-card:hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 16px 36px -16px rgba(139, 92, 246, 0.5);
+}
+
+/* Left accent rails — semantic colour cue for direction. */
+.ss-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #a78bfa, #c4b5fd);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.5);
+}
+.ss-card-bull::before { background: linear-gradient(180deg, #c4b5fd, #a78bfa); box-shadow: 0 0 14px rgba(196, 181, 253, 0.6); }
+.ss-card-bear::before { background: linear-gradient(180deg, #f0abfc, #c084fc); box-shadow: 0 0 14px rgba(240, 171, 252, 0.55); }
+.ss-card-neutral::before { background: linear-gradient(180deg, #fcd34d, #c4b5fd); box-shadow: 0 0 14px rgba(252, 211, 77, 0.4); }
 
 .ss-card-head {
   display: flex;
@@ -303,66 +354,72 @@ onBeforeUnmount(() => {
 
 .ss-badge {
   font-size: 9px;
-  letter-spacing: 2px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 2px;
-  font-weight: 600;
-  color: var(--color-white);
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
-
-.ss-badge-bull { background: var(--color-green); }
-.ss-badge-bear { background: var(--color-red); }
-.ss-badge-neutral {
-  background: var(--color-amber);
-  color: var(--color-black);
-}
+.ss-badge-bull    { background: linear-gradient(180deg, #a78bfa 0%, #6d4dd8 100%); }
+.ss-badge-bear    { background: linear-gradient(180deg, #f0abfc 0%, #c084fc 100%); }
+.ss-badge-neutral { background: linear-gradient(180deg, #fcd34d 0%, #d4a017 100%); color: #1a0f3a; }
 
 .ss-range {
   font-size: 10px;
-  color: rgba(10, 10, 10, 0.55);
-  letter-spacing: 0.5px;
+  color: rgba(228, 222, 255, 0.55);
+  letter-spacing: 0.04em;
 }
 
 .ss-question {
-  font-family: var(--font-display);
+  font-family: 'Geist', system-ui, -apple-system, sans-serif;
   font-size: 14px;
-  color: var(--color-black);
-  line-height: 1.35;
+  color: #f4f1ff;
+  line-height: 1.4;
+  font-weight: 600;
 }
 
 .ss-rationale {
-  font-size: 10px;
-  color: rgba(10, 10, 10, 0.55);
-  line-height: 1.4;
-  letter-spacing: 0.2px;
+  font-size: 10.5px;
+  color: rgba(228, 222, 255, 0.6);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
 }
 
 .ss-use {
   align-self: flex-start;
   margin-top: 4px;
-  background: transparent;
-  border: 1px solid var(--color-orange);
-  color: var(--color-orange);
-  font-family: var(--font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: linear-gradient(180deg, rgba(70, 55, 120, 0.55) 0%, rgba(20, 14, 42, 0.75) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.4);
+  color: #ece8ff;
+  font-family: inherit;
   font-size: 10px;
-  letter-spacing: 1.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  padding: 4px 10px;
-  border-radius: 2px;
+  padding: 6px 12px;
+  border-radius: 9999px;
   cursor: pointer;
-  transition: var(--transition-fast);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35);
+  transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .ss-use:hover {
-  background: var(--color-orange);
-  color: var(--color-white);
+  color: #ffffff;
+  border-color: rgba(196, 181, 253, 0.7);
+  transform: translateY(-1px);
 }
 
 .ss-error {
   font-size: 11px;
-  color: var(--color-red);
-  letter-spacing: 0.5px;
+  color: #f0abfc;
+  letter-spacing: 0.04em;
 }
 
 /* Panel enter/leave */

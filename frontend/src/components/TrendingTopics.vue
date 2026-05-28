@@ -155,13 +155,20 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* Reskinned for the dark MiroShark Home — glossy violet panel,
+   chrome accents, no orange/green Hyperstitions leftovers. */
+
 .tt-wrap {
-  margin-top: var(--space-md);
-  padding: var(--space-sm) var(--space-md);
-  background: rgba(67, 193, 101, 0.04);
-  border: 2px dashed rgba(67, 193, 101, 0.3);
-  border-radius: 4px;
-  font-family: var(--font-mono);
+  margin-top: 1rem;
+  padding: 0.95rem 1.1rem 1.05rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(48, 36, 84, 0.45) 0%, rgba(20, 14, 42, 0.65) 100%);
+  border: 1px solid rgba(167, 139, 250, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 12px 28px -16px rgba(0, 0, 0, 0.7);
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  color: #f4f1ff;
   position: relative;
 }
 
@@ -169,53 +176,67 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-sm);
+  margin-bottom: 0.7rem;
+  gap: 0.75rem;
 }
 
 .tt-label {
   font-size: 11px;
-  letter-spacing: 2px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--color-green);
-  display: flex;
+  color: #c4b5fd;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .tt-dot {
-  color: var(--color-green);
-  font-size: 12px;
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #ffffff 0%, #a78bfa 60%, #4c1d95 100%);
+  box-shadow: 0 0 8px rgba(167, 139, 250, 0.9), 0 0 16px rgba(139, 92, 246, 0.6);
+  /* Hides the original ◉ glyph; the CSS dot above replaces it. */
+  font-size: 0;
+  color: transparent;
 }
 
 .tt-sub {
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(228, 222, 255, 0.55);
   font-size: 10px;
-  letter-spacing: 1px;
+  letter-spacing: 0.04em;
   font-weight: normal;
   text-transform: none;
 }
 
 .tt-refresh {
-  background: none;
-  border: 1px solid rgba(10, 10, 10, 0.15);
-  color: rgba(10, 10, 10, 0.45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(70, 55, 120, 0.5) 0%, rgba(20, 14, 42, 0.75) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(228, 222, 255, 0.7);
   font-size: 13px;
   line-height: 1;
   cursor: pointer;
-  padding: 3px 8px;
-  border-radius: 2px;
-  transition: var(--transition-fast);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
 
 .tt-refresh:hover {
-  color: var(--color-green);
-  border-color: var(--color-green);
+  color: #ffffff;
+  border-color: rgba(167, 139, 250, 0.55);
+  transform: translateY(-1px);
 }
 
 .tt-loading {
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.55);
-  letter-spacing: 0.5px;
+  color: rgba(228, 222, 255, 0.6);
+  letter-spacing: 0.04em;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -223,13 +244,14 @@ onMounted(() => {
 }
 
 .tt-spinner {
-  width: 10px;
-  height: 10px;
-  border: 2px solid rgba(67, 193, 101, 0.25);
-  border-top-color: var(--color-green);
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(167, 139, 250, 0.22);
+  border-top-color: #c4b5fd;
   border-radius: 50%;
   display: inline-block;
   animation: tt-spin 0.8s linear infinite;
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.4);
 }
 
 @keyframes tt-spin {
@@ -239,29 +261,49 @@ onMounted(() => {
 .tt-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
+  gap: 0.6rem;
 }
 
 .tt-card {
-  background: var(--color-white);
-  border: 2px solid rgba(10, 10, 10, 0.08);
-  border-left: 4px solid var(--color-green);
-  border-radius: 4px;
-  padding: 10px 12px;
+  position: relative;
+  background: linear-gradient(180deg, rgba(40, 30, 70, 0.65) 0%, rgba(18, 12, 38, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.85rem;
+  padding: 0.7rem 0.85rem;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.45rem;
   cursor: pointer;
   text-align: left;
   font-family: inherit;
-  transition: var(--transition-fast);
+  color: #f4f1ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45);
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
   min-height: 110px;
+  overflow: hidden;
+}
+
+/* Left accent rail — replaces the old 4px solid green border. */
+.tt-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, #a78bfa 0%, #c4b5fd 100%);
+  box-shadow: 0 0 12px rgba(167, 139, 250, 0.6);
 }
 
 .tt-card:hover:not(:disabled) {
-  border-color: var(--color-green);
-  border-left-color: var(--color-green);
+  border-color: rgba(167, 139, 250, 0.55);
   transform: translateY(-1px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.45),
+    0 16px 36px -16px rgba(139, 92, 246, 0.5);
 }
 
 .tt-card:disabled {
@@ -275,9 +317,9 @@ onMounted(() => {
   justify-content: space-between;
   gap: 8px;
   font-size: 9px;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(228, 222, 255, 0.6);
 }
 
 .tt-source {
@@ -286,21 +328,22 @@ onMounted(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 60%;
+  color: #c4b5fd;
 }
 
 .tt-time {
   font-size: 9px;
-  color: rgba(10, 10, 10, 0.4);
-  letter-spacing: 0.5px;
+  color: rgba(228, 222, 255, 0.5);
+  letter-spacing: 0.04em;
   text-transform: none;
   flex-shrink: 0;
 }
 
 .tt-title {
-  font-family: var(--font-display);
+  font-family: 'Geist', system-ui, -apple-system, sans-serif;
   font-size: 13px;
-  color: var(--color-black);
-  line-height: 1.35;
+  color: #f4f1ff;
+  line-height: 1.4;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -315,9 +358,9 @@ onMounted(() => {
   gap: 4px;
   margin-top: auto;
   font-size: 10px;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--color-green);
+  color: #c4b5fd;
 }
 
 .tt-cta-arrow {
