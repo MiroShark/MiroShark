@@ -71,9 +71,9 @@
 
           <h1
             class="ms-chrome-text ms-display"
-            :data-text="$tr('Simulate anything, for $1', '一切皆可模拟,只需 $1')"
+            :data-text="$tr('Simulate anything for $1', '一切皆可模拟 只需 $1')"
           >
-            {{ $tr('Simulate anything, for $1', '一切皆可模拟,只需 $1') }}
+            {{ $tr('Simulate anything for $1', '一切皆可模拟 只需 $1') }}
           </h1>
         </div>
 
@@ -841,7 +841,10 @@ const copyScenarioShareLink = async () => {
 .ms-nav-icon {
   width: 36px;
   padding: 0;
-  font-size: 1rem;
+  gap: 0;
+  justify-content: center;
+  font-size: 1.05rem;
+  line-height: 1;
 }
 .ms-nav-link:hover, .ms-nav-icon:hover {
   border-color: rgba(167,139,250,0.55);
@@ -937,9 +940,7 @@ const copyScenarioShareLink = async () => {
   font-weight: 900;
   letter-spacing: -0.04em;
   margin: 0;
-}
-@media (min-width: 900px) {
-  .ms-display { text-align: left; }
+  text-align: center;
 }
 
 .ms-chrome-text {

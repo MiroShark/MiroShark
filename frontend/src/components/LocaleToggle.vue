@@ -19,42 +19,54 @@ const { locale, toggleLocale } = useI18n()
 </script>
 
 <style scoped>
+/* Matches the dark glossy nav-pill family on the Home view. The
+   original orange Hyperstitions look is intentionally dropped. */
 .locale-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  font-family: 'JetBrains Mono', 'Courier New', monospace;
+  gap: 8px;
+  height: 36px;
+  padding: 0 10px;
+  font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.8);
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 4px;
+  letter-spacing: 0.08em;
+  color: #ece8ff;
+  background: linear-gradient(180deg, rgba(70, 55, 120, 0.45) 0%, rgba(20, 14, 42, 0.7) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
   cursor: pointer;
-  transition: all 0.15s ease;
   user-select: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 8px 22px -10px rgba(139, 92, 246, 0.4);
+  transition: border-color 180ms ease, transform 180ms ease, color 180ms ease;
 }
 
 .locale-toggle:hover {
-  color: #ff7a3d;
-  border-color: rgba(255, 122, 61, 0.4);
-  background: rgba(255, 122, 61, 0.08);
+  color: #ffffff;
+  border-color: rgba(167, 139, 250, 0.55);
+  transform: translateY(-1px);
 }
 
 .locale-toggle.active {
-  color: #ff7a3d;
-  border-color: rgba(255, 122, 61, 0.5);
+  color: #ffffff;
+  border-color: rgba(167, 139, 250, 0.55);
 }
 
 .locale-toggle-flag {
-  display: inline-block;
-  padding: 1px 5px;
-  background: rgba(255, 122, 61, 0.18);
-  border-radius: 2px;
-  color: #ff7a3d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 9999px;
   font-size: 10px;
+  font-weight: 700;
+  color: #f4f1ff;
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.35) 0%, rgba(76, 29, 149, 0.55) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .locale-toggle-text {
