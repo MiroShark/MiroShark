@@ -949,7 +949,9 @@ const saveSettings = async () => {
 .settings-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 10, 0.6);
+  background: rgba(5, 3, 10, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -963,15 +965,21 @@ const saveSettings = async () => {
 }
 
 .settings-modal {
-  background: #FAFAFA;
+  background: linear-gradient(180deg, rgba(40, 30, 70, 0.95) 0%, rgba(18, 12, 38, 0.97) 100%);
   width: 580px;
   max-width: calc(100vw - 48px);
   max-height: calc(100vh - 80px);
   overflow-y: auto;
-  border: 2px solid rgba(10,10,10,0.12);
+  border: 1px solid rgba(167, 139, 250, 0.3);
+  border-radius: 1.25rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 30px 80px -20px rgba(0, 0, 0, 0.9),
+    0 0 80px -20px rgba(139, 92, 246, 0.4);
+  color: #f4f1ff;
   position: relative;
   animation: slide-in 0.2s ease-out;
-  font-family: 'Space Mono', 'Courier New', monospace;
+  font-family: 'Geist', system-ui, -apple-system, sans-serif;
 }
 
 @keyframes slide-in {
@@ -985,45 +993,64 @@ const saveSettings = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 18px 22px;
-  background: #0A0A0A;
-  color: #FAFAFA;
+  background: transparent;
+  color: #f4f1ff;
+  border-bottom: 1px solid rgba(167, 139, 250, 0.18);
 }
 
 .title-label {
-  font-family: 'Space Mono', monospace;
+  font-family: 'Geist Mono', ui-monospace, monospace;
   font-size: 13px;
   font-weight: 700;
-  letter-spacing: 3px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
+  color: #c4b5fd;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .close-btn {
-  background: none;
-  border: none;
-  color: rgba(250,250,250,0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, rgba(70, 55, 120, 0.5) 0%, rgba(20, 14, 42, 0.75) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: rgba(244, 241, 255, 0.7);
   font-size: 14px;
+  line-height: 1;
   cursor: pointer;
-  padding: 4px 8px;
-  transition: color 0.1s;
+  padding: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: color 180ms ease, border-color 180ms ease, transform 180ms ease;
 }
-.close-btn:hover { color: #FAFAFA; }
+.close-btn:hover {
+  color: #ffffff;
+  border-color: rgba(167, 139, 250, 0.55);
+  transform: translateY(-1px);
+}
 
-/* ── Warning Stripe ── */
+/* ── Warning Stripe — now a calm metal rule ── */
 .warning-stripe {
-  height: 6px;
-  background: repeating-linear-gradient(
-    -45deg,
-    #FF6B1A,
-    #FF6B1A 10px,
-    #FAFAFA 10px,
-    #FAFAFA 20px
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(167, 139, 250, 0.4) 20%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(167, 139, 250, 0.4) 80%,
+    transparent 100%
   );
+  box-shadow: 0 0 16px rgba(167, 139, 250, 0.3);
 }
 
 /* ── Sections ── */
 .settings-section {
   padding: 22px;
-  border-bottom: 2px solid rgba(10,10,10,0.08);
+  border-bottom: 2px solid rgba(244, 241, 255,0.08);
 }
 
 .section-header {
@@ -1038,7 +1065,7 @@ const saveSettings = async () => {
   font-weight: 700;
   letter-spacing: 3px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
 }
 
 /* ── Current Setup grid ── */
@@ -1046,9 +1073,9 @@ const saveSettings = async () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border: 2px dashed rgba(10,10,10,0.1);
+  border: 2px dashed rgba(244, 241, 255,0.1);
   padding: 12px 14px;
-  background: #F5F5F5;
+  background: #1a0f3a;
 }
 .setup-row {
   display: flex;
@@ -1059,17 +1086,17 @@ const saveSettings = async () => {
   letter-spacing: 0.3px;
 }
 .setup-key {
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   flex-shrink: 0;
 }
 .setup-val {
-  color: #0A0A0A;
+  color: #f4f1ff;
   font-weight: 700;
   text-align: right;
   overflow-wrap: anywhere;
 }
 .setup-aux {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-weight: 400;
   margin-left: 4px;
 }
@@ -1091,14 +1118,14 @@ const saveSettings = async () => {
 .badge-dot {
   width: 7px;
   height: 7px;
-  background: rgba(10,10,10,0.2);
+  background: rgba(244, 241, 255,0.2);
   border-radius: 0;
 }
-.status-badge.ok .badge-dot { background: #43C165; }
+.status-badge.ok .badge-dot { background: #c4b5fd; }
 .status-badge.fail .badge-dot { background: #FF4444; }
-.status-badge.ok { color: #43C165; }
+.status-badge.ok { color: #c4b5fd; }
 .status-badge.fail { color: #FF4444; }
-.status-badge.idle { color: rgba(10,10,10,0.3); }
+.status-badge.idle { color: rgba(244, 241, 255,0.3); }
 
 /* ── Form Fields ── */
 .field-row {
@@ -1110,41 +1137,41 @@ const saveSettings = async () => {
   font-size: 11px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   margin-bottom: 6px;
 }
 
 .field-input {
   width: 100%;
-  border: 2px solid rgba(10,10,10,0.1);
-  background: #F5F5F5;
+  border: 2px solid rgba(244, 241, 255,0.1);
+  background: #1a0f3a;
   padding: 8px 11px;
   font-family: 'Space Mono', monospace;
   font-size: 13px;
-  color: #0A0A0A;
+  color: #f4f1ff;
   outline: none;
   transition: border-color 0.1s;
   box-sizing: border-box;
 }
-.field-input:focus { border-color: #FF6B1A; background: #FAFAFA; }
-.field-input::placeholder { color: rgba(10,10,10,0.3); }
+.field-input:focus { border-color: #a78bfa; background: #110a26; }
+.field-input::placeholder { color: rgba(244, 241, 255,0.3); }
 
 .select-wrapper { position: relative; }
 .field-select {
   width: 100%;
-  border: 2px solid rgba(10,10,10,0.1);
-  background: #F5F5F5;
+  border: 2px solid rgba(244, 241, 255,0.1);
+  background: #1a0f3a;
   padding: 8px 11px;
   font-family: 'Space Mono', monospace;
   font-size: 13px;
-  color: #0A0A0A;
+  color: #f4f1ff;
   outline: none;
   cursor: pointer;
   appearance: auto;
   transition: border-color 0.1s;
   box-sizing: border-box;
 }
-.field-select:focus { border-color: #FF6B1A; }
+.field-select:focus { border-color: #a78bfa; }
 
 /* ── Model input group ── */
 .model-input-group {
@@ -1154,8 +1181,8 @@ const saveSettings = async () => {
 .model-select-wrapper { flex: 1; min-width: 0; }
 
 .load-models-btn {
-  border: 2px solid rgba(10,10,10,0.1);
-  background: #F5F5F5;
+  border: 2px solid rgba(244, 241, 255,0.1);
+  background: #1a0f3a;
   padding: 8px 12px;
   font-family: 'Space Mono', monospace;
   font-size: 14px;
@@ -1163,7 +1190,7 @@ const saveSettings = async () => {
   transition: all 0.1s;
   flex-shrink: 0;
 }
-.load-models-btn:hover:not(:disabled) { border-color: #FF6B1A; color: #FF6B1A; }
+.load-models-btn:hover:not(:disabled) { border-color: #a78bfa; color: #a78bfa; }
 .load-models-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* ── Key input group ── */
@@ -1174,23 +1201,23 @@ const saveSettings = async () => {
 .key-input-group .field-input { flex: 1; }
 
 .toggle-key-btn {
-  border: 2px solid rgba(10,10,10,0.1);
-  background: #F5F5F5;
+  border: 2px solid rgba(244, 241, 255,0.1);
+  background: #1a0f3a;
   padding: 8px 12px;
   font-size: 14px;
   cursor: pointer;
   flex-shrink: 0;
   transition: border-color 0.1s;
 }
-.toggle-key-btn:hover { border-color: #FF6B1A; }
+.toggle-key-btn:hover { border-color: #a78bfa; }
 
 .field-hint {
   margin-top: 5px;
   font-size: 11px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   letter-spacing: 0.5px;
 }
-.field-hint a { color: #FF6B1A; text-decoration: underline; }
+.field-hint a { color: #a78bfa; text-decoration: underline; }
 
 .field-error {
   margin-top: 5px;
@@ -1207,7 +1234,7 @@ const saveSettings = async () => {
 }
 
 .test-btn {
-  border: 2px solid rgba(10,10,10,0.12);
+  border: 2px solid rgba(244, 241, 255,0.12);
   background: transparent;
   padding: 8px 16px;
   font-family: 'Space Mono', monospace;
@@ -1218,14 +1245,14 @@ const saveSettings = async () => {
   cursor: pointer;
   transition: all 0.1s;
 }
-.test-btn:hover:not(:disabled) { border-color: #FF6B1A; color: #FF6B1A; }
+.test-btn:hover:not(:disabled) { border-color: #a78bfa; color: #a78bfa; }
 .test-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .test-result {
   font-size: 12px;
   letter-spacing: 1px;
 }
-.test-result.ok { color: #43C165; }
+.test-result.ok { color: #c4b5fd; }
 .test-result.fail { color: #FF4444; }
 
 /* ── Advanced ── */
@@ -1242,7 +1269,7 @@ const saveSettings = async () => {
 }
 .chevron {
   font-size: 16px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   line-height: 1;
 }
 .advanced-body {
@@ -1250,13 +1277,13 @@ const saveSettings = async () => {
 }
 .advanced-hint {
   font-size: 11px;
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   margin-bottom: 12px;
   letter-spacing: 0.5px;
 }
 .advanced-group {
   padding: 10px 0;
-  border-top: 1px dashed rgba(10,10,10,0.08);
+  border-top: 1px dashed rgba(244, 241, 255,0.08);
 }
 .advanced-group:first-child { border-top: none; padding-top: 0; }
 .advanced-group-title {
@@ -1264,7 +1291,7 @@ const saveSettings = async () => {
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #0A0A0A;
+  color: #f4f1ff;
   margin-bottom: 10px;
 }
 
@@ -1290,12 +1317,12 @@ const saveSettings = async () => {
 
 .save-success {
   font-size: 12px;
-  color: #43C165;
+  color: #c4b5fd;
   letter-spacing: 1px;
 }
 
 .cancel-btn {
-  border: 2px solid rgba(10,10,10,0.1);
+  border: 2px solid rgba(244, 241, 255,0.1);
   background: transparent;
   padding: 10px 20px;
   font-family: 'Space Mono', monospace;
@@ -1304,15 +1331,15 @@ const saveSettings = async () => {
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   transition: all 0.1s;
 }
-.cancel-btn:hover { border-color: rgba(10,10,10,0.3); color: #0A0A0A; }
+.cancel-btn:hover { border-color: rgba(244, 241, 255,0.3); color: #f4f1ff; }
 
 .save-btn {
-  border: 2px solid #0A0A0A;
-  background: #0A0A0A;
-  color: #FAFAFA;
+  border: 2px solid #f4f1ff;
+  background: #f4f1ff;
+  color: #110a26;
   padding: 10px 20px;
   font-family: 'Space Mono', monospace;
   font-size: 12px;
@@ -1322,7 +1349,7 @@ const saveSettings = async () => {
   cursor: pointer;
   transition: all 0.15s;
 }
-.save-btn:hover:not(:disabled) { background: #FF6B1A; border-color: #FF6B1A; }
+.save-btn:hover:not(:disabled) { background: #a78bfa; border-color: #a78bfa; }
 .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Webhook integration row ── */
@@ -1343,7 +1370,7 @@ const saveSettings = async () => {
 .webhook-test-result.fail { color: #FF4444; }
 
 .field-label-optional {
-  color: rgba(10,10,10,0.4);
+  color: rgba(244, 241, 255,0.4);
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
@@ -1352,13 +1379,13 @@ const saveSettings = async () => {
 
 /* ── AI Integration (MCP) ── */
 .ai-section {
-  background: #F5F5F5;
+  background: #1a0f3a;
 }
 
 .ai-intro {
   font-size: 12px;
   line-height: 1.5;
-  color: rgba(10,10,10,0.65);
+  color: rgba(244, 241, 255,0.65);
   margin-bottom: 14px;
 }
 
@@ -1366,8 +1393,8 @@ const saveSettings = async () => {
 .ai-error {
   font-size: 12px;
   padding: 12px 14px;
-  border: 2px dashed rgba(10,10,10,0.1);
-  background: #FAFAFA;
+  border: 2px dashed rgba(244, 241, 255,0.1);
+  background: #110a26;
 }
 
 .ai-error {
@@ -1379,8 +1406,8 @@ const saveSettings = async () => {
 }
 
 .ai-retry {
-  background: #0A0A0A;
-  color: #FAFAFA;
+  background: #f4f1ff;
+  color: #110a26;
   border: none;
   padding: 6px 12px;
   font-family: 'Space Mono', monospace;
@@ -1394,9 +1421,9 @@ const saveSettings = async () => {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border: 2px dashed rgba(10,10,10,0.1);
+  border: 2px dashed rgba(244, 241, 255,0.1);
   padding: 12px 14px;
-  background: #FAFAFA;
+  background: #110a26;
   margin-bottom: 14px;
 }
 
@@ -1409,12 +1436,12 @@ const saveSettings = async () => {
 }
 
 .ai-summary-key {
-  color: rgba(10,10,10,0.5);
+  color: rgba(244, 241, 255,0.5);
   flex-shrink: 0;
 }
 
 .ai-summary-val {
-  color: #0A0A0A;
+  color: #f4f1ff;
   font-weight: 700;
   text-align: right;
   overflow-wrap: anywhere;
@@ -1431,7 +1458,7 @@ const saveSettings = async () => {
   flex-wrap: wrap;
   gap: 4px;
   margin-bottom: 0;
-  border-bottom: 2px solid rgba(10,10,10,0.08);
+  border-bottom: 2px solid rgba(244, 241, 255,0.08);
 }
 
 .ai-tab {
@@ -1444,16 +1471,16 @@ const saveSettings = async () => {
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.45);
+  color: rgba(244, 241, 255,0.45);
   cursor: pointer;
   transition: color 0.1s, border-color 0.1s;
 }
 
-.ai-tab:hover { color: #0A0A0A; }
+.ai-tab:hover { color: #f4f1ff; }
 
 .ai-tab.active {
-  color: #0A0A0A;
-  border-bottom-color: #FF6B1A;
+  color: #f4f1ff;
+  border-bottom-color: #a78bfa;
 }
 
 .ai-client {
@@ -1462,7 +1489,7 @@ const saveSettings = async () => {
 
 .ai-client-file {
   font-size: 11px;
-  color: rgba(10,10,10,0.55);
+  color: rgba(244, 241, 255,0.55);
   margin-bottom: 8px;
   overflow-wrap: anywhere;
 }
@@ -1475,10 +1502,10 @@ const saveSettings = async () => {
 
 .ai-client-file-path {
   font-family: 'Space Mono', monospace;
-  color: #0A0A0A;
-  background: #FAFAFA;
+  color: #f4f1ff;
+  background: #110a26;
   padding: 1px 5px;
-  border: 1px solid rgba(10,10,10,0.08);
+  border: 1px solid rgba(244, 241, 255,0.08);
 }
 
 .ai-snippet-wrap {
@@ -1486,8 +1513,8 @@ const saveSettings = async () => {
 }
 
 .ai-snippet {
-  background: #0A0A0A;
-  color: #FAFAFA;
+  background: #f4f1ff;
+  color: #110a26;
   padding: 14px 16px;
   margin: 0;
   font-family: 'Space Mono', 'Courier New', monospace;
@@ -1495,7 +1522,7 @@ const saveSettings = async () => {
   line-height: 1.45;
   overflow-x: auto;
   white-space: pre;
-  border: 2px solid #0A0A0A;
+  border: 2px solid #f4f1ff;
 }
 
 .ai-snippet code {
@@ -1507,8 +1534,8 @@ const saveSettings = async () => {
   position: absolute;
   top: 8px;
   right: 8px;
-  background: #FAFAFA;
-  color: #0A0A0A;
+  background: #110a26;
+  color: #f4f1ff;
   border: 1px solid rgba(250,250,250,0.2);
   padding: 4px 10px;
   font-family: 'Space Mono', monospace;
@@ -1519,13 +1546,13 @@ const saveSettings = async () => {
   transition: background 0.1s, color 0.1s;
 }
 
-.ai-copy-btn:hover { background: #FF6B1A; color: #FAFAFA; }
-.ai-copy-btn.ok { background: #43C165; color: #FAFAFA; }
-.ai-copy-btn.fail { background: #FF4444; color: #FAFAFA; }
+.ai-copy-btn:hover { background: #a78bfa; color: #110a26; }
+.ai-copy-btn.ok { background: #c4b5fd; color: #110a26; }
+.ai-copy-btn.fail { background: #FF4444; color: #110a26; }
 
 .ai-client-notes {
   font-size: 11px;
-  color: rgba(10,10,10,0.55);
+  color: rgba(244, 241, 255,0.55);
   margin-top: 8px;
   line-height: 1.5;
 }
@@ -1534,30 +1561,30 @@ const saveSettings = async () => {
   display: block;
   width: 100%;
   background: none;
-  border: 2px dashed rgba(10,10,10,0.1);
+  border: 2px dashed rgba(244, 241, 255,0.1);
   padding: 8px 12px;
   margin-top: 14px;
   font-family: 'Space Mono', monospace;
   font-size: 11px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(10,10,10,0.55);
+  color: rgba(244, 241, 255,0.55);
   cursor: pointer;
   text-align: left;
   transition: border-color 0.1s, color 0.1s;
 }
 
 .ai-tools-toggle:hover {
-  border-color: rgba(10,10,10,0.3);
-  color: #0A0A0A;
+  border-color: rgba(244, 241, 255,0.3);
+  color: #f4f1ff;
 }
 
 .ai-tools-list {
   list-style: none;
   padding: 12px 14px;
   margin: 6px 0 0 0;
-  background: #FAFAFA;
-  border: 2px dashed rgba(10,10,10,0.1);
+  background: #110a26;
+  border: 2px dashed rgba(244, 241, 255,0.1);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1572,31 +1599,31 @@ const saveSettings = async () => {
 }
 
 .ai-tool-name {
-  color: #FF6B1A;
+  color: #a78bfa;
   font-weight: 700;
   font-family: 'Space Mono', monospace;
 }
 
 .ai-tool-desc {
-  color: rgba(10,10,10,0.7);
+  color: rgba(244, 241, 255,0.7);
   overflow-wrap: anywhere;
 }
 
 .ai-docs-link {
   font-size: 11px;
-  color: rgba(10,10,10,0.55);
+  color: rgba(244, 241, 255,0.55);
   margin-top: 14px;
   text-align: right;
 }
 
 .ai-docs-link a {
-  color: #0A0A0A;
+  color: #f4f1ff;
   font-weight: 700;
   text-decoration: none;
-  border-bottom: 1px solid #FF6B1A;
+  border-bottom: 1px solid #a78bfa;
 }
 
-.ai-docs-link a:hover { color: #FF6B1A; }
+.ai-docs-link a:hover { color: #a78bfa; }
 
 @media (max-width: 480px) {
   .ai-tool {

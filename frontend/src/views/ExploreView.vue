@@ -802,54 +802,74 @@ onMounted(refresh)
   color: var(--foreground);
 }
 
-/* ── Nav (matches Home.vue) ── */
+/* ── Nav (MiroShark dark, matches Home.vue) ── */
 .navbar {
-  height: var(--space-xl);
-  background: var(--color-black);
-  color: var(--color-white);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: auto;
+  background: linear-gradient(180deg, rgba(10, 5, 26, 0.85) 0%, rgba(5, 3, 10, 0.6) 70%, transparent 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: #f4f1ff;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 var(--space-lg);
+  padding: 0.95rem 2rem;
 }
 
 .nav-brand {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  letter-spacing: 3px;
-  font-size: 14px;
-  text-transform: uppercase;
-  color: var(--color-white);
+  font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-size: 1.05rem;
+  text-transform: none;
+  color: #f4f1ff;
   text-decoration: none;
-  transition: var(--transition-fast);
+  transition: color 180ms ease;
 }
 
-.nav-brand:hover { color: var(--color-orange); }
+.nav-brand:hover { color: #c4b5fd; }
 
 .nav-links {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 0.6rem;
 }
 
 .nav-link,
 .github-link {
-  color: var(--color-white);
-  text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 1px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
-  transition: var(--transition-fast);
-  opacity: 0.6;
+  gap: 0.4rem;
+  height: 36px;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  color: #ece8ff;
+  font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  background: linear-gradient(180deg, rgba(70, 55, 120, 0.45) 0%, rgba(20, 14, 42, 0.7) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 8px 22px -10px rgba(139, 92, 246, 0.4);
+  opacity: 1;
+  transition: border-color 180ms ease, transform 180ms ease, color 180ms ease;
 }
 
 .nav-link:hover,
-.github-link:hover { opacity: 1; }
+.github-link:hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  color: #ffffff;
+  transform: translateY(-1px);
+  opacity: 1;
+}
 
-.arrow { font-family: sans-serif; }
+.arrow { font-family: sans-serif; opacity: 0.7; }
 
 /* ── Main Content ── */
 .main-content {
@@ -882,8 +902,8 @@ onMounted(refresh)
   font-weight: 700;
 }
 
-.meta-sep { color: rgba(10, 10, 10, 0.35); }
-.meta-text { color: rgba(10, 10, 10, 0.7); }
+.meta-sep { color: rgba(244, 241, 255, 0.35); }
+.meta-text { color: rgba(244, 241, 255, 0.7); }
 
 .page-title {
   font-family: var(--font-display);
@@ -896,7 +916,7 @@ onMounted(refresh)
 .page-subtitle {
   font-size: 17px;
   line-height: 1.55;
-  color: rgba(10, 10, 10, 0.7);
+  color: rgba(244, 241, 255, 0.7);
   margin-bottom: var(--space-lg);
 }
 
@@ -926,7 +946,7 @@ onMounted(refresh)
 }
 
 .stat-label {
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   text-transform: uppercase;
 }
 
@@ -937,7 +957,7 @@ onMounted(refresh)
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.5px;
-  color: rgba(10, 10, 10, 0.7);
+  color: rgba(244, 241, 255, 0.7);
   cursor: pointer;
   transition: var(--transition-fast);
 }
@@ -965,9 +985,9 @@ onMounted(refresh)
   height: 360px;
   background: linear-gradient(
     90deg,
-    rgba(10, 10, 10, 0.04) 0%,
-    rgba(10, 10, 10, 0.08) 50%,
-    rgba(10, 10, 10, 0.04) 100%
+    rgba(244, 241, 255, 0.04) 0%,
+    rgba(244, 241, 255, 0.08) 50%,
+    rgba(244, 241, 255, 0.04) 100%
   );
   background-size: 200% 100%;
   border: var(--border-light);
@@ -1005,7 +1025,7 @@ onMounted(refresh)
 
 .error-msg,
 .empty-msg {
-  color: rgba(10, 10, 10, 0.65);
+  color: rgba(244, 241, 255, 0.65);
   font-size: 15px;
   line-height: 1.5;
   margin-bottom: var(--space-md);
@@ -1085,7 +1105,7 @@ onMounted(refresh)
   background: linear-gradient(
     180deg,
     transparent 60%,
-    rgba(10, 10, 10, 0.15) 100%
+    rgba(244, 241, 255, 0.15) 100%
   );
   pointer-events: none;
 }
@@ -1132,7 +1152,7 @@ onMounted(refresh)
 }
 
 .pill-bullish {
-  background: rgba(67, 193, 101, 0.15);
+  background: rgba(196, 181, 253, 0.15);
   color: #2a8545;
 }
 
@@ -1142,17 +1162,17 @@ onMounted(refresh)
 }
 
 .pill-neutral {
-  background: rgba(10, 10, 10, 0.08);
-  color: rgba(10, 10, 10, 0.7);
+  background: rgba(244, 241, 255, 0.08);
+  color: rgba(244, 241, 255, 0.7);
 }
 
 .pill-quality-excellent {
-  background: rgba(67, 193, 101, 0.15);
+  background: rgba(196, 181, 253, 0.15);
   color: #2a8545;
 }
 
 .pill-quality-good {
-  background: rgba(67, 193, 101, 0.1);
+  background: rgba(196, 181, 253, 0.1);
   color: #2a8545;
 }
 
@@ -1167,8 +1187,8 @@ onMounted(refresh)
 }
 
 .pill-quality-unknown {
-  background: rgba(10, 10, 10, 0.06);
-  color: rgba(10, 10, 10, 0.5);
+  background: rgba(244, 241, 255, 0.06);
+  color: rgba(244, 241, 255, 0.5);
 }
 
 .pill-resolved {
@@ -1177,8 +1197,8 @@ onMounted(refresh)
 }
 
 .pill-status {
-  background: rgba(10, 10, 10, 0.06);
-  color: rgba(10, 10, 10, 0.55);
+  background: rgba(244, 241, 255, 0.06);
+  color: rgba(244, 241, 255, 0.55);
 }
 
 /* Verified-prediction pills — slightly stronger visual weight than the
@@ -1244,7 +1264,7 @@ a.pill-verified:hover {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.5px;
-  color: rgba(10, 10, 10, 0.7);
+  color: rgba(244, 241, 255, 0.7);
   cursor: pointer;
   transition: var(--transition-fast);
   text-transform: uppercase;
@@ -1256,15 +1276,16 @@ a.pill-verified:hover {
 }
 
 .filter-chip-active {
-  background: var(--color-orange);
-  border-color: var(--color-orange);
-  color: var(--color-white);
+  background: linear-gradient(180deg, rgba(167, 139, 250, 0.4) 0%, rgba(76, 29, 149, 0.6) 100%);
+  border-color: rgba(196, 181, 253, 0.65);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 }
 
 .filter-chip-active:hover:not(:disabled) {
-  background: var(--color-black);
-  border-color: var(--color-black);
-  color: var(--color-white);
+  background: linear-gradient(180deg, rgba(196, 181, 253, 0.5) 0%, rgba(76, 29, 149, 0.7) 100%);
+  border-color: rgba(196, 181, 253, 0.85);
+  color: #ffffff;
 }
 
 .filter-chip:disabled {
@@ -1281,8 +1302,8 @@ a.pill-verified:hover {
    muted text link until hover. */
 .filter-chip-feed {
   text-decoration: none;
-  color: rgba(10, 10, 10, 0.6);
-  border-color: rgba(10, 10, 10, 0.18);
+  color: rgba(244, 241, 255, 0.6);
+  border-color: rgba(244, 241, 255, 0.18);
 }
 
 .filter-chip-feed:hover {
@@ -1304,14 +1325,14 @@ a.pill-verified:hover {
 .consensus-bar {
   display: flex;
   height: 6px;
-  background: rgba(10, 10, 10, 0.06);
+  background: rgba(244, 241, 255, 0.06);
   overflow: hidden;
   border-radius: 3px;
 }
 
 .bar-seg { height: 100%; transition: width 0.2s ease; }
 .bar-bullish { background: var(--color-green); }
-.bar-neutral { background: rgba(10, 10, 10, 0.3); }
+.bar-neutral { background: rgba(244, 241, 255, 0.3); }
 .bar-bearish { background: var(--color-red); }
 
 /* ── Metadata ── */
@@ -1321,7 +1342,7 @@ a.pill-verified:hover {
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: rgba(10, 10, 10, 0.55);
+  color: rgba(244, 241, 255, 0.55);
   letter-spacing: 0.3px;
   flex-wrap: wrap;
 }
@@ -1334,11 +1355,11 @@ a.pill-verified:hover {
 
 .meta-label {
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
 }
 
 .meta-val {
-  color: rgba(10, 10, 10, 0.75);
+  color: rgba(244, 241, 255, 0.75);
   font-weight: 600;
 }
 
@@ -1348,7 +1369,7 @@ a.pill-verified:hover {
   gap: var(--space-xs);
   margin-top: auto;
   padding-top: var(--space-sm);
-  border-top: 1px solid rgba(10, 10, 10, 0.06);
+  border-top: 1px solid rgba(244, 241, 255, 0.06);
 }
 
 .action-btn {
@@ -1362,7 +1383,7 @@ a.pill-verified:hover {
   text-align: center;
   border: var(--border-light);
   background: transparent;
-  color: rgba(10, 10, 10, 0.75);
+  color: rgba(244, 241, 255, 0.75);
   cursor: pointer;
   transition: var(--transition-fast);
   font-weight: 600;
@@ -1413,7 +1434,7 @@ a.pill-verified:hover {
   font-size: 13px;
   letter-spacing: 1px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.75);
+  color: rgba(244, 241, 255, 0.75);
   cursor: pointer;
   transition: var(--transition-fast);
   font-weight: 600;
@@ -1438,7 +1459,7 @@ a.pill-verified:hover {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  color: rgba(10, 10, 10, 0.4);
+  color: rgba(244, 241, 255, 0.4);
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.5px;
@@ -1447,7 +1468,7 @@ a.pill-verified:hover {
 .footer-line {
   flex: 1;
   height: 1px;
-  background: rgba(10, 10, 10, 0.08);
+  background: rgba(244, 241, 255, 0.08);
 }
 
 .footer-text { white-space: nowrap; }
@@ -1477,7 +1498,7 @@ a.pill-verified:hover {
   left: 12px;
   font-family: var(--font-mono);
   font-size: 16px;
-  color: rgba(10, 10, 10, 0.5);
+  color: rgba(244, 241, 255, 0.5);
   pointer-events: none;
 }
 
@@ -1512,12 +1533,12 @@ a.pill-verified:hover {
   right: 8px;
   width: 22px;
   height: 22px;
-  background: rgba(10, 10, 10, 0.08);
+  background: rgba(244, 241, 255, 0.08);
   border: none;
   border-radius: 50%;
   font-size: 14px;
   line-height: 1;
-  color: rgba(10, 10, 10, 0.6);
+  color: rgba(244, 241, 255, 0.6);
   cursor: pointer;
   transition: var(--transition-fast);
 }
@@ -1539,7 +1560,7 @@ a.pill-verified:hover {
   font-size: 11px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   margin-right: 4px;
   font-weight: 600;
 }
@@ -1555,7 +1576,7 @@ a.pill-verified:hover {
   font-size: 11px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.65);
+  color: rgba(244, 241, 255, 0.65);
   cursor: pointer;
   transition: var(--transition-fast);
   font-weight: 600;
@@ -1567,15 +1588,19 @@ a.pill-verified:hover {
 }
 
 .chip-active {
-  background: var(--color-black);
-  border-color: var(--color-black);
-  color: var(--color-white);
+  background: linear-gradient(180deg, #6a4ad6 0%, #4922b8 45%, #2a118a 55%, #4f2dc4 100%);
+  border-color: rgba(167, 139, 250, 0.6);
+  color: #f8f5ff;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    0 8px 22px -8px rgba(139, 92, 246, 0.55);
 }
 
 .chip-active:hover:not(:disabled) {
-  background: var(--color-orange);
-  border-color: var(--color-orange);
-  color: var(--color-white);
+  background: linear-gradient(180deg, #7d5ee8 0%, #5728d4 45%, #3414a3 55%, #5e3bde 100%);
+  border-color: rgba(196, 181, 253, 0.7);
+  color: #ffffff;
 }
 
 .chip:disabled {
@@ -1591,7 +1616,7 @@ a.pill-verified:hover {
 
 .glyph-bullish { color: #2a8545; }
 .glyph-bearish { color: #c52d2d; }
-.glyph-neutral { color: rgba(10, 10, 10, 0.55); }
+.glyph-neutral { color: rgba(244, 241, 255, 0.55); }
 
 .chip-active .chip-glyph {
   color: var(--color-white);
@@ -1608,7 +1633,7 @@ a.pill-verified:hover {
   font-size: 11px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.45);
+  color: rgba(244, 241, 255, 0.45);
   font-weight: 600;
 }
 
@@ -1619,11 +1644,11 @@ a.pill-verified:hover {
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.5px;
-  color: rgba(10, 10, 10, 0.75);
+  color: rgba(244, 241, 255, 0.75);
   cursor: pointer;
   -webkit-appearance: none;
   appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 4l3 3 3-3' fill='none' stroke='rgba(10,10,10,0.5)' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'><path d='M2 4l3 3 3-3' fill='none' stroke='rgba(244, 241, 255,0.5)' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat: no-repeat;
   background-position: right 8px center;
   font-weight: 600;
@@ -1646,12 +1671,12 @@ a.pill-verified:hover {
 .reset-btn {
   padding: 5px 12px;
   background: transparent;
-  border: 1px dashed rgba(10, 10, 10, 0.25);
+  border: 1px dashed rgba(244, 241, 255, 0.25);
   font-family: var(--font-mono);
   font-size: 11px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  color: rgba(10, 10, 10, 0.6);
+  color: rgba(244, 241, 255, 0.6);
   cursor: pointer;
   transition: var(--transition-fast);
   font-weight: 600;
@@ -1673,7 +1698,7 @@ a.pill-verified:hover {
   font-family: var(--font-mono);
   font-size: 12px;
   letter-spacing: 0.4px;
-  color: rgba(10, 10, 10, 0.6);
+  color: rgba(244, 241, 255, 0.6);
 }
 
 .empty-cta-button {

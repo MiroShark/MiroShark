@@ -16,18 +16,28 @@ import ZhWarningBanner from './components/ZhWarningBanner.vue'
    ═══════════════════════════════════════════════════════════ */
 
 :root {
-  /* ── Primary Colors ── */
-  --color-orange: #FF6B1A;
-  --color-green: #43C165;
-  --color-white: #FAFAFA;
-  --color-black: #0A0A0A;
-  --color-gray: #F5F5F5;
-  --color-amber: #FFB347;
-  --color-red: #FF4444;
+  /* ── Primary Colors ──
+     Legacy token NAMES kept (so every scoped <style> that already
+     references them inherits the new palette automatically), but
+     VALUES remapped to the MiroShark space-purple system.
+       --color-orange  →  bright violet accent
+       --color-green   →  soft violet (used for "yes" / positive)
+       --color-white   →  deep glossy-panel base
+       --color-black   →  light foreground text
+       --color-gray    →  panel-on-panel surface
+       --color-red     →  soft fuchsia for warnings
+   */
+  --color-orange: #a78bfa;
+  --color-green:  #c4b5fd;
+  --color-white:  #110a26;
+  --color-black:  #f4f1ff;
+  --color-gray:   #1a0f3a;
+  --color-amber:  #fcd34d;
+  --color-red:    #f0abfc;
 
-  /* ── Semantic ── */
-  --background: #FAFAFA;
-  --foreground: #0A0A0A;
+  /* Page-level background — deep-space. */
+  --background: #05030a;
+  --foreground: #f4f1ff;
 
   /* ── 1.4x Modular Spacing Scale ── */
   --space-xs: 6px;
@@ -102,12 +112,12 @@ button {
   cursor: pointer;
 }
 
-/* ── Text Opacity Scale ── */
-.text-primary-100 { color: rgba(10,10,10,1); }
-.text-primary-70 { color: rgba(10,10,10,0.7); }
-.text-primary-50 { color: rgba(10,10,10,0.5); }
-.text-primary-40 { color: rgba(10,10,10,0.4); }
-.text-primary-35 { color: rgba(10,10,10,0.35); }
+/* ── Text Opacity Scale (now light-on-dark) ── */
+.text-primary-100 { color: #ffffff; }
+.text-primary-70 { color: rgba(244, 241, 255, 0.85); }
+.text-primary-50 { color: rgba(228, 222, 255, 0.7); }
+.text-primary-40 { color: rgba(228, 222, 255, 0.6); }
+.text-primary-35 { color: rgba(228, 222, 255, 0.5); }
 
 /* ── Warning Stripes Divider ── */
 .warning-stripes {
