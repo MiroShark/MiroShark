@@ -1,17 +1,25 @@
 <template>
-  <div class="home-container">
-    <!-- Top Navigation Bar -->
-    <nav class="navbar">
-      <div class="nav-brand">MIROSHARK</div>
-      <div class="nav-links">
-        <router-link to="/explore" class="explore-link" :title="$tr('Browse public simulations', '浏览公开模拟')">
-          <span class="compass">◎</span> {{ $tr('Explore', '浏览') }}
+  <div class="ms-home">
+    <!-- Deep-space background — scoped to this view only, doesn't touch
+         the global App.vue theme. -->
+    <div class="ms-space-bg" aria-hidden></div>
+    <div class="ms-space-stars" aria-hidden></div>
+
+    <!-- ── Top Navigation ── -->
+    <nav class="ms-nav">
+      <router-link to="/" class="ms-brand">
+        <img src="/shark.webp" alt="" class="ms-brand-mark" />
+        <span>MiroShark</span>
+      </router-link>
+      <div class="ms-nav-links">
+        <router-link to="/explore" class="ms-nav-link" :title="$tr('Browse public simulations', '浏览公开模拟')">
+          {{ $tr('Explore', '浏览') }}
         </router-link>
-        <a href="https://github.com/aaronjmars/MiroShark" target="_blank" class="github-link">
-          GitHub <span class="arrow">↗</span>
+        <a href="https://github.com/aaronjmars/MiroShark" target="_blank" rel="noopener" class="ms-nav-link">
+          GitHub <span class="ms-nav-arrow">↗</span>
         </a>
         <LocaleToggle />
-        <button class="settings-btn" @click="settingsOpen = true" :title="$tr('Settings', '设置')">
+        <button class="ms-nav-icon" @click="settingsOpen = true" :title="$tr('Settings', '设置')" aria-label="Settings">
           ⚙
         </button>
       </div>
@@ -19,151 +27,132 @@
 
     <SettingsPanel :open="settingsOpen" @close="settingsOpen = false" />
 
-    <!-- Template auto-launch indicator — visible only while resolving a
-         ?template=<slug> link. The redirect to /process/new fires the
-         moment the API responds, so this is a brief 0.3–1.5 s strip; we
-         stay on the home page for slow network so the user has feedback
-         instead of an apparently-frozen click. -->
-    <div v-if="templateAutoLaunching" class="prefill-template-loading">
-      <span class="prefill-template-loading-dot">◇</span>
+    <!-- Template auto-launch toast — visible briefly while a ?template= link
+         resolves before redirecting. -->
+    <div v-if="templateAutoLaunching" class="ms-toast ms-toast-info">
+      <span class="ms-toast-dot" aria-hidden>◇</span>
       <span>{{ $tr('Loading template — redirecting…', '正在加载模板 — 即将跳转…') }}</span>
     </div>
-    <div v-if="templateAutoLaunchError" class="prefill-template-error">
+    <div v-if="templateAutoLaunchError" class="ms-toast ms-toast-error">
       <span>⚠ {{ templateAutoLaunchError }}</span>
-      <button class="prefill-template-error-close" @click="templateAutoLaunchError = ''">×</button>
+      <button class="ms-toast-close" @click="templateAutoLaunchError = ''" aria-label="Close">×</button>
     </div>
 
-    <!-- Document preview modal (URL fetches + Ask-mode generations) -->
+    <!-- Document preview modal -->
     <Teleport to="body">
-      <div v-if="previewDoc" class="doc-preview-overlay" @click.self="previewDoc = null">
-        <div class="doc-preview-modal">
-          <div class="doc-preview-header">
-            <div class="doc-preview-title">
-              <span class="doc-preview-icon">◈</span>
+      <div v-if="previewDoc" class="ms-modal-overlay" @click.self="previewDoc = null">
+        <div class="ms-modal">
+          <div class="ms-modal-header">
+            <div class="ms-modal-title">
+              <span class="ms-modal-icon" aria-hidden>◈</span>
               <span>{{ previewDoc.title }}</span>
             </div>
-            <button class="doc-preview-close" @click="previewDoc = null">✕</button>
+            <button class="ms-modal-close" @click="previewDoc = null" aria-label="Close">✕</button>
           </div>
-          <div class="doc-preview-warning"></div>
-          <div class="doc-preview-meta">
-            {{ previewDoc.char_count.toLocaleString() }} chars
-            <span v-if="previewDoc.url" class="doc-preview-meta-sep">·</span>
-            <span v-if="previewDoc.url" class="doc-preview-url">{{ previewDoc.url }}</span>
+          <div class="ms-modal-meta">
+            {{ previewDoc.char_count.toLocaleString() }} {{ $tr('chars', '字符') }}
+            <span v-if="previewDoc.url" class="ms-modal-sep">·</span>
+            <span v-if="previewDoc.url" class="ms-modal-url">{{ previewDoc.url }}</span>
           </div>
-          <pre class="doc-preview-body">{{ previewDoc.text }}</pre>
+          <pre class="ms-modal-body">{{ previewDoc.text }}</pre>
         </div>
       </div>
     </Teleport>
 
-    <div class="main-content">
-      <!-- Upper Section: Hero Area -->
-      <section class="hero-section">
-        <div class="tag-row">
-          <span class="orange-tag">{{ $tr('Universal Swarm Intelligence Engine', '通用群体智能引擎') }}</span>
+    <main class="ms-main">
+      <!-- ── HERO ── -->
+      <section class="ms-hero">
+        <span class="ms-chip">{{ $tr('Universal Swarm Intelligence Engine', '通用群体智能引擎') }}</span>
+
+        <div class="ms-hero-stage">
+          <div class="ms-shark-wrap ms-float">
+            <img src="/shark.webp" alt="MiroShark" class="ms-shark" />
+          </div>
+
+          <h1
+            class="ms-chrome-text ms-display"
+            :data-text="$tr('Simulate anything, for $1', '一切皆可模拟,只需 $1')"
+          >
+            {{ $tr('Simulate anything, for $1', '一切皆可模拟,只需 $1') }}
+          </h1>
         </div>
 
-        <h1 class="main-title">
-          <span class="gradient-text">{{ $tr('Simulate anything, for $1', '一切皆可模拟,只需 $1') }}</span>
-        </h1>
+        <p class="ms-hero-desc" v-if="!$isZh()">
+          Drop in anything — a press release, a news headline, a policy draft, a
+          question you can't answer, a historical what-if — and
+          <span class="ms-hero-strong">MiroShark</span> spawns
+          <span class="ms-hero-accent">hundreds of agents</span> that react to it
+          hour by hour. Posting, arguing, trading, changing their minds.
+        </p>
+        <p class="ms-hero-desc" v-else>
+          放入任何素材 — 新闻稿、头条、政策草案、一个无解的问题、一段历史假设 —
+          <span class="ms-hero-strong">MiroShark</span>
+          会派出<span class="ms-hero-accent">数百个智能体</span>,每小时一轮地做出反应。发帖、辩论、交易、改变想法。
+        </p>
 
-        <div class="hero-desc">
-          <p v-if="!$isZh()">
-            Drop in anything — a press release, a news headline, a policy draft, a question you can't answer, a historical what-if — and <span class="highlight-bold">MiroShark</span> spawns <span class="highlight-orange">hundreds of agents</span> that react to it hour by hour. Posting, arguing, trading, changing their minds.
-          </p>
-          <p v-else>
-            放入任何素材 — 新闻稿、头条、政策草案、一个无解的问题、一段历史假设 — <span class="highlight-bold">MiroShark</span> 会派出<span class="highlight-orange">数百个智能体</span>,每小时一轮地做出反应。发帖、辩论、交易、改变想法。
-          </p>
-          <p class="slogan-text">
-            {{ $tr("Don't predict the future. Simulate it", '不要预测未来。模拟它') }}<span class="blinking-cursor">_</span>
-          </p>
-        </div>
+        <p class="ms-slogan">
+          {{ $tr("Don't predict the future. Simulate it", '不要预测未来。模拟它') }}<span class="ms-cursor">_</span>
+        </p>
 
-        <div class="decoration-square"></div>
-
-        <button class="scroll-down-btn" @click="scrollToBottom">
-          ↓
-        </button>
+        <button class="ms-scroll-btn" @click="scrollToBottom" aria-label="Scroll to console">↓</button>
       </section>
 
-      <!-- Lower Section: Two-Column Layout -->
-      <section class="dashboard-section">
-        <!-- Left Column: Status & Steps -->
-        <div class="left-panel">
-          <div class="panel-header">
-            <span class="status-dot">■</span> {{ $tr('System Status', '系统状态') }}
+      <div class="ms-rule" aria-hidden></div>
+
+      <!-- ── DASHBOARD ── -->
+      <section class="ms-dashboard">
+        <!-- LEFT: Status + what it does -->
+        <aside class="ms-side">
+          <div class="ms-side-panel ms-glossy">
+            <header class="ms-side-head">
+              <span class="ms-status-dot" aria-hidden></span>
+              {{ $tr('System Status', '系统状态') }}
+            </header>
+
+            <h2 class="ms-side-status">{{ $tr('Ready', '就绪') }}</h2>
+            <p class="ms-side-desc">
+              {{ $tr('First simulation in ~10 min, ~$1 on the cloud preset. Drop in a doc or pick a trending headline to start.', '使用云端预设,首次模拟约 10 分钟、约 $1。投入一份文档或挑一条热门头条即可开始。') }}
+            </p>
           </div>
 
-          <h2 class="section-title">{{ $tr('Ready', '就绪') }}</h2>
-          <p class="section-desc">
-            {{ $tr('First simulation in ~10 min, ~$1 on the cloud preset. Drop in a doc or pick a trending headline to start.', '使用云端预设,首次模拟约 10 分钟、约 $1。投入一份文档或挑一条热门头条即可开始。') }}
-          </p>
+          <div class="ms-side-panel ms-glossy">
+            <header class="ms-side-head ms-side-head-faint">
+              <span class="ms-diamond" aria-hidden>◇</span>
+              {{ $tr('What it does', '它做什么') }}
+            </header>
 
-
-          <!-- What it does (from README) -->
-          <div class="steps-container">
-            <div class="steps-header">
-               <span class="diamond-icon">◇</span> {{ $tr('What it does', '它做什么') }}
-            </div>
-            <div class="workflow-list">
-              <div class="workflow-item">
-                <span class="step-num">01</span>
-                <div class="step-info">
-                  <div class="step-title">{{ $tr('You bring a scenario', '你提供一个情景') }}</div>
-                  <div class="step-desc">{{ $tr('MiroShark builds the world around it — extracts actors, stakes, and open questions from your input.', 'MiroShark 围绕它构建世界 — 从你的输入中提取角色、利害关系与待解问题。') }}</div>
+            <ol class="ms-steps">
+              <li class="ms-step" v-for="step in steps" :key="step.num">
+                <span class="ms-step-num">{{ step.num }}</span>
+                <div>
+                  <div class="ms-step-title">{{ $tr(step.titleEn, step.titleZh) }}</div>
+                  <div class="ms-step-desc">{{ $tr(step.descEn, step.descZh) }}</div>
                 </div>
-              </div>
-              <div class="workflow-item">
-                <span class="step-num">02</span>
-                <div class="step-info">
-                  <div class="step-title">{{ $tr('Hundreds of grounded agents', '数百个有据可依的智能体') }}</div>
-                  <div class="step-desc">{{ $tr('React on Twitter, Reddit, and a prediction market. Hour by hour, round after round.', '在 Twitter、Reddit 与预测市场上做出反应。每小时一轮,一轮接一轮。') }}</div>
-                </div>
-              </div>
-              <div class="workflow-item">
-                <span class="step-num">03</span>
-                <div class="step-info">
-                  <div class="step-title">{{ $tr('Steer the timeline', '掌舵时间线') }}</div>
-                  <div class="step-desc">{{ $tr('Chat with any agent. Drop breaking news mid-run. Fork a counterfactual and watch it diverge.', '与任意智能体对话。在运行中投入突发新闻。派生一个反事实分支并观察其偏离。') }}</div>
-                </div>
-              </div>
-              <div class="workflow-item">
-                <span class="step-num">04</span>
-                <div class="step-info">
-                  <div class="step-title">{{ $tr('Get a report', '生成报告') }}</div>
-                  <div class="step-desc">{{ $tr('A Substack-style write-up of what happened, citing actual posts and trades from the run.', 'Substack 风格的复盘文章,引用本次运行中的真实发帖与交易。') }}</div>
-                </div>
-              </div>
-            </div>
+              </li>
+            </ol>
           </div>
-        </div>
+        </aside>
 
-        <!-- Right Column: Interactive Console -->
-        <div class="right-panel">
-          <!-- Pre-fill banner — shown when a ?scenario= / ?url= / ?ask= link
-               populated the form on mount. Sits above the console so it's
-               obvious which fields were touched without obscuring the form
-               itself. Dismissible — once seen, get out of the way. -->
-          <div v-if="prefillBannerVisible" class="prefill-banner" role="status">
-            <span class="prefill-banner-icon">🔗</span>
-            <span class="prefill-banner-text">{{ prefillBannerCopy }}</span>
-            <button
-              class="prefill-banner-close"
-              :title="$tr('Dismiss', '关闭')"
-              @click="dismissPrefillBanner"
-            >×</button>
+        <!-- RIGHT: Console -->
+        <section class="ms-console-wrap">
+          <!-- Pre-fill banner -->
+          <div v-if="prefillBannerVisible" class="ms-prefill" role="status">
+            <span class="ms-prefill-icon" aria-hidden>🔗</span>
+            <span class="ms-prefill-text">{{ prefillBannerCopy }}</span>
+            <button class="ms-prefill-close" :title="$tr('Dismiss', '关闭')" @click="dismissPrefillBanner" aria-label="Dismiss">×</button>
           </div>
 
-          <div class="console-box">
-            <!-- Upload Area -->
-            <div class="console-section">
-              <div class="console-header">
-                <span class="console-label">{{ $tr('01 / Reality Seeds', '01 / 现实种子') }}</span>
-                <span class="console-meta">{{ $tr('Supported formats: PDF, MD, TXT', '支持格式:PDF、MD、TXT') }}</span>
-              </div>
-              
-              <div 
-                class="upload-zone"
-                :class="{ 'drag-over': isDragOver, 'has-files': files.length > 0 }"
+          <div class="ms-console ms-glossy">
+            <!-- 01 — Files -->
+            <section class="ms-block">
+              <header class="ms-block-head">
+                <span class="ms-block-label">{{ $tr('01 · Reality Seeds', '01 · 现实种子') }}</span>
+                <span class="ms-block-meta">{{ $tr('PDF · MD · TXT', 'PDF · MD · TXT') }}</span>
+              </header>
+
+              <div
+                class="ms-drop"
+                :class="{ 'is-over': isDragOver, 'has-files': files.length > 0 }"
                 @dragover.prevent="handleDragOver"
                 @dragleave.prevent="handleDragLeave"
                 @drop.prevent="handleDrop"
@@ -175,57 +164,53 @@
                   multiple
                   accept=".pdf,.md,.txt"
                   @change="handleFileSelect"
-                  style="display: none"
+                  style="display:none"
                   :disabled="loading"
                 />
-                
-                <div v-if="files.length === 0" class="upload-placeholder">
-                  <div class="upload-icon">↑</div>
-                  <div class="upload-title">{{ $tr('Drop Files to Upload', '拖入文件以上传') }}</div>
-                  <div class="upload-hint">{{ $tr('or click to browse the file system', '或点击浏览文件系统') }}</div>
+                <div v-if="files.length === 0" class="ms-drop-empty">
+                  <div class="ms-drop-arrow" aria-hidden>↑</div>
+                  <div class="ms-drop-title">{{ $tr('Drop files to upload', '拖入文件以上传') }}</div>
+                  <div class="ms-drop-hint">{{ $tr('or click to browse the file system', '或点击浏览文件系统') }}</div>
                 </div>
-                
-                <div v-else class="file-list">
-                  <div v-for="(file, index) in files" :key="index" class="file-item">
-                    <span class="file-icon">📄</span>
-                    <span class="file-name">{{ file.name }}</span>
-                    <button @click.stop="removeFile(index)" class="remove-btn">×</button>
-                  </div>
-                </div>
+                <ul v-else class="ms-file-list">
+                  <li v-for="(file, i) in files" :key="i" class="ms-file">
+                    <span class="ms-file-icon" aria-hidden>📄</span>
+                    <span class="ms-file-name">{{ file.name }}</span>
+                    <button @click.stop="removeFile(i)" class="ms-x" aria-label="Remove">×</button>
+                  </li>
+                </ul>
               </div>
-            </div>
+            </section>
 
-            <!-- Ask Mode (no document needed) -->
-            <div class="console-section url-section">
-              <div class="console-header">
-                <span class="console-label">{{ $tr('01a / Just Ask', '01a / 直接提问') }}</span>
-                <span class="console-meta">{{ $tr('No document? Type a question, we synthesize a briefing.', '没有文档?输入一个问题,我们会合成一份简报。') }}</span>
-              </div>
-              <div class="url-input-row">
+            <!-- 01a — Ask -->
+            <section class="ms-block">
+              <header class="ms-block-head">
+                <span class="ms-block-label">{{ $tr('01a · Just Ask', '01a · 直接提问') }}</span>
+                <span class="ms-block-meta">{{ $tr('No document? Type a question, we synthesize a briefing.', '没有文档?输入一个问题,我们会合成一份简报。') }}</span>
+              </header>
+
+              <div class="ms-input-row">
                 <input
                   v-model="askQuestion"
-                  class="url-input"
+                  class="ms-input"
                   type="text"
                   :placeholder="$tr(`e.g. Will the EU AI Act's biometrics clause survive the final trilogue?`, '例如:欧盟人工智能法案的生物识别条款能否在最终三方会议中存活?')"
                   :disabled="loading || askBusy"
                   @keydown.enter.prevent="runAskMode"
                 />
-                <button
-                  class="url-fetch-btn"
-                  @click="runAskMode"
-                  :disabled="!askQuestion.trim() || loading || askBusy"
-                >
-                  <span v-if="askBusy">...</span>
+                <button class="ms-btn ms-btn-ghost" @click="runAskMode" :disabled="!askQuestion.trim() || loading || askBusy">
+                  <span v-if="askBusy">…</span>
                   <span v-else>{{ $tr('Research →', '研究 →') }}</span>
                 </button>
               </div>
-              <div v-if="askError" class="url-error">{{ askError }}</div>
-              <div v-if="askBusy" class="url-doc-meta" style="margin-top:6px">{{ $tr('Synthesizing briefing — this uses the Smart model and takes ~20–30s.', '正在合成简报 — 使用 Smart 模型,大约需要 20–30 秒。') }}</div>
-              <div v-if="askDocs.length > 0" class="url-doc-list">
-                <div
+              <p v-if="askError" class="ms-error">{{ askError }}</p>
+              <p v-if="askBusy" class="ms-hint">{{ $tr('Synthesizing briefing — Smart model, ~20–30s.', '正在合成简报 — Smart 模型,大约 20–30 秒。') }}</p>
+
+              <ul v-if="askDocs.length" class="ms-doc-list">
+                <li
                   v-for="doc in askDocs"
                   :key="doc.url"
-                  class="url-doc-item"
+                  class="ms-doc"
                   role="button"
                   tabindex="0"
                   :title="$tr('Click to preview the generated briefing', '点击预览生成的简报')"
@@ -233,46 +218,44 @@
                   @keydown.enter.prevent="previewDoc = doc"
                   @keydown.space.prevent="previewDoc = doc"
                 >
-                  <span class="url-doc-icon">◈</span>
-                  <div class="url-doc-info">
-                    <div class="url-doc-title" :title="doc.title">{{ truncate(doc.title, 70) }}</div>
-                    <div class="url-doc-meta" :title="doc.url">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符') }} · {{ truncate(doc.url, 72) }}</div>
+                  <span class="ms-doc-icon" aria-hidden>◈</span>
+                  <div class="ms-doc-info">
+                    <div class="ms-doc-title">{{ truncate(doc.title, 70) }}</div>
+                    <div class="ms-doc-meta">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符') }} · {{ truncate(doc.url, 72) }}</div>
                   </div>
-                  <button @click.stop="removeUrlDocByRef(doc)" class="remove-btn">×</button>
-                </div>
-              </div>
-            </div>
+                  <button @click.stop="removeUrlDocByRef(doc)" class="ms-x" aria-label="Remove">×</button>
+                </li>
+              </ul>
+            </section>
 
-            <!-- URL Input Section -->
-            <div class="console-section url-section">
-              <div class="console-header">
-                <span class="console-label">{{ $tr('01b / URL Import', '01b / 网址导入') }}</span>
-                <span class="console-meta">{{ $tr('Paste article or report URL', '粘贴文章或报告网址') }}</span>
-              </div>
-              <div class="url-input-row">
+            <!-- 01b — URL -->
+            <section class="ms-block">
+              <header class="ms-block-head">
+                <span class="ms-block-label">{{ $tr('01b · URL Import', '01b · 网址导入') }}</span>
+                <span class="ms-block-meta">{{ $tr('Paste article or report URL', '粘贴文章或报告网址') }}</span>
+              </header>
+
+              <div class="ms-input-row">
                 <input
                   v-model="urlInput"
-                  class="url-input"
+                  class="ms-input"
                   type="url"
                   placeholder="https://example.com/article"
                   :disabled="loading || urlFetching"
                   @keydown.enter.prevent="fetchUrlDoc"
                 />
-                <button
-                  class="url-fetch-btn"
-                  @click="fetchUrlDoc"
-                  :disabled="!urlInput.trim() || loading || urlFetching"
-                >
-                  <span v-if="urlFetching">...</span>
+                <button class="ms-btn ms-btn-ghost" @click="fetchUrlDoc" :disabled="!urlInput.trim() || loading || urlFetching">
+                  <span v-if="urlFetching">…</span>
                   <span v-else>{{ $tr('Fetch →', '抓取 →') }}</span>
                 </button>
               </div>
-              <div v-if="urlError" class="url-error">{{ urlError }}</div>
-              <div v-if="fetchedDocs.length > 0" class="url-doc-list">
-                <div
+              <p v-if="urlError" class="ms-error">{{ urlError }}</p>
+
+              <ul v-if="fetchedDocs.length" class="ms-doc-list">
+                <li
                   v-for="doc in fetchedDocs"
                   :key="doc.url"
-                  class="url-doc-item"
+                  class="ms-doc"
                   role="button"
                   tabindex="0"
                   :title="$tr('Click to preview the extracted content', '点击预览提取的内容')"
@@ -280,100 +263,95 @@
                   @keydown.enter.prevent="previewDoc = doc"
                   @keydown.space.prevent="previewDoc = doc"
                 >
-                  <span class="url-doc-icon">◈</span>
-                  <div class="url-doc-info">
-                    <div class="url-doc-title" :title="doc.title">{{ truncate(doc.title, 70) }}</div>
-                    <div class="url-doc-meta" :title="doc.url">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符') }} · {{ truncate(doc.url, 72) }}</div>
+                  <span class="ms-doc-icon" aria-hidden>◈</span>
+                  <div class="ms-doc-info">
+                    <div class="ms-doc-title">{{ truncate(doc.title, 70) }}</div>
+                    <div class="ms-doc-meta">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符') }} · {{ truncate(doc.url, 72) }}</div>
                   </div>
-                  <button @click.stop="removeUrlDocByRef(doc)" class="remove-btn">×</button>
-                </div>
-              </div>
-              <TrendingTopics
-                :busy="urlFetching"
-                @select="handleTrendingSelect"
-              />
-            </div>
+                  <button @click.stop="removeUrlDocByRef(doc)" class="ms-x" aria-label="Remove">×</button>
+                </li>
+              </ul>
 
-            <!-- Divider -->
-            <div class="console-divider">
-              <span>{{ $tr('Input Parameters', '输入参数') }}</span>
-            </div>
+              <TrendingTopics :busy="urlFetching" @select="handleTrendingSelect" />
+            </section>
 
-            <!-- Input Area -->
-            <div class="console-section">
-              <div class="console-header">
-                <span class="console-label">{{ $tr('>_ 02 / Simulation Prompt', '>_ 02 / 模拟提示词') }}</span>
-              </div>
+            <div class="ms-divider"><span>{{ $tr('Input parameters', '输入参数') }}</span></div>
+
+            <!-- 02 — Prompt -->
+            <section class="ms-block">
+              <header class="ms-block-head">
+                <span class="ms-block-label">{{ $tr('>_ 02 · Simulation Prompt', '>_ 02 · 模拟提示词') }}</span>
+              </header>
+
               <ScenarioSuggestions
                 :text-preview="scenarioSuggestPreview"
                 :simulation-prompt="formData.simulationRequirement"
                 @use="handleSuggestionUse"
               />
-              <div class="input-wrapper">
+
+              <div class="ms-textarea-wrap">
                 <textarea
                   v-model="formData.simulationRequirement"
-                  class="code-input"
-                  :placeholder="$tr('// Enter your simulation or prediction requirements in natural language (e.g., If a university announces the revocation of a disciplinary action against a student, what public opinion trends will emerge?)', '// 用自然语言描述你的模拟或预测需求(例如:如果一所大学宣布撤销对一名学生的纪律处分,会出现哪些舆论走向?)')"
+                  class="ms-textarea"
+                  :placeholder="$tr('// Enter your simulation requirements in natural language (e.g., If a university announces the revocation of a disciplinary action against a student, what public opinion trends will emerge?)', '// 用自然语言描述你的模拟需求(例如:如果一所大学宣布撤销对一名学生的纪律处分,会出现哪些舆论走向?)')"
                   rows="6"
                   :disabled="loading"
                 ></textarea>
-                <div class="model-badge">{{ $tr('Engine: MiroShark-V1.0', '引擎:MiroShark-V1.0') }}</div>
+                <div class="ms-engine-tag">{{ $tr('Engine: MiroShark-V1.0', '引擎:MiroShark-V1.0') }}</div>
               </div>
 
-              <!-- Share-as-link — copy a URL that drops a reader into this
-                   exact pre-filled form. Visible once there's something
-                   worth sharing (scenario text, fetched URL doc, or ask
-                   question). The un-run-scenario counterpart to the
-                   "Fork this scenario" button on /watch and /share. -->
-              <div v-if="canShareScenarioLink" class="share-scenario-row">
+              <div v-if="canShareScenarioLink" class="ms-share-row">
                 <button
-                  class="share-scenario-btn"
-                  :class="{ copied: shareLinkCopied }"
+                  class="ms-share-btn"
+                  :class="{ 'is-copied': shareLinkCopied }"
                   :title="$tr('Copy a URL that drops a reader into this pre-filled form', '复制可让读者直接进入此预填表单的链接')"
                   @click="copyScenarioShareLink"
                 >
-                  <span class="share-scenario-icon">🔗</span>
-                  <span v-if="shareLinkCopied">{{ '✓ ' + $tr('Link copied', '链接已复制') }}</span>
+                  <span aria-hidden>🔗</span>
+                  <span v-if="shareLinkCopied">✓ {{ $tr('Link copied', '链接已复制') }}</span>
                   <span v-else>{{ $tr('Share as link', '分享为链接') }}</span>
                 </button>
-                <span class="share-scenario-hint">
+                <span class="ms-share-hint">
                   {{ $tr('Tweet this URL to invite anyone to run the same setup.', '发推此 URL,即可邀请他人运行相同设置。') }}
                 </span>
               </div>
-              <div v-if="shareLinkError" class="share-scenario-error">{{ shareLinkError }}</div>
-            </div>
+              <p v-if="shareLinkError" class="ms-error">{{ shareLinkError }}</p>
+            </section>
 
-            <!-- Start Button -->
-            <div class="console-section btn-section">
+            <!-- Launch -->
+            <div class="ms-launch">
               <button
-                class="start-engine-btn"
+                class="ms-cta"
                 @click="startSimulation"
                 :disabled="!canSubmit || loading"
               >
                 <span v-if="!loading">{{ $tr('Launch Simulation', '启动模拟') }}</span>
-                <span v-else>{{ $tr('Initializing...', '初始化中...') }}</span>
-                <span class="btn-arrow">→</span>
+                <span v-else>{{ $tr('Initializing…', '初始化中…') }}</span>
+                <span class="ms-cta-arrow" aria-hidden>→</span>
               </button>
             </div>
           </div>
-        </div>
+        </section>
       </section>
 
-      <!-- Quick Start Templates -->
-      <TemplateGallery />
-
-      <!-- History Project Database -->
-      <HistoryDatabase />
-
-    </div>
+      <!-- TemplateGallery + HistoryDatabase are intentionally hidden in
+           this iteration — their internal light-theme styles clash with
+           the dark frame. Reinstate once they have a matching reskin:
+        <section class="ms-section"><TemplateGallery /></section>
+        <section class="ms-section"><HistoryDatabase /></section>
+      -->
+    </main>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import HistoryDatabase from '../components/HistoryDatabase.vue'
-import TemplateGallery from '../components/TemplateGallery.vue'
+// HistoryDatabase + TemplateGallery hidden in this iteration — see
+// the template for context. Keep imports out so the bundle doesn't
+// drag in their light-theme CSS.
+// import HistoryDatabase from '../components/HistoryDatabase.vue'
+// import TemplateGallery from '../components/TemplateGallery.vue'
 import SettingsPanel from '../components/SettingsPanel.vue'
 import ScenarioSuggestions from '../components/ScenarioSuggestions.vue'
 import TrendingTopics from '../components/TrendingTopics.vue'
@@ -395,97 +373,67 @@ const previewDoc = ref(null)
 const router = useRouter()
 const route = useRoute()
 
-// Pre-fill banner — shown when ?scenario= / ?url= / ?ask= dropped the user
-// here from a tweet or blog post and at least one field was populated. Stays
-// dismissible because seasoned operators don't need the affordance once
-// they've seen the form.
 const prefillBannerVisible = ref(false)
-const prefillBannerKind = ref('text') // 'text' | 'url' | 'ask' | 'mixed'
+const prefillBannerKind = ref('text')
 
-// Toast for the "Share as link" copy button — same UX pattern as the embed
-// dialog's "Copy" toast (resets to default label after a beat).
 const shareLinkCopiedAt = ref(0)
-// Bumped after the toast window expires so the time-windowed `shareLinkCopied`
-// computed re-evaluates (it depends on Date.now(), which isn't reactive).
 const shareLinkCopiedTick = ref(0)
 const shareLinkError = ref('')
 
-// In-flight state for the ?template=<slug> auto-launch path. We hide the
-// page chrome while resolving so a slow API call doesn't render the empty
-// console for half a second before redirecting to /process/new.
 const templateAutoLaunching = ref(false)
 const templateAutoLaunchError = ref('')
 
-// Form data
-const formData = ref({
-  simulationRequirement: ''
-})
-
-// File list
+const formData = ref({ simulationRequirement: '' })
 const files = ref([])
-
-// URL import state
 const urlInput = ref('')
-const urlDocs = ref([])   // [{title, url, text, char_count}]
+const urlDocs = ref([])
 const urlFetching = ref(false)
 const urlError = ref('')
-
-// Ask-mode state — question-only pipeline
 const askQuestion = ref('')
 const askBusy = ref(false)
 const askError = ref('')
-
-// State
 const loading = ref(false)
 const error = ref('')
 const isDragOver = ref(false)
-
-// File input ref
 const fileInput = ref(null)
 
-// Computed: whether the form can be submitted
+const steps = [
+  { num: '01', titleEn: 'You bring a scenario', titleZh: '你提供一个情景',
+    descEn: 'MiroShark builds the world around it — extracts actors, stakes, and open questions from your input.',
+    descZh: 'MiroShark 围绕它构建世界 — 从你的输入中提取角色、利害关系与待解问题。' },
+  { num: '02', titleEn: 'Hundreds of grounded agents', titleZh: '数百个有据可依的智能体',
+    descEn: 'React on Twitter, Reddit, and a prediction market. Hour by hour, round after round.',
+    descZh: '在 Twitter、Reddit 与预测市场上做出反应。每小时一轮,一轮接一轮。' },
+  { num: '03', titleEn: 'Steer the timeline', titleZh: '掌舵时间线',
+    descEn: 'Chat with any agent. Drop breaking news mid-run. Fork a counterfactual and watch it diverge.',
+    descZh: '与任意智能体对话。在运行中投入突发新闻。派生一个反事实分支并观察其偏离。' },
+  { num: '04', titleEn: 'Get a report', titleZh: '生成报告',
+    descEn: 'A Substack-style write-up of what happened, citing actual posts and trades from the run.',
+    descZh: 'Substack 风格的复盘文章,引用本次运行中的真实发帖与交易。' },
+]
+
 const canSubmit = computed(() => {
   return formData.value.simulationRequirement.trim() !== '' &&
     (files.value.length > 0 || urlDocs.value.length > 0)
 })
 
-// Trigger file selection
 const triggerFileInput = () => {
-  if (!loading.value) {
-    fileInput.value?.click()
-  }
+  if (!loading.value) fileInput.value?.click()
 }
 
-// Handle file selection
 const handleFileSelect = (event) => {
   const selectedFiles = Array.from(event.target.files)
   addFiles(selectedFiles)
 }
 
-// Handle drag-related events
-const handleDragOver = (e) => {
-  if (!loading.value) {
-    isDragOver.value = true
-  }
-}
-
-const handleDragLeave = (e) => {
-  isDragOver.value = false
-}
-
+const handleDragOver = () => { if (!loading.value) isDragOver.value = true }
+const handleDragLeave = () => { isDragOver.value = false }
 const handleDrop = (e) => {
   isDragOver.value = false
   if (loading.value) return
-  
-  const droppedFiles = Array.from(e.dataTransfer.files)
-  addFiles(droppedFiles)
+  addFiles(Array.from(e.dataTransfer.files))
 }
 
-// Client-readable file previews (.md / .txt), keyed by File identity so we
-// don't re-read when the `files` array gets reordered. PDFs are skipped here
-// — their text is extracted server-side during graph build, so they simply
-// won't trigger scenario auto-suggest on their own. A .md/.txt sibling (or a
-// URL doc) will still drive suggestions.
 const filePreviewText = ref('')
 
 const refreshFilePreviewText = async () => {
@@ -493,30 +441,19 @@ const refreshFilePreviewText = async () => {
     const ext = (f.name.split('.').pop() || '').toLowerCase()
     return ext === 'md' || ext === 'txt'
   })
-  if (textish.length === 0) {
-    filePreviewText.value = ''
-    return
-  }
-
+  if (textish.length === 0) { filePreviewText.value = ''; return }
   try {
     const chunks = await Promise.all(textish.map(async (f) => {
       try {
-        // Only read the first ~6KB per file to keep the combined preview
-        // bounded. The backend further clamps to 2000 chars.
         const slice = f.slice ? f.slice(0, 6000) : f
         const txt = await slice.text()
         return (txt || '').slice(0, 3000)
-      } catch (_) {
-        return ''
-      }
+      } catch (_) { return '' }
     }))
     filePreviewText.value = chunks.filter(Boolean).join('\n\n').slice(0, 6000)
-  } catch (_) {
-    filePreviewText.value = ''
-  }
+  } catch (_) { filePreviewText.value = '' }
 }
 
-// Add files
 const addFiles = (newFiles) => {
   const validFiles = newFiles.filter(file => {
     const ext = file.name.split('.').pop().toLowerCase()
@@ -526,15 +463,11 @@ const addFiles = (newFiles) => {
   refreshFilePreviewText()
 }
 
-// Remove file
 const removeFile = (index) => {
   files.value.splice(index, 1)
   refreshFilePreviewText()
 }
 
-// Combined text preview handed to ScenarioSuggestions.  Includes every
-// fetched URL's extracted text plus any client-side-readable file text.
-// Kept to ~6KB on the client; the backend trims again.
 const scenarioSuggestPreview = computed(() => {
   const urlChunks = (urlDocs.value || [])
     .map(d => {
@@ -549,33 +482,22 @@ const scenarioSuggestPreview = computed(() => {
   return combined.join('\n\n').slice(0, 6000)
 })
 
-// User picked one of the 3 scenario cards — fill the textarea but don't
-// submit.  We overwrite whatever was there (including any earlier pick); if
-// the user had already typed a partial scenario they can undo with Ctrl+Z.
 const handleSuggestionUse = ({ question }) => {
   if (!question) return
   formData.value.simulationRequirement = question
 }
 
-// Scroll to bottom
 const scrollToBottom = () => {
-  window.scrollTo({
-    top: document.body.scrollHeight,
-    behavior: 'smooth'
-  })
+  window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
 }
 
-// Fetch a URL and add it to urlDocs
 const fetchUrlDoc = async () => {
   const url = urlInput.value.trim()
   if (!url || urlFetching.value) return
-
-  // Prevent duplicate URLs
   if (urlDocs.value.some(d => d.url === url)) {
     urlError.value = tr('This URL has already been added.', '此网址已添加过。')
     return
   }
-
   urlFetching.value = true
   urlError.value = ''
   try {
@@ -593,9 +515,6 @@ const fetchUrlDoc = async () => {
   }
 }
 
-// Ask mode: ask → synthesized briefing becomes a url_doc; we also prefill the
-// simulation_requirement textarea with the LLM's framing. Rest of the flow is
-// unchanged.
 const runAskMode = async () => {
   const q = askQuestion.value.trim()
   if (!q || askBusy.value) return
@@ -609,7 +528,6 @@ const runAskMode = async () => {
     }
     const d = res.data
     const synthUrl = `miroshark://ask/${encodeURIComponent(q.slice(0, 64))}`
-    // Don't duplicate if re-run.
     const idx = urlDocs.value.findIndex(x => x.url === synthUrl)
     const payload = {
       title: d.title,
@@ -630,10 +548,6 @@ const runAskMode = async () => {
   }
 }
 
-// User picked a "What's Trending" card — push the URL into the input and
-// reuse the existing fetch pipeline. ScenarioSuggestions already watches
-// urlDocs and will fire once the fetched doc lands, so the user goes from
-// blank-page to three scenario cards in one click.
 const handleTrendingSelect = ({ url }) => {
   if (!url || urlFetching.value) return
   if (urlDocs.value.some(d => d.url === url)) {
@@ -645,26 +559,16 @@ const handleTrendingSelect = ({ url }) => {
   fetchUrlDoc()
 }
 
-// Remove a URL document from the list
-const removeUrlDoc = (index) => {
-  urlDocs.value.splice(index, 1)
-}
-
 const removeUrlDocByRef = (doc) => {
   const idx = urlDocs.value.indexOf(doc)
   if (idx >= 0) urlDocs.value.splice(idx, 1)
 }
 
-// Hard-cap display strings so long titles / deep URLs can't widen the
-// doc-list row (CSS ellipsis can fail when intermediate flex ancestors
-// don't propagate min-width:0).
 const truncate = (s, max) => {
   if (!s) return ''
   return s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s
 }
 
-// Split docs by origin — Ask-synthesized briefings show under Just Ask,
-// real URL fetches show under URL Import.
 const askDocs = computed(() =>
   urlDocs.value.filter(d => typeof d.url === 'string' && d.url.startsWith('miroshark://ask/'))
 )
@@ -672,31 +576,15 @@ const fetchedDocs = computed(() =>
   urlDocs.value.filter(d => !(typeof d.url === 'string' && d.url.startsWith('miroshark://ask/')))
 )
 
-// Start simulation - navigate immediately, API calls happen on the Process page
 const startSimulation = () => {
   if (!canSubmit.value || loading.value) return
-
-  // Store data pending upload
   import('../store/pendingUpload.js').then(({ setPendingUpload }) => {
     setPendingUpload(files.value, formData.value.simulationRequirement, urlDocs.value)
-
-    // Navigate immediately to Process page (using special identifier for new project)
-    router.push({
-      name: 'Process',
-      params: { projectId: 'new' }
-    })
+    router.push({ name: 'Process', params: { projectId: 'new' } })
   })
 }
 
-// ── Pre-filled scenario links ───────────────────────────────────────────
-// `/?scenario=...&url=...&ask=...` drops the reader directly into a
-// pre-configured New Sim form. `/?template=<slug>` is the auto-launch
-// equivalent for one of the preset templates (matches what clicking the
-// gallery launch button does).
-
-const dismissPrefillBanner = () => {
-  prefillBannerVisible.value = false
-}
+const dismissPrefillBanner = () => { prefillBannerVisible.value = false }
 
 const prefillBannerCopy = computed(() => {
   switch (prefillBannerKind.value) {
@@ -758,17 +646,8 @@ const autoLaunchTemplate = async (slug) => {
 const applyPrefilledParams = async () => {
   const params = readPrefilledParams(route.query || {})
   if (!hasAnyPrefill(params)) return
-
-  // Strip the params off the URL so a refresh / back-button doesn't replay
-  // the pre-fill (and so a copy-paste of the address bar after editing the
-  // form is the user's edited state, not the original shared link).
   router.replace({ path: '/', query: {} })
-
-  if (params.template) {
-    autoLaunchTemplate(params.template)
-    return
-  }
-
+  if (params.template) { autoLaunchTemplate(params.template); return }
   let touched = []
   if (params.scenario && !formData.value.simulationRequirement) {
     formData.value.simulationRequirement = params.scenario
@@ -782,17 +661,12 @@ const applyPrefilledParams = async () => {
     const dup = urlDocs.value.some((d) => d.url === params.url)
     if (!dup) {
       urlInput.value = params.url
-      // Wait for the next tick so the input change is observed before fetch
-      // — keeps the network call colocated with the visible input value if
-      // the user opens devtools to debug a slow fetch.
       await nextTick()
       fetchUrlDoc()
       touched.push('url')
     }
   }
-
   if (touched.length === 0) return
-
   if (touched.length >= 2) prefillBannerKind.value = 'mixed'
   else if (touched[0] === 'url') prefillBannerKind.value = 'url'
   else if (touched[0] === 'ask') prefillBannerKind.value = 'ask'
@@ -800,14 +674,8 @@ const applyPrefilledParams = async () => {
   prefillBannerVisible.value = true
 }
 
-onMounted(() => {
-  applyPrefilledParams()
-})
+onMounted(() => { applyPrefilledParams() })
 
-// Construct a `?scenario=...&url=...&ask=...` URL from the live form state
-// and copy it to the clipboard. Visible whenever there's enough content to
-// produce a meaningful share link — the un-run-scenario counterpart to the
-// "Fork this scenario" button on /watch and /share pages.
 const canShareScenarioLink = computed(() => {
   return Boolean(
     formData.value.simulationRequirement.trim() ||
@@ -817,8 +685,6 @@ const canShareScenarioLink = computed(() => {
 })
 
 const buildLiveShareUrl = () => {
-  // Only the first fetched URL doc travels with the link — multi-doc setups
-  // are advanced and rare; copy-paste the additional URLs separately.
   const firstHttpDoc = urlDocs.value.find(
     (d) => typeof d.url === 'string' && /^https?:\/\//i.test(d.url),
   )
@@ -830,7 +696,6 @@ const buildLiveShareUrl = () => {
 }
 
 const shareLinkCopied = computed(() => {
-  // Touch the tick ref so the computed re-runs when the toast window expires.
   void shareLinkCopiedTick.value
   return shareLinkCopiedAt.value > 0 && Date.now() - shareLinkCopiedAt.value < 2200
 })
@@ -842,1016 +707,916 @@ const copyScenarioShareLink = async () => {
   try {
     await navigator.clipboard.writeText(url)
     shareLinkCopiedAt.value = Date.now()
-    setTimeout(() => {
-      // Re-evaluate `shareLinkCopied` once the toast window expires.
-      shareLinkCopiedTick.value++
-    }, 2300)
+    setTimeout(() => { shareLinkCopiedTick.value++ }, 2300)
   } catch (err) {
     shareLinkError.value =
       err?.message || tr('Copy failed — long-press the link to copy manually.', '复制失败 — 长按链接手动复制。')
   }
 }
-
 </script>
 
 <style scoped>
 /* ═══════════════════════════════════════════════════════════
-   HOME — Hyperstitions Design System applied
+   HOME — Real MiroShark visual language
+   Deep space + chrome + glossy violet panels.
+   Scoped: only this view is dark. The rest of the app keeps
+   its existing theme until the next pass.
    ═══════════════════════════════════════════════════════════ */
 
-.home-container {
+.ms-home {
+  position: relative;
   min-height: 100vh;
-  background: var(--background);
-  font-family: var(--font-display);
-  color: var(--foreground);
+  color: #f4f1ff;
+  font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  /* Solid dark base so the whole page reads dark even where the
+     fixed gradients tile below the fold. The radial-gradient layers
+     stack on top via .ms-space-bg. */
+  background:
+    radial-gradient(ellipse 60% 50% at 20% 110%, rgba(56, 30, 110, 0.35), transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 130%, rgba(150, 80, 230, 0.2), transparent 70%),
+    linear-gradient(180deg, #050210 0%, #0a0420 45%, #06021a 80%, #02010a 100%);
 }
 
-/* ── Top Navigation ── */
-.navbar {
-  height: var(--space-xl);
-  background: var(--color-black);
-  color: var(--color-white);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 var(--space-lg);
-}
-
-.nav-brand {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  letter-spacing: 3px;
-  font-size: 14px;
-  text-transform: uppercase;
-}
-
-.nav-links {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.explore-link {
-  color: var(--color-white);
-  text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  transition: var(--transition-fast);
-  opacity: 0.6;
-}
-
-.explore-link:hover { opacity: 1; color: var(--color-orange); }
-
-.compass { font-size: 15px; line-height: 1; }
-
-.github-link {
-  color: var(--color-white);
-  text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 1px;
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  transition: var(--transition-fast);
-  opacity: 0.6;
-}
-
-.github-link:hover { opacity: 1; }
-
-.arrow { font-family: sans-serif; }
-
-.settings-btn {
-  background: none;
-  border: none;
-  color: rgba(250,250,250,0.5);
-  font-size: 18px;
-  cursor: pointer;
-  padding: 0 0 0 var(--space-md);
-  line-height: 1;
-  transition: var(--transition-fast);
-}
-
-.settings-btn:hover { color: var(--color-orange); }
-
-/* ── Main Content ── */
-.main-content {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: var(--space-2xl) var(--space-lg);
-}
-
-/* ── Hero Section ── */
-.hero-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  margin-bottom: var(--space-2xl);
-  position: relative;
-}
-
-.tag-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-
-.orange-tag {
-  background: var(--color-orange);
-  color: var(--color-white);
-  padding: 4px var(--space-sm);
-  font-weight: 700;
-  letter-spacing: 3px;
-  font-size: 11px;
-  text-transform: uppercase;
-  font-family: var(--font-mono);
-}
-
-.main-title {
-  font-family: var(--font-display);
-  font-size: 50px;
-  line-height: 1.25;
-  font-weight: 400;
-  margin: 0 0 var(--space-lg) 0;
-  letter-spacing: -1px;
-  color: var(--foreground);
-}
-
-.gradient-text {
-  color: var(--color-orange);
-  -webkit-text-fill-color: var(--color-orange);
-  display: inline;
-}
-
-.hero-desc {
-  font-family: var(--font-display);
-  font-size: 22px;
-  line-height: 1.5;
-  color: rgba(10,10,10,0.7);
-  max-width: 640px;
-  margin-bottom: var(--space-xl);
-}
-
-.hero-desc p { margin-bottom: var(--space-md); }
-
-.highlight-bold {
-  color: var(--foreground);
-  font-weight: 400;
-}
-
-.highlight-orange {
-  color: var(--color-orange);
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-}
-
-.highlight-code {
-  background: rgba(10,10,10,0.05);
-  padding: 2px var(--space-xs);
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-  color: var(--foreground);
-}
-
-.slogan-text {
-  font-family: var(--font-display);
-  font-size: 25px;
-  line-height: 1.5;
-  color: var(--foreground);
-  border-left: var(--border-orange);
-  padding-left: var(--space-md);
-  margin-top: var(--space-md);
-}
-
-.blinking-cursor {
-  color: var(--color-green);
-  animation: blink 1s step-end infinite;
-}
-
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-
-.decoration-square {
-  width: var(--space-sm);
-  height: var(--space-sm);
-  background: var(--color-green);
-  margin-top: var(--space-md);
-}
-
-.scroll-down-btn {
-  margin-top: var(--space-md);
-  width: var(--space-lg);
-  height: var(--space-lg);
-  border: var(--border-medium);
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  color: var(--color-orange);
-  font-size: 1.2rem;
-  transition: var(--transition-fast);
-}
-
-.scroll-down-btn:hover {
-  border-color: var(--color-orange);
-}
-
-/* ── Warning Stripe Divider ── */
-.dashboard-section::before {
-  content: '';
-  display: block;
-  height: 7px;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--color-orange),
-    var(--color-orange) 11px,
-    var(--background) 11px,
-    var(--background) 22px
-  );
-  margin-bottom: var(--space-xl);
-}
-
-/* ── Dashboard Section ── */
-.dashboard-section {
-  display: flex;
-  gap: var(--space-xl);
-  padding-top: 0;
-  align-items: flex-start;
-}
-
-.dashboard-section .left-panel,
-.dashboard-section .right-panel {
-  display: flex;
-  flex-direction: column;
-}
-
-/* ── Left Panel ── */
-.left-panel { flex: 0.8; }
-
-.panel-header {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: rgba(10,10,10,0.4);
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-bottom: var(--space-md);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
-.status-dot {
-  color: var(--color-green);
-  font-size: 0.8rem;
-}
-
-.section-title {
-  font-family: var(--font-display);
-  font-size: 34px;
-  font-weight: 400;
-  margin: 0 0 var(--space-sm) 0;
-}
-
-.section-desc {
-  color: rgba(10,10,10,0.5);
-  font-family: var(--font-display);
-  font-size: 22px;
-  margin-bottom: var(--space-md);
-  line-height: 1.5;
-}
-
-/* ── Metric Cards ── */
-.metrics-row {
-  display: flex;
-  gap: var(--space-md);
-  margin-bottom: var(--space-md);
-}
-
-.metric-card {
-  border: var(--border-light);
-  padding: var(--space-md) var(--space-lg);
-  min-width: 150px;
-  transition: var(--transition-fast);
-}
-
-.metric-card:hover { border-color: var(--color-orange); }
-
-.metric-value {
-  font-family: var(--font-display);
-  font-size: 31px;
-  margin-bottom: var(--space-xs);
-}
-
-.metric-label {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(10,10,10,0.4);
-  letter-spacing: 1px;
-}
-
-/* ── Workflow Steps ── */
-.steps-container {
-  border: var(--border-light);
-  padding: var(--space-lg);
-  position: relative;
-}
-
-/* Corner markers */
-.steps-container::before,
-.steps-container::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
+/* Hero halo — fixed so it stays glued to the top while you scroll. */
+.ms-space-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
-}
-.steps-container::before {
-  top: 12px; left: 12px;
-  border-top: 3px solid var(--color-orange);
-  border-left: 3px solid var(--color-orange);
-}
-.steps-container::after {
-  bottom: 12px; right: 12px;
-  border-bottom: 3px solid var(--color-green);
-  border-right: 3px solid var(--color-green);
-}
-
-.steps-header {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  color: rgba(10,10,10,0.4);
-  margin-bottom: var(--space-md);
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
-.diamond-icon {
-  color: var(--color-orange);
-  font-size: 1.2rem;
-}
-
-.workflow-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-}
-
-.workflow-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-md);
-}
-
-.step-num {
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 15px;
-  color: var(--color-orange);
-  opacity: 0.5;
-}
-
-.step-info { flex: 1; }
-
-.step-title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  margin-bottom: 4px;
-}
-
-.step-desc {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(10,10,10,0.4);
-  line-height: 1.6;
-}
-
-/* ── Right Console ── */
-.right-panel { flex: 1.2; }
-
-.console-box {
-  border: var(--border-medium);
-  padding: var(--space-xs);
-  position: relative;
-}
-
-/* Console corner markers */
-.console-box::before,
-.console-box::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  pointer-events: none;
-}
-.console-box::before {
-  top: -2px; right: -2px;
-  border-top: 3px solid var(--color-orange);
-  border-right: 3px solid var(--color-orange);
-}
-.console-box::after {
-  bottom: -2px; left: -2px;
-  border-bottom: 3px solid var(--color-green);
-  border-left: 3px solid var(--color-green);
-}
-
-.console-section { padding: var(--space-md); }
-.console-section.btn-section { padding-top: 0; }
-
-.console-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(10,10,10,0.4);
-  letter-spacing: 1px;
-}
-
-.console-label { text-transform: uppercase; }
-.console-meta { font-size: 11px; }
-
-/* ── Upload Zone ── */
-.upload-zone {
-  border: 2px dashed rgba(10,10,10,0.12);
-  height: 200px;
-  overflow-y: auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: var(--transition-medium);
-  background: var(--color-gray);
-}
-
-.upload-zone.has-files { align-items: flex-start; }
-
-.upload-zone:hover {
-  border-color: var(--color-orange);
-  background: var(--background);
-}
-
-.upload-zone.drag-over {
-  border-color: var(--color-green);
-  background: rgba(67,193,101,0.05);
-}
-
-.upload-placeholder { text-align: center; }
-
-.upload-icon {
-  width: var(--space-lg);
-  height: var(--space-lg);
-  border: var(--border-medium);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto var(--space-sm);
-  color: var(--color-orange);
-  font-size: 1.2rem;
-}
-
-.upload-title {
-  font-family: var(--font-display);
-  font-size: 18px;
-  margin-bottom: var(--space-xs);
-}
-
-.upload-hint {
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(10,10,10,0.35);
-}
-
-/* ── File List ── */
-.file-list {
-  width: 100%;
-  padding: var(--space-sm);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.file-item {
-  display: flex;
-  align-items: center;
-  background: var(--background);
-  padding: var(--space-xs) var(--space-sm);
-  border: var(--border-light);
-  font-family: var(--font-mono);
-  font-size: 14px;
-}
-
-.file-name { flex: 1; margin: 0 var(--space-sm); }
-
-.remove-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.2rem;
-  color: rgba(10,10,10,0.35);
-  transition: var(--transition-fast);
-}
-
-.remove-btn:hover { color: var(--color-red); }
-
-/* ── Console Divider ── */
-.console-divider {
-  display: flex;
-  align-items: center;
-  margin: var(--space-sm) 0;
-}
-
-.console-divider::before,
-.console-divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: rgba(10,10,10,0.08);
-}
-
-.console-divider span {
-  padding: 0 var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: rgba(10,10,10,0.25);
-  letter-spacing: 3px;
-  text-transform: uppercase;
-}
-
-/* ── Text Input ── */
-.input-wrapper {
-  position: relative;
-  border: var(--border-light);
-  background: var(--color-gray);
-  transition: var(--transition-fast);
-}
-
-.input-wrapper:focus-within {
-  border-color: var(--color-orange);
-}
-
-.code-input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  padding: var(--space-md);
-  font-family: var(--font-mono);
-  font-size: 15px;
-  line-height: 1.6;
-  resize: vertical;
-  outline: none;
-  min-height: 150px;
-  color: var(--foreground);
-}
-
-.code-input::placeholder {
-  color: rgba(10,10,10,0.35);
-}
-
-.model-badge {
-  position: absolute;
-  bottom: var(--space-xs);
-  right: var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: rgba(10,10,10,0.25);
-  letter-spacing: 1px;
-}
-
-/* ── Launch Button ── */
-.start-engine-btn {
-  width: 100%;
-  background: var(--color-black);
-  color: var(--color-white);
-  border: 2px solid var(--color-black);
-  padding: 20px var(--space-lg);
-  font-family: var(--font-mono);
-  font-weight: 700;
-  font-size: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  position: relative;
-  overflow: hidden;
-}
-
-.start-engine-btn:not(:disabled) {
-  animation: btn-pulse 2s ease-in-out infinite;
-}
-
-.start-engine-btn:hover:not(:disabled) {
-  background: var(--color-orange);
-  border-color: var(--color-orange);
-}
-
-.start-engine-btn:active:not(:disabled) {
+  background:
+    radial-gradient(ellipse 55% 45% at 50% 25%, rgba(139, 92, 246, 0.55), transparent 65%),
+    radial-gradient(ellipse 70% 50% at 50% 50%, rgba(76, 29, 149, 0.35), transparent 70%),
+    radial-gradient(ellipse 35% 30% at 85% 20%, rgba(150, 80, 230, 0.35), transparent 70%);
+  mix-blend-mode: screen;
   opacity: 0.9;
 }
 
-.start-engine-btn:disabled {
-  background: var(--color-gray);
-  color: rgba(10,10,10,0.35);
-  cursor: not-allowed;
-  border-color: rgba(10,10,10,0.08);
-}
-
-@keyframes btn-pulse {
-  0%, 100% { border-color: var(--color-black); }
-  50% { border-color: var(--color-orange); }
-}
-
-/* ── URL Import Section ── */
-.url-section {
-  padding-top: 0;
-}
-
-.url-input-row {
-  display: flex;
-  gap: var(--space-xs);
-}
-
-.url-input {
-  flex: 1;
-  border: var(--border-light);
-  background: var(--color-gray);
-  padding: var(--space-xs) var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: var(--foreground);
-  outline: none;
-  transition: var(--transition-fast);
-  min-width: 0;
-}
-
-.url-input:focus {
-  border-color: var(--color-orange);
-  background: var(--background);
-}
-
-.url-input::placeholder {
-  color: rgba(10,10,10,0.3);
-}
-
-.url-input:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.url-fetch-btn {
-  background: var(--color-black);
-  color: var(--color-white);
-  border: 2px solid var(--color-black);
-  padding: var(--space-xs) var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  cursor: pointer;
-  transition: var(--transition-fast);
-  white-space: nowrap;
-}
-
-.url-fetch-btn:hover:not(:disabled) {
-  background: var(--color-orange);
-  border-color: var(--color-orange);
-}
-
-.url-fetch-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.url-error {
-  margin-top: var(--space-xs);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--color-red);
-}
-
-.url-doc-list {
-  margin-top: var(--space-xs);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-xs);
-}
-
-.url-doc-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-xs);
-  background: var(--background);
-  padding: var(--space-xs) var(--space-sm);
-  border: var(--border-light);
-  border-left: 3px solid var(--color-green);
-  cursor: pointer;
-  transition: background 0.1s, border-left-color 0.1s;
-}
-.url-doc-item:hover,
-.url-doc-item:focus-visible {
-  background: rgba(67, 193, 101, 0.06);
-  border-left-color: var(--color-orange);
-  outline: none;
-}
-
-.url-doc-icon {
-  color: var(--color-green);
-  font-size: 14px;
-  margin-top: 1px;
-  flex-shrink: 0;
-}
-
-.url-doc-info {
-  flex: 1;
-  min-width: 0;
-}
-
-.url-doc-title {
-  font-family: var(--font-display);
-  font-size: 14px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.url-doc-meta {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: rgba(10,10,10,0.35);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Footer ── */
-.attribution-footer {
-  text-align: center;
-  padding: var(--space-lg) 0;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  color: rgba(10,10,10,0.25);
-  letter-spacing: 1px;
-}
-
-.attribution-footer a {
-  color: rgba(10,10,10,0.4);
-  text-decoration: none;
-}
-
-.attribution-footer a:hover {
-  color: var(--color-orange);
-}
-
-/* ── Doc Preview Modal ── */
-.doc-preview-overlay {
+.ms-space-stars {
   position: fixed;
   inset: 0;
-  background: rgba(10, 10, 10, 0.65);
-  z-index: 1050;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,1), transparent 50%),
+    radial-gradient(1px 1px at 78% 9%, rgba(255,255,255,0.9), transparent 50%),
+    radial-gradient(1.5px 1.5px at 33% 72%, rgba(255,255,255,1), transparent 50%),
+    radial-gradient(1px 1px at 62% 38%, rgba(220,220,255,0.85), transparent 50%),
+    radial-gradient(1px 1px at 88% 56%, rgba(255,255,255,0.95), transparent 50%),
+    radial-gradient(1.5px 1.5px at 22% 88%, rgba(255,240,255,0.75), transparent 50%),
+    radial-gradient(1px 1px at 7% 42%, rgba(255,255,255,0.65), transparent 50%),
+    radial-gradient(1px 1px at 49% 14%, rgba(255,255,255,1), transparent 50%),
+    radial-gradient(1px 1px at 92% 82%, rgba(255,255,255,0.75), transparent 50%),
+    radial-gradient(1.5px 1.5px at 41% 51%, rgba(255,255,255,0.65), transparent 50%),
+    radial-gradient(1px 1px at 67% 91%, rgba(220,220,255,0.75), transparent 50%),
+    radial-gradient(1px 1px at 17% 63%, rgba(255,255,255,0.65), transparent 50%),
+    radial-gradient(1px 1px at 55% 78%, rgba(255,255,255,0.8), transparent 50%),
+    radial-gradient(1px 1px at 73% 24%, rgba(255,255,255,0.7), transparent 50%);
+  animation: ms-twinkle 6s ease-in-out infinite alternate;
+}
+
+@keyframes ms-twinkle { from { opacity: 0.55 } to { opacity: 1 } }
+
+/* All page content sits above the fixed bg/stars layers. */
+.ms-nav, .ms-main { position: relative; z-index: 1; }
+
+/* ── Top Nav ── */
+.ms-nav {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.5rem;
+  background: linear-gradient(180deg, rgba(10,5,26,0.85) 0%, rgba(5,3,10,0.6) 70%, transparent 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+@media (min-width: 640px) { .ms-nav { padding: 1rem 2rem } }
+
+.ms-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #f4f1ff;
+  text-decoration: none;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-size: 1.05rem;
+}
+.ms-brand-mark {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(167, 139, 250, 0.5));
+}
+
+.ms-nav-links { display: flex; align-items: center; gap: 0.5rem; }
+
+.ms-nav-link, .ms-nav-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 36px;
+  padding: 0 0.9rem;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 9999px;
+  color: #ece8ff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  background: linear-gradient(180deg, rgba(70,55,120,0.45) 0%, rgba(20,14,42,0.7) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 8px 22px -10px rgba(139,92,246,0.4);
+  transition: border-color 180ms ease, transform 180ms ease, color 180ms ease;
+  cursor: pointer;
+  font-family: inherit;
+}
+.ms-nav-icon {
+  width: 36px;
+  padding: 0;
+  font-size: 1rem;
+}
+.ms-nav-link:hover, .ms-nav-icon:hover {
+  border-color: rgba(167,139,250,0.55);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+.ms-nav-arrow { opacity: 0.7; }
+
+/* ── Hero ── */
+.ms-main { max-width: 1180px; margin: 0 auto; padding: 0 1.25rem 5rem; }
+@media (min-width: 640px) { .ms-main { padding: 0 2rem 6rem } }
+
+.ms-hero {
+  position: relative;
+  text-align: center;
+  padding: 5rem 0 4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+@media (min-width: 1024px) { .ms-hero { padding: 7rem 0 5rem } }
+
+.ms-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 32px;
+  padding: 0 0.95rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #e9e6ff;
+  background: linear-gradient(180deg, rgba(80,60,140,0.5) 0%, rgba(28,18,58,0.7) 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.1),
+    inset 0 1px 0 rgba(255,255,255,0.25),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 8px 24px -8px rgba(139,92,246,0.4);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+}
+.ms-chip::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #a78bfa 60%, #4c1d95 100%);
+  box-shadow: 0 0 8px rgba(167,139,250,0.9), 0 0 16px rgba(139,92,246,0.6);
+}
+
+.ms-hero-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 0.5rem;
+  width: 100%;
+}
+@media (min-width: 900px) {
+  .ms-hero-stage { flex-direction: row; gap: 2.5rem; }
+}
+
+.ms-shark-wrap {
+  position: relative;
+  width: 150px;
+  height: 160px;
+  flex-shrink: 0;
+}
+@media (min-width: 900px) { .ms-shark-wrap { width: 200px; height: 215px } }
+
+.ms-shark {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter:
+    drop-shadow(0 30px 60px rgba(139,92,246,0.45))
+    drop-shadow(0 10px 24px rgba(0,0,0,0.7))
+    drop-shadow(0 0 80px rgba(167,139,250,0.35));
+}
+
+.ms-float { animation: ms-float 6s ease-in-out infinite; }
+@keyframes ms-float {
+  0%, 100% { transform: translateY(0) }
+  50%      { transform: translateY(-10px) }
+}
+
+.ms-display {
+  font-size: clamp(2.5rem, 6.5vw, 5.5rem);
+  line-height: 1.02;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+@media (min-width: 900px) {
+  .ms-display { text-align: left; }
+}
+
+.ms-chrome-text {
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%, #e9e9f5 15%, #b9b9cc 32%, #6e6e85 50%,
+    #c8c8dc 68%, #ffffff 85%, #d6d6e8 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(255,255,255,0.15);
+  filter:
+    drop-shadow(0 1px 0 rgba(255,255,255,0.4))
+    drop-shadow(0 4px 12px rgba(167,139,250,0.35))
+    drop-shadow(0 16px 32px rgba(0,0,0,0.6));
+  position: relative;
+}
+.ms-chrome-text::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255,255,255,0.85) 50%, transparent 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  background-size: 200% 100%;
+  animation: ms-shimmer 5s linear infinite;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+@keyframes ms-shimmer {
+  0% { background-position: 200% 0 }
+  100% { background-position: -100% 0 }
+}
+
+.ms-hero-desc {
+  max-width: 700px;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: rgba(244,241,255,0.85);
+  margin: 0 auto;
+}
+.ms-hero-strong { color: #ffffff; font-weight: 700; }
+.ms-hero-accent { color: #c4b5fd; font-weight: 600; }
+
+.ms-slogan {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  color: rgba(228,222,255,0.7);
+  margin-top: 0.5rem;
+}
+.ms-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: ms-blink 1s steps(2) infinite;
+}
+@keyframes ms-blink { 50% { opacity: 0 } }
+
+.ms-scroll-btn {
+  margin-top: 0.5rem;
+  width: 44px;
+  height: 44px;
+  border-radius: 9999px;
+  color: #f4f1ff;
+  background: linear-gradient(180deg, #4a4360 0%, #2a2440 45%, #18132a 55%, #3a3450 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.4),
+    inset 0 -1px 0 rgba(0,0,0,0.6),
+    0 10px 24px -8px rgba(0,0,0,0.8);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.ms-scroll-btn:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    inset 0 -1px 0 rgba(0,0,0,0.6),
+    0 16px 32px -8px rgba(139,92,246,0.5);
+}
+
+.ms-rule {
+  height: 1px;
+  margin: 0 auto;
+  max-width: 720px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(167,139,250,0.4) 20%,
+    rgba(255,255,255,0.5) 50%,
+    rgba(167,139,250,0.4) 80%,
+    transparent 100%
+  );
+  box-shadow: 0 0 16px rgba(167,139,250,0.3);
+}
+
+/* ── Toasts ── */
+.ms-toast {
+  position: fixed;
+  top: 5.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  z-index: 50;
+  color: #f4f1ff;
+  background: linear-gradient(180deg, rgba(40,30,70,0.85) 0%, rgba(18,12,38,0.92) 100%);
+  border: 1px solid rgba(167,139,250,0.35);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 16px 40px -16px rgba(0,0,0,0.8);
+}
+.ms-toast-error { border-color: rgba(240,171,252,0.5); }
+.ms-toast-dot { color: #a78bfa; }
+.ms-toast-close {
+  margin-left: 0.25rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.ms-toast-close:hover { opacity: 1; }
+
+/* ── Modal ── */
+.ms-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 32px;
-  animation: doc-preview-fade 0.12s ease-out;
+  padding: 1rem;
+  background: rgba(5, 3, 10, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-@keyframes doc-preview-fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-.doc-preview-modal {
-  background: #FAFAFA;
-  width: 760px;
-  max-width: 100%;
-  max-height: 100%;
+.ms-modal {
+  width: 100%;
+  max-width: 760px;
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  border: 2px solid rgba(10,10,10,0.12);
-  font-family: 'Space Mono', 'Courier New', monospace;
-}
-.doc-preview-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 16px 20px;
-  background: #0A0A0A;
-  color: #FAFAFA;
-}
-.doc-preview-title {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  min-width: 0;
+  border-radius: 1.25rem;
+  background: linear-gradient(180deg, rgba(40,30,70,0.95) 0%, rgba(18,12,38,0.97) 100%);
+  border: 1px solid rgba(167,139,250,0.3);
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,0.9);
+  color: #f4f1ff;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.doc-preview-icon { color: #43C165; flex-shrink: 0; }
-.doc-preview-close {
-  background: none;
-  border: none;
-  color: rgba(250,250,250,0.6);
-  font-size: 14px;
-  cursor: pointer;
-  padding: 4px 8px;
-  flex-shrink: 0;
-}
-.doc-preview-close:hover { color: #FAFAFA; }
-.doc-preview-warning {
-  height: 6px;
-  background: repeating-linear-gradient(
-    -45deg,
-    #FF6B1A,
-    #FF6B1A 10px,
-    #FAFAFA 10px,
-    #FAFAFA 20px
-  );
-}
-.doc-preview-meta {
-  padding: 12px 20px;
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  color: rgba(10,10,10,0.45);
-  border-bottom: 2px solid rgba(10,10,10,0.08);
-  overflow-wrap: anywhere;
-}
-.doc-preview-meta-sep { margin: 0 6px; }
-.doc-preview-url { color: #FF6B1A; }
-.doc-preview-body {
-  margin: 0;
-  padding: 18px 20px;
-  flex: 1;
-  overflow-y: auto;
-  font-family: 'Space Mono', 'Courier New', monospace;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: #0A0A0A;
-  white-space: pre-wrap;
-  word-break: break-word;
-  background: #FAFAFA;
-}
-
-/* ── Pre-fill banner (?scenario / ?url / ?ask) ── */
-.prefill-banner {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-md);
-  margin-bottom: var(--space-sm);
-  background: rgba(255, 107, 26, 0.08);
-  border-left: 3px solid var(--color-orange);
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  line-height: 1.5;
-  color: var(--foreground);
-}
-
-.prefill-banner-icon {
-  font-size: 14px;
-  line-height: 1.4;
-  flex-shrink: 0;
-}
-
-.prefill-banner-text {
-  flex: 1;
-}
-
-.prefill-banner-close {
-  background: none;
-  border: none;
-  color: rgba(10, 10, 10, 0.4);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  padding: 0;
-  flex-shrink: 0;
-  transition: var(--transition-fast);
-}
-
-.prefill-banner-close:hover {
-  color: var(--color-orange);
-}
-
-/* ── Template auto-launch indicators (?template=<slug>) ── */
-.prefill-template-loading,
-.prefill-template-error {
+.ms-modal-header {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
-  padding: var(--space-xs) var(--space-md);
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  letter-spacing: 0.5px;
-  background: var(--color-black);
-  color: var(--color-white);
-}
-
-.prefill-template-loading-dot {
-  color: var(--color-orange);
-  animation: blink 1s step-end infinite;
-}
-
-.prefill-template-error {
-  background: rgba(239, 68, 68, 0.12);
-  color: var(--color-red);
-  border-bottom: 1px solid rgba(239, 68, 68, 0.3);
   justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(167,139,250,0.18);
 }
-
-.prefill-template-error-close {
-  background: none;
+.ms-modal-title { display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700; }
+.ms-modal-icon { color: #a78bfa; }
+.ms-modal-close {
+  background: transparent;
   border: none;
-  color: rgba(239, 68, 68, 0.6);
-  font-size: 16px;
-  line-height: 1;
+  color: rgba(244,241,255,0.7);
+  font-size: 1.1rem;
   cursor: pointer;
-  padding: 0 var(--space-xs);
 }
-
-.prefill-template-error-close:hover {
-  color: var(--color-red);
-}
-
-/* ── Share scenario as link ── */
-.share-scenario-row {
-  margin-top: var(--space-sm);
+.ms-modal-close:hover { color: #fff; }
+.ms-modal-meta {
+  padding: 0.6rem 1.25rem;
+  font-size: 0.78rem;
+  color: rgba(228,222,255,0.6);
+  border-bottom: 1px solid rgba(167,139,250,0.12);
   display: flex;
+  gap: 0.5rem;
   align-items: center;
-  gap: var(--space-sm);
-  flex-wrap: wrap;
+}
+.ms-modal-sep { opacity: 0.5; }
+.ms-modal-url {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  word-break: break-all;
+}
+.ms-modal-body {
+  padding: 1.25rem;
+  overflow: auto;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(244,241,255,0.85);
+  white-space: pre-wrap;
 }
 
-.share-scenario-btn {
+/* ── Dashboard ── */
+.ms-dashboard {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  margin-top: 3rem;
+}
+@media (min-width: 1024px) {
+  .ms-dashboard {
+    grid-template-columns: 22rem 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+}
+
+/* Glossy panel base */
+.ms-glossy {
+  position: relative;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  background: linear-gradient(180deg, rgba(40,30,70,0.6) 0%, rgba(18,12,38,0.78) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 -1px 0 rgba(0,0,0,0.45),
+    0 20px 48px -16px rgba(0,0,0,0.8),
+    0 0 60px -20px rgba(139,92,246,0.25);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  overflow: hidden;
+  isolation: isolate;
+}
+.ms-glossy::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.02) 30%, transparent 60%);
+  pointer-events: none;
+}
+@media (min-width: 640px) { .ms-glossy { padding: 1.75rem } }
+
+/* Left: Status */
+.ms-side { display: flex; flex-direction: column; gap: 1.25rem; }
+.ms-side-panel { display: flex; flex-direction: column; gap: 0.65rem; }
+.ms-side-head {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: 0.55rem;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(228,222,255,0.7);
+}
+.ms-side-head-faint { color: rgba(228,222,255,0.55); }
+.ms-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 9999px;
+  background: radial-gradient(circle at 30% 30%, #fff 0%, #a78bfa 60%, #4c1d95 100%);
+  box-shadow: 0 0 8px rgba(167,139,250,0.9), 0 0 16px rgba(139,92,246,0.6);
+  animation: ms-pulse 2.4s ease-in-out infinite;
+}
+@keyframes ms-pulse {
+  0%, 100% { opacity: 0.8; transform: scale(1) }
+  50%      { opacity: 1; transform: scale(1.15) }
+}
+.ms-diamond { color: #a78bfa; }
+
+.ms-side-status {
+  font-size: 2.5rem;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  margin: 0.25rem 0 0.5rem;
+  background: linear-gradient(180deg, #ffffff 0%, #e2dcf6 55%, #a99fc8 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.ms-side-desc {
+  color: rgba(244,241,255,0.78);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.ms-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.95rem;
+}
+.ms-step {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  gap: 0.85rem;
+  align-items: start;
+}
+.ms-step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 9999px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e9e6ff;
+  background: linear-gradient(180deg, rgba(80,60,140,0.55) 0%, rgba(28,18,58,0.85) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.ms-step-title { font-weight: 700; font-size: 0.95rem; color: #f4f1ff; }
+.ms-step-desc {
+  margin-top: 2px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: rgba(228,222,255,0.7);
+}
+
+/* Right: Console */
+.ms-console-wrap { display: flex; flex-direction: column; gap: 1rem; }
+
+.ms-prefill {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, rgba(70,55,120,0.45) 0%, rgba(28,18,58,0.7) 100%);
+  border: 1px solid rgba(167,139,250,0.35);
+  color: #ece8ff;
+  font-size: 0.88rem;
+}
+.ms-prefill-icon { font-size: 0.95rem; }
+.ms-prefill-text { flex: 1; line-height: 1.4; }
+.ms-prefill-close {
   background: transparent;
-  color: var(--foreground);
-  border: 1px solid rgba(10, 10, 10, 0.18);
-  padding: 6px var(--space-sm);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  letter-spacing: 0.5px;
+  border: none;
+  color: rgba(244,241,255,0.6);
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: var(--transition-fast);
+}
+.ms-prefill-close:hover { color: #fff; }
+
+.ms-console {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
 }
 
-.share-scenario-btn:hover {
-  border-color: var(--color-orange);
-  color: var(--color-orange);
+.ms-block { display: flex; flex-direction: column; gap: 0.65rem; }
+.ms-block-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.ms-block-label {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #c4b5fd;
+}
+.ms-block-meta {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: rgba(228,222,255,0.55);
+  letter-spacing: 0.04em;
 }
 
-.share-scenario-btn.copied {
-  border-color: var(--color-green);
-  color: var(--color-green);
+/* Drop zone */
+.ms-drop {
+  position: relative;
+  border-radius: 1rem;
+  padding: 1.75rem 1.25rem;
+  text-align: center;
+  border: 1.5px dashed rgba(167,139,250,0.4);
+  background: linear-gradient(180deg, rgba(22,16,46,0.4) 0%, rgba(8,5,22,0.65) 100%);
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease, transform 180ms ease;
+}
+.ms-drop:hover, .ms-drop.is-over {
+  border-color: rgba(196,181,253,0.85);
+  background: linear-gradient(180deg, rgba(48,36,84,0.5) 0%, rgba(20,14,42,0.75) 100%);
+  transform: translateY(-1px);
+}
+.ms-drop.has-files { padding: 1rem; text-align: left; }
+.ms-drop-empty { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; }
+.ms-drop-arrow { font-size: 1.5rem; color: #a78bfa; filter: drop-shadow(0 4px 12px rgba(167,139,250,0.5)); }
+.ms-drop-title { font-size: 1rem; font-weight: 600; color: #f4f1ff; }
+.ms-drop-hint { font-size: 0.8rem; color: rgba(228,222,255,0.55); }
+
+.ms-file-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.ms-file {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.65rem;
+  background: rgba(40,30,70,0.55);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.ms-file-name { flex: 1; font-size: 0.88rem; color: #f4f1ff; word-break: break-all; }
+.ms-x {
+  background: transparent;
+  border: none;
+  color: rgba(244,241,255,0.55);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+.ms-x:hover { color: #f0abfc; }
+
+/* Inputs */
+.ms-input-row { display: flex; gap: 0.5rem; align-items: stretch; }
+.ms-input, .ms-textarea {
+  flex: 1;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-family: inherit;
+  font-size: 0.92rem;
+  color: #f4f1ff;
+  background: linear-gradient(180deg, rgba(22,16,46,0.85) 0%, rgba(8,5,22,0.95) 100%);
+  border: 1px solid rgba(167,139,250,0.25);
+  border-radius: 0.85rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.ms-input:focus, .ms-textarea:focus {
+  border-color: rgba(167,139,250,0.7);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.08),
+    0 0 0 4px rgba(139,92,246,0.18);
+}
+.ms-input::placeholder, .ms-textarea::placeholder { color: rgba(228,222,255,0.4); }
+.ms-input { height: 44px; }
+
+.ms-textarea-wrap { position: relative; }
+.ms-textarea {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  min-height: 140px;
+  resize: vertical;
 }
 
-.share-scenario-icon {
-  font-size: 13px;
-  line-height: 1;
+.ms-engine-tag {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.65rem;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(228,222,255,0.55);
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.5rem;
+  background: rgba(40,30,70,0.6);
+  border: 1px solid rgba(255,255,255,0.06);
+  pointer-events: none;
 }
 
-.share-scenario-hint {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: rgba(10, 10, 10, 0.4);
-  line-height: 1.4;
+/* Buttons */
+.ms-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0 1.1rem;
+  height: 44px;
+  border-radius: 0.85rem;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  border: none;
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease, opacity 180ms ease;
+}
+.ms-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.ms-btn-ghost {
+  color: #ece8ff;
+  background: linear-gradient(180deg, rgba(70,55,120,0.55) 0%, rgba(20,14,42,0.75) 100%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.2),
+    inset 0 -1px 0 rgba(0,0,0,0.4),
+    0 8px 22px -10px rgba(139,92,246,0.45);
+}
+.ms-btn-ghost:not(:disabled):hover {
+  border-color: rgba(167,139,250,0.55);
+  transform: translateY(-1px);
 }
 
-.share-scenario-error {
-  margin-top: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--color-red);
+/* Errors / hints */
+.ms-error {
+  color: #f0abfc;
+  font-size: 0.82rem;
+  margin: 0;
+}
+.ms-hint {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  color: rgba(228,222,255,0.6);
+  font-size: 0.78rem;
+  margin: 0;
 }
 
-/* ── Responsive ── */
-@media (max-width: 1024px) {
-  .dashboard-section { flex-direction: column; }
-  .main-title { font-size: 34px; }
+/* Doc list (fetched URLs / ask briefings) */
+.ms-doc-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.ms-doc {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.85rem;
+  background: linear-gradient(180deg, rgba(48,36,84,0.55) 0%, rgba(20,14,42,0.7) 100%);
+  border: 1px solid rgba(255,255,255,0.06);
+  cursor: pointer;
+  transition: border-color 180ms ease, transform 180ms ease;
+}
+.ms-doc:hover { border-color: rgba(167,139,250,0.45); transform: translateY(-1px); }
+.ms-doc-icon { color: #a78bfa; }
+.ms-doc-info { flex: 1; min-width: 0; }
+.ms-doc-title {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #f4f1ff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ms-doc-meta {
+  margin-top: 2px;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.74rem;
+  color: rgba(228,222,255,0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-@media (max-width: 640px) {
-  .share-scenario-row { gap: var(--space-xs); }
-  .share-scenario-hint { display: none; }
+/* Divider with text */
+.ms-divider {
+  position: relative;
+  text-align: center;
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(228,222,255,0.5);
+}
+.ms-divider::before, .ms-divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: calc(50% - 5rem);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(167,139,250,0.35), transparent);
+}
+.ms-divider::before { left: 0; }
+.ms-divider::after  { right: 0; }
+.ms-divider span { background: transparent; }
+
+/* Share link */
+.ms-share-row {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 0.65rem;
+}
+.ms-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 38px;
+  padding: 0 1rem;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #ece8ff;
+  background: linear-gradient(180deg, rgba(70,55,120,0.55) 0%, rgba(20,14,42,0.75) 100%);
+  border: 1px solid rgba(167,139,250,0.35);
+  cursor: pointer;
+  transition: border-color 180ms ease, transform 180ms ease, color 180ms ease;
+}
+.ms-share-btn:hover { border-color: rgba(196,181,253,0.65); color: #fff; transform: translateY(-1px); }
+.ms-share-btn.is-copied {
+  color: #c4b5fd;
+  border-color: rgba(196,181,253,0.65);
+  background: linear-gradient(180deg, rgba(80,60,140,0.7) 0%, rgba(28,18,58,0.85) 100%);
+}
+.ms-share-hint {
+  font-family: 'Geist Mono', ui-monospace, monospace;
+  font-size: 0.74rem;
+  color: rgba(228,222,255,0.55);
+  flex: 1;
+  min-width: 220px;
+}
+
+/* Launch CTA */
+.ms-launch { display: flex; justify-content: flex-end; padding-top: 0.5rem; }
+.ms-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  height: 56px;
+  padding: 0 2rem;
+  border-radius: 9999px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f8f5ff;
+  background: linear-gradient(180deg, #6a4ad6 0%, #4922b8 45%, #2a118a 55%, #4f2dc4 100%);
+  border: none;
+  cursor: pointer;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.15),
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 14px 32px -8px rgba(139,92,246,0.6),
+    0 0 60px -10px rgba(167,139,250,0.5);
+  transition: transform 200ms cubic-bezier(0.2,0.8,0.2,1), box-shadow 200ms ease, background 200ms ease, opacity 200ms ease;
+  overflow: hidden;
+  isolation: isolate;
+}
+.ms-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 40%, transparent 55%);
+  pointer-events: none;
+}
+.ms-cta:not(:disabled):hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, #7d5ee8 0%, #5728d4 45%, #3414a3 55%, #5e3bde 100%);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.22),
+    inset 0 1px 0 rgba(255,255,255,0.55),
+    inset 0 -1px 0 rgba(0,0,0,0.5),
+    0 22px 44px -10px rgba(139,92,246,0.75),
+    0 0 80px -10px rgba(167,139,250,0.65);
+}
+.ms-cta:disabled { opacity: 0.5; cursor: not-allowed; }
+.ms-cta-arrow { font-size: 1.1rem; }
+
+/* Sub-sections (TemplateGallery / HistoryDatabase) — given a glossy
+   wrapper so the inner light styles read as "embedded in a dark frame"
+   rather than floating awkwardly. */
+.ms-section {
+  margin-top: 3rem;
+  border-radius: 1.5rem;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, rgba(20,14,42,0.55) 0%, rgba(8,5,22,0.75) 100%);
+  border: 1px solid rgba(167,139,250,0.18);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    0 20px 48px -16px rgba(0,0,0,0.8);
+}
+
+@media (max-width: 1023px) {
+  .ms-side { order: 2; }
+  .ms-console-wrap { order: 1; }
 }
 </style>
