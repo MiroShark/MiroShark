@@ -86,6 +86,7 @@ def test_surface_keys_includes_every_serve_handler():
         "oembed",
         "peak_round",
         "agent_sparklines",
+        "volatility",
     }
     assert set(surface_stats.SURFACE_KEYS) == expected
 
