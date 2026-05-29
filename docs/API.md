@@ -6,6 +6,27 @@ Base URL is `http://localhost:5001` in dev. Every endpoint returns JSON unless o
 
 > **Interactive docs:** the running backend serves Swagger UI at `/api/docs` and the OpenAPI 3.1 spec at `/api/openapi.yaml` (or `/api/openapi.json`). Point [`openapi-generator`](https://openapi-generator.tech/) at the spec to produce a Python / TypeScript / Go SDK in one command.
 
+## Localization
+
+Every endpoint resolves an active locale per request. Order of precedence:
+
+1. `?lang=` query parameter (use on share-surface URLs that need to be locale-pinned in their canonical form — `/share/<id>`, `cite.bib`, `badge.svg`, `chart.svg`)
+2. `X-MiroShark-Locale` request header (what the bundled SPA sends on every API call)
+3. `Accept-Language` request header (standard fallback for off-the-shelf HTTP clients)
+4. `en` (default)
+
+Supported locales: `en`, `zh-CN`. Unknown tags fall back to `en` silently — `?lang=fr` on the current build returns the English payload, not a 400.
+
+What gets localized: API error messages (`{"success": false, "error": "..."}`), preset template `name` / `description` metadata, RSS / Atom feed copy, and the report agent's narration. Raw simulation data (posts, trades, agent stances) is never translated.
+
+```bash
+# SPA-style: header-driven
+curl -s -H "X-MiroShark-Locale: zh-CN" "https://your-host/api/templates/list"
+
+# Share-surface-style: query-pinned for stable canonical URLs
+curl -s "https://your-host/share/<id>?lang=zh-CN"
+```
+
 ## Setup & Discovery
 
 | Method | Path | Purpose |

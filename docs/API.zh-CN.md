@@ -6,6 +6,27 @@
 
 > **交互式文档:** 运行中的后端会在 `/api/docs` 暴露 Swagger UI,在 `/api/openapi.yaml`(或 `/api/openapi.json`)暴露 OpenAPI 3.1 规范。把 [`openapi-generator`](https://openapi-generator.tech/) 指向这份规范,一行命令就能生成 Python / TypeScript / Go SDK。
 
+## 本地化
+
+每个端点都会按请求解析一个活动 locale。优先级顺序:
+
+1. `?lang=` 查询参数(用于需要在规范 URL 中锁定 locale 的分享面 — `/share/<id>`、`cite.bib`、`badge.svg`、`chart.svg`)
+2. `X-MiroShark-Locale` 请求头(自带 SPA 在每次 API 调用上都会发送)
+3. `Accept-Language` 请求头(用于现成 HTTP 客户端的标准回退)
+4. `en`(默认)
+
+支持的 locale:`en`、`zh-CN`。未知 tag 静默回退到 `en` — 当前构建上 `?lang=fr` 返回英文负载,而不是 400。
+
+会被本地化的内容:API 错误消息(`{"success": false, "error": "..."}`)、预设模板的 `name` / `description` 元数据、RSS / Atom 订阅源文本、报告智能体的叙述。原始模拟数据(发帖、交易、智能体立场)不会被翻译。
+
+```bash
+# SPA 风格:头驱动
+curl -s -H "X-MiroShark-Locale: zh-CN" "https://your-host/api/templates/list"
+
+# 分享面风格:用查询参数锁定稳定的规范 URL
+curl -s "https://your-host/share/<id>?lang=zh-CN"
+```
+
 ## 配置与发现
 
 | 方法 | 路径 | 用途 |
