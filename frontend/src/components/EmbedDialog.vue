@@ -771,6 +771,111 @@
               </div>
             </div>
 
+            <!-- Belief volatility — the turbulence counterpart to
+                 peak-round. peak-round picks the single most-volatile
+                 round; volatility describes the *distribution* of
+                 round-over-round swings (mean / std dev / max), a
+                 normalized 0-100 index, and a converging / stable /
+                 contested trend label. The third leg of the analytical
+                 quadrant alongside signal.json (where) and peak-round
+                 (when), so a quant tool can tell a high-volatility
+                 Bullish result from a low-volatility one. Same publish
+                 gate + pure-stdlib derivation; zero new deps. -->
+            <div class="transcript-section signal-section volatility-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">📈</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Belief volatility (JSON)', '信念波动率(JSON)') }}
+                    <span
+                      v-if="volatilityPayload"
+                      class="signal-direction-badge"
+                      :class="volatilityTrendBadgeClass(volatilityPayload.trend)"
+                    >
+                      {{ volatilityTrendLabel(volatilityPayload.trend) }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('The turbulence layer alongside signal.json (direction) and peak-round (when). Mean + std dev + max of the round-over-round swing, a normalized 0-100 volatility index, and a stable / converging / contested trend label. High-volatility Bullish ≠ low-volatility Bullish for a position-sizing model.', '与 signal.json(方向)和 peak-round(时机)并列的动荡层。回合间摆动的均值 + 标准差 + 最大值,归一化的 0-100 波动指数,以及稳定 / 收敛 / 争议的趋势标签。对仓位模型而言,高波动看涨 ≠ 低波动看涨。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && volatilityPayload" class="signal-preview">
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Volatility index', '波动指数') }}</span>
+                  <span class="signal-value">
+                    {{ volatilityPayload.volatility_index }} / 100
+                  </span>
+                </div>
+                <div class="volatility-bar-wrap">
+                  <div
+                    class="volatility-bar"
+                    :class="volatilityIndexBucket(volatilityPayload.volatility_index)"
+                    :style="{ width: volatilityIndexBarWidth(volatilityPayload.volatility_index) }"
+                  ></div>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Max swing', '最大摆动') }}</span>
+                  <span class="signal-value">
+                    ±{{ volatilityPayload.max_delta_pct }}% · {{ $tr('round', '回合') }} {{ volatilityPayload.max_delta_round }}
+                  </span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Mean swing', '平均摆动') }}</span>
+                  <span class="signal-value">±{{ volatilityPayload.mean_delta_pct }}%</span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Std dev', '标准差') }}</span>
+                  <span class="signal-value">±{{ volatilityPayload.std_dev_delta_pct }}%</span>
+                </div>
+                <div class="signal-row signal-row-breakdown">
+                  <span class="signal-label">{{ $tr('Path', '路径') }}</span>
+                  <span class="signal-value">
+                    {{ volatilityTrendLabel(volatilityPayload.trend) }}
+                    · {{ volatilityPayload.delta_count }} {{ $tr('deltas', '差值') }}
+                  </span>
+                </div>
+              </div>
+              <div v-else-if="isPublic && volatilityLoading" class="signal-loading">
+                {{ $tr('Loading volatility…', '加载波动率中…') }}
+              </div>
+              <div v-else-if="isPublic && volatilityError" class="signal-empty">
+                {{ volatilityError }}
+              </div>
+              <div v-else-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable volatility analytics.', '发布模拟以启用波动率分析。') }}
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Volatility URL', '波动率 URL') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('volatilityUrl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'volatilityUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ volatilityUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('volatilityCurl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'volatilityCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ volatilityCurlSnippet }}</code></pre>
+              </div>
+            </div>
+
             <!-- Per-agent belief sparklines — the agent-level companion
                  to chart.svg (aggregate curve) and peak-round
                  (inflection points). Each agent's belief position over
@@ -2453,6 +2558,8 @@ import {
   getSignalJson,
   getPeakRoundUrl,
   getPeakRound,
+  getVolatilityUrl,
+  getVolatility,
   getAgentSparklinesUrl,
   getAgentSparklines,
   getPolymarketJsonUrl,
@@ -2758,6 +2865,81 @@ const loadPeakRound = async () => {
     peakError.value = err?.message || tr('Peak-round fetch failed', '峰值回合获取失败')
   } finally {
     peakLoading.value = false
+  }
+}
+
+// ── Belief volatility state ────────────────────────────────────────────
+// The turbulence counterpart to peak-round. Peak-round picks the single
+// most-volatile round; volatility describes the *distribution* of
+// round-over-round swings — mean / std dev / max / volatility_index /
+// trend. Same publish gate; 404 means the sim has fewer than two rounds.
+
+const volatilityPayload = ref(null)
+const volatilityLoading = ref(false)
+const volatilityError = ref('')
+
+const volatilityUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getVolatilityUrl(props.simulationId, origin.value)
+})
+
+const volatilityCurlSnippet = computed(() => {
+  const url = volatilityUrl.value || 'https://your-host/api/simulation/<id>/volatility'
+  return `curl -s "${url}"`
+})
+
+const volatilityIndexBucket = (idx) => {
+  // Three colour bands matching the documented trend semantics:
+  // green ≤33 (calm), amber 34-66 (moderate), red ≥67 (turbulent).
+  if (typeof idx !== 'number' || Number.isNaN(idx)) return 'volatility-bar-low'
+  if (idx <= 33) return 'volatility-bar-low'
+  if (idx <= 66) return 'volatility-bar-mid'
+  return 'volatility-bar-high'
+}
+
+const volatilityIndexBarWidth = (idx) => {
+  // Pin to [0, 100] so a clamped 100 reads as a full bar even if the
+  // payload ever ships a value slightly over (it can't, but the UI
+  // shouldn't break if the contract drifts).
+  if (typeof idx !== 'number' || Number.isNaN(idx)) return '0%'
+  return `${Math.max(0, Math.min(100, idx))}%`
+}
+
+const volatilityTrendLabel = (trend) => {
+  if (trend === 'converging') return tr('Converging', '收敛')
+  if (trend === 'contested') return tr('Contested', '争议')
+  return tr('Stable', '稳定')
+}
+
+const volatilityTrendBadgeClass = (trend) => {
+  if (trend === 'converging') return 'signal-direction-bullish'
+  if (trend === 'contested') return 'signal-direction-bearish'
+  return 'signal-direction-neutral'
+}
+
+const loadVolatility = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    volatilityPayload.value = null
+    return
+  }
+  volatilityLoading.value = true
+  volatilityError.value = ''
+  try {
+    const payload = await getVolatility(props.simulationId)
+    if (payload && typeof payload === 'object') {
+      volatilityPayload.value = payload
+    } else {
+      volatilityPayload.value = null
+      volatilityError.value = tr(
+        'Volatility analytics not available yet — the simulation needs at least two rounds.',
+        '尚无可用的波动率分析 — 模拟至少需要两个回合。',
+      )
+    }
+  } catch (err) {
+    volatilityPayload.value = null
+    volatilityError.value = err?.message || tr('Volatility fetch failed', '波动率获取失败')
+  } finally {
+    volatilityLoading.value = false
   }
 }
 
@@ -3648,6 +3830,8 @@ const copy = async (which) => {
   else if (which === 'signalCurl') text = signalCurlSnippet.value
   else if (which === 'peakUrl') text = peakRoundUrl.value
   else if (which === 'peakCurl') text = peakCurlSnippet.value
+  else if (which === 'volatilityUrl') text = volatilityUrl.value
+  else if (which === 'volatilityCurl') text = volatilityCurlSnippet.value
   else if (which === 'sparkUrl') text = agentSparklinesUrl.value
   else if (which === 'sparkCurl') text = sparklinesCurlSnippet.value
   else if (which === 'polymarketUrl') text = polymarketJsonUrl.value
@@ -4243,6 +4427,9 @@ watch(() => props.open, async (val) => {
   // Peak-round analytics sits on the same publish gate; load alongside
   // so the inflection-point preview renders without a manual refresh.
   loadPeakRound()
+  // Belief volatility sits on the same publish gate; load alongside so
+  // the turbulence preview renders without a manual refresh.
+  loadVolatility()
   // Per-agent sparklines sit on the same publish gate; load alongside so
   // the agent-trajectory rows render without a manual refresh.
   loadAgentSparklines()
@@ -4294,6 +4481,8 @@ watch(isPublic, () => {
   loadSignal()
   // Same publish-gate flip applies to peak-round analytics — re-fetch.
   loadPeakRound()
+  // Same publish-gate flip applies to belief volatility — re-fetch.
+  loadVolatility()
   // Same publish-gate flip applies to per-agent sparklines — re-fetch.
   loadAgentSparklines()
   // Polymarket prediction sits on the same gate; re-fetch alongside.
@@ -5130,6 +5319,36 @@ watch(isPublic, () => {
   font-size: 13px;
   color: #6b7280;
   font-style: italic;
+}
+
+/* Belief volatility — the horizontal turbulence bar sitting under the
+   index row. Three colour bands match the documented buckets the
+   docs/API.md describe: green ≤33 (calm), amber 34-66 (moderate), red
+   ≥67 (turbulent). */
+.volatility-bar-wrap {
+  height: 6px;
+  margin: 4px 0 4px;
+  background: rgba(10, 10, 10, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.volatility-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.18s ease-out;
+}
+
+.volatility-bar-low {
+  background: #22c55e;
+}
+
+.volatility-bar-mid {
+  background: #f59e0b;
+}
+
+.volatility-bar-high {
+  background: #ef4444;
 }
 
 /* Per-agent sparklines — a scrollable list of agent rows, each a name

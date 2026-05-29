@@ -5575,6 +5575,90 @@ def get_peak_round(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/volatility', methods=['GET'])
+def get_volatility(simulation_id: str):
+    """Belief volatility analytics for a published simulation.
+
+    The turbulence counterpart to ``peak-round`` and ``signal.json``.
+    ``signal.json`` answers *where the swarm landed* (direction +
+    confidence); ``peak-round`` picks the single most-volatile round.
+    This surface describes the *distribution* of round-over-round swings
+    so a quant tool can tell a high-volatility Bullish result (agents
+    swung repeatedly before aligning) from a low-volatility one
+    (consensus formed early and held) — the same final direction can
+    mean very different things to a position-sizing model.
+
+    Pure derivation. Each round-over-round delta is the same summed
+    absolute swing ``peak-round`` already uses to pick its single max,
+    so ``max_delta_round`` here equals ``most_volatile_round`` there on
+    identical input by construction; the new information is the
+    distribution (``mean_delta_pct``, ``std_dev_delta_pct``,
+    ``volatility_index``, ``trend``) rather than just the maximum.
+
+    Same publish gate as every other share surface (``is_public=true``).
+    Returns ``404`` when the simulation has fewer than two rounds (no
+    deltas to compute) so a consumer can tell a "not ready" sim (404)
+    apart from a "private" sim (403).
+    """
+    from ..services import volatility_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        payload = volatility_service.compute_volatility_for_sim(sim_dir)
+        if payload is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Volatility analytics not available yet — the simulation needs at least two rounds.",
+                    "尚无可用的波动率分析 — 模拟至少需要两个回合。",
+                    locale,
+                ),
+            }), 404
+
+        payload["simulation_id"] = simulation_id
+
+        # Pretty-printed + sorted keys so ``curl > volatility.json``
+        # produces a diff-friendly file, matching the peak-round /
+        # signal.json posture.
+        body = json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        response = Response(body, mimetype="application/json; charset=utf-8")
+        # 5-minute cache — matches peak-round / chart.svg / signal.json.
+        # A live sim's volatility shifts round-to-round, so a short cache
+        # lets analytical tools see fresh numbers without re-scanning the
+        # trajectory on every hit.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-volatility.json"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "volatility")
+        return response
+
+    except Exception as e:
+        logger.error(f"volatility: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/agents/sparklines', methods=['GET'])
 def get_agent_sparklines(simulation_id: str):
     """Per-agent belief sparklines for a published simulation.

@@ -295,6 +295,41 @@ The Embed dialog exposes a `📊 Peak beliefs (JSON)` section beneath the tradin
 
 Completes the analytical quadrant alongside `trajectory.csv` (raw data), `chart.svg` (visual), and `signal.json` (final-state action primitive) — the inflection-point view those three left implicit.
 
+## Belief Volatility Score
+
+`signal.json` answers *where the swarm landed* (direction + confidence). `peak-round` picks the single most-volatile round. Neither answers the question a quant operator asks third — *"how contested was the path to consensus?"* A high-volatility Bullish result (agents swung repeatedly before aligning) is a different input than a low-volatility one where consensus formed in round three and held; for a position-sizing model the same final direction can mean very different things. `GET /api/simulation/<id>/volatility` describes the distribution of round-over-round swings so the turbulence dimension is finally readable next to the direction and the inflection.
+
+Returns a stable v1-schema JSON document:
+
+```json
+{
+  "schema_version": "1",
+  "simulation_id": "<sim_id>",
+  "mean_delta_pct": 12.45,
+  "std_dev_delta_pct": 8.16,
+  "max_delta_pct": 38.6,
+  "max_delta_round": 4,
+  "volatility_index": 40.8,
+  "trend": "converging",
+  "total_rounds": 12,
+  "delta_count": 11
+}
+```
+
+- **`mean_delta_pct` / `std_dev_delta_pct` / `max_delta_pct`** — the mean, population standard deviation, and maximum of the round-over-round summed-absolute belief swings, all rounded to two decimal places. The swing for each round is `|Δbullish| + |Δneutral| + |Δbearish|` — the exact definition `peak-round` already uses to pick its single `most_volatile_round`.
+- **`max_delta_round`** — the round carrying `max_delta_pct`. Equals `most_volatile_round` from `peak-round` on the same input by construction; ties resolve to the earliest round.
+- **`volatility_index`** — a normalized 0–100 turbulence score: `min(std_dev_delta_pct × 5, 100)`. A std dev of 20 pp maps to 100, a fully flat trajectory lands at 0. The 5× multiplier is a calibration knob — the formula is in the schema so an integrator can rescale to a different range without reverse-engineering.
+- **`trend`** — `"stable"` when `std_dev_delta_pct < 3` (very tight cluster), `"converging"` when the second half of the trajectory's deltas has strictly lower std dev than the first half (the swarm calmed down), `"contested"` otherwise. Trajectories with fewer than four deltas fall back to the std-dev-only buckets, since there's no honest half-vs-half comparison.
+- **`total_rounds` / `delta_count`** — the number of usable rounds and the number of round-over-round deltas (`total_rounds - 1`).
+
+Pure derivation, transposed: instead of picking the single maximum (the inflection view) it summarises the distribution of *every* swing. Stdlib-only (`json` + `os` + `math` for std dev); `volatility_service.py` has no new dependencies.
+
+Same publish gate as every other share surface (`is_public=true`). Returns `404` when the simulation has fewer than two rounds (no deltas to compute) so a consumer can tell a "not ready" sim (404) apart from a "private" sim (403). Cached for 5 minutes — matches the `chart.svg` / `trajectory` / `peak-round` / `signal.json` cadence.
+
+The Embed dialog exposes a `📈 Belief volatility (JSON)` section beneath the peak-round row: a live preview (volatility index with a gradient bar, max swing, mean swing, std dev, trend chip), a copyable URL, and a paste-ready `curl` snippet. The `volatility` counter joins the surface-stats schema so an operator can see how often the turbulence view is pulled independently of the raw CSV.
+
+Closes the three-factor analytical view — `signal.json` for *direction*, `peak-round` for *when*, `volatility` for *how contested* — that downstream quant tooling needs alongside the raw trajectory.
+
 ## Per-Agent Belief Sparklines
 
 `chart.svg` and the embed-summary draw the *aggregate* belief curve — what the swarm concluded, round by round. `peak-round` collapses that aggregate into inflection points. Neither exposes the layer underneath: *each individual agent's* belief path. A researcher studying swarm convergence — *"which agent anchored the consensus? did the financial-analyst cohort align before the retail traders?"* — had no surface for it short of parsing `transcript.md` by hand. `GET /api/simulation/<id>/agents/sparklines` is the agent-level companion: one belief trajectory per agent.

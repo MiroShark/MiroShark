@@ -99,6 +99,7 @@ SURFACE_KEYS: frozenset[str] = frozenset(
         "oembed",
         "peak_round",
         "agent_sparklines",
+        "volatility",
     }
 )
 

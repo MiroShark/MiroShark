@@ -1646,6 +1646,55 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/volatility:
+    get:
+      tags: [Publish & Embed]
+      summary: Belief volatility analytics for a published sim.
+      description: |
+        The turbulence counterpart to `peak-round` and `signal.json`.
+        `signal.json` answers *where the swarm landed* (direction +
+        confidence); `peak-round` picks the single most-volatile round.
+        This surface describes the *distribution* of round-over-round
+        swings so a quant tool can tell a high-volatility Bullish
+        result (agents swung repeatedly before aligning) from a
+        low-volatility one (consensus formed early and held) — the
+        same final direction can mean different things to a
+        position-sizing model.
+
+        Pure derivation. Each round-over-round delta is the same
+        summed absolute swing `|Δbullish| + |Δneutral| + |Δbearish|`
+        `peak-round` already uses to pick its single max, so
+        `max_delta_round` here equals `most_volatile_round` there on
+        identical input by construction. The new information is the
+        *distribution* (`mean_delta_pct`, `std_dev_delta_pct`,
+        `volatility_index`, `trend`) rather than just the maximum.
+
+        `volatility_index = min(std_dev_delta_pct * 5, 100)` — a std
+        dev of 20 pp maps to 100, a fully flat trajectory lands at 0.
+        `trend` is `"stable"` when `std_dev_delta_pct < 3`,
+        `"converging"` when the second half's delta std dev is
+        strictly lower than the first half's, and `"contested"`
+        otherwise. Trajectories with fewer than four deltas fall back
+        to the std-dev-only buckets.
+
+        Same publish gate as every other share surface
+        (`is_public=true`). Returns `404` when the simulation has
+        fewer than two rounds (no deltas) so a consumer can tell a
+        "not ready" sim (404) apart from a "private" sim (403).
+        Cached for 5 minutes — matches the `chart.svg` /
+        `peak-round` / `signal.json` cadence.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Belief volatility analytics payload.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VolatilityResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/agents/sparklines:
     get:
       tags: [Publish & Embed]
@@ -4985,6 +5034,100 @@ components:
           type: integer
           minimum: 1
           description: Number of usable rounds in the trajectory.
+
+    VolatilityResponse:
+      type: object
+      description: |
+        Machine-readable belief-volatility analytics returned by
+        `/api/simulation/{id}/volatility`. Describes the distribution
+        of round-over-round belief swings — the turbulence
+        counterpart to `peak-round`'s single-max view. Derived from
+        the same `|Δbullish| + |Δneutral| + |Δbearish|` swing
+        definition `peak-round` uses, so `max_delta_round` here
+        equals `most_volatile_round` there on identical input.
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal.
+      required:
+        - schema_version
+        - simulation_id
+        - mean_delta_pct
+        - std_dev_delta_pct
+        - max_delta_pct
+        - max_delta_round
+        - volatility_index
+        - trend
+        - total_rounds
+        - delta_count
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        mean_delta_pct:
+          type: number
+          format: float
+          minimum: 0
+          description: |
+            Mean of the round-over-round summed-absolute belief
+            swings, rounded to two decimal places. Expressed in
+            percentage points.
+        std_dev_delta_pct:
+          type: number
+          format: float
+          minimum: 0
+          description: |
+            Population standard deviation of the round-over-round
+            swings, rounded to two decimal places. Drives the
+            `volatility_index` and the `trend` classifier.
+        max_delta_pct:
+          type: number
+          format: float
+          minimum: 0
+          description: |
+            The largest single round-over-round swing in the
+            trajectory, rounded to two decimal places. Equals
+            `max_swing_pct` from `peak-round` on the same input.
+        max_delta_round:
+          type: integer
+          description: |
+            The round carrying `max_delta_pct`. Equals
+            `most_volatile_round` from `peak-round` on the same
+            input by construction; ties resolve to the earliest
+            round.
+        volatility_index:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: |
+            Normalized turbulence score on `[0, 100]`. Computed as
+            `min(std_dev_delta_pct * 5, 100)` — a std dev of 20 pp
+            maps to 100. `0.0` for a fully flat trajectory.
+        trend:
+          type: string
+          enum: [stable, converging, contested]
+          description: |
+            Bucketed trajectory shape. `stable` when
+            `std_dev_delta_pct < 3`; `converging` when the
+            second-half delta std dev is strictly lower than the
+            first-half std dev (≥4 deltas required); `contested`
+            otherwise.
+        total_rounds:
+          type: integer
+          minimum: 2
+          description: |
+            Number of usable rounds in the trajectory. The endpoint
+            returns 404 when fewer than 2 rounds exist.
+        delta_count:
+          type: integer
+          minimum: 1
+          description: |
+            Number of round-over-round deltas — always
+            `total_rounds - 1`.
 
     SparklinePoint:
       type: object
