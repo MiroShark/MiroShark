@@ -539,7 +539,7 @@ watch(() => props.systemLogs.length, () => {
     font-size: 9px;
     font-weight: 700;
     color: #110a26;
-    background: #0A0A0A;
+    background: #f4f1ff;
     padding: 2px 6px;
     text-transform: uppercase;
     letter-spacing: 3px;
@@ -739,7 +739,7 @@ watch(() => props.systemLogs.length, () => {
 /* Step 03 Button */
 .action-btn {
   width: 100%;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border: none;
   padding: 14px;
@@ -833,7 +833,7 @@ watch(() => props.systemLogs.length, () => {
 
 /* System Logs */
 .system-logs {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: rgba(250,250,250,0.8);
   padding: 22px;
   font-family: var(--font-mono);

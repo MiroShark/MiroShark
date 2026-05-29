@@ -408,7 +408,7 @@ const entityTypes = computed(() => {
   if (!props.graphData?.nodes) return []
   const typeMap = {}
   // Aesthetic color palette
-  const colors = ['#a78bfa', '#c4b5fd', '#0A0A0A', '#FFB347', '#FF4444', '#FF8C42', '#2D9B5E', '#D45B1A', '#7A7A7A', '#B8522E']
+  const colors = ['#a78bfa', '#c4b5fd', '#f4f1ff', '#FFB347', '#FF4444', '#FF8C42', '#2D9B5E', '#D45B1A', '#7A7A7A', '#B8522E']
   
   props.graphData.nodes.forEach(node => {
     const type = node.labels?.find(l => l !== 'Entity') || 'Entity'
@@ -1537,10 +1537,10 @@ input:checked + .slider:before {
   text-transform: uppercase;
   letter-spacing: 2px;
   color: #110a26;
-  background: #0A0A0A;
+  background: #f4f1ff;
 }
 
-.action-platform.twitter { background: #0A0A0A; }
+.action-platform.twitter { background: #f4f1ff; }
 .action-platform.reddit { background: #a78bfa; }
 .action-platform.polymarket { background: #c4b5fd; }
 
@@ -1677,7 +1677,7 @@ input:checked + .slider:before {
   bottom: 160px;
   left: 50%;
   transform: translateX(-50%);
-  background: #0A0A0A;
+  background: #f4f1ff;
   backdrop-filter: blur(8px);
   color: #110a26;
   padding: 10px 20px;
@@ -1725,7 +1725,7 @@ input:checked + .slider:before {
 
 /* Post-simulation hint styles */
 .graph-building-hint.finished-hint {
-  background: #0A0A0A;
+  background: #f4f1ff;
   border: 2px solid rgba(250,250,250,0.1);
 }
 

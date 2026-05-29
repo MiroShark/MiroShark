@@ -4485,7 +4485,7 @@ watch(isPublic, () => {
 }
 
 .embed-size-btn.active {
-  background: #0a0a0a;
+  background: #f4f1ff;
   color: #ffffff;
   border-color: #f4f1ff;
 }
@@ -4569,7 +4569,7 @@ watch(isPublic, () => {
 }
 
 .snippet-copy-btn {
-  background: #0a0a0a;
+  background: #f4f1ff;
   color: #ffffff;
   border: none;
   padding: 4px 12px;
@@ -4709,7 +4709,7 @@ watch(isPublic, () => {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #0a0a0a;
+  background: #f4f1ff;
   color: #ffffff;
   text-decoration: none;
   border-radius: 8px;
@@ -4727,7 +4727,7 @@ watch(isPublic, () => {
 .replay-section {
   margin-top: 18px;
   padding: 14px 16px;
-  background: #0a0a0a;
+  background: #f4f1ff;
   color: #110a26;
   border-radius: 10px;
   border: 1px solid rgba(250, 250, 250, 0.08);
@@ -4923,7 +4923,7 @@ watch(isPublic, () => {
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: #0a0a0a;
+  background: #f4f1ff;
   color: #ffffff;
   text-decoration: none;
   border-radius: 8px;
@@ -6186,7 +6186,7 @@ watch(isPublic, () => {
 }
 
 .outcome-submit:hover:not(:disabled) {
-  background: #0a0a0a;
+  background: #f4f1ff;
 }
 
 .outcome-submit:disabled {
@@ -6292,7 +6292,7 @@ watch(isPublic, () => {
 }
 
 .gallery-callout-link:hover {
-  background: #0a0a0a;
+  background: #f4f1ff;
 }
 
 /* RSS / Atom feed callout — same anatomy as the gallery callout but
@@ -6365,7 +6365,7 @@ watch(isPublic, () => {
 }
 
 .feed-callout-link:hover {
-  background: #0a0a0a;
+  background: #f4f1ff;
 }
 
 .feed-callout-link-secondary {
@@ -6741,7 +6741,7 @@ watch(isPublic, () => {
 
 .webhook-log-refresh:hover,
 .webhook-log-retry:hover {
-  background: #0a0a0a;
+  background: #f4f1ff;
   color: #fff;
   border-color: #f4f1ff;
 }

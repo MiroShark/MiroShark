@@ -570,7 +570,7 @@ onUnmounted(() => {
 
 /* Playback Bar */
 .playback-bar {
-  background: #0A0A0A;
+  background: #f4f1ff;
   padding: 12px 20px;
   display: flex;
   flex-direction: column;
@@ -837,7 +837,7 @@ onUnmounted(() => {
   background: rgba(10,10,10,0.2);
 }
 
-.timeline-item.twitter .marker-dot { background: #0A0A0A; }
+.timeline-item.twitter .marker-dot { background: #f4f1ff; }
 .timeline-item.reddit .marker-dot { background: #a78bfa; }
 .timeline-item.polymarket .marker-dot { background: #a78bfa; }
 .timeline-item.twitter .timeline-marker { border-color: #f4f1ff; }
@@ -855,7 +855,7 @@ onUnmounted(() => {
 }
 
 .timeline-card:hover { border-color: #a78bfa; }
-.timeline-item.twitter .timeline-card { border-left: 2px solid #0A0A0A; }
+.timeline-item.twitter .timeline-card { border-left: 2px solid #f4f1ff; }
 .timeline-item.reddit .timeline-card { border-left: 2px solid #a78bfa; }
 .timeline-item.polymarket .timeline-card { border-left: 2px solid #a78bfa; }
 
@@ -878,7 +878,7 @@ onUnmounted(() => {
   width: 24px;
   height: 24px;
   min-width: 24px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   display: flex;
   align-items: center;
@@ -910,7 +910,7 @@ onUnmounted(() => {
   height: 22px;
 }
 
-.platform-indicator.twitter { background: #0A0A0A; color: #110a26; }
+.platform-indicator.twitter { background: #f4f1ff; color: #110a26; }
 .platform-logo { width: 20px; height: 20px; object-fit: contain; }
 
 .action-badge {

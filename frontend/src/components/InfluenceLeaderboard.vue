@@ -688,7 +688,7 @@ onMounted(() => { if (props.visible) load() })
 .iv-name {
   font-size: 14px;
   font-weight: 700;
-  color: var(--foreground, #0A0A0A);
+  color: var(--foreground, #f4f1ff);
 }
 
 .iv-meta {
@@ -839,7 +839,7 @@ onMounted(() => { if (props.visible) load() })
   padding: 8px 12px;
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--foreground, #0A0A0A);
+  color: var(--foreground, #f4f1ff);
   outline: none;
   transition: border-color 0.15s;
 }

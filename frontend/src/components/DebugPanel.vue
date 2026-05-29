@@ -498,7 +498,7 @@ onUnmounted(() => {
   right: 0;
   width: 560px;
   max-height: 70vh;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #E0E0E0;
   font-family: 'Space Mono', 'Courier New', monospace;
   font-size: 11px;
@@ -689,7 +689,7 @@ onUnmounted(() => {
 }
 
 .debug-content::-webkit-scrollbar { width: 6px; }
-.debug-content::-webkit-scrollbar-track { background: #0A0A0A; }
+.debug-content::-webkit-scrollbar-track { background: #f4f1ff; }
 .debug-content::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
 
 .debug-empty {

@@ -423,7 +423,7 @@ const _buildExportCanvas = async () => {
     let y = 36
 
     // ── Title ── Young Serif, largest element
-    ctx.fillStyle = '#0A0A0A'
+    ctx.fillStyle = '#f4f1ff'
     ctx.font = titleFont
     ctx.textAlign = 'left'
     ctx.textBaseline = 'top'
@@ -476,7 +476,7 @@ const _buildExportCanvas = async () => {
       ctx.textBaseline = 'top'
       ctx.fillText(s.k, cx, y)
       // Value
-      ctx.fillStyle = '#0A0A0A'
+      ctx.fillStyle = '#f4f1ff'
       ctx.font = '700 14px "Space Mono", "JetBrains Mono", ui-monospace, monospace'
       ctx.fillText(s.v, cx, y + 16)
     })

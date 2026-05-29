@@ -1072,7 +1072,7 @@ watch(() => props.simulationId, (newId) => {
 }
 
 .report-tag {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   font-size: 11px;
   font-family: var(--font-mono);
@@ -1429,7 +1429,7 @@ watch(() => props.simulationId, (newId) => {
 }
 
 .tab-pill.active {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
 }
 
@@ -1512,7 +1512,7 @@ watch(() => props.simulationId, (newId) => {
 }
 
 .tab-btn.active {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-color: #f4f1ff;
 }
@@ -1547,7 +1547,7 @@ watch(() => props.simulationId, (newId) => {
   height: 44px;
   min-width: 44px;
   min-height: 44px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-radius: 50%;
   display: flex;
@@ -1697,7 +1697,7 @@ watch(() => props.simulationId, (newId) => {
   height: 44px;
   min-width: 44px;
   min-height: 44px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-radius: 50%;
   display: flex;
@@ -1841,7 +1841,7 @@ watch(() => props.simulationId, (newId) => {
 }
 
 .target-option.active {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-color: #f4f1ff;
 }
@@ -1912,7 +1912,7 @@ watch(() => props.simulationId, (newId) => {
   height: 32px;
   min-width: 32px;
   min-height: 32px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-radius: 50%;
   display: flex;
@@ -2005,7 +2005,7 @@ watch(() => props.simulationId, (newId) => {
 }
 
 .chat-message.user .message-avatar {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
 }
 
@@ -2056,7 +2056,7 @@ watch(() => props.simulationId, (newId) => {
 }
 
 .chat-message.user .message-text {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-color: #f4f1ff;
 }
@@ -2171,7 +2171,7 @@ watch(() => props.simulationId, (newId) => {
 .send-btn {
   width: 44px;
   height: 44px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border: none;
   cursor: pointer;
@@ -2429,7 +2429,7 @@ watch(() => props.simulationId, (newId) => {
   font-family: var(--font-mono);
   font-weight: 600;
   color: #110a26;
-  background: #0A0A0A;
+  background: #f4f1ff;
   border: none;
   cursor: pointer;
   transition: background 0.2s ease;
@@ -2516,7 +2516,7 @@ watch(() => props.simulationId, (newId) => {
   height: 36px;
   min-width: 36px;
   min-height: 36px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-radius: 50%;
   display: flex;
@@ -2620,14 +2620,14 @@ watch(() => props.simulationId, (newId) => {
   margin: 11px 0;
   padding: 11px 22px;
   background: var(--color-gray, #1a0f3a);
-  border-left: 3px solid #0A0A0A;
+  border-left: 3px solid #f4f1ff;
   color: rgba(244, 241, 255,0.5);
 }
 
 :deep(.code-block) {
   margin: 11px 0;
   padding: 11px 22px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   overflow-x: auto;
 }
 
@@ -2690,7 +2690,7 @@ watch(() => props.simulationId, (newId) => {
   width: 40px;
   height: 40px;
   min-width: 40px;
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   border-radius: 50%;
   display: flex;

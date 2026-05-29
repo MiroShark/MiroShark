@@ -2249,7 +2249,7 @@ watch(() => props.reportId, (newId) => {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #0A0A0A;
+  background: #f4f1ff;
   border: 2px solid rgba(10,10,10,0.08);
   margin-right: 11px;
   flex-shrink: 0;
@@ -2377,7 +2377,7 @@ watch(() => props.reportId, (newId) => {
 }
 
 .report-tag {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
   font-size: 11px;
   font-family: var(--font-mono);
@@ -2698,7 +2698,7 @@ watch(() => props.reportId, (newId) => {
   --wf-active-bg: #110a26;
   --wf-active-border: #a78bfa;
   --wf-active-dot: #a78bfa;
-  --wf-active-text: #0A0A0A;
+  --wf-active-text: #f4f1ff;
 
   --wf-done-bg: #110a26;
   --wf-done-border: rgba(10,10,10,0.12);
@@ -3427,7 +3427,7 @@ watch(() => props.reportId, (newId) => {
   font-family: var(--font-mono);
   font-weight: 600;
   color: #110a26;
-  background: #0A0A0A;
+  background: #f4f1ff;
   border: none;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -5183,7 +5183,7 @@ watch(() => props.reportId, (newId) => {
 
 /* Console Logs - consistent with Step3Simulation.vue */
 .console-logs {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: rgba(244, 241, 255,0.2);
   padding: 22px;
   font-family: var(--font-mono);

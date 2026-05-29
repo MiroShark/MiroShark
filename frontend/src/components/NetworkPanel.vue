@@ -73,7 +73,7 @@
     <div class="network-legend" v-if="hasData">
       <span class="legend-title">{{ $tr('Platforms', '平台') }}</span>
       <div class="legend-items">
-        <div class="legend-item"><span class="legend-dot" style="background: #0A0A0A"></span><span>X</span></div>
+        <div class="legend-item"><span class="legend-dot" style="background: #f4f1ff"></span><span>X</span></div>
         <div class="legend-item"><span class="legend-dot" style="background: #a78bfa"></span><span>Reddit</span></div>
         <div class="legend-item"><span class="legend-dot" style="background: #c4b5fd"></span><span>Polymarket</span></div>
       </div>
@@ -791,7 +791,7 @@ onUnmounted(() => {
 
 .bar-track { flex: 1; height: 6px; background: rgba(10,10,10,0.06); }
 .bar-fill { height: 100%; transition: width 0.3s; }
-.bar-fill.twitter { background: #0A0A0A; }
+.bar-fill.twitter { background: #f4f1ff; }
 .bar-fill.reddit { background: #a78bfa; }
 .bar-fill.polymarket { background: #c4b5fd; }
 .bar-count { font-size: 10px; font-weight: 600; color: rgba(244, 241, 255,0.7); min-width: 20px; text-align: right; }

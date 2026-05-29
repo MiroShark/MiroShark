@@ -1458,7 +1458,7 @@ onUnmounted(() => {
 }
 
 .action-btn.primary {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: #110a26;
 }
 
@@ -2368,7 +2368,7 @@ onUnmounted(() => {
 
 /* System Logs */
 .system-logs {
-  background: #0A0A0A;
+  background: #f4f1ff;
   color: rgba(250,250,250,0.8);
   padding: 16px;
   font-family: var(--font-mono);
@@ -2682,7 +2682,7 @@ onUnmounted(() => {
 }
 
 .switch-control input:checked + .switch-track {
-  background: #0A0A0A;
+  background: #f4f1ff;
 }
 
 .switch-control input:checked + .switch-track::after {
@@ -2751,7 +2751,7 @@ onUnmounted(() => {
   height: 4px;
   background: rgba(10,10,10,0.08);
   outline: none;
-  background-image: linear-gradient(#0A0A0A, #0A0A0A);
+  background-image: linear-gradient(#f4f1ff, #f4f1ff);
   background-size: var(--percent, 0%) 100%;
   background-repeat: no-repeat;
   cursor: pointer;
@@ -2762,7 +2762,7 @@ onUnmounted(() => {
   width: 16px;
   height: 16px;
   background: #110a26;
-  border: 2px solid #0A0A0A;
+  border: 2px solid #f4f1ff;
   cursor: pointer;
   transition: transform 0.1s;
   margin-top: -6px; /* Center thumb */
