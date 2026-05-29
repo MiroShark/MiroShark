@@ -1,0 +1,19 @@
+{
+  "agent": "MiroShark",
+  "xHandle": "@miroshark_",
+  "ecosystem": "Base",
+  "wallets": [
+    {
+      "address": "0x7753a770285b39308c426742BE81EEe2f6e80dC1",
+      "role": "treasury",
+      "chain": "base",
+      "notes": "Main protocol treasury"
+    },
+    {
+      "address": "0x6cab485fc28ec70d3845113b704d4824e4d2b24f",
+      "role": "deployer",
+      "chain": "base",
+      "notes": "Contract deployer"
+    }
+  ]
+}
