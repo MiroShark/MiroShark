@@ -2882,6 +2882,82 @@ paths:
                   `aria-label`, and a rounded `clipPath` so the pill
                   ends render across every `<img>`-tag consumer.
 
+  /api/surfaces.json:
+    get:
+      tags: [Platform]
+      summary: Machine-readable catalog of every share / platform surface this deployment exposes.
+      description: |
+        Sibling of `/api/stats` — both endpoints describe the platform
+        itself rather than one simulation. `/api/stats` aggregates
+        runtime metrics over the corpus; this endpoint describes the
+        capability surface area an integrator can call into.
+
+        Every entry in `surfaces` carries the surface `key`, the
+        `endpoint` path (with `<simulation_id>` placeholder for per-sim
+        surfaces), the HTTP `method`, a `type` category (one of
+        `analytics`, `visualization`, `export`, `embed`, `integration`,
+        `platform`, `discovery`), a one-line `description` (≤120 chars),
+        the originating PR (`added_in_pr`, nullable for surfaces that
+        predate per-PR instrumentation), and a copy-pasteable
+        `example_curl` invocation. Each `example_curl` references its
+        entry's `endpoint` verbatim — a consumer pasting the example
+        always hits the same path the catalog claims.
+
+        **Static / hardcoded.** The catalog is a literal list at module
+        scope in `services/surfaces_catalog.py`; it is NOT auto-derived
+        from `SURFACE_KEYS` (which only tracks the publish-gated per-sim
+        surfaces with serve counters) and NOT scanned off the Flask URL
+        map (which would include private mutation routes the catalog
+        must not expose). The per-sim subset of the catalog is cross-
+        checked against `SURFACE_KEYS` by a drift guard test, so a new
+        per-sim surface can't ship without an entry here.
+
+        **Schema versioned.** The response envelope carries
+        `schema_version`. v1 is the only published version; future
+        breaking changes bump the literal and a consumer can gate on
+        it.
+
+        **`ETag` derives from the catalog length** (`surfaces-v1-<N>`).
+        Bumps when a new surface is appended. A conditional
+        `If-None-Match` GET short-circuits to `304` so a polling
+        consumer doesn't pay the JSON body cost on every request.
+
+        **`Cache-Control: public, max-age=3600`** — the catalog only
+        changes when a new PR ships a new surface; one hour is a tight
+        bound on the lag between a ship and the catalog reflecting it.
+
+        Always returns `200` (or `304`) — there is no input the caller
+        can supply that would produce a `404`. The catalog is
+        intentionally static so two consecutive calls return
+        bytewise-identical JSON.
+      responses:
+        "200":
+          description: Surface catalog envelope.
+          headers:
+            ETag:
+              schema: { type: string }
+              description: |
+                `surfaces-v<schema>-<count>`. Bumps when a new surface
+                is added; stable across consecutive deployments of the
+                same code revision.
+            Cache-Control:
+              schema: { type: string }
+              description: "`public, max-age=3600`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/SurfaceCatalog"
+        "304":
+          description: |
+            `If-None-Match` matched the current `ETag`; body omitted.
+            `ETag` and `Cache-Control` are still returned so the
+            consumer can refresh its cache TTL.
+
   /api/simulation/{simulation_id}/export:
     get:
       tags: [Export]
@@ -5670,6 +5746,125 @@ components:
             The `created_at` timestamp paired with `newest_sim_id`,
             or `null` on an empty deployment. ISO-8601 — emitted
             verbatim from the underlying sim's `state.json`.
+
+    SurfaceCatalogEntry:
+      type: object
+      description: |
+        Single entry in the surface catalog returned by
+        `GET /api/surfaces.json`. Describes one share or platform
+        surface this deployment exposes — endpoint path, HTTP method,
+        category, and a copy-pasteable `curl` example.
+
+        A consumer iterating the catalog can build a typed client by
+        following the `endpoint` + `method` pair, can scope its work
+        to a category by filtering on `type`, and can probe a single
+        surface in one shell-line via `example_curl`.
+      required:
+        - key
+        - endpoint
+        - method
+        - type
+        - description
+        - added_in_pr
+        - example_curl
+      properties:
+        key:
+          type: string
+          pattern: "^[a-z][a-z0-9_]+$"
+          description: |
+            Stable snake_case identifier for the surface. For
+            publish-gated per-simulation surfaces this matches the
+            corresponding `surface_stats.SURFACE_KEYS` member, so a
+            consumer correlating catalog entries with the
+            per-sim `/surface-stats` counters can join on this field.
+            Platform-level entries (`platform_stats`,
+            `platform_stats_badge`, `surfaces_catalog`) have keys with
+            no `SURFACE_KEYS` counterpart — those surfaces don't
+            increment per-sim counters.
+        endpoint:
+          type: string
+          description: |
+            HTTP path. Per-simulation surfaces carry the literal
+            `<simulation_id>` placeholder so a consumer can substitute
+            an id without parsing a regex. Always starts with `/`.
+        method:
+          type: string
+          enum: [GET, POST]
+          description: HTTP method the surface responds to.
+        type:
+          type: string
+          enum: [analytics, visualization, export, embed, integration, platform, discovery]
+          description: |
+            Category bucket the surface falls into.
+            `analytics` — derived numeric / structured payload
+            (`signal.json`, `peak-round`, `volatility`,
+            `agents/sparklines`, `lineage`).
+            `visualization` — pre-rendered image / vector chart
+            (`share-card.png`, `replay.gif`, `chart.svg`, `badge.svg`).
+            `export` — full-fidelity download intended for offline
+            analysis (`transcript.*`, `trajectory.*`, `archive.zip`,
+            `notebook.ipynb`, `reproduce.json`, `cite.bib`, `thread.*`).
+            `embed` — surfaces designed to be rendered in another
+            page (`/watch/<id>`, `/oembed`).
+            `integration` — outputs shaped for a specific external
+            consumer (`polymarket.json`).
+            `platform` — describes the deployment itself, not one
+            simulation (`/api/stats`, `/api/stats/badge.svg`,
+            `/api/surfaces.json`).
+            `discovery` — syndication / index surfaces auto-consumed
+            by aggregators (`/api/feed.atom`, `/api/feed.rss`).
+        description:
+          type: string
+          maxLength: 120
+          description: One-line summary (≤120 chars) of what the surface returns.
+        added_in_pr:
+          type: [integer, "null"]
+          minimum: 1
+          description: |
+            PR number on `aaronjmars/MiroShark` that introduced the
+            surface, or `null` for surfaces that predate per-PR
+            instrumentation. Nullable so a consumer can sort or filter
+            by "shipped after PR N" without special-casing absence.
+        example_curl:
+          type: string
+          description: |
+            Single-line `curl` invocation. Uses `https://your-host` as
+            the deployment placeholder and `<simulation_id>` as the
+            sim id placeholder — never contains a real host or admin
+            token. References the entry's `endpoint` verbatim (drift-
+            guarded by the unit test suite).
+
+    SurfaceCatalog:
+      type: object
+      description: |
+        Envelope returned by `GET /api/surfaces.json`. Wraps the full
+        catalog of share + platform surfaces with a schema version and
+        a count so a consumer can probe the catalog size before
+        iterating.
+      required:
+        - schema_version
+        - count
+        - surfaces
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        count:
+          type: integer
+          minimum: 0
+          description: |
+            Number of surfaces the catalog currently carries. Equals
+            `len(surfaces)`.
+        surfaces:
+          type: array
+          description: |
+            Roughly chronological list of every share / platform
+            surface this deployment exposes. Order is part of the
+            published contract — appending is a non-breaking change;
+            reordering existing entries is breaking.
+          items:
+            $ref: "#/components/schemas/SurfaceCatalogEntry"
 
     ArchiveManifestEntry:
       type: object

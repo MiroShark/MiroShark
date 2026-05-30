@@ -518,6 +518,50 @@ A zero-sim deployment renders a valid `MiroShark | 0 simulations` pill rather th
 
 A second-order distribution amplifier: per-sim badges (PR #94) are pull points for *specific simulations*; the platform badge is a pull point for *MiroShark itself*. Every operator running an Aeon framework instance, every researcher with a personal site, every Substack post about swarm simulations becomes a live signal that the platform is active and growing.
 
+## Surface Catalog API
+
+The first endpoint that answers the meta-question every integrator hits on day one: *"what's available on this deployment?"* Until now the answer required reading `docs/FEATURES.md`, grepping the routes, or chasing PR descriptions. `GET /api/surfaces.json` collapses that catalog into a single machine-readable response — every share / platform surface this deployment exposes, with the endpoint path, HTTP method, type category, one-line description, originating PR, and a copy-pasteable `curl` example for each.
+
+```json
+{
+  "success": true,
+  "data": {
+    "schema_version": "1",
+    "count": 27,
+    "surfaces": [
+      {
+        "key": "signal_json",
+        "endpoint": "/api/simulation/<simulation_id>/signal.json",
+        "method": "GET",
+        "type": "analytics",
+        "description": "Direction + confidence + quality_health JSON — the trading-signal core payload.",
+        "added_in_pr": 60,
+        "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/signal.json'"
+      },
+      {
+        "key": "polymarket_json",
+        "endpoint": "/api/simulation/<simulation_id>/polymarket.json",
+        "method": "GET",
+        "type": "integration",
+        "description": "Polymarket-shaped trading signal — direction-aware yes/no probability + tier.",
+        "added_in_pr": 99,
+        "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/polymarket.json'"
+      },
+      "..."
+    ]
+  }
+}
+```
+
+- **Static and hardcoded — by design.** The catalog is a literal list at module scope in `services/surfaces_catalog.py`; it is NOT auto-derived from `SURFACE_KEYS` (which only tracks publish-gated per-sim surfaces with serve counters) and NOT scanned off the Flask URL map (which would include private mutation routes the catalog must not advertise). A new surface ships in three files — the route handler, `SURFACE_KEYS` if it's per-sim and publish-gated, and this catalog. The drift-guard test in `test_unit_surfaces_catalog.py` cross-checks the per-sim subset against `SURFACE_KEYS` so neither side can drift silently.
+- **Seven type categories.** `analytics` (`signal.json`, `peak-round`, `volatility`, `agents/sparklines`, `lineage`), `visualization` (`share-card.png`, `replay.gif`, `chart.svg`, `badge.svg`), `export` (`transcript.*`, `trajectory.*`, `archive.zip`, `notebook.ipynb`, `reproduce.json`, `cite.bib`, `thread.*`), `embed` (`/watch/<id>`, `/oembed`), `integration` (`polymarket.json`), `platform` (`/api/stats`, `/api/stats/badge.svg`, this endpoint), and `discovery` (`/api/feed.atom`, `/api/feed.rss`). A consumer can scope its work to a category by filtering on `type` — `jq '.data.surfaces[] | select(.type == "analytics")'` returns just the analytical surfaces.
+- **Copy-pasteable `example_curl`.** Every entry's `example_curl` references that entry's `endpoint` verbatim — a consumer pasting the example always hits the same path the catalog claims. Guarded by a unit test. The placeholder host is the literal string `https://your-host` and the simulation id placeholder is the literal `<simulation_id>` — no entry contains a real host or admin token, so a consumer never accidentally copy-pastes an internal URL.
+- **One-hour cache, ETag-driven invalidation.** The catalog only changes when a new PR ships a new surface; `Cache-Control: public, max-age=3600` is a tight bound on the lag between a ship and the catalog reflecting it. The `ETag` is `surfaces-v<schema>-<count>` — bumps when the catalog grows. A conditional `If-None-Match` GET short-circuits to `304 Not Modified` so a polling consumer (Aeon's daily surface-count check, an integrator's dashboard) doesn't pay the JSON body cost between ships.
+- **Stable shape, schema-versioned.** The envelope is `{schema_version, count, surfaces}`; v1 is the only published version. Order inside `surfaces` is roughly chronological — earliest surfaces first, platform-level + meta entries grouped at the end. Appending a new entry is non-breaking; reordering existing entries is breaking and bumps `schema_version`. The `key` field on each entry is snake_case and matches the corresponding `surface_stats.SURFACE_KEYS` member for per-sim surfaces, so a consumer correlating catalog entries with the per-sim `/surface-stats` counters can join on this field.
+- **Closes the discoverability loop the README work started.** PRs #118 and #119 refined the README's first-touch discoverability for human readers; this endpoint adds the same for machine readers. Aeon's daily surface-count check no longer needs to parse FEATURES.md; an integrator querying a deployment to detect which surfaces are available no longer needs to scrape docs.
+
+Pure stdlib (~370 LoC across `services/surfaces_catalog.py` + `api/surfaces.py`); zero new dependencies — same posture as `platform_stats`, `surface_stats`, and every other pure-data module in this tree. The catalog itself is a literal list; no disk scan, no Neo4j, no outbound network. Always returns `200` (or `304`) — there is no input the caller can supply that produces a `404`.
+
 ## BibTeX Academic Citation
 
 Closes the academic citation arc. `reproduce.json` (PR #79) carries every parameter a second operator needs to re-run the simulation; the OriginTrail DKG citation (PR #84) anchors those bytes on-chain as cryptographic provenance; the `notebook.ipynb` (PR #80) drops the trajectory into a researcher's IDE. `GET /api/simulation/<id>/cite.bib` adds the missing layer — a one-call BibTeX `@misc{…}` entry that drops straight into a LaTeX paper source, imports cleanly into Zotero / Mendeley via "Import from URL" (both readers consume `text/plain` BibTeX at an HTTP URL directly), and carries the reproduce.json SHA-256 in the `note` field so a reviewer can verify the citation points to the same simulation parameters years later via `sha256sum --check`.

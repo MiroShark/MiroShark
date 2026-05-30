@@ -48,3 +48,8 @@ from .notifications import notifications_bp  # noqa: E402, F401
 # simulation. See app/api/stats.py.
 from .stats import stats_bp  # noqa: E402, F401
 
+# surfaces_bp serves /api/surfaces.json — the machine-readable
+# catalog of every share / platform surface this deployment
+# exposes. Platform-level sibling of stats_bp. See app/api/surfaces.py.
+from .surfaces import surfaces_bp  # noqa: E402, F401
+

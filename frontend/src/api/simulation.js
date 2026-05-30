@@ -1030,6 +1030,39 @@ export const getSurfaceStats = (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the deployment's machine-readable surface
+ * catalog. Platform-level surface — describes every share / platform
+ * endpoint this deployment exposes, not one simulation.
+ *
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getSurfacesCatalogUrl = (origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/surfaces.json`
+}
+
+/**
+ * Fetch the machine-readable catalog of every share / platform surface
+ * this deployment exposes. Returns the parsed envelope (`schema_version`
+ * + `count` + `surfaces`) on 200; throws on transport errors. Never
+ * 404s — the catalog is static and always present.
+ *
+ * @returns {Promise<{schema_version: string, count: number, surfaces: Array<object>}>}
+ */
+export const getSurfacesCatalog = async () => {
+  const res = await fetch(getSurfacesCatalogUrl(), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    throw new Error(`surfaces catalog fetch failed: ${res.status}`)
+  }
+  const body = await res.json()
+  return body?.data ?? body
+}
+
+/**
  * Build the absolute URL of the reproducibility config blob for a
  * simulation.
  *
