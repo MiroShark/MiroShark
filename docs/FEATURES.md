@@ -411,6 +411,46 @@ The Embed dialog exposes a `🎯 Polymarket prediction (JSON)` section beneath t
 
 Zero new dependencies (streak: 31 PRs). The first surface naming a specific external integrator — pairing with PR #83 ("Discord/Slack notifications" — first feature naming `@revaultdrops`) and continuing the explicit-audience pattern that drives external integrator adoption.
 
+## Simulation Clone JSON
+
+Every other share surface returns *outputs* — direction, chart, badge, trajectories, volatility score, agent sparklines, Polymarket envelope. `GET /api/simulation/<id>/clone.json` is the first surface that returns *inputs*: the exact configuration a sim was built with, in the shape `POST /api/simulation/create` accepts.
+
+Returns a stable v1-schema JSON envelope:
+
+```json
+{
+  "schema_version": "1",
+  "simulation_id": "sim_abc123",
+  "project_id": "proj_xyz789",
+  "graph_id": "miroshark_def456",
+  "simulation_requirement": "Will Aave's reserve factor doubling reduce TVL?",
+  "scenario_preview": "Will Aave's reserve factor doubling reduce TVL?",
+  "clone_payload": {
+    "project_id": "proj_xyz789",
+    "graph_id": "miroshark_def456",
+    "enable_twitter": true,
+    "enable_reddit": true,
+    "enable_polymarket": false,
+    "polymarket_market_count": 1,
+    "country": null,
+    "demographic_filters": null
+  },
+  "example_curl": "curl -fsSL -X POST 'https://your-host/api/simulation/create' -H 'Content-Type: application/json' -d '{…}'"
+}
+```
+
+- **Wire-compatible with `/api/simulation/create`** — `clone_payload` is the literal request body that endpoint accepts. A caller with the same `project_id` re-runs the sim with one `curl -X POST`; a benchmark workflow forking the sim swaps a knob and POSTs the modified body. No reshaping required, no manual re-entry of toggles or filters.
+- **`simulation_requirement` is informational** — the scenario text lives at the project level (a project may host multiple simulations across the same graph + scenario). `/api/simulation/create` doesn't accept `simulation_requirement` as a body field — the project's value is reused. A fork that needs a *different* scenario updates the project before POSTing the clone payload. The field is echoed in the envelope so the caller knows what the cloned sim debates.
+- **`country` + `demographic_filters` carry through** — when the original sim was anchored in a Nemotron demographic pack, the clone payload preserves the country code (lowercased + stripped, matching `manager.create_simulation`'s normalisation) and the filter dict (empty filter dicts coerce to `null` since they are semantically equivalent to "no filtering"). A caller forking into a different demographic just swaps the field and POSTs.
+- **`example_curl` carries the literal `https://your-host` placeholder** — same posture as the surfaces catalog. A copy-paste of the example never accidentally hits an internal URL; the operator substitutes their deployment host before running it.
+- **`polymarket_market_count` is clamped to `[1, 5]`** — matches `manager.create_simulation`'s clamp so a hand-edited state.json can't produce a clone payload that the create handler would reject.
+
+Pure derivation. The `clone_service.py` module is ~250 LoC of stdlib Python — `build_clone_payload` reads `state.json` (the structural fields `/create` accepts) and `simulation_config.json` (the scenario text). No new dependencies, no LLM calls, no graph traversal — pure file I/O over two on-disk artifacts every published sim already has.
+
+Same publish gate as every other share surface (`is_public=true`). Returns `404` when no `state.json` exists on disk (mid-prepare or pruned) so a consumer can tell a "not ready" sim (404) apart from a "private" sim (403). Cached for one hour — the clone payload is structural (project_id / graph_id / toggles / country / demographic_filters). Unlike the analytical surfaces (peak-round / volatility / signal), these inputs don't shift round-to-round; an hour is the right cadence for a "structural snapshot of how this sim was configured" surface.
+
+The `clone_json` counter joins the surface-stats schema. Pairs with the existing `/api/simulation/compare` endpoint: clone the inputs, run the sim, then diff the outputs against the original. Closes the API half of the still-unbuilt Scenario Clone Button workflow.
+
 ## Consensus Status Badge SVG
 
 The cheapest visible pointer back to a simulation. The previous twelve share surfaces describe a simulation in increasing depth (chart SVG, replay GIF, trajectory CSV / JSONL, transcript, notebook, signal.json, archive.zip, ...); `GET /api/simulation/<id>/badge.svg` is the *passive distribution lever* — a flat 20-pixel-tall Shields.io-compatible SVG that fits inside any `<img>` tag, Markdown image link, or `<link rel="alternate">` reference. Every researcher's GitHub README, every Notion page, every operator's personal site can embed a live consensus badge with one line of Markdown:

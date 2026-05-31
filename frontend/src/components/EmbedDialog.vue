@@ -1086,6 +1086,121 @@
               </div>
             </div>
 
+            <!-- Simulation clone payload — the first share surface that
+                 returns *inputs* rather than outputs. ``clone_payload``
+                 is wire-compatible with POST /api/simulation/create, so
+                 a caller with the same project_id re-runs the sim with
+                 one curl; an AntFleet benchmark workflow forking the sim
+                 swaps a knob and POSTs the body. Pairs with the existing
+                 /api/simulation/compare endpoint: clone, run, then diff
+                 the outputs against the original. Same publish gate as
+                 every other surface; cached 1 hour because the inputs
+                 are structural and don't shift round-to-round. -->
+            <div class="transcript-section signal-section clone-section">
+              <div class="transcript-head">
+                <span class="transcript-icon">🔁</span>
+                <div class="transcript-head-body">
+                  <div class="transcript-title">
+                    {{ $tr('Clone configuration (JSON)', '克隆配置(JSON)') }}
+                    <span v-if="isPublic && clonePayload" class="signal-direction-badge">
+                      {{ $tr('inputs', '输入') }}
+                    </span>
+                  </div>
+                  <div class="transcript-sub">
+                    {{ $tr('The first share surface that returns inputs rather than outputs. clone_payload is wire-compatible with POST /api/simulation/create — fork the sim with one curl, or swap a knob (agent count, polymarket markets, demographic country) and POST a variant. simulation_requirement is echoed alongside for context; the create body itself does not accept the scenario text (that lives on the project).', '首个返回输入而非输出的共享表面。clone_payload 与 POST /api/simulation/create 完全兼容 —— 一条 curl 即可分叉模拟,或替换某个参数(智能体数量、Polymarket 市场数、人口学国家)再 POST 变体。simulation_requirement 在外层一并回显作为上下文;create 请求体本身不接收场景文本(它属于项目层)。') }}
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="isPublic && clonePayload" class="signal-preview clone-preview">
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Project', '项目') }}</span>
+                  <span class="signal-value">{{ clonePayload.project_id || '—' }}</span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Graph', '图谱') }}</span>
+                  <span class="signal-value">{{ clonePayload.graph_id || '—' }}</span>
+                </div>
+                <div class="signal-row">
+                  <span class="signal-label">{{ $tr('Platforms', '平台') }}</span>
+                  <span class="signal-value">
+                    <span v-if="clonePayload.clone_payload?.enable_twitter">Twitter</span>
+                    <span v-if="clonePayload.clone_payload?.enable_reddit">{{ clonePayload.clone_payload?.enable_twitter ? ' · ' : '' }}Reddit</span>
+                    <span v-if="clonePayload.clone_payload?.enable_polymarket">{{ (clonePayload.clone_payload?.enable_twitter || clonePayload.clone_payload?.enable_reddit) ? ' · ' : '' }}Polymarket ({{ clonePayload.clone_payload?.polymarket_market_count }})</span>
+                  </span>
+                </div>
+                <div class="signal-row" v-if="clonePayload.clone_payload?.country">
+                  <span class="signal-label">{{ $tr('Country pack', '国家包') }}</span>
+                  <span class="signal-value">{{ clonePayload.clone_payload.country }}</span>
+                </div>
+                <div class="signal-row signal-row-breakdown" v-if="clonePayload.scenario_preview">
+                  <span class="signal-label">{{ $tr('Scenario', '场景') }}</span>
+                  <span class="signal-value">{{ clonePayload.scenario_preview }}</span>
+                </div>
+              </div>
+              <div v-else-if="isPublic && cloneLoading" class="signal-loading">
+                {{ $tr('Loading clone configuration…', '加载克隆配置中…') }}
+              </div>
+              <div v-else-if="isPublic && cloneError" class="signal-empty">
+                {{ cloneError }}
+              </div>
+              <div v-else-if="!isPublic" class="signal-empty">
+                {{ $tr('Publish the simulation to enable the clone configuration.', '发布模拟以启用克隆配置。') }}
+              </div>
+
+              <div class="transcript-actions">
+                <a
+                  v-if="isPublic && cloneJsonUrl"
+                  class="transcript-download-btn"
+                  :href="cloneJsonUrl"
+                  :download="`miroshark-${simulationId.slice(0, 12)}-clone.json`"
+                >
+                  ↓ {{ $tr('Download clone.json', '下载 clone.json') }}
+                </a>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('Clone URL', '克隆 URL') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('cloneUrl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'cloneUrl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy URL', '复制 URL') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ cloneJsonUrl || '—' }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('cloneCurl')"
+                    :disabled="!isPublic"
+                  >
+                    {{ copied === 'cloneCurl' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy snippet', '复制代码片段') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ cloneCurlSnippet }}</code></pre>
+              </div>
+
+              <div class="snippet-block transcript-snippet" v-if="isPublic && clonePostBody">
+                <div class="snippet-head">
+                  <span class="snippet-label">{{ $tr('POST body (paste into /api/simulation/create)', 'POST 请求体(粘贴到 /api/simulation/create)') }}</span>
+                  <button
+                    class="snippet-copy-btn"
+                    @click="copy('clonePostBody')"
+                  >
+                    {{ copied === 'clonePostBody' ? '✓ ' + $tr('Copied', '已复制') : $tr('Copy body', '复制请求体') }}
+                  </button>
+                </div>
+                <pre class="snippet-code"><code>{{ clonePostBody }}</code></pre>
+              </div>
+            </div>
+
             <!-- Simulation archive bundle — every published share
                  surface collapsed into a single ZIP download plus a
                  manifest.json pairing each contained file with its
@@ -2564,6 +2679,8 @@ import {
   getAgentSparklines,
   getPolymarketJsonUrl,
   getPolymarketJson,
+  getCloneJsonUrl,
+  getCloneJson,
   getArchiveZipUrl,
   getArchiveSummary,
   getThreadTxtUrl,
@@ -3068,6 +3185,59 @@ const loadPolymarket = async () => {
     polymarketError.value = err?.message || tr('Polymarket fetch failed', 'Polymarket 获取失败')
   } finally {
     polymarketLoading.value = false
+  }
+}
+
+// ── Clone payload state ─────────────────────────────────────────────────
+// The first surface that returns *inputs* (the configuration this sim
+// was built with) rather than outputs. ``clone_payload`` is wire-
+// compatible with POST /api/simulation/create — the dialog renders the
+// shape so a viewer can see at a glance whether the cloned sim ran with
+// twitter/reddit/polymarket toggles, a demographic country pack, etc.
+
+const clonePayload = ref(null)
+const cloneLoading = ref(false)
+const cloneError = ref('')
+
+const cloneJsonUrl = computed(() => {
+  if (!props.simulationId || !origin.value) return ''
+  return getCloneJsonUrl(props.simulationId, origin.value)
+})
+
+const cloneCurlSnippet = computed(() => {
+  const url = cloneJsonUrl.value || 'https://your-host/api/simulation/<id>/clone.json'
+  return `curl -s "${url}" | jq '.clone_payload'`
+})
+
+const clonePostBody = computed(() => {
+  const body = clonePayload.value?.clone_payload
+  if (!body || typeof body !== 'object') return ''
+  return JSON.stringify(body, null, 2)
+})
+
+const loadClone = async () => {
+  if (!props.simulationId || !isPublic.value) {
+    clonePayload.value = null
+    return
+  }
+  cloneLoading.value = true
+  cloneError.value = ''
+  try {
+    const payload = await getCloneJson(props.simulationId)
+    if (payload && typeof payload === 'object') {
+      clonePayload.value = payload
+    } else {
+      clonePayload.value = null
+      cloneError.value = tr(
+        'Clone payload not available yet — the simulation has no state on disk.',
+        '尚无可用的克隆配置 — 该模拟尚无磁盘状态。',
+      )
+    }
+  } catch (err) {
+    clonePayload.value = null
+    cloneError.value = err?.message || tr('Clone fetch failed', '克隆配置获取失败')
+  } finally {
+    cloneLoading.value = false
   }
 }
 
@@ -3836,6 +4006,9 @@ const copy = async (which) => {
   else if (which === 'sparkCurl') text = sparklinesCurlSnippet.value
   else if (which === 'polymarketUrl') text = polymarketJsonUrl.value
   else if (which === 'polymarketCurl') text = polymarketCurlSnippet.value
+  else if (which === 'cloneUrl') text = cloneJsonUrl.value
+  else if (which === 'cloneCurl') text = cloneCurlSnippet.value
+  else if (which === 'clonePostBody') text = clonePostBody.value
   else if (which === 'archiveUrl') text = archiveZipUrl.value
   else if (which === 'archiveCurl') text = archiveCurlSnippet.value
   else if (which === 'farcasterShare') text = farcasterShareUrl.value || shareLandingUrl.value
@@ -4436,6 +4609,10 @@ watch(() => props.open, async (val) => {
   // Polymarket prediction sits on the same gate as signal.json; load
   // alongside so the YES/NO preview row renders without a manual refresh.
   loadPolymarket()
+  // Clone payload sits on the same publish gate; load alongside so the
+  // inputs preview renders without a manual refresh. Inputs are
+  // structural (no LLM round-trip), so the fetch is cheap.
+  loadClone()
   // HEAD the archive endpoint so the bundle section can show the file
   // count without downloading the ZIP. Same publish gate as every
   // other surface — a private sim resolves cleanly to "not available".
@@ -4487,6 +4664,9 @@ watch(isPublic, () => {
   loadAgentSparklines()
   // Polymarket prediction sits on the same gate; re-fetch alongside.
   loadPolymarket()
+  // Same publish-gate flip applies to the clone payload — re-fetch so
+  // the inputs preview populates after publish.
+  loadClone()
   // Same flip applies to the archive bundle — re-HEAD so the bundle
   // section reflects the now-available surface count.
   loadArchive()

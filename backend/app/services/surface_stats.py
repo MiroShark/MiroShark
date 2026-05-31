@@ -100,6 +100,7 @@ SURFACE_KEYS: frozenset[str] = frozenset(
         "peak_round",
         "agent_sparklines",
         "volatility",
+        "clone_json",
     }
 )
 

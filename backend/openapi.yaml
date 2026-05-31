@@ -1695,6 +1695,46 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/clone.json:
+    get:
+      tags: [Publish & Embed]
+      summary: Clone payload — the *inputs* this sim was built with.
+      description: |
+        Every other share surface returns outputs (`signal.json`,
+        `chart.svg`, `peak-round`, `volatility`, `polymarket.json`,
+        `badge.svg`, the share card, the transcript, the trajectory).
+        None return inputs — the exact configuration that produced
+        those outputs. Without an inputs surface, forking a published
+        sim requires either re-entering its parameters by hand or
+        scraping `state.json` out-of-band.
+
+        This endpoint closes that gap. The returned `clone_payload`
+        block is wire-compatible with `POST /api/simulation/create` —
+        a caller with the same `project_id` re-runs the sim with a
+        single curl. The `simulation_requirement` field is echoed
+        alongside for context (it lives at the project level rather
+        than the create body), so a fork that needs a different
+        scenario updates the project first.
+
+        Same publish gate as every other share surface
+        (`is_public=true`). Returns `404` when no `state.json` exists
+        on disk (mid-prepare or pruned), so a consumer can tell a
+        "not ready" sim (404) apart from a "private" sim (403).
+        Cached for 1 hour — the clone payload is structural; unlike
+        the analytical surfaces (peak-round / volatility / signal),
+        these inputs don't shift round-to-round.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Clone payload envelope (wire-compatible with `POST /api/simulation/create`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CloneResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/agents/sparklines:
     get:
       tags: [Publish & Embed]
@@ -5128,6 +5168,127 @@ components:
           description: |
             Number of round-over-round deltas — always
             `total_rounds - 1`.
+
+    ClonePayloadBody:
+      type: object
+      description: |
+        Wire-compatible body for `POST /api/simulation/create`. Same
+        field set and same defaults the create handler accepts. A
+        caller can re-run the sim by POSTing this dict verbatim.
+      required:
+        - project_id
+        - graph_id
+        - enable_twitter
+        - enable_reddit
+        - enable_polymarket
+        - polymarket_market_count
+        - country
+        - demographic_filters
+      properties:
+        project_id:
+          type: string
+          description: |
+            The project this sim was created under. Required by
+            `/api/simulation/create`.
+        graph_id:
+          type: string
+          description: |
+            The knowledge graph the sim drew its agents from. Required
+            by `/api/simulation/create` when the project hasn't
+            recorded a default graph yet.
+        enable_twitter:
+          type: boolean
+          description: Whether the sim ran the Twitter platform leg.
+        enable_reddit:
+          type: boolean
+          description: Whether the sim ran the Reddit platform leg.
+        enable_polymarket:
+          type: boolean
+          description: Whether the sim ran the Polymarket platform leg.
+        polymarket_market_count:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: |
+            Number of Polymarket markets generated when
+            `enable_polymarket=true`. Clamped to `[1, 5]` by the
+            create handler.
+        country:
+          type: string
+          nullable: true
+          description: |
+            Demographic country code (e.g. `"sg"`, `"us"`) when the
+            persona generator anchored agents in a Nemotron row.
+            `null` when no demographic anchoring was used.
+        demographic_filters:
+          type: object
+          nullable: true
+          description: |
+            Optional sampler filters (`geography_values`, `min_age`,
+            `max_age`, `occupations`, ...). `null` when the full
+            sample was used. Pass-through to the create handler — the
+            sampler silently ignores unknown keys.
+
+    CloneResponse:
+      type: object
+      description: |
+        Clone-payload envelope returned by
+        `/api/simulation/{id}/clone.json`. The first surface that
+        returns *inputs* rather than outputs.
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal.
+      required:
+        - schema_version
+        - simulation_id
+        - project_id
+        - graph_id
+        - simulation_requirement
+        - scenario_preview
+        - clone_payload
+        - example_curl
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        project_id:
+          type: string
+          description: |
+            Echoed at the envelope level (duplicates the
+            `clone_payload.project_id` value) so a caller can route on
+            project id without unpacking the body.
+        graph_id:
+          type: string
+          description: |
+            Echoed at the envelope level (duplicates the
+            `clone_payload.graph_id` value) for the same routing
+            reason as `project_id`.
+        simulation_requirement:
+          type: string
+          description: |
+            The scenario text — what the agents debate. Lives at the
+            project level (not on the create body) so it is echoed
+            separately. A fork that needs a different scenario
+            updates the project before POSTing the `clone_payload`.
+        scenario_preview:
+          type: string
+          maxLength: 200
+          description: |
+            `simulation_requirement` truncated to 200 chars with a
+            trailing ellipsis. Suitable for log lines and one-line
+            status dashboards.
+        clone_payload:
+          $ref: "#/components/schemas/ClonePayloadBody"
+        example_curl:
+          type: string
+          description: |
+            One-line `curl` invocation re-creating the sim. Uses the
+            literal placeholder `https://your-host` so a copy-paste
+            never accidentally hits an internal URL.
 
     SparklinePoint:
       type: object

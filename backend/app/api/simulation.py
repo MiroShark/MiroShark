@@ -5659,6 +5659,95 @@ def get_volatility(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/clone.json', methods=['GET'])
+def get_clone_json(simulation_id: str):
+    """Clone payload for a published simulation — the *inputs* surface.
+
+    Every other share surface returns *outputs* — direction, chart,
+    badge, trajectories, volatility score, agent sparklines. None
+    return the *inputs*: the exact configuration that produced those
+    outputs. Without an inputs surface, forking a published sim
+    requires either re-entering its parameters by hand or scraping
+    ``state.json`` out-of-band.
+
+    This endpoint closes that gap. The returned ``clone_payload`` block
+    is wire-compatible with ``POST /api/simulation/create`` — a caller
+    with the same ``project_id`` re-runs the sim with a single curl, an
+    AntFleet benchmark fork swaps ``polymarket_market_count`` from 1 to
+    5 and POSTs, and a researcher diffing two sims feeds both clone
+    payloads into ``/api/simulation/compare``'s upstream context.
+
+    The scenario text (``simulation_requirement``) is echoed alongside
+    the create body for context — it lives at the project level rather
+    than the create body, so a fork that needs a different scenario
+    updates the project first.
+
+    Same publish gate as every other share surface (``is_public=true``).
+    Returns ``404`` when no ``state.json`` exists on disk (mid-prepare
+    or pruned), so a consumer can tell a "not ready" sim (404) apart
+    from a "private" sim (403).
+    """
+    from ..services import clone_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        payload = clone_service.build_clone_payload(simulation_id, sim_dir)
+        if payload is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Clone payload not available yet — the simulation has no state on disk.",
+                    "尚无可用的克隆配置 — 该模拟尚无磁盘状态。",
+                    locale,
+                ),
+            }), 404
+
+        # Pretty-printed + sorted keys so ``curl > clone.json`` produces
+        # a diff-friendly file. Matches the peak-round / volatility /
+        # signal.json posture. ``ensure_ascii=False`` keeps non-ASCII
+        # scenario text (e.g. Chinese ``simulation_requirement``)
+        # readable rather than escaped to ``\uXXXX``.
+        body = json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        response = Response(body, mimetype="application/json; charset=utf-8")
+        # 1-hour cache — the clone payload is structural (project_id /
+        # graph_id / toggles / country / demographic_filters). Unlike
+        # the analytical surfaces (peak-round / volatility / signal),
+        # these inputs don't shift round-to-round; an hour is the
+        # right cadence for a "structural snapshot of how this sim
+        # was configured" surface.
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-clone.json"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "clone_json")
+        return response
+
+    except Exception as e:
+        logger.error(f"clone.json: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/agents/sparklines', methods=['GET'])
 def get_agent_sparklines(simulation_id: str):
     """Per-agent belief sparklines for a published simulation.

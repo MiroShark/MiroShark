@@ -695,6 +695,48 @@ export const getPolymarketJson = async (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the clone-payload endpoint for a published
+ * simulation. The first surface that returns *inputs* rather than
+ * outputs — `clone_payload` is wire-compatible with
+ * `POST /api/simulation/create`, so a caller with the same `project_id`
+ * re-runs the sim with one curl. `simulation_requirement` is echoed
+ * alongside for context (it lives at the project level rather than the
+ * create body).
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getCloneJsonUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/clone.json`
+}
+
+/**
+ * Fetch the clone-payload envelope for a published simulation.
+ *
+ * Returns the parsed JSON document on 200, `null` on 404 (no state on
+ * disk — mid-prepare or pruned) or 403 (sim not published), and throws
+ * on transport errors.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<object|null>}
+ */
+export const getCloneJson = async (simulationId) => {
+  const res = await fetch(getCloneJsonUrl(simulationId), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (res.status === 403 || res.status === 404) {
+    return null
+  }
+  if (!res.ok) {
+    throw new Error(`clone.json fetch failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+/**
  * Build the absolute URL of the peak-round belief analytics endpoint for
  * a published simulation. The analytical counterpart to trajectory.csv
  * (raw per-round data) and chart.svg (the visual): a single O(n) summary
