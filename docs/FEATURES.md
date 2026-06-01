@@ -527,7 +527,7 @@ The first endpoint that answers the meta-question every integrator hits on day o
   "success": true,
   "data": {
     "schema_version": "1",
-    "count": 27,
+    "count": 28,
     "surfaces": [
       {
         "key": "signal_json",

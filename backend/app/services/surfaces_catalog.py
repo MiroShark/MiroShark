@@ -309,6 +309,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 124,
         "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/volatility'",
     },
+    {
+        "key": "clone_json",
+        "endpoint": "/api/simulation/<simulation_id>/clone.json",
+        "method": "GET",
+        "type": "export",
+        "description": "Clone payload — the sim's inputs in POST /api/simulation/create shape; re-run or fork with one curl.",
+        "added_in_pr": 131,
+        "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/clone.json'",
+    },
     # ── Platform-level surfaces ─────────────────────────────────────
     {
         "key": "platform_stats",
@@ -371,6 +380,7 @@ _PER_SIM_TRACKED_KEYS: frozenset[str] = frozenset(
         "peak_round",
         "agent_sparklines",
         "volatility",
+        "clone_json",
     }
 )
 
