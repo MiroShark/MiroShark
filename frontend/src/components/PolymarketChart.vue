@@ -692,6 +692,10 @@ onBeforeUnmount(() => {
   border: none;
   border-bottom: 1px solid rgba(10, 10, 10, 0.04);
   border-left: 3px solid transparent;
+  /* Opt out of the global pill default (button { border-radius: 9999px })
+     so the row background, left accent, and focus-visible outline stay
+     square like the other flat panels instead of a stadium ring. */
+  border-radius: 0;
   padding: 10px 14px;
   cursor: pointer;
   color: inherit;

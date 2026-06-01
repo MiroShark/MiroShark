@@ -353,6 +353,10 @@ onMounted(() => { if (props.visible) load() })
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
+  /* Opt out of the global pill default (button { border-radius: 9999px })
+     so this underline tab — and its focus-visible outline — stays square
+     like the rest of the panel instead of rendering as a stadium ring. */
+  border-radius: 0;
   padding: 10px 14px;
   font-family: var(--font-mono);
   font-size: 11px;
