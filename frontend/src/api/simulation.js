@@ -398,6 +398,73 @@ export const publishSimulation = (simulationId, publicFlag = true) => {
 }
 
 /**
+ * Mint a private share-link token for a simulation. The returned URL
+ * (`preview_url` / `share_url`) bypasses the `is_public` gate for the
+ * preview page only — it does **not** publish the sim, surface it on the
+ * gallery, or unlock the per-sim REST surfaces. Search-engine indexing
+ * and link-unfurl previews are suppressed on the resolved page.
+ *
+ * Admin-token gated (same `Authorization: Bearer $MIROSHARK_ADMIN_TOKEN`
+ * scheme as `publishSimulation`). Default expiry: 30 days; clamped to
+ * `[1, 365]` by the backend.
+ *
+ * @param {string} simulationId
+ * @param {number} [expiresInDays=30]
+ * @returns {Promise<{success: boolean, data: {token: string, preview_url: string, share_url: string, expires_at_iso: string, expires_in_days: number}}>}
+ */
+export const createShareLink = (simulationId, expiresInDays = 30) => {
+  return service.post(
+    `/api/simulation/${simulationId}/share-link`,
+    { expires_in_days: expiresInDays }
+  )
+}
+
+/**
+ * List active (non-revoked, non-expired) private share-link tokens for
+ * a simulation, newest-first by creation time. Returns an empty array
+ * for a sim with no tokens issued yet.
+ *
+ * Admin-token gated.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<{success: boolean, data: {simulation_id: string, tokens: Array, count: number}}>}
+ */
+export const listShareLinks = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/share-links`)
+}
+
+/**
+ * Revoke a single share-link token. Idempotent — succeeds whether the
+ * token existed or was already revoked. Returns `204` on success.
+ *
+ * Admin-token gated.
+ *
+ * @param {string} simulationId
+ * @param {string} token
+ * @returns {Promise<void>}
+ */
+export const revokeShareLink = (simulationId, token) => {
+  return service.delete(
+    `/api/simulation/${simulationId}/share-link/${encodeURIComponent(token)}`
+  )
+}
+
+/**
+ * Build the absolute URL of the private-preview landing page for a
+ * share-link token. Convenience — `createShareLink` already returns
+ * the full `preview_url`, but this helper is handy when the caller
+ * already has just the token.
+ *
+ * @param {string} token
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getPreviewUrl = (token, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/preview/${encodeURIComponent(token)}`
+}
+
+/**
  * Build the absolute URL of the 1200x630 PNG share card for a simulation.
  *
  * The card is server-rendered from the same data that powers the embed

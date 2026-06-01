@@ -4738,6 +4738,175 @@ def publish_simulation(simulation_id: str):
         return jsonify({"success": False, "error": str(e)}), 500
 
 
+# ============== Private Share Links ==============
+#
+# A simulation has two visibility states today: ``is_public=true`` means
+# every read surface (signal.json, share-card.png, embed-summary, the
+# SPA share view) returns 200 and the gallery indexes the sim; private
+# means every read surface returns 403 / 404 unless the caller is the
+# operator with the admin token. Private share links add a third state
+# — "this specific recipient holds a token that bypasses the public
+# gate **for the preview page only**, without flipping the gallery /
+# search-engine indexing switch."
+#
+# Three mutation endpoints (all admin-gated) plus the resolution route
+# (``GET /preview/<token>`` in ``app.api.share``) close the workflow:
+#
+#   • POST   /api/simulation/<id>/share-link            — mint a token
+#   • GET    /api/simulation/<id>/share-links           — list active
+#   • DELETE /api/simulation/<id>/share-link/<token>    — revoke
+#
+# The token grants access to ``/preview/<token>`` (a noindex landing
+# page that re-uses the same SPA view as ``/share/<sim_id>``) without
+# unlocking any per-sim REST surface — those keep the ``is_public``
+# gate. See ``app.services.share_link_service`` for the storage and
+# expiry policy notes.
+
+
+@simulation_bp.route('/<simulation_id>/share-link', methods=['POST'])
+@require_admin_token
+def create_share_link(simulation_id: str):
+    """Mint a private share-link token for ``simulation_id``.
+
+    Body (optional): ``{"expires_in_days": int}`` (defaults to 30,
+    clamped to [1, 365]). Returns the token + the absolute
+    ``/preview/<token>`` URL the operator hands to the recipient.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
+    """
+    from ..services import share_link_service
+
+    locale = get_locale(request)
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
+
+        payload = request.get_json(silent=True) or {}
+        expires_in_days = payload.get("expires_in_days")
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        # ``generate_token`` writes the record file under ``<sim_dir>/share-tokens/``.
+        # The directory may not exist yet for a freshly-created sim that
+        # hasn't been prepared — the service's atomic-write helper
+        # handles the ``makedirs`` itself.
+        record = share_link_service.generate_token(
+            sim_id=simulation_id,
+            sim_dir=sim_dir,
+            expires_in_days=expires_in_days,
+        )
+
+        base = _resolve_request_base_url()
+        record["preview_url"] = f"{base}/preview/{record['token']}"
+        # Backwards-friendly alias matching the spec'd field name.
+        record["share_url"] = record["preview_url"]
+
+        return jsonify({"success": True, "data": record}), 201
+    except Exception as e:
+        logger.error(f"Failed to mint share link for {simulation_id}: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@simulation_bp.route('/<simulation_id>/share-links', methods=['GET'])
+@require_admin_token
+def list_share_links(simulation_id: str):
+    """List active share-link tokens for ``simulation_id``.
+
+    Active = not revoked + not expired. Sorted newest-first by
+    ``created_at_epoch``.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
+    """
+    from ..services import share_link_service
+
+    locale = get_locale(request)
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        tokens = share_link_service.list_tokens(sim_id=simulation_id, sim_dir=sim_dir)
+
+        base = _resolve_request_base_url()
+        for entry in tokens:
+            entry["preview_url"] = f"{base}/preview/{entry['token']}"
+            entry["share_url"] = entry["preview_url"]
+
+        return jsonify({
+            "success": True,
+            "data": {
+                "simulation_id": simulation_id,
+                "tokens": tokens,
+                "count": len(tokens),
+            },
+        })
+    except Exception as e:
+        logger.error(f"Failed to list share links for {simulation_id}: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@simulation_bp.route('/<simulation_id>/share-link/<token>', methods=['DELETE'])
+@require_admin_token
+def revoke_share_link(simulation_id: str, token: str):
+    """Revoke a single share-link token.
+
+    Idempotent — returns ``204`` whether the token existed or not so the
+    caller can fire-and-forget without branching on the prior state.
+
+    Auth: requires ``Authorization: Bearer $MIROSHARK_ADMIN_TOKEN``.
+    """
+    from ..services import share_link_service
+
+    locale = get_locale(request)
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(simulation_id)
+        if not state:
+            return jsonify({"success": False, "error": _t(
+                f"Simulation not found: {simulation_id}",
+                f"未找到模拟:{simulation_id}",
+                locale,
+            )}), 404
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        share_link_service.revoke_token(
+            sim_id=simulation_id, sim_dir=sim_dir, token=token
+        )
+        return ("", 204)
+    except Exception as e:
+        logger.error(f"Failed to revoke share link for {simulation_id}/{token}: {str(e)}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+def _resolve_request_base_url() -> str:
+    """Canonical absolute origin for ``preview_url`` fields.
+
+    Honours ``X-Forwarded-Proto`` / ``X-Forwarded-Host`` so links work
+    behind a reverse proxy. Same posture as the share-landing helper in
+    ``app.api.share`` — keep them parallel so a deployment that fronts
+    the app with TLS-termination at the proxy emits ``https://``-prefixed
+    URLs on both surfaces.
+    """
+    base = request.host_url.rstrip("/")
+    forwarded_proto = request.headers.get("X-Forwarded-Proto")
+    forwarded_host = request.headers.get("X-Forwarded-Host")
+    if forwarded_host:
+        proto = forwarded_proto or ("https" if request.is_secure else "http")
+        base = f"{proto}://{forwarded_host}"
+    return base
+
+
 def _build_embed_summary_payload(simulation_id: str) -> dict:
     """Assemble the same dict the embed-summary endpoint returns.
 

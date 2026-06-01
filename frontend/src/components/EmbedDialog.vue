@@ -29,6 +29,62 @@
             <span v-if="publishError" class="embed-public-error">{{ publishError }}</span>
           </div>
 
+          <!-- Private share links -->
+          <div class="share-link-section">
+            <div class="share-link-header">
+              <span class="share-link-title">🔗 {{ $tr('Private share links', '私享链接') }}</span>
+              <span class="share-link-sub">
+                {{ $tr('Send a simulation to one person without publishing it. The preview link bypasses the public gate but is `noindex` and revocable.', '将模拟发送给特定人员而无需公开。预览链接绕过公开门控,但禁止索引且可随时撤销。') }}
+              </span>
+            </div>
+            <div class="share-link-mint-row">
+              <label class="share-link-expiry">
+                <span>{{ $tr('Expires in', '有效期') }}</span>
+                <select v-model.number="shareLinkExpiresInDays" :disabled="shareLinkBusy">
+                  <option :value="1">1 {{ $tr('day', '天') }}</option>
+                  <option :value="7">7 {{ $tr('days', '天') }}</option>
+                  <option :value="30">30 {{ $tr('days', '天') }}</option>
+                  <option :value="90">90 {{ $tr('days', '天') }}</option>
+                  <option :value="365">365 {{ $tr('days', '天') }}</option>
+                </select>
+              </label>
+              <button
+                class="share-link-mint-btn"
+                @click="mintShareLink"
+                :disabled="shareLinkBusy || !simulationId"
+              >
+                {{ shareLinkBusy ? $tr('Working…', '处理中…') : $tr('Generate link', '生成链接') }}
+              </button>
+            </div>
+            <p v-if="shareLinkError" class="share-link-error">{{ shareLinkError }}</p>
+            <ul v-if="shareLinks.length" class="share-link-list">
+              <li v-for="entry in shareLinks" :key="entry.token" class="share-link-row">
+                <div class="share-link-url">
+                  <code>{{ entry.preview_url }}</code>
+                </div>
+                <div class="share-link-meta">
+                  <span>
+                    {{ $tr('Expires', '过期时间') }}: {{ entry.expires_at_iso || '—' }}
+                    <template v-if="entry.expires_in_days_remaining != null">
+                      ({{ entry.expires_in_days_remaining }} {{ $tr('days left', '天剩余') }})
+                    </template>
+                  </span>
+                </div>
+                <div class="share-link-actions">
+                  <button class="share-link-copy" @click="copyShareLink(entry.preview_url)">
+                    {{ $tr('Copy', '复制') }}
+                  </button>
+                  <button class="share-link-revoke" @click="revokeShareLinkEntry(entry.token)">
+                    {{ $tr('Revoke', '撤销') }}
+                  </button>
+                </div>
+              </li>
+            </ul>
+            <p v-else-if="!shareLinkBusy && !shareLinkError" class="share-link-empty">
+              {{ $tr('No private links issued. Generate one to share without publishing.', '尚未生成私享链接。生成一个即可在不公开的情况下分享。') }}
+            </p>
+          </div>
+
           <!-- Size presets -->
           <div class="embed-size-row">
             <span class="embed-size-label">{{ $tr('Size', '尺寸') }}</span>
@@ -2705,6 +2761,9 @@ import {
   publishToWaybackclaw,
   getFrameMetadata,
   buildWarpcastComposeUrl,
+  createShareLink,
+  listShareLinks,
+  revokeShareLink,
 } from '../api/simulation'
 import { tr } from '../i18n'
 
@@ -2742,6 +2801,83 @@ const togglePublic = async () => {
     publishing.value = false
   }
 }
+
+// ── Private share-link panel state ─────────────────────────────────────────
+//
+// Private share links bypass the `is_public` gate for the preview page
+// only — see backend/app/services/share_link_service.py for the policy
+// notes. The panel is admin-token gated (same scheme as publishSimulation);
+// the backend surfaces 401/503 via the response interceptor and we render
+// the message in `shareLinkError`.
+
+const shareLinkExpiresInDays = ref(30)
+const shareLinkBusy = ref(false)
+const shareLinkError = ref('')
+const shareLinks = ref([])
+
+const loadShareLinks = async () => {
+  if (!props.simulationId) return
+  try {
+    const res = await listShareLinks(props.simulationId)
+    const tokens = res?.data?.tokens
+    shareLinks.value = Array.isArray(tokens) ? tokens : []
+  } catch (err) {
+    // A 401/503 from a deployment with admin auth disabled shouldn't
+    // crash the panel — leave the list empty and let the user surface
+    // the error on a write attempt.
+    shareLinks.value = []
+  }
+}
+
+const mintShareLink = async () => {
+  if (!props.simulationId) return
+  shareLinkBusy.value = true
+  shareLinkError.value = ''
+  try {
+    await createShareLink(props.simulationId, shareLinkExpiresInDays.value)
+    await loadShareLinks()
+  } catch (err) {
+    shareLinkError.value =
+      err?.response?.data?.error || err?.message || tr('Could not generate link', '无法生成链接')
+  } finally {
+    shareLinkBusy.value = false
+  }
+}
+
+const revokeShareLinkEntry = async (token) => {
+  if (!props.simulationId || !token) return
+  shareLinkBusy.value = true
+  shareLinkError.value = ''
+  try {
+    await revokeShareLink(props.simulationId, token)
+    await loadShareLinks()
+  } catch (err) {
+    shareLinkError.value =
+      err?.response?.data?.error || err?.message || tr('Could not revoke link', '无法撤销链接')
+  } finally {
+    shareLinkBusy.value = false
+  }
+}
+
+const copyShareLink = async (url) => {
+  if (!url) return
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url)
+    }
+  } catch (err) {
+    // Browser denied clipboard access; the URL is still visible in the
+    // panel so the user can manually copy.
+  }
+}
+
+watch(
+  () => [props.open, props.simulationId],
+  ([isOpen, simId]) => {
+    if (isOpen && simId) loadShareLinks()
+  },
+  { immediate: true }
+)
 
 const sizePresets = [
   { name: 'Compact', width: 480, height: 260 },
@@ -7382,5 +7518,145 @@ watch(isPublic, () => {
 .dkg-network-chip-mainnet {
   background: #dcfce7;
   color: #4ade80;
+}
+
+/* ── Private share-link panel ─────────────────────────────────────────── */
+
+.share-link-section {
+  margin: 12px 0 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(80, 60, 130, 0.18);
+  border: 1px solid rgba(167, 139, 250, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.share-link-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.share-link-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #f4f1ff;
+}
+
+.share-link-sub {
+  font-size: 11px;
+  color: rgba(244, 241, 255, 0.6);
+  line-height: 1.4;
+}
+
+.share-link-mint-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.share-link-expiry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: rgba(244, 241, 255, 0.75);
+}
+
+.share-link-expiry select {
+  background: rgba(20, 14, 40, 0.7);
+  color: #f4f1ff;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-size: 12px;
+}
+
+.share-link-mint-btn {
+  background: #ea580c;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+}
+
+.share-link-mint-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.share-link-error {
+  font-size: 11px;
+  color: #fca5a5;
+  margin: 0;
+}
+
+.share-link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.share-link-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  background: rgba(20, 14, 40, 0.4);
+  border-radius: 8px;
+  border: 1px solid rgba(167, 139, 250, 0.12);
+}
+
+.share-link-url code {
+  font-family: 'JetBrains Mono', 'Geist Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: #c4b5fd;
+  word-break: break-all;
+}
+
+.share-link-meta {
+  font-size: 10px;
+  color: rgba(244, 241, 255, 0.5);
+  letter-spacing: 0.02em;
+}
+
+.share-link-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.share-link-copy,
+.share-link-revoke {
+  background: transparent;
+  color: #c4b5fd;
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+}
+
+.share-link-revoke {
+  color: #fca5a5;
+  border-color: rgba(252, 165, 165, 0.35);
+}
+
+.share-link-empty {
+  font-size: 11px;
+  color: rgba(244, 241, 255, 0.45);
+  margin: 0;
+  font-style: italic;
 }
 </style>

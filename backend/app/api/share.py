@@ -450,3 +450,189 @@ def oembed_provider():
 
     response.headers["Cache-Control"] = "public, max-age=300"
     return response
+
+
+def _render_private_preview_html(
+    simulation_id: str,
+    scenario: str,
+    spa_url: str,
+    expires_at_iso: str,
+) -> str:
+    """Build the private-preview HTML returned for a valid share token.
+
+    Differences from the public landing page in :func:`_render_landing_html`:
+
+    * ``<meta name="robots" content="noindex,nofollow">`` — the whole
+      point of a private link is that search engines and link unfurlers
+      don't index it. The recipient sees the page; Googlebot doesn't.
+    * No Open Graph / Twitter card / Farcaster Frame tags. A leaked
+      preview URL pasted into a Discord channel renders as a bare link
+      rather than auto-unfurling the scenario text into the channel.
+    * No oEmbed discovery links. Same reason — a content provider that
+      crawls oEmbed shouldn't auto-render the preview.
+    * A "Private Preview" banner so a recipient who lands on the page
+      knows this is a pre-publication share and not the public surface.
+    * The same SPA redirect (JS + ``<meta refresh>`` fallback) so the
+      recipient gets the live simulation view without an extra click.
+    """
+    title_e = _esc(f"MiroShark — Private Preview · {simulation_id}")
+    spa_e = _esc(spa_url)
+    import json as _json
+    spa_js = _json.dumps(spa_url)
+
+    if scenario:
+        scenario_clean = scenario.strip()
+        if len(scenario_clean) > 200:
+            scenario_clean = scenario_clean[:197].rstrip() + "…"
+        scenario_e = _esc(scenario_clean)
+        scenario_block = f"<p class=\"scenario\">{scenario_e}</p>\n"
+    else:
+        scenario_block = ""
+
+    expires_block = ""
+    if expires_at_iso:
+        expires_block = (
+            f"<p class=\"expires\">Link expires {_esc(expires_at_iso)}</p>\n"
+        )
+
+    return (
+        "<!DOCTYPE html>\n"
+        "<html lang=\"en\">\n"
+        "<head>\n"
+        "<meta charset=\"utf-8\">\n"
+        f"<title>{title_e}</title>\n"
+        "<meta name=\"robots\" content=\"noindex,nofollow\">\n"
+        "<meta name=\"referrer\" content=\"no-referrer\">\n"
+        f"<link rel=\"canonical\" href=\"{spa_e}\">\n"
+        f"<meta http-equiv=\"refresh\" content=\"0; url={spa_e}\">\n"
+        "<style>\n"
+        "  body { font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif;\n"
+        "         background: #0a0a0a; color: #fafafa; margin: 0;\n"
+        "         display: flex; align-items: center; justify-content: center;\n"
+        "         min-height: 100vh; text-align: center; padding: 24px; }\n"
+        "  a { color: #ea580c; }\n"
+        "  .wrap { max-width: 540px; }\n"
+        "  .badge { display: inline-block; padding: 4px 10px; font-size: 11px;\n"
+        "           letter-spacing: 0.18em; text-transform: uppercase;\n"
+        "           border: 1px solid #ea580c; color: #ea580c; border-radius: 999px;\n"
+        "           margin-bottom: 16px; font-weight: 700; }\n"
+        "  h1 { font-size: 16px; letter-spacing: 0.18em; margin: 0 0 8px; opacity: 0.5;\n"
+        "       text-transform: uppercase; font-weight: 700; }\n"
+        "  p { font-size: 18px; line-height: 1.5; margin: 0 0 16px; }\n"
+        "  .scenario { font-size: 16px; opacity: 0.85; margin-bottom: 24px; }\n"
+        "  .expires { font-size: 12px; opacity: 0.55; margin-top: 24px;\n"
+        "             letter-spacing: 0.06em; }\n"
+        "</style>\n"
+        "</head>\n"
+        "<body>\n"
+        "<div class=\"wrap\">\n"
+        "  <div class=\"badge\">Private Preview</div>\n"
+        "  <h1>MiroShark</h1>\n"
+        "  <p>Opening simulation…</p>\n"
+        f"{scenario_block}"
+        f"  <p><a href=\"{spa_e}\">Continue →</a></p>\n"
+        f"{expires_block}"
+        "</div>\n"
+        "<script>\n"
+        f"  window.location.replace({spa_js});\n"
+        "</script>\n"
+        "</body>\n"
+        "</html>\n"
+    )
+
+
+def _private_preview_not_found(locale: str) -> Response:
+    """Single 404 for every preview-resolution miss.
+
+    Unknown token / revoked token / expired token / malformed token all
+    return the same response so an attacker probing the surface can't
+    distinguish "token never existed" from "token was revoked yesterday"
+    — both are equally not-allowed-in.
+    """
+    body = _t(
+        "This preview link is no longer valid.",
+        "此预览链接已失效。",
+        locale,
+    )
+    response = Response(body, status=404, mimetype="text/plain; charset=utf-8")
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex,nofollow"
+    return response
+
+
+@share_bp.route('/preview/<token>', methods=['GET'])
+def private_preview_landing(token: str):
+    """Resolve a private share-link token to a noindex preview page.
+
+    A token bypasses the ``is_public`` gate for one page — the same SPA
+    share view ``/share/<sim_id>`` serves — without flipping the sim's
+    public flag or adding it to the gallery. Search-engine indexing and
+    link-unfurl previews are suppressed via ``<meta robots>`` and the
+    absence of Open Graph tags.
+
+    Returns 404 for unknown / revoked / expired tokens — single response
+    so a probe can't tell the cases apart.
+    """
+    from ..services import share_link_service
+
+    locale = get_locale(request)
+
+    sim_id = share_link_service.resolve_token(
+        token=token,
+        sim_root=Config.WONDERWALL_SIMULATION_DATA_DIR,
+    )
+    if not sim_id:
+        return _private_preview_not_found(locale)
+
+    try:
+        validate_simulation_id(sim_id)
+    except ValueError:
+        return _private_preview_not_found(locale)
+
+    scenario = ""
+    try:
+        manager = SimulationManager()
+        state = manager.get_simulation(sim_id)
+        if not state:
+            return _private_preview_not_found(locale)
+        config = manager.get_simulation_config(sim_id)
+        if config:
+            scenario = (config.get("simulation_requirement") or "").strip()
+    except Exception:
+        return _private_preview_not_found(locale)
+
+    base = request.host_url.rstrip("/")
+    forwarded_proto = request.headers.get("X-Forwarded-Proto")
+    forwarded_host = request.headers.get("X-Forwarded-Host")
+    if forwarded_host:
+        proto = forwarded_proto or ("https" if request.is_secure else "http")
+        base = f"{proto}://{forwarded_host}"
+
+    spa_url = f"{base}/simulation/{sim_id}/start"
+
+    expires_at_iso = ""
+    try:
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, sim_id)
+        tokens = share_link_service.list_tokens(sim_id=sim_id, sim_dir=sim_dir)
+        for entry in tokens:
+            if entry.get("token") == token:
+                expires_at_iso = entry.get("expires_at_iso") or ""
+                break
+    except Exception:
+        expires_at_iso = ""
+
+    body = _render_private_preview_html(
+        simulation_id=sim_id,
+        scenario=scenario,
+        spa_url=spa_url,
+        expires_at_iso=expires_at_iso,
+    )
+
+    response = Response(body, mimetype="text/html; charset=utf-8")
+    # Never cache the preview page — a freshly revoked token must stop
+    # serving immediately, and an intermediate proxy holding the body
+    # would defeat that.
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["X-Robots-Tag"] = "noindex,nofollow"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    return response

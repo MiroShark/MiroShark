@@ -1155,6 +1155,154 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
 
+  /api/simulation/{simulation_id}/share-link:
+    post:
+      tags: [Publish & Embed]
+      summary: Mint a private share-link token for one simulation.
+      description: |
+        Mints a 32-character URL-safe token whose `/preview/<token>` URL
+        bypasses the `is_public` gate **for the preview page only**. The
+        token does not publish the sim, surface it on `/explore`, or
+        unlock per-sim REST surfaces. The resolved page emits
+        `noindex,nofollow` + no Open Graph / oEmbed tags so the link
+        doesn't auto-unfurl on Discord / Slack / Twitter.
+
+        Admin-gated. Default expiry: 30 days; clamped to `[1, 365]`.
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                expires_in_days:
+                  type: integer
+                  minimum: 1
+                  maximum: 365
+                  default: 30
+      responses:
+        "201":
+          description: New token envelope.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        $ref: "#/components/schemas/ShareLinkRecord"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
+
+  /api/simulation/{simulation_id}/share-links:
+    get:
+      tags: [Publish & Embed]
+      summary: List active share-link tokens for one simulation.
+      description: |
+        Active = non-revoked, non-expired. Sorted newest-first by
+        `created_at_epoch`. Returns an empty array for a sim with no
+        tokens issued yet. Admin-gated.
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Active tokens.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/SuccessEnvelope"
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        required: [simulation_id, tokens, count]
+                        properties:
+                          simulation_id:
+                            type: string
+                          tokens:
+                            type: array
+                            items:
+                              $ref: "#/components/schemas/ShareLinkRecord"
+                          count:
+                            type: integer
+                            minimum: 0
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
+
+  /api/simulation/{simulation_id}/share-link/{token}:
+    delete:
+      tags: [Publish & Embed]
+      summary: Revoke a single share-link token.
+      description: |
+        Idempotent — returns `204` whether the token existed or had
+        already been revoked. The associated `/preview/<token>` URL
+        stops resolving immediately (the preview page is served with
+        `Cache-Control: no-store` so revocation is not cacheable).
+        Admin-gated.
+      security:
+        - AdminToken: []
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: "^[A-Za-z0-9_-]+$"
+      responses:
+        "204":
+          description: Token revoked (or already revoked).
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/AdminAuthNotConfigured" }
+
+  /preview/{token}:
+    get:
+      tags: [Publish & Embed]
+      summary: Private-preview landing page resolved from a share-link token.
+      description: |
+        Resolves the token to a sim ID and renders the same SPA redirect
+        as `/share/<id>` — but with `<meta name="robots"
+        content="noindex,nofollow">`, `X-Robots-Tag: noindex,nofollow`,
+        `Referrer-Policy: no-referrer`, and **no** Open Graph / Twitter
+        / Farcaster Frame / oEmbed tags. Unknown / revoked / expired
+        tokens all return the same `404` body so a probe can't tell
+        the cases apart. `Cache-Control: no-store`.
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: "^[A-Za-z0-9_-]+$"
+      responses:
+        "200":
+          description: HTML landing page with SPA redirect.
+          content:
+            text/html:
+              schema:
+                type: string
+        "404":
+          description: Token unknown, revoked, or expired.
+          content:
+            text/plain:
+              schema:
+                type: string
+
   /api/simulation/{simulation_id}/embed-summary:
     get:
       tags: [Publish & Embed]
@@ -4521,6 +4669,54 @@ components:
             actual_outcome: { type: string }
             predicted_consensus: { type: string }
             accuracy_score: { type: number }
+
+    ShareLinkRecord:
+      type: object
+      required:
+        - token
+        - sim_id
+        - preview_url
+        - share_url
+        - expires_at_epoch
+        - expires_at_iso
+      properties:
+        token:
+          type: string
+          description: 32-character URL-safe base64 token (`secrets.token_urlsafe(24)`).
+          minLength: 32
+          maxLength: 128
+          pattern: "^[A-Za-z0-9_-]+$"
+        sim_id:
+          type: string
+        preview_url:
+          type: string
+          format: uri
+          description: Absolute `/preview/<token>` URL the operator hands to the recipient.
+        share_url:
+          type: string
+          format: uri
+          description: Alias of `preview_url` for forward-compatibility with the original spec.
+        created_at_epoch:
+          type: integer
+        created_at_iso:
+          type: string
+          format: date-time
+        expires_at_epoch:
+          type: integer
+        expires_at_iso:
+          type: string
+          format: date-time
+        expires_in_days:
+          type: integer
+          minimum: 1
+          maximum: 365
+          description: Lifetime in whole days (clamped). Only present on mint responses.
+        expires_in_days_remaining:
+          type: integer
+          minimum: 0
+        expires_in_seconds_remaining:
+          type: integer
+          minimum: 0
 
     GalleryCard:
       type: object

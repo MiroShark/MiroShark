@@ -193,6 +193,25 @@ Useful when:
 
 `EmbedDialog` has a `Public / Private` toggle backed by `is_public` on the simulation state. Embed URLs return `403` on unpublished simulations — flip the toggle (or `POST /api/simulation/<id>/publish`) to make them publicly embeddable. Defaults to private so existing sims are unaffected.
 
+## Private Share Links
+
+The platform's sharing model was binary until `share_link_service` landed: publish globally or keep entirely private. Private share links add a third state — a token-gated `/preview/<token>` URL that lets one recipient see a finished simulation without flipping the public flag, surfacing it on `/explore`, or unlocking the per-sim REST surfaces.
+
+Use cases that fall in this gap:
+
+- A researcher sending a finished sim to a co-author for review.
+- An operator giving a stakeholder a pre-publication preview.
+- A platform-builder shipping an integrator a one-off debug share.
+
+The link is **selective access**, not publication: the preview page emits `<meta name="robots" content="noindex,nofollow">`, no Open Graph / Twitter / Farcaster Frame tags, no oEmbed discovery links, and `Cache-Control: no-store` — so a URL pasted into Discord/Slack/Twitter shows as a bare link rather than auto-unfurling the scenario, and a leaked URL won't appear in Google. The token grants the preview page only — `signal.json`, `share-card.png`, `chart.svg`, `transcript.md`, and every other per-sim REST surface keep the `is_public` gate.
+
+- **Mint:** `POST /api/simulation/<id>/share-link` (admin-token gated; body `{expires_in_days?}`, default 30, clamped `[1, 365]`). Returns the token, the `preview_url`, and ISO expiry. Tokens are 32-character URL-safe base64 from `secrets.token_urlsafe(24)` (192 bits of entropy).
+- **List:** `GET /api/simulation/<id>/share-links` (admin-gated) — active tokens only (non-revoked, non-expired), newest-first by creation time, with `expires_in_days_remaining` for the UI countdown.
+- **Revoke:** `DELETE /api/simulation/<id>/share-link/<token>` (admin-gated; idempotent). The associated `/preview/<token>` URL stops resolving immediately — no proxy caching is allowed on the preview page so the kill switch is instant.
+- **Resolve:** `GET /preview/<token>` — public route (no auth). Resolves the token to a sim ID and renders the same SPA redirect as `/share/<id>`, but with the noindex/no-OG posture above. Unknown / revoked / expired tokens all return the same `404` body so a probe can't distinguish the cases.
+- **Storage:** one JSON record per token at `<sim_dir>/share-tokens/<token>.json`. Co-located with the sim's data so deleting a simulation deletes its tokens.
+- **UI:** "🔗 Private share links" panel inside the Embed dialog, alongside the public toggle. Expiry presets (1 / 7 / 30 / 90 / 365 days), one-click copy, one-click revoke, active-tokens list with remaining-days countdown.
+
 ## Predictive Accuracy Ledger (Verified Predictions)
 
 Every public simulation can be annotated with the real-world outcome it called. From the Embed dialog, choose **Called it / Partial / Called wrong**, paste the article/tweet/dashboard URL that confirmed the outcome, add a one-sentence summary (≤280 chars), and submit. The annotation lands on `<sim_dir>/outcome.json` and immediately surfaces:
