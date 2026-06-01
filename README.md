@@ -29,7 +29,7 @@
 > Drop in anything — a press release, a news headline, a policy draft, a question you can't answer, a historical what-if — and MiroShark spawns hundreds of agents that react to it hour by hour. Posting, arguing, trading, changing their minds.
 
 <p align="center">
-  <img src="./docs/images/simulate-anything-hero.png" alt="Simulate anything — $1 per simulation, 10 min first result, 100 agents: input → build world → swarm → report" width="100%" />
+  <img src="./docs/images/simulate-anything-hero-v2.jpg" alt="Simulate anything — $1 per simulation, 10 min first result, 100 agents: input → build world → swarm → report" width="100%" />
 </p>
 
 ### What it does
@@ -40,7 +40,7 @@
 - Get a report on what happened, citing actual posts and trades.
 
 <p align="center">
-  <img src="./docs/images/simulation-phases.png" alt="MiroShark pipeline: Phase 1 Ontology Generation → Phase 2 Graph Building → Phase 3 Agent Setup → Phase 4 Simulation Execution → Phase 5 Report & Interaction" width="100%" />
+  <img src="./docs/images/simulation-phases-v2.jpg" alt="MiroShark pipeline: Phase 1 Ontology Generation → Phase 2 Graph Building → Phase 3 Agent Setup → Phase 4 Simulation Execution → Phase 5 Report & Interaction" width="100%" />
 </p>
 
 ### Quick start
@@ -72,7 +72,7 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
 **Other paths** — [one-click Railway / Render deploy](docs/INSTALL.md#one-click-cloud), [Docker + Ollama](docs/INSTALL.md#option-b-docker--local-ollama), [manual Ollama](docs/INSTALL.md#option-c-manual--local-ollama), [Claude Code CLI](docs/INSTALL.md#option-d-claude-code-no-api-key) — all in **[docs/INSTALL.md](docs/INSTALL.md)**.
 
 <p align="center">
-  <img src="./docs/images/miroshark-overview-diagram.png" alt="MiroShark Overview" />
+  <img src="./docs/images/miroshark-overview-diagram-v2.jpg" alt="MiroShark Overview" />
 </p>
 
 ### Interface language
@@ -90,7 +90,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
 - **Creative experiments** — feed a novel with a lost ending; agents write a narratively consistent conclusion
 
 <p align="center">
-  <img src="./docs/images/agent-grounding.png" alt="Five layers of grounding per agent: demographic seed, web enrichment, semantic search, relationships, graph attributes" width="100%" />
+  <img src="./docs/images/agent-grounding-v2.jpg" alt="Five layers of grounding per agent: demographic seed, web enrichment, semantic search, relationships, graph attributes" width="100%" />
 </p>
 
 ### Features
@@ -111,7 +111,7 @@ A few of the highlights:
 …and **40+ more** — share surfaces, exports, integrations, observability, and on-chain citation. See the **[full feature list and deep dives in docs/FEATURES.md](docs/FEATURES.md)**.
 
 <p align="center">
-  <img src="./docs/images/graph-memory-pipeline.png" alt="Graph memory pipeline: ingestion (NER, embed, entity resolution, contradiction check, temporal edges) and retrieval (vector + BM25 + BFS, fused, reranked)" width="100%" />
+  <img src="./docs/images/graph-memory-pipeline-v2.jpg" alt="Graph memory pipeline: ingestion (NER, embed, entity resolution, contradiction check, temporal edges) and retrieval (vector + BM25 + BFS, fused, reranked)" width="100%" />
 </p>
 
 ### Documentation
@@ -179,7 +179,7 @@ cp .env.example .env
 **其他部署路径** — [一键 Railway / Render](docs/INSTALL.zh-CN.md)、[Docker + Ollama](docs/INSTALL.zh-CN.md)、[手动 Ollama](docs/INSTALL.zh-CN.md)、[Claude Code CLI](docs/INSTALL.zh-CN.md) — 详见 **[docs/INSTALL.zh-CN.md](docs/INSTALL.zh-CN.md)**。
 
 <p align="center">
-  <img src="./docs/images/miroshark-overview-cn.png" alt="MiroShark 中文界面" />
+  <img src="./docs/images/miroshark-overview-cn-v2.jpg" alt="MiroShark 中文界面" />
 </p>
 
 ### 主要功能
