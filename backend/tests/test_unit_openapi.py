@@ -111,6 +111,10 @@ _BLUEPRINT_PREFIXES = {
     # stats_bp serves /api/stats (JSON aggregate) + /api/stats/badge.svg
     # (platform Shields.io pill) — see app/api/stats.py.
     "stats_bp":          "/api/stats",
+    # surfaces_bp serves /api/surfaces.json — the machine-readable catalog
+    # of every share / platform surface. Mounted at /api with no sub-prefix
+    # so the discovery URL stays short — see app/__init__.py / app/api/surfaces.py.
+    "surfaces_bp":       "/api",
 }
 
 
