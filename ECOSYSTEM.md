@@ -18,6 +18,7 @@ These are the projects we know of that run MiroShark, extend it, or integrate wi
 |---------|-------|
 | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) · [miroshark-bench](https://github.com/AntFleet/miroshark-bench) |
 | Blue Agent | [@blueagent_](https://x.com/blueagent_) · [blue-agent](https://github.com/madebyshun/blue-agent) |
+| Capacitr | [capacitr.xyz](https://capacitr.xyz/) · [MiroShark integration spec](https://spec.capacitr.xyz/#miroshark) · [@capacitr_xyz](https://x.com/capacitr_xyz) |
 | Crucible Sim | [crucible-sim](https://github.com/wshuyi/crucible-sim) |
 | Echo Oracle | [@BuiltByEcho](https://x.com/BuiltByEcho) · [builtbyecho.xyz](https://www.builtbyecho.xyz/) |
 | HivemindOS | [website](https://hivemindos.liamvisionary.com) · [@thehivemindos](https://x.com/thehivemindos) · [repo](https://github.com/LiamVisionary/hivemindos) |
