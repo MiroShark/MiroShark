@@ -130,6 +130,7 @@ A few of the highlights:
 | [DKG citation](docs/DKG.md) | OriginTrail DKG anchoring — UAL + Merkle root + on-chain citation key for any finished sim |
 | [WaybackClaw archive](docs/WAYBACKCLAW.md) | WaybackClaw submission — snapshot id + IPFS CID + Nostr event id for any finished sim |
 | [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
+| [Ecosystem](ECOSYSTEM.md) | Projects, agents, and products built on top of MiroShark |
 | [Contributing](CONTRIBUTING.md) | Tests and development |
 
 ---
@@ -223,6 +224,7 @@ cp .env.example .env
 | [MCP](docs/MCP.zh-CN.md) | Claude Desktop / Cursor / Windsurf / Continue 集成 + 报告智能体工具(可在「设置 → AI 集成」中获取自动生成的片段) |
 | [Webhook](docs/WEBHOOKS.zh-CN.md) | 完成 Webhook 载荷、头部、投递语义、Slack/Discord/Zapier/n8n 食谱 |
 | [可观测性](docs/OBSERVABILITY.zh-CN.md) | 调试面板、事件流、日志 |
+| [生态](ECOSYSTEM.md) | 基于 MiroShark 构建的项目、智能体与产品 |
 | [贡献](CONTRIBUTING.zh-CN.md) | 测试与开发 |
 
 ---
