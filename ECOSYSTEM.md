@@ -19,7 +19,7 @@ These are the projects we know of that run MiroShark, extend it, or integrate wi
 | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) · [miroshark-bench](https://github.com/AntFleet/miroshark-bench) |
 | Blue Agent | [@blueagent_](https://x.com/blueagent_) · [blue-agent](https://github.com/madebyshun/blue-agent) |
 | Crucible Sim | [crucible-sim](https://github.com/wshuyi/crucible-sim) |
-| Echo | [@BuiltByEcho](https://x.com/BuiltByEcho) · [builtbyecho.xyz](https://www.builtbyecho.xyz/) |
+| Echo Oracle | [@BuiltByEcho](https://x.com/BuiltByEcho) · [builtbyecho.xyz](https://www.builtbyecho.xyz/) |
 | HivemindOS | [website](https://hivemindos.liamvisionary.com) · [@thehivemindos](https://x.com/thehivemindos) · [repo](https://github.com/LiamVisionary/hivemindos) |
 | Monitor | [monitor-the-situation-bags](https://github.com/Zoidberg-eternal/monitor-the-situation-bags) |
 | Noelclaw | [@noelclawfun](https://x.com/noelclawfun) · [noelclaw.com](https://noelclaw.com) · [mcp](https://github.com/noelclaw/mcp) |
@@ -27,6 +27,7 @@ These are the projects we know of that run MiroShark, extend it, or integrate wi
 | RootAI | [@Root_Edge](https://x.com/Root_Edge) · [rootai.wtf](https://rootai.wtf) |
 | Signa | [@Signa_Agent](https://x.com/Signa_Agent) · [signa-miroshark-skills](https://github.com/codexvritra/signa-miroshark-skills) |
 | Supercompact | [supercompact-for-miroshark](https://github.com/JohnTammi/supercompact-for-miroshark) |
+| SyntheticsAI | [@SyntheticsAI_](https://x.com/SyntheticsAI_) · [syntheticuser.org](https://syntheticuser.org) |
 | Xerg | [@xerg_AI](https://x.com/xerg_AI) · [xerg.ai](https://xerg.ai/) |
 | ZER0 | [@atzer0_BOT](https://x.com/atzer0_BOT) · [atzer0.xyz](https://www.atzer0.xyz/) |
 ---
