@@ -19,7 +19,7 @@ These are the projects we know of that run MiroShark, extend it, or integrate wi
 | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) · [miroshark-bench](https://github.com/AntFleet/miroshark-bench) |
 | Blue Agent | [@blueagent_](https://x.com/blueagent_) · [blue-agent](https://github.com/madebyshun/blue-agent) |
 | Crucible Sim | [crucible-sim](https://github.com/wshuyi/crucible-sim) |
-| Echo | [@BuiltByEcho](https://x.com/BuiltByEcho) · [builtbyecho.xyz](https://www.builtbyecho.xyz/) |
+| Echo Oracle | [@BuiltByEcho](https://x.com/BuiltByEcho) · [builtbyecho.xyz](https://www.builtbyecho.xyz/) |
 | Monitor | [monitor-the-situation-bags](https://github.com/Zoidberg-eternal/monitor-the-situation-bags) |
 | Noelclaw | [@noelclawfun](https://x.com/noelclawfun) · [noelclaw.com](https://noelclaw.com) · [mcp](https://github.com/noelclaw/mcp) |
 | Nookplot | [nookplot.com](https://nookplot.com/?view=network) |
