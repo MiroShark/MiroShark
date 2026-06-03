@@ -56,6 +56,7 @@
 | **谱系导航** | `GET /api/simulation/<id>/lineage` — 将 `parent_simulation_id` 指针转化为可导航的图。展示该模拟派生 / 分支自的父模拟,以及每一个把父级指回此模拟的公开子模拟。无需记住每个子模拟 ID,即可追踪一项结果的思想脉络 |
 | **OriginTrail DKG 引用** | 可选:将情景、共识与 `reproduce.json` 的 SHA-256 锚定到 OriginTrail DKG,成为可验证的知识资产 |
 | **WaybackClaw 归档** | 可选:把已完成的快照固定到 IPFS,并通过 WaybackClaw 在一次 POST 中广播一条 Nostr note |
+| **生态系统 JSON 注册表** | `GET /api/ecosystem.json` — 在 MiroShark 之上构建的每一个外部项目、智能体与产品的机器可读名单;按字母排序、带分类、ETag 缓存 |
 
 ## 智能配置(情景自动建议)
 
@@ -614,6 +615,23 @@ oEmbed 添加的是一套*协议*,而非一个渲染器 — 缩略图和 iframe 
 - **闭合了 README 工作开启的可发现性回路。** PR #118 与 #119 为人类读者精炼了 README 的首触可发现性;本端点为机器读者补上了同样的能力。Aeon 的每日分享面计数检查不再需要解析 FEATURES.md;查询某个部署以探测哪些分享面可用的集成者不再需要去抓取文档。
 
 纯标准库(`services/surfaces_catalog.py` + `api/surfaces.py` 共约 370 LoC);零新增依赖 — 与 `platform_stats`、`surface_stats` 以及本目录树中其他每一个纯数据模块姿态一致。目录本身是一份字面列表;无磁盘扫描、无 Neo4j、无外发网络。始终返回 `200`(或 `304`)— 调用方提供任何输入都不会产生 `404`。
+
+## 生态系统 JSON 注册表
+
+[`ECOSYSTEM.md`](../ECOSYSTEM.md) 面向机器读者的对照端点。`GET /api/ecosystem.json` 把同一份策展的集成者名单 — 每一个被公开认定为在 MiroShark 之上构建的外部项目、智能体或产品 — 作为带类型的 JSON 信封返回。消费方再也无需解析 Markdown 表格来发现还有谁在平台上构建。
+
+与 `/api/surfaces.json` 共用同一个蓝图。两个端点合起来回答每位集成者第一天都会碰到的两个元问题 — *「我可以调用哪些分享面?」*(surfaces.json)与 *「还有谁在这之上构建?」*(ecosystem.json)。
+
+- **五个类别。** `product`(在 MiroShark 之上构建的面向公众的应用 — Capacitr、Echo Oracle、HivemindOS、RootAI、Xerg、ZER0)、`tool`(面向操作者的工具 — Crucible Sim)、`integration`(把 MiroShark 接入其他系统的 MCP 服务器、Aeon 技能包、Bags 风格的监视器 — Monitor、Noelclaw、Signa)、`agent`(运行 MiroShark 模拟的自主机器人 — Blue Agent、SyntheticsAI)、`benchmark`(在引擎之上构建的测试 / 评估流水线 — AntFleet)。消费方可以通过对 `category` 过滤来把工作范围限定在某个类别。
+- **静态硬编码 — 出于设计。** 目录是 `services/ecosystem_catalog.py` 模块作用域内的字面列表;它 **不** 通过解析 `ECOSYSTEM.md` 自动派生 — Markdown 形状(单元格内含徽标、链接和自由文本)非常脆弱,解析器的悄然漂移会损害公开契约。新增一位集成者会落在两个文件里:`ECOSYSTEM.md` 的一行与本目录中的一条记录。`test_unit_ecosystem_catalog.py` 中的漂移守护测试会在两个来源之间交叉校验项目 `name` 集合,因此任何一侧都无法悄然漂移。
+- **按 `name` 字母排序。** 与 `ECOSYSTEM.md` 的排序约定一致。消费方迭代该列表时看到的顺序与人类读者浏览 Markdown 表格时一致。顺序是公开契约的一部分 — 追加是非破坏性变更;重排现有条目是破坏性的。
+- **`x_handle` 不带前导 `@`。** 消费方拼接 `https://x.com/<x_handle>` URL(信息流、批量关注脚本、情感监视器)时可直接得到干净的 URL,无需字符串裁剪。若集成者没有公开 X 账号,该值为 `null`。
+- **`repo` 是 `https://github.com/…` URL 或 `null`。** 闭源集成者暴露 `null` 而非伪造 URL — 只迭代开源条目的消费方可以干净地用 `select(.repo != null)` 过滤。
+- **一小时缓存,ETag 驱动失效。** 目录仅在某个新 PR 新增集成者时才变化;`Cache-Control: public, max-age=3600` 为上线与目录反映该变化之间的滞后划定了紧致上界。`ETag` 为 `ecosystem-v<schema>-<count>` — 目录增长时递增。带条件的 `If-None-Match` GET 会短路为 `304 Not Modified`。
+- **形状稳定,带 schema 版本。** 信封为 `{schema_version, count, ecosystem}`;v1 是唯一已发布的版本。每条目的字段集(`name`、`url`、`description`、`category`、`x_handle`、`repo`)是锁定的。
+- **闭合生态系统可发现性回路。** 2026-06-02 一天之内落地了四个生态系统 PR(HivemindOS / Echo Oracle / Capacitr / SyntheticsAI);生态系统的增长速度已经超过了服务它的工具。这个端点为「在集成者之上构建的集成者」提供了一个带类型的 API 起点。
+
+纯标准库(`services/ecosystem_catalog.py` + `api/surfaces.py` 新增路由共约 250 LoC);零新增依赖 — 与 `surfaces_catalog`、`platform_stats`、`surface_stats` 以及本目录树中其他每一个纯数据模块姿态一致。目录本身是一份字面列表;无磁盘扫描、无 Markdown 解析、无 Neo4j、无外发网络。始终返回 `200`(或 `304`)— 调用方提供任何输入都不会产生 `404`。
 
 ## BibTeX 学术引用
 

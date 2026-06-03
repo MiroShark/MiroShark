@@ -1175,6 +1175,40 @@ export const getSurfacesCatalog = async () => {
 }
 
 /**
+ * Build the absolute URL of the deployment's machine-readable
+ * ecosystem registry. Platform-level surface — describes every
+ * external project, agent, and product publicly identified as built
+ * on MiroShark; counterpart of ECOSYSTEM.md for machine readers.
+ *
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getEcosystemUrl = (origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/ecosystem.json`
+}
+
+/**
+ * Fetch the machine-readable ecosystem registry. Returns the parsed
+ * envelope (`schema_version` + `count` + `ecosystem`) on 200; throws
+ * on transport errors. Never 404s — the registry is static and
+ * always present.
+ *
+ * @returns {Promise<{schema_version: string, count: number, ecosystem: Array<object>}>}
+ */
+export const getEcosystem = async () => {
+  const res = await fetch(getEcosystemUrl(), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    throw new Error(`ecosystem registry fetch failed: ${res.status}`)
+  }
+  const body = await res.json()
+  return body?.data ?? body
+}
+
+/**
  * Build the absolute URL of the reproducibility config blob for a
  * simulation.
  *

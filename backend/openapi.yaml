@@ -3157,6 +3157,94 @@ paths:
             `ETag` and `Cache-Control` are still returned so the
             consumer can refresh its cache TTL.
 
+  /api/ecosystem.json:
+    get:
+      tags: [Platform]
+      summary: Machine-readable registry of every external project, agent, and product built on MiroShark.
+      description: |
+        Counterpart of the human-facing `ECOSYSTEM.md`. Returns a
+        typed JSON envelope listing every public integrator the
+        project has admitted to the curated registry — name, primary
+        URL, one-line description, category, X handle (without the
+        leading `@`), and public repo URL.
+
+        Sits alongside `/api/surfaces.json` on the same blueprint
+        (`surfaces_bp`). Together the two endpoints answer the two
+        meta-questions every integrator hits on day one — "what
+        surfaces can I call?" (`surfaces.json`) and "who else is
+        building on this?" (`ecosystem.json`).
+
+        **Five categories.** `product` (a public-facing app or
+        service built on MiroShark), `tool` (operator-facing
+        utilities), `integration` (services wiring MiroShark into
+        another system — MCP servers, Aeon skill packs, Bags-style
+        monitors), `agent` (autonomous bots running MiroShark sims),
+        `benchmark` (test / evaluation pipelines over the engine).
+        A consumer can scope its work to a category by filtering on
+        `category`.
+
+        **Static / hardcoded.** The catalog is a literal list at
+        module scope in `services/ecosystem_catalog.py`; it is NOT
+        auto-derived from a Markdown parse of `ECOSYSTEM.md` — the
+        Markdown shape is fragile (cells contain links, images, and
+        free text) and a silent parser drift would degrade the
+        public contract. Adding an integrator ships in two files: the
+        row in `ECOSYSTEM.md` and the entry in the catalog. A drift
+        test cross-checks the project `name` set between the two
+        sources so neither side can drift silently.
+
+        **Alphabetised by `name`.** Matches the ECOSYSTEM.md
+        ordering convention. Order is part of the published contract
+        — a consumer iterating the list sees the same order as a
+        human reader scanning the Markdown table.
+
+        **Schema versioned.** The response envelope carries
+        `schema_version`. v1 is the only published version; future
+        breaking changes bump the literal and a consumer can gate on
+        it.
+
+        **`ETag` derives from the catalog length** (`ecosystem-v1-<N>`).
+        Bumps when a new integrator is appended. A conditional
+        `If-None-Match` GET short-circuits to `304` so a polling
+        consumer doesn't pay the JSON body cost on every request.
+
+        **`Cache-Control: public, max-age=3600`** — the catalog only
+        changes when a new PR adds an integrator; one hour is a
+        tight bound on the lag between a ship and the catalog
+        reflecting it.
+
+        Always returns `200` (or `304`) — there is no input the
+        caller can supply that would produce a `404`. The catalog is
+        intentionally static so two consecutive calls return
+        bytewise-identical JSON.
+      responses:
+        "200":
+          description: Ecosystem registry envelope.
+          headers:
+            ETag:
+              schema: { type: string }
+              description: |
+                `ecosystem-v<schema>-<count>`. Bumps when a new
+                integrator is added; stable across consecutive
+                deployments of the same code revision.
+            Cache-Control:
+              schema: { type: string }
+              description: "`public, max-age=3600`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/EcosystemRegistry"
+        "304":
+          description: |
+            `If-None-Match` matched the current `ETag`; body omitted.
+            `ETag` and `Cache-Control` are still returned so the
+            consumer can refresh its cache TTL.
+
   /api/simulation/{simulation_id}/export:
     get:
       tags: [Export]
@@ -6239,6 +6327,103 @@ components:
             sim id placeholder — never contains a real host or admin
             token. References the entry's `endpoint` verbatim (drift-
             guarded by the unit test suite).
+
+    EcosystemEntry:
+      type: object
+      description: |
+        Single entry in the ecosystem registry returned by
+        `GET /api/ecosystem.json`. Describes one external project,
+        agent, or product publicly identified as built on MiroShark.
+
+        A consumer iterating the registry can filter by `category` to
+        scope its work, follow the `url` to the project's public
+        surface, or follow `repo` to the project's source when one
+        exists.
+      required:
+        - name
+        - url
+        - description
+        - category
+        - x_handle
+        - repo
+      properties:
+        name:
+          type: string
+          description: |
+            Display name in the project's own canonical
+            capitalisation (matches the row in `ECOSYSTEM.md`).
+            Unique across the registry — no two integrators can
+            claim the same name.
+        url:
+          type: string
+          format: uri
+          description: |
+            Primary public link. Repo URL when one exists; X profile
+            otherwise. Always `http://` or `https://`.
+        description:
+          type: string
+          maxLength: 160
+          description: One-line summary (≤160 chars) of what the integrator does and how it relates to MiroShark.
+        category:
+          type: string
+          enum: [product, tool, integration, agent, benchmark]
+          description: |
+            `product` — a public-facing app or service built on
+            MiroShark.
+            `tool` — operator-facing utilities.
+            `integration` — services wiring MiroShark into another
+            system (MCP servers, Aeon skill packs, Bags-style
+            monitors).
+            `agent` — autonomous bots running MiroShark sims.
+            `benchmark` — test / evaluation pipelines over the
+            engine.
+        x_handle:
+          type: [string, "null"]
+          description: |
+            X / Twitter handle without the leading `@`, or `null`
+            when the project has no public X presence. A consumer
+            building a feed off the registry can compose
+            `https://x.com/<x_handle>` directly.
+        repo:
+          type: [string, "null"]
+          format: uri
+          description: |
+            Public GitHub repo URL, or `null` when the project is
+            closed-source. Always a `https://github.com/...` URL
+            when present.
+
+    EcosystemRegistry:
+      type: object
+      description: |
+        Envelope returned by `GET /api/ecosystem.json`. Wraps the
+        full catalog of external integrators with a schema version
+        and a count so a consumer can probe the registry size before
+        iterating.
+      required:
+        - schema_version
+        - count
+        - ecosystem
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        count:
+          type: integer
+          minimum: 0
+          description: |
+            Number of integrators the registry currently carries.
+            Equals `len(ecosystem)`.
+        ecosystem:
+          type: array
+          description: |
+            Alphabetised list of every external project, agent, and
+            product publicly identified as built on MiroShark. Order
+            is part of the published contract — appending is a
+            non-breaking change; reordering existing entries is
+            breaking.
+          items:
+            $ref: "#/components/schemas/EcosystemEntry"
 
     SurfaceCatalog:
       type: object

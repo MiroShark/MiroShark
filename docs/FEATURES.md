@@ -56,6 +56,7 @@ Deep dive on every feature. One heading per feature, ordered roughly by when you
 | **Lineage Navigator** | `lineage` turns the `parent_simulation_id` pointer into a navigable parent/child graph |
 | **OriginTrail DKG Citation** | Opt-in: anchor scenario, consensus, and `reproduce.json` SHA-256 on the OriginTrail DKG as a verifiable Knowledge Asset |
 | **WaybackClaw Archive** | Opt-in: pin the finished snapshot to IPFS and broadcast a Nostr note via WaybackClaw in one POST |
+| **Ecosystem JSON Registry** | `GET /api/ecosystem.json` — machine-readable list of every external project, agent, and product built on MiroShark; alphabetised, categorised, ETag-cached |
 
 ## Smart Setup (Scenario Auto-Suggest)
 
@@ -686,6 +687,52 @@ The first endpoint that answers the meta-question every integrator hits on day o
 - **Closes the discoverability loop the README work started.** PRs #118 and #119 refined the README's first-touch discoverability for human readers; this endpoint adds the same for machine readers. Aeon's daily surface-count check no longer needs to parse FEATURES.md; an integrator querying a deployment to detect which surfaces are available no longer needs to scrape docs.
 
 Pure stdlib (~370 LoC across `services/surfaces_catalog.py` + `api/surfaces.py`); zero new dependencies — same posture as `platform_stats`, `surface_stats`, and every other pure-data module in this tree. The catalog itself is a literal list; no disk scan, no Neo4j, no outbound network. Always returns `200` (or `304`) — there is no input the caller can supply that produces a `404`.
+
+## Ecosystem JSON Registry
+
+Counterpart of [`ECOSYSTEM.md`](../ECOSYSTEM.md) for machine readers. `GET /api/ecosystem.json` returns the same curated list of integrators — every external project, agent, and product publicly identified as built on MiroShark — as a typed JSON envelope. A consumer never has to parse the Markdown table to discover what else is built on the platform.
+
+Sits alongside `/api/surfaces.json` on the same blueprint. Together the two endpoints answer the two meta-questions every integrator hits on day one — *"what surfaces can I call?"* (surfaces.json) and *"who else is building on this?"* (ecosystem.json).
+
+```json
+{
+  "success": true,
+  "data": {
+    "schema_version": "1",
+    "count": 13,
+    "ecosystem": [
+      {
+        "name": "AntFleet",
+        "url": "https://github.com/AntFleet/miroshark-bench",
+        "description": "Security and capability benchmark suite over the MiroShark engine — first integrator-product feedback loop.",
+        "category": "benchmark",
+        "x_handle": "AntFleetDev",
+        "repo": "https://github.com/AntFleet/miroshark-bench"
+      },
+      {
+        "name": "Capacitr",
+        "url": "https://capacitr.xyz/",
+        "description": "Capacity-planning platform with a public MiroShark integration spec citing the /x402/run surface by name.",
+        "category": "product",
+        "x_handle": "capacitr_xyz",
+        "repo": null
+      },
+      "..."
+    ]
+  }
+}
+```
+
+- **Five categories.** `product` (public-facing apps built on MiroShark — Capacitr, Echo Oracle, HivemindOS, RootAI, Xerg, ZER0), `tool` (operator-facing utilities — Crucible Sim), `integration` (MCP servers, Aeon skill packs, and Bags-style monitors that wire MiroShark into other systems — Monitor, Noelclaw, Signa), `agent` (autonomous bots running MiroShark sims — Blue Agent, SyntheticsAI), `benchmark` (test / evaluation pipelines over the engine — AntFleet). A consumer can scope its work to a category with `jq '.data.ecosystem[] | select(.category == "product")'`.
+- **Static and hardcoded — by design.** The catalog is a literal list at module scope in `services/ecosystem_catalog.py`; it is NOT auto-derived from a Markdown parse of `ECOSYSTEM.md` — the Markdown shape (cells contain logos, links, and free text) is fragile and a silent parser drift would degrade the public contract. Adding an integrator ships in two files: the row in `ECOSYSTEM.md` and the entry here. The drift-guard test in `test_unit_ecosystem_catalog.py` cross-checks the project `name` set between the two sources so neither side can drift silently.
+- **Alphabetised by `name`.** Matches the `ECOSYSTEM.md` ordering convention. A consumer iterating the list sees the same order as a human reader scanning the Markdown table. Order is part of the published contract — appending is a non-breaking change; reordering existing entries is breaking.
+- **`x_handle` without the leading `@`.** A consumer composing `https://x.com/<x_handle>` URLs (a feed, a follow-all script, a sentiment monitor) gets a clean URL with no string-trimming step. The value is `null` when the integrator has no public X presence.
+- **`repo` is a `https://github.com/…` URL or `null`.** Closed-source integrators surface a `null` rather than a fake URL — a consumer iterating only open-source entries can filter `select(.repo != null)` cleanly.
+- **One-hour cache, ETag-driven invalidation.** The catalog only changes when a new PR adds an integrator; `Cache-Control: public, max-age=3600` is a tight bound on the lag between a ship and the catalog reflecting it. The `ETag` is `ecosystem-v<schema>-<count>` — bumps when the catalog grows. A conditional `If-None-Match` GET short-circuits to `304 Not Modified` so a polling consumer doesn't pay the JSON body cost between ships.
+- **Stable shape, schema-versioned.** The envelope is `{schema_version, count, ecosystem}`; v1 is the only published version. The per-entry field set (`name`, `url`, `description`, `category`, `x_handle`, `repo`) is locked — new fields can be appended without bumping the schema; existing field types or removals bump `schema_version`.
+- **Closes the ecosystem discoverability loop.** Four ecosystem PRs landed in a single afternoon (HivemindOS / Echo Oracle / Capacitr / SyntheticsAI on 2026-06-02); the ecosystem is growing faster than the tooling that serves it. This endpoint gives integrators building on integrators a typed API to start from.
+
+Pure stdlib (~250 LoC across `services/ecosystem_catalog.py` + the new route on `api/surfaces.py`); zero new dependencies — same posture as `surfaces_catalog`, `platform_stats`, `surface_stats`, and every other pure-data module in this tree. The catalog itself is a literal list; no disk scan, no Markdown parse, no Neo4j, no outbound network. Always returns `200` (or `304`) — there is no input the caller can supply that produces a `404`.
 
 ## BibTeX Academic Citation
 

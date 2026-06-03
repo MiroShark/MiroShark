@@ -356,6 +356,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 127,
         "example_curl": "curl -fsSL 'https://your-host/api/surfaces.json'",
     },
+    {
+        "key": "ecosystem_catalog",
+        "endpoint": "/api/ecosystem.json",
+        "method": "GET",
+        "type": "platform",
+        "description": "Machine-readable ecosystem registry — every public project, agent, product built on MiroShark.",
+        "added_in_pr": 145,
+        "example_curl": "curl -fsSL 'https://your-host/api/ecosystem.json'",
+    },
 ]
 
 

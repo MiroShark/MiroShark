@@ -14,6 +14,8 @@
 
 These are the projects we know of that run MiroShark, extend it, or integrate with the engine. The list is curated from operator self-disclosures and public mentions — it isn't exhaustive, and not every fork is listed here.
 
+> Machine-readable: `GET /api/ecosystem.json` returns the same registry as a typed JSON envelope.
+
 | Logo | Project | Links |
 |------|---------|-------|
 | <img src="https://pbs.twimg.com/profile_images/2055896281751633920/NeawiT3G_400x400.png" alt="AntFleet" width="40" /> | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) · [miroshark-bench](https://github.com/AntFleet/miroshark-bench) |
