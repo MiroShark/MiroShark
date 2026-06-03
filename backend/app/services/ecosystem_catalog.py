@@ -181,6 +181,14 @@ _CATALOG: List[Dict[str, Any]] = [
         "repo": "https://github.com/codexvritra/signa-miroshark-skills",
     },
     {
+        "name": "Sparkleware",
+        "url": "https://sparkleware.fun",
+        "description": "Discovery registry that indexes MiroShark-on-Aeon skill packs and bundles them into an installable kit.",
+        "category": "integration",
+        "x_handle": "sparklewarefun",
+        "repo": None,
+    },
+    {
         "name": "SyntheticsAI",
         "url": "https://syntheticuser.org",
         "description": "Synthetic-user pipeline that runs MiroShark sims as the underlying behavioural engine.",
