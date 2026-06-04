@@ -1209,6 +1209,42 @@ export const getEcosystem = async () => {
 }
 
 /**
+ * Build the absolute URL of the per-project stats endpoint.
+ * Platform-level surface — describes one project's worth of
+ * published simulations, not the platform aggregate.
+ *
+ * @param {string} projectId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getProjectStatsUrl = (projectId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/project/${encodeURIComponent(projectId)}/stats`
+}
+
+/**
+ * Fetch per-project aggregate stats — the per-project sibling of
+ * `/api/stats`. Returns the parsed envelope (`schema_version` +
+ * `project_id` + `total_sims` + ...) on 200; unknown project_id
+ * returns an all-zero envelope, not a 404. Throws on 400 (malformed
+ * project_id) or transport errors.
+ *
+ * @param {string} projectId
+ * @returns {Promise<object>}
+ */
+export const getProjectStats = async (projectId) => {
+  const res = await fetch(getProjectStatsUrl(projectId), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    throw new Error(`project stats fetch failed: ${res.status}`)
+  }
+  const body = await res.json()
+  return body?.data ?? body
+}
+
+/**
  * Build the absolute URL of the reproducibility config blob for a
  * simulation.
  *

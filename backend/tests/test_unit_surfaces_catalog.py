@@ -177,6 +177,8 @@ def test_catalog_includes_platform_stats_surfaces():
     keys = {entry["key"] for entry in surfaces_catalog.get_surfaces_catalog()}
     assert "platform_stats" in keys
     assert "platform_stats_badge" in keys
+    # Per-project sibling — same discoverability requirement.
+    assert "project_stats" in keys
 
 
 def test_catalog_includes_polymarket_signal_and_volatility():

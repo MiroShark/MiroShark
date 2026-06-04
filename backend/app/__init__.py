@@ -136,7 +136,7 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp, countries_bp, stats_bp, surfaces_bp
+    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp, countries_bp, stats_bp, surfaces_bp, project_stats_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
@@ -183,6 +183,11 @@ def create_app(config_class=Config):
     # short, oEmbed-style discovery surface that an integrator can
     # query without knowing about any per-sim namespace.
     app.register_blueprint(surfaces_bp, url_prefix='/api')
+    # project_stats_bp serves /api/project/<project_id>/stats — the
+    # per-project sibling of /api/stats. Pinned at /api/project so the
+    # URL stays the canonical place a per-project surface lives even
+    # as the platform-stats namespace grows.
+    app.register_blueprint(project_stats_bp, url_prefix='/api/project')
     
     # Health check
     @app.route('/health')

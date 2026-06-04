@@ -57,3 +57,11 @@ MIROSHARK_LOG_LEVEL=info      # debug|info|warn — controls event verbosity
 ```
 
 By default, only response previews (200 chars) are logged. Set `MIROSHARK_LOG_PROMPTS=true` to capture full prompts and responses for deep debugging.
+
+## Aggregate metrics
+
+For higher-level "is this MiroShark instance healthy?" monitoring, three platform-aggregate endpoints describe the whole deployment rather than a single simulation:
+
+- `GET /api/stats` — every public, completed simulation rolled into a single envelope: `total_sims`, `consensus_distribution`, `avg_confidence_pct`, `total_surface_views`, `unique_projects`, `newest_sim_id`. Cached 60 s with an ETag, so a Grafana / Datadog scrape can poll once a minute cheaply.
+- `GET /api/stats/badge.svg` — flat Shields.io-style pill (`MiroShark | N simulations`) for any README, Substack header, or status page that needs a live activity indicator.
+- `GET /api/project/<project_id>/stats` — same envelope shape as `/api/stats` but filtered to a single `project_id`, plus a `quality_distribution` of `excellent / good / fair / poor` buckets. The operator-side surface for monitoring one workspace across many published sims — pull the same numbers Aeon's daily push-recap derives client-side. Unknown `project_id` returns an all-zero envelope (not 404); malformed `project_id` returns 400.

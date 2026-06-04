@@ -57,6 +57,7 @@ Deep dive on every feature. One heading per feature, ordered roughly by when you
 | **OriginTrail DKG Citation** | Opt-in: anchor scenario, consensus, and `reproduce.json` SHA-256 on the OriginTrail DKG as a verifiable Knowledge Asset |
 | **WaybackClaw Archive** | Opt-in: pin the finished snapshot to IPFS and broadcast a Nostr note via WaybackClaw in one POST |
 | **Ecosystem JSON Registry** | `GET /api/ecosystem.json` — machine-readable list of every external project, agent, and product built on MiroShark; alphabetised, categorised, ETag-cached |
+| **Per-Project Simulation Statistics** | `GET /api/project/<project_id>/stats` — per-project sibling of `/api/stats`; same envelope filtered to one workspace + a `quality_distribution` bucket count |
 
 ## Smart Setup (Scenario Auto-Suggest)
 
@@ -733,6 +734,45 @@ Sits alongside `/api/surfaces.json` on the same blueprint. Together the two endp
 - **Closes the ecosystem discoverability loop.** Four ecosystem PRs landed in a single afternoon (HivemindOS / Echo Oracle / Capacitr / SyntheticsAI on 2026-06-02); the ecosystem is growing faster than the tooling that serves it. This endpoint gives integrators building on integrators a typed API to start from.
 
 Pure stdlib (~250 LoC across `services/ecosystem_catalog.py` + the new route on `api/surfaces.py`); zero new dependencies — same posture as `surfaces_catalog`, `platform_stats`, `surface_stats`, and every other pure-data module in this tree. The catalog itself is a literal list; no disk scan, no Markdown parse, no Neo4j, no outbound network. Always returns `200` (or `304`) — there is no input the caller can supply that produces a `404`.
+
+## Per-Project Simulation Statistics
+
+The per-project sibling of [`/api/stats`](#platform-aggregate-statistics). The platform aggregate answers *"how is MiroShark doing?"* in one number. `GET /api/project/<project_id>/stats` answers the operator-facing version: *"how is **this project** doing?"* — same envelope shape, scoped to one workspace, plus a per-bucket quality distribution that's only useful at the per-project granularity.
+
+An operator who has published twenty sims across three named projects can already pull the platform total. Until now the per-project slice required fetching `/api/stats` plus the public gallery and filtering client-side. One call now returns the same numbers scoped to a single `project_id`.
+
+```json
+{
+  "success": true,
+  "data": {
+    "schema_version": "1",
+    "project_id": "proj_research_q2",
+    "total_sims": 8,
+    "published_sims": 8,
+    "consensus_distribution": {
+      "bullish": 4, "neutral": 2, "bearish": 2,
+      "bullish_pct": 50.0, "neutral_pct": 25.0, "bearish_pct": 25.0
+    },
+    "avg_confidence_pct": 61.3,
+    "quality_distribution": {
+      "excellent": 6, "good": 2, "fair": 0, "poor": 0
+    },
+    "total_surface_views": 1284,
+    "newest_sim_id": "sim_a91c2b3d4e5f",
+    "newest_sim_created_at": "2026-06-03T18:42:11.103928"
+  }
+}
+```
+
+- **Same gate as the platform aggregate.** A sim contributes when `is_public == true` AND `status == "completed"` AND `state.project_id == project_id`. Two surfaces, one source of truth — a sim counted in the platform aggregate is also counted in its project aggregate, and vice versa. The `published_sims` field aliases `total_sims` (every counted sim is publish-gated); both names are exposed so a caption can pick whichever phrasing reads better in context.
+- **Stance derivation matches the per-sim signal.json byte-for-byte.** The same plurality + tie-break rules (`bullish > bearish > neutral`) that turn a sim's final belief split into a `direction` on the per-sim surface produce the per-project counts here. A sim labelled Bullish on its `signal.json` lands in the project's `bullish` bucket.
+- **`quality_distribution` is the new field.** The platform aggregate doesn't bucket quality — the corpus is too heterogeneous for the distribution to be useful. Inside one project the distribution *is* useful: an operator wants to see *"6 excellent, 2 good, 0 fair, 0 poor"* to know their workflow is producing high-quality sims, not just a lot of them. The four buckets match the `quality.health` values every other surface already reads; sims whose quality file is missing or carries an unrecognised value are excluded from the distribution but still counted in `total_sims`, so the four-bucket sum may be less than `total_sims`, never greater.
+- **`project_id` is the only filter.** `SimulationState` carries no operator / created-by field — `project_id` is the closest stable identifier and the same field used as a routing key elsewhere (file downloads, graph endpoints). Case-sensitive exact match against `state.project_id`; partial matches and case-insensitive matches are not supported, by design, because they would silently merge distinct workspaces.
+- **Unknown `project_id` → all-zero envelope, not 404.** Absence of a project is a valid state (the project hasn't shipped its first public sim yet, or every sim is still running). A consumer rendering *"N sims published for project X"* doesn't need to special-case the fresh-project case.
+- **Malformed `project_id` → 400.** The path parameter must match `[A-Za-z0-9_.-]{1,120}` — same character set used as a routing identifier elsewhere. Anything else returns `400` before the scan runs (path-traversal probes, control characters, oversized inputs all rejected at the boundary).
+- **One scan, 60-second per-project cache.** A module-level cache keyed on the `(sim_root, project_id)` pair so two different projects on the same deployment don't share an entry. Same TTL as `/api/stats` so a dashboard polling both surfaces sees consistent freshness. The response carries `Cache-Control: public, max-age=60` and a short `ETag` `"project-<total_sims>-<newest_sim_id_prefix>"` distinct from the platform ETag; a conditional `If-None-Match` GET short-circuits to `304 Not Modified` without re-serialising the body.
+
+Pure stdlib (`os` + `json` + `re` + `time` + `threading`, ~460 LoC in `app/services/project_stats.py`); zero new dependencies — same posture as `platform_stats`, `signal_service`, and every other aggregate module. The scan walks `WONDERWALL_SIMULATION_DATA_DIR` directly; no Neo4j, no LLM, no outbound network.
 
 ## BibTeX Academic Citation
 

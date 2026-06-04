@@ -3245,6 +3245,117 @@ paths:
             `ETag` and `Cache-Control` are still returned so the
             consumer can refresh its cache TTL.
 
+  /api/project/{project_id}/stats:
+    get:
+      tags: [Platform]
+      summary: Per-project aggregate stats across one operator's published simulations.
+      description: |
+        Per-project sibling of `/api/stats`. Collapses every public,
+        completed simulation whose `state.project_id` matches
+        `project_id` exactly into the same envelope shape — total
+        sim count, consensus distribution (bullish / neutral /
+        bearish counts + percentages), average `confidence_pct`,
+        total surface-views, and newest-sim metadata — plus a
+        per-project addition: a `quality_distribution` bucketing
+        sims into `excellent / good / fair / poor`.
+
+        Closes the operator-side gap `/api/stats` leaves open. An
+        operator who has published twenty sims across three named
+        projects can already see the platform total. This endpoint
+        lets them see *"how is project X performing specifically?"*
+        in one call instead of fetching `/api/stats` and the public
+        gallery and filtering client-side.
+
+        **Same gate as `/api/stats`.** A sim contributes only when
+        `is_public == true` AND `status == "completed"`. Two surfaces,
+        one source of truth — a sim counted in the platform aggregate
+        is also counted in its project aggregate, and vice versa.
+
+        **Stance derivation matches the per-sim signal.json
+        byte-for-byte.** The same plurality + tie-break rules
+        (`bullish > bearish > neutral`) that turn a sim's final
+        belief split into a `direction` on the per-sim surface
+        produce the per-project counts here.
+
+        **`quality_distribution` reuses `quality.health`.** The four
+        recognised buckets are `excellent / good / fair / poor` — the
+        same values the per-sim quality and signal_service surfaces
+        already read. A sim whose quality file is missing or carries
+        an unrecognised value is excluded from the distribution but
+        still counted in `total_sims` (so the four-bucket sum can be
+        less than `total_sims`, never greater).
+
+        **Unknown `project_id` → all-zero envelope, not 404.** Absence
+        of a project is a valid state (the project hasn't shipped its
+        first public sim yet, or every sim is still running). A
+        consumer rendering *"N sims published for project X"* doesn't
+        need to special-case the fresh-project case.
+
+        **Malformed `project_id` → 400.** The path parameter must
+        match `[A-Za-z0-9_.\-]{1,120}` — same character set used
+        elsewhere as a routing identifier. Anything else returns
+        `400` before the scan runs.
+
+        **Cached for 60 seconds per `(sim_root, project_id)` pair.**
+        Matches the `/api/stats` cache TTL so a dashboard polling
+        both surfaces sees consistent freshness. The response carries
+        `Cache-Control: public, max-age=60` and a short `ETag`
+        derived from `total_sims` + `newest_sim_id`; a conditional
+        `If-None-Match` GET short-circuits to `304 Not Modified`.
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+            pattern: "^[A-Za-z0-9_.\\-]{1,120}$"
+            example: "proj_research_q2"
+          description: |
+            Stable project identifier — case-sensitive exact match
+            against the `project_id` recorded in each sim's
+            `state.json`. The same field elsewhere routes
+            project-scoped graph + file-download endpoints.
+      responses:
+        "200":
+          description: Per-project stats envelope.
+          headers:
+            ETag:
+              schema: { type: string }
+              description: |
+                `"project-<total_sims>-<newest_sim_id_prefix>"`.
+                Stable across the 60-second cache window; bumps when
+                a new sim is published into the project.
+            Cache-Control:
+              schema: { type: string }
+              description: "`public, max-age=60`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/ProjectStats"
+        "304":
+          description: |
+            `If-None-Match` matched the current `ETag`; body omitted.
+            `ETag` and `Cache-Control` are still returned so the
+            consumer can refresh its cache TTL.
+        "400":
+          description: |
+            `project_id` does not match the allowed pattern. Body is
+            the standard error envelope `{"success": false,
+            "error": "..."}`.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, error]
+                properties:
+                  success: { type: boolean, enum: [false] }
+                  error: { type: string }
+
   /api/simulation/{simulation_id}/export:
     get:
       tags: [Export]
@@ -6240,6 +6351,174 @@ components:
             The `created_at` timestamp paired with `newest_sim_id`,
             or `null` on an empty deployment. ISO-8601 — emitted
             verbatim from the underlying sim's `state.json`.
+
+    ProjectStats:
+      type: object
+      description: |
+        Per-project aggregate envelope returned by
+        `/api/project/<project_id>/stats`. Collapses every simulation
+        under `WONDERWALL_SIMULATION_DATA_DIR` whose
+        `state.project_id` matches the requested `project_id` exactly
+        AND satisfies `is_public == true` AND `status == "completed"`.
+
+        Same envelope shape as `PlatformStats` (the platform
+        aggregate) with three differences:
+
+        1. Adds `project_id` to the envelope so the response is
+           self-describing.
+        2. Adds `quality_distribution` — a four-bucket count of
+           `excellent / good / fair / poor` quality.health values.
+           Useful inside one project, where the population is
+           homogeneous enough for the distribution to be meaningful;
+           omitted from `PlatformStats` because the corpus is too
+           heterogeneous for the distribution to be useful there.
+        3. Drops `unique_projects` (always `1` for a per-project
+           response).
+
+        Two consecutive calls inside the 60-second cache window
+        return bytewise-identical JSON. An unknown `project_id` (no
+        matching sims) returns a fully-zeroed envelope, not a 404 —
+        absence is a valid state.
+      required:
+        - schema_version
+        - project_id
+        - total_sims
+        - published_sims
+        - consensus_distribution
+        - avg_confidence_pct
+        - quality_distribution
+        - total_surface_views
+        - newest_sim_id
+        - newest_sim_created_at
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        project_id:
+          type: string
+          description: |
+            Echo of the requested project identifier. Stable across
+            consecutive calls; consumers can index responses by this
+            field without re-deriving it from the URL.
+        total_sims:
+          type: integer
+          minimum: 0
+          description: |
+            Count of simulations under this project satisfying
+            `is_public == true` AND `status == "completed"`.
+        published_sims:
+          type: integer
+          minimum: 0
+          description: |
+            Alias of `total_sims` (every counted sim is
+            publish-gated). Exposed under both names so a consumer
+            building a dashboard caption can pick whichever phrasing
+            reads better.
+        consensus_distribution:
+          type: object
+          description: |
+            Per-stance counts + percentages across every counted
+            simulation in the project. Same plurality + tie-break
+            rules as `PlatformStats.consensus_distribution`.
+          required:
+            - bullish
+            - neutral
+            - bearish
+            - bullish_pct
+            - neutral_pct
+            - bearish_pct
+          properties:
+            bullish:
+              type: integer
+              minimum: 0
+              description: Number of sims whose plurality stance is Bullish.
+            neutral:
+              type: integer
+              minimum: 0
+              description: Number of sims whose plurality stance is Neutral.
+            bearish:
+              type: integer
+              minimum: 0
+              description: Number of sims whose plurality stance is Bearish.
+            bullish_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `bullish / total_sims * 100` rounded to one decimal.
+                `0.0` when `total_sims == 0`.
+            neutral_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `neutral / total_sims * 100` rounded to one decimal.
+            bearish_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `bearish / total_sims * 100` rounded to one decimal.
+        avg_confidence_pct:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: |
+            Mean of every contributing sim's per-sim
+            `confidence_pct`, rounded to one decimal. `0.0` when no
+            sim in the project contributes a derivable signal.
+        quality_distribution:
+          type: object
+          description: |
+            Per-bucket count of `quality.health` values across
+            contributing sims. The four recognised buckets match
+            what `signal_service` and the per-sim quality surfaces
+            already read; sims whose quality file is missing or
+            carries an unrecognised value are excluded here but
+            still counted in `total_sims`, so the four-bucket sum
+            may be less than `total_sims`, never greater.
+          required: [excellent, good, fair, poor]
+          properties:
+            excellent:
+              type: integer
+              minimum: 0
+              description: Sims with `quality.health == "excellent"`.
+            good:
+              type: integer
+              minimum: 0
+              description: Sims with `quality.health == "good"`.
+            fair:
+              type: integer
+              minimum: 0
+              description: Sims with `quality.health == "fair"`.
+            poor:
+              type: integer
+              minimum: 0
+              description: Sims with `quality.health == "poor"`.
+        total_surface_views:
+          type: integer
+          minimum: 0
+          description: |
+            Sum of every recognised counter across every contributing
+            sim's `surface-stats.json`. Same `SURFACE_KEYS` whitelist
+            the platform aggregate uses.
+        newest_sim_id:
+          type: [string, "null"]
+          description: |
+            Identifier of the contributing sim with the
+            lexicographically largest `created_at` ISO timestamp, or
+            `null` when the project has no contributing sims.
+        newest_sim_created_at:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            The `created_at` timestamp paired with `newest_sim_id`,
+            or `null` when the project has no contributing sims.
 
     SurfaceCatalogEntry:
       type: object

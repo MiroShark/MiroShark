@@ -346,6 +346,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 105,
         "example_curl": "curl -fsSL 'https://your-host/api/stats/badge.svg' -o platform-badge.svg",
     },
+    {
+        "key": "project_stats",
+        "endpoint": "/api/project/<project_id>/stats",
+        "method": "GET",
+        "type": "platform",
+        "description": "Per-project aggregate stats — total_sims, consensus + quality distributions, surface_views.",
+        "added_in_pr": 147,
+        "example_curl": "curl -fsSL 'https://your-host/api/project/<project_id>/stats'",
+    },
     # ── Meta — the catalog endpoint itself ───────────────────────────
     {
         "key": "surfaces_catalog",

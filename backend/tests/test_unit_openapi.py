@@ -115,6 +115,10 @@ _BLUEPRINT_PREFIXES = {
     # of every share / platform surface. Mounted at /api with no sub-prefix
     # so the discovery URL stays short — see app/__init__.py / app/api/surfaces.py.
     "surfaces_bp":       "/api",
+    # project_stats_bp serves /api/project/<project_id>/stats — the
+    # per-project sibling of /api/stats. Same file as stats_bp; second
+    # blueprint so the URL prefix stays operator-facing — see app/api/stats.py.
+    "project_stats_bp":  "/api/project",
 }
 
 
