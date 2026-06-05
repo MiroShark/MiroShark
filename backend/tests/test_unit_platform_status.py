@@ -14,8 +14,8 @@ Covers the properties ``GET /api/status.json`` depends on:
      window count but still bump ``total_sims`` + ``last_completed_at``.
   5. ``last_completed_at`` is the maximum ``updated_at`` across all
      completed sims.
-  6. ``total_sims`` counts every sim on disk — public + private,
-     completed + in-flight + failed.
+  6. ``total_sims`` counts only public + completed sims (the probe is
+     unauthenticated, so it must not leak private/in-flight volume).
   7. ``surface_count`` is taken verbatim from the injected argument
      (the source of truth is the catalog, not a re-implementation).
   8. ``check_at`` is an ISO-8601 UTC string ending in ``Z``.
@@ -125,7 +125,8 @@ def test_running_sims_increment_queue_depth(tmp_path: Path):
 
     payload = platform_status.build_status(str(tmp_path))
     assert payload["queue_depth"] == 2
-    assert payload["total_sims"] == 4
+    # total_sims counts only public + completed sims — here just sim-done.
+    assert payload["total_sims"] == 1
 
 
 def test_status_match_is_case_insensitive(tmp_path: Path):
@@ -245,17 +246,20 @@ def test_last_completed_at_is_none_when_no_completions(tmp_path: Path):
     assert payload["last_completed_at"] is None
 
 
-def test_total_sims_counts_every_state_file(tmp_path: Path):
-    """``total_sims`` is the cumulative throughput — public + private,
-    completed + in-flight + failed."""
+def test_total_sims_counts_only_public_completed(tmp_path: Path):
+    """``total_sims`` counts only public + completed sims — the same
+    ``is_public AND status == "completed"`` filter platform_stats uses.
+    The probe is unauthenticated, so private / in-flight / failed sims
+    must not leak into the cumulative count an anonymous caller reads."""
     _write_sim(tmp_path, "sim-pub", status="completed", is_public=True)
     _write_sim(tmp_path, "sim-priv", status="completed", is_public=False)
-    _write_sim(tmp_path, "sim-run", status="running")
-    _write_sim(tmp_path, "sim-failed", status="failed")
-    _write_sim(tmp_path, "sim-stopped", status="stopped")
+    _write_sim(tmp_path, "sim-run", status="running", is_public=True)
+    _write_sim(tmp_path, "sim-failed", status="failed", is_public=True)
+    _write_sim(tmp_path, "sim-priv-run", status="running", is_public=False)
 
     payload = platform_status.build_status(str(tmp_path))
-    assert payload["total_sims"] == 5
+    # Only sim-pub is both public and completed.
+    assert payload["total_sims"] == 1
 
 
 # ── Property 5 — surface_count is taken verbatim ─────────────────────────
@@ -320,8 +324,10 @@ def test_corrupt_state_json_is_skipped(tmp_path: Path):
 
     payload = platform_status.build_status(str(tmp_path))
     assert payload["ok"] is True
+    # The valid sim is processed (queue_depth proves it); it's running,
+    # not public+completed, so it doesn't count toward total_sims.
     assert payload["queue_depth"] == 1
-    assert payload["total_sims"] == 1
+    assert payload["total_sims"] == 0
 
 
 def test_dotfile_directories_are_skipped(tmp_path: Path):

@@ -106,6 +106,15 @@ def create_app(config_class=Config):
         if request.path in ['/api/openapi.json', '/api/openapi.yaml', '/api/docs']:
             return
 
+        # Exempt the platform status probe. Unlike its gated siblings
+        # (/api/stats, /api/surfaces.json), this endpoint exists to be polled
+        # by external, keyless status monitors (Upptime, BetterUptime,
+        # Statuspage.io) — requiring the internal key would defeat its purpose.
+        # total_sims is filtered to public+completed in platform_status so an
+        # anonymous caller can never read the volume of private/in-flight sims.
+        if request.path == '/api/status.json':
+            return
+
         # Only protect /api/* routes
         if not request.path.startswith('/api/'):
             return

@@ -11,7 +11,7 @@ and is it making forward progress?"*
 This module collapses that question into a single envelope — pending
 sim count (in-flight work), completed-in-the-last-24h (forward
 progress), last-completed timestamp (most recent heartbeat), total
-sims (cumulative throughput), surface count (capability surface
+sims (cumulative public throughput), surface count (capability surface
 breadth), and a literal ``ok: true`` so a status-page check that just
 matches on the body works on day one. The new ``GET /api/status.json``
 endpoint reads from here; external monitors (Upptime, BetterUptime,
@@ -37,11 +37,13 @@ Design notes
   because a completed sim's updated_at is the completion timestamp —
   ``simulation_runner`` writes it on terminal-state transitions.
 
-* **Total sims counts everything on disk** — public + private,
-  completed + in-flight + failed. This is the cumulative throughput
-  number an operator wants to see (*"how many sims has the engine ever
-  run?"*) and it does not duplicate ``platform_stats.total_sims``
-  which is filtered to public + completed.
+* **Total sims counts only public + completed sims** — the same
+  ``is_public AND status == "completed"`` filter ``platform_stats``
+  applies. This endpoint is unauthenticated (it serves external status
+  monitors), so the cumulative count must not leak the volume of
+  private or in-flight/failed sims to anonymous callers. ``queue_depth``
+  and ``completed_24h`` stay whole-corpus liveness signals — they
+  convey forward progress, not cumulative private-corpus size.
 
 * **Surface count is injected.** The catalog is the source of truth
   for the surface count; rather than re-implementing the count here,
@@ -216,9 +218,16 @@ def build_status(
         if not isinstance(state, dict):
             continue
 
-        total_sims += 1
-
         status_value = str(state.get("status", "") or "").lower()
+
+        # total_sims counts only public + completed sims — the same
+        # ``is_public AND status == "completed"`` filter platform_stats
+        # applies. /api/status.json is unauthenticated (it serves external
+        # status monitors), so the cumulative count must not leak the volume
+        # of private or in-flight/failed sims to anonymous callers.
+        # queue_depth and completed_24h stay whole-corpus liveness signals.
+        if bool(state.get("is_public", False)) and status_value == "completed":
+            total_sims += 1
 
         if status_value == "running":
             queue_depth += 1

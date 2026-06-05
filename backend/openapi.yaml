@@ -3374,8 +3374,8 @@ paths:
         status pages and automated probes: `queue_depth` (in-flight
         sims), `completed_24h` (forward progress over the last 24
         hours), `last_completed_at` (most recent completion heartbeat),
-        `total_sims` (cumulative throughput across the lifetime of
-        the deployment), `surface_count` (capability surface breadth,
+        `total_sims` (cumulative count of public, completed sims),
+        `surface_count` (capability surface breadth,
         sourced from the surfaces catalog), `check_at` (the ISO-8601
         UTC timestamp this response was generated), and a literal
         `ok: true` so a status-page template that only body-matches
@@ -3386,11 +3386,11 @@ paths:
         The endpoint is added to the `internal_auth_guard` allow-list
         alongside `/api/openapi.json` and `/api/docs`.
 
-        **`total_sims` is cumulative — public + private + in-flight +
-        failed.** Distinct from `/api/stats.total_sims` (filtered to
-        public + completed). The probe answers a different question:
-        how much has the engine ever processed, not how much
-        successful corpus is visible to readers.
+        **`total_sims` is filtered to public + completed** — the same
+        filter `/api/stats.total_sims` uses. Because this probe is
+        unauthenticated, the count deliberately excludes private and
+        in-flight/failed sims so an anonymous caller can't read the
+        volume of non-public work.
 
         **`completed_24h` uses `updated_at`, not `created_at`.** A
         sim created weeks ago but completed in the last 24 hours
@@ -6448,9 +6448,10 @@ components:
           recent heartbeat" timestamp.
 
         The remaining fields round out the envelope: `total_sims` is
-        the cumulative lifetime count (public + private + in-flight +
-        failed); `surface_count` is the capability surface breadth
-        sourced from `surfaces_catalog.catalog_count()`; `check_at`
+        the cumulative count of public, completed sims (filtered like
+        `PlatformStats.total_sims`, since this probe is unauthenticated);
+        `surface_count` is the capability surface breadth sourced from
+        `surfaces_catalog.catalog_count()`; `check_at`
         is the ISO-8601 UTC timestamp the response was generated;
         `ok` is a literal `true` so a status-page template that only
         body-matches has a stable anchor.
@@ -6505,11 +6506,12 @@ components:
           type: integer
           minimum: 0
           description: |
-            Cumulative lifetime sim count — public + private +
-            in-flight + failed. Distinct from `PlatformStats.total_sims`
-            (filtered to public + completed). Useful for "how much has
-            the engine processed?" rather than "how much successful
-            corpus is visible?"
+            Cumulative count of public, completed sims — the same
+            `is_public AND status == "completed"` filter
+            `PlatformStats.total_sims` uses. Because `/api/status.json`
+            is unauthenticated, private and in-flight/failed sims are
+            deliberately excluded so an anonymous caller can't read the
+            volume of non-public work.
         surface_count:
           type: integer
           minimum: 0

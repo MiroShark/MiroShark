@@ -179,3 +179,25 @@ def test_openapi_docs_without_internal_key():
         # May be 200 (if exempt) or 401 (if protected)
         # This test documents current behavior
         assert response.status_code in [200, 401]
+
+
+def test_status_probe_without_internal_key():
+    """The platform status probe MUST stay reachable without the internal
+    key even when one is configured — it exists to be polled by external,
+    keyless status monitors. Guards against a future change re-gating it.
+    Unlike its siblings (/api/stats, /api/surfaces.json), it is the one
+    deliberately-public data endpoint; total_sims is filtered to
+    public+completed in platform_status so this leaks no private volume."""
+    # Set internal key to enable the auth guard for every other /api/* route.
+    os.environ['MIROSHARK_INTERNAL_KEY'] = 'test-secret-key'
+
+    app = create_app()
+    app.config['TESTING'] = True
+
+    with app.test_client() as client:
+        response = client.get('/api/status.json')
+        # Must NOT be gated (401) or fail-closed (503) — the probe is exempt.
+        assert response.status_code == 200, response.status_code
+        body = response.get_json()
+        assert body['success'] is True
+        assert body['data']['ok'] is True
