@@ -1209,6 +1209,41 @@ export const getEcosystem = async () => {
 }
 
 /**
+ * Build the absolute URL of the platform health probe.
+ * Platform-level surface — answers "is the platform up and
+ * completing sims?" for external status monitors. Distinct from
+ * `/api/stats` (analytics aggregate); this one is the health check.
+ *
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getPlatformStatusUrl = (origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/status.json`
+}
+
+/**
+ * Fetch the platform health envelope. Returns the parsed payload
+ * (`ok` + `queue_depth` + `completed_24h` + `last_completed_at` +
+ * `total_sims` + `surface_count` + `check_at`) on 200; throws on
+ * transport errors. Never 404s — an empty deployment still returns a
+ * fully-zeroed envelope with `ok: true`.
+ *
+ * @returns {Promise<{ok: boolean, schema_version: string, queue_depth: number, completed_24h: number, last_completed_at: (string|null), total_sims: number, surface_count: number, check_at: string}>}
+ */
+export const getPlatformStatus = async () => {
+  const res = await fetch(getPlatformStatusUrl(), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    throw new Error(`platform status fetch failed: ${res.status}`)
+  }
+  const body = await res.json()
+  return body?.data ?? body
+}
+
+/**
  * Build the absolute URL of the per-project stats endpoint.
  * Platform-level surface — describes one project's worth of
  * published simulations, not the platform aggregate.

@@ -136,7 +136,7 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp, countries_bp, stats_bp, surfaces_bp, project_stats_bp
+    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp, countries_bp, stats_bp, surfaces_bp, project_stats_bp, status_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
@@ -188,6 +188,11 @@ def create_app(config_class=Config):
     # URL stays the canonical place a per-project surface lives even
     # as the platform-stats namespace grows.
     app.register_blueprint(project_stats_bp, url_prefix='/api/project')
+    # status_bp serves /api/status.json — the platform health probe
+    # that external status monitors (Upptime, BetterUptime, Statuspage)
+    # consume. Mounted at /api (no sub-prefix) so the URL stays the
+    # short, well-known probe path a status-page template can drop in.
+    app.register_blueprint(status_bp, url_prefix='/api')
     
     # Health check
     @app.route('/health')

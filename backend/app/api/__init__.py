@@ -58,3 +58,10 @@ from .stats import project_stats_bp  # noqa: E402, F401
 # exposes. Platform-level sibling of stats_bp. See app/api/surfaces.py.
 from .surfaces import surfaces_bp  # noqa: E402, F401
 
+# status_bp serves /api/status.json — the platform health probe.
+# Sibling of stats_bp + surfaces_bp; answers "is the platform up and
+# completing sims?" for external status monitors (Upptime,
+# BetterUptime, Statuspage.io) without leaking the analytics envelope
+# /api/stats returns. See app/api/status.py.
+from .status import status_bp  # noqa: E402, F401
+

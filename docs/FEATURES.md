@@ -58,6 +58,7 @@ Deep dive on every feature. One heading per feature, ordered roughly by when you
 | **WaybackClaw Archive** | Opt-in: pin the finished snapshot to IPFS and broadcast a Nostr note via WaybackClaw in one POST |
 | **Ecosystem JSON Registry** | `GET /api/ecosystem.json` — machine-readable list of every external project, agent, and product built on MiroShark; alphabetised, categorised, ETag-cached |
 | **Per-Project Simulation Statistics** | `GET /api/project/<project_id>/stats` — per-project sibling of `/api/stats`; same envelope filtered to one workspace + a `quality_distribution` bucket count |
+| **Platform Status Probe** | `GET /api/status.json` — *"is this MiroShark instance up and completing sims?"* for external status monitors (Upptime, BetterUptime, Statuspage); literal `ok: true` + `queue_depth` + `completed_24h` + `last_completed_at` + lifetime `total_sims` + catalog `surface_count` + ISO `check_at` |
 
 ## Smart Setup (Scenario Auto-Suggest)
 
@@ -773,6 +774,48 @@ An operator who has published twenty sims across three named projects can alread
 - **One scan, 60-second per-project cache.** A module-level cache keyed on the `(sim_root, project_id)` pair so two different projects on the same deployment don't share an entry. Same TTL as `/api/stats` so a dashboard polling both surfaces sees consistent freshness. The response carries `Cache-Control: public, max-age=60` and a short `ETag` `"project-<total_sims>-<newest_sim_id_prefix>"` distinct from the platform ETag; a conditional `If-None-Match` GET short-circuits to `304 Not Modified` without re-serialising the body.
 
 Pure stdlib (`os` + `json` + `re` + `time` + `threading`, ~460 LoC in `app/services/project_stats.py`); zero new dependencies — same posture as `platform_stats`, `signal_service`, and every other aggregate module. The scan walks `WONDERWALL_SIMULATION_DATA_DIR` directly; no Neo4j, no LLM, no outbound network.
+
+## Platform Status Probe
+
+The third leg of the platform-level surface family. [`/api/stats`](#per-project-simulation-statistics) describes what the *corpus looks like* (consensus distribution, average confidence, total surface views). [`/api/surfaces.json`](#surface-catalog-api) describes what the *deployment can do* (every share / platform endpoint, with type, description, and curl example). `GET /api/status.json` answers the third question external monitors care about: *is the platform currently working?*
+
+```json
+{
+  "success": true,
+  "data": {
+    "ok": true,
+    "schema_version": "1",
+    "queue_depth": 3,
+    "completed_24h": 14,
+    "last_completed_at": "2026-06-04T18:42:11Z",
+    "total_sims": 1027,
+    "surface_count": 32,
+    "check_at": "2026-06-05T09:15:03Z"
+  }
+}
+```
+
+Built for the three audiences who hit this question on day one:
+
+- **External status pages** (Upptime, BetterUptime, Statuspage.io) need an unauthenticated, body-matchable health endpoint. The literal `ok: true` plus stable `Cache-Control: public, max-age=30` slot into the standard status-page templates without custom code.
+- **Aeon-style heartbeat skills** can probe a deployment's freshness in one request instead of parsing `/api/stats`. `last_completed_at` is the most recent completion timestamp — if it stops moving, something is wrong with the sim runner.
+- **Integrators pre-flighting a batch run** (AntFleet's benchmark pipeline, Capacitr's polling loop) can check that the queue isn't already saturated before submitting their N sims. `queue_depth` answers that in one number.
+
+Three semantic distinctions matter:
+
+- **`queue_depth` counts only `status == "running"`.** Case-insensitive match against `state.json.status` so older sims that wrote mixed-case values aren't silently excluded.
+- **`completed_24h` uses `updated_at`, not `created_at`.** `simulation_runner` writes the completion timestamp to `updated_at` on terminal-state transitions, so a sim that was created weeks ago but completed in the last 24 hours still counts toward the window. The 86 400-second cutoff is fixed (exposed as `RECENT_WINDOW_SECONDS` so a test can patch it).
+- **`total_sims` is cumulative — public + private + in-flight + failed.** Deliberately distinct from `/api/stats.total_sims` (filtered to public + completed). The probe answers *"how much has the engine ever processed?"*; `/api/stats` answers *"how much successful corpus is visible to readers?"*. Two surfaces, two questions, two numbers.
+
+`surface_count` is sourced directly from `surfaces_catalog.catalog_count()` — single source of truth. A status-page consumer that wants to alert on capability regression (a surface disappeared) can watch this number drop instead of polling the catalog separately.
+
+`check_at` is ISO-8601 UTC with a trailing `Z`. Always present, even on the all-zero envelope returned by a fresh install. A downstream cache (CDN, reverse-proxy) can compute its own freshness from this timestamp even after the JSON body is cached.
+
+The route deliberately does not maintain an in-process cache. The surface is meant to be live; a cached response would make `last_completed_at` lie about the deployment's actual heartbeat. The only smoothing is the 30-second HTTP `Cache-Control` — short enough that a freshly-completed sim appears within half a minute, long enough that a load-balanced fleet of monitors polling at the same cadence doesn't multiply the scan cost.
+
+Empty / missing `WONDERWALL_SIMULATION_DATA_DIR` returns a fully-zeroed envelope (still `200`, still `ok: true`, still well-formed) rather than a 404 — a fresh install probing itself should see a valid response, not an error. The `ok` flag is intentionally a *literal* `true` rather than a derived value: a future regression in the scan that materially degrades the probe should bubble up via the JSON envelope (or a 500) rather than silently flip the boolean. A downstream alert keyed on `ok` shouldn't decay into a no-op.
+
+Pure stdlib (`os` + `json` + `time` + `datetime`, ~240 LoC in `app/services/platform_status.py`); zero new dependencies — same posture as `platform_stats`, `project_stats`, and the rest of the platform-level surface modules. Mounted on a new `status_bp` blueprint at `/api/status.json` so the URL stays the short, well-known probe path a status-page template can drop in.
 
 ## BibTeX Academic Citation
 

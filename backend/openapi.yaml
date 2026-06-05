@@ -3356,6 +3356,81 @@ paths:
                   success: { type: boolean, enum: [false] }
                   error: { type: string }
 
+  /api/status.json:
+    get:
+      tags: [Platform]
+      summary: Platform health probe — "is this MiroShark instance up and completing sims?"
+      description: |
+        Sibling of `/api/stats` (analytics aggregate) and
+        `/api/surfaces.json` (capability catalog). The three platform
+        surfaces split a clean three-way: `stats` describes what the
+        corpus *looks like*, `surfaces` describes what the deployment
+        *can do*, and this one describes whether it is *currently
+        working* — the question external status monitors (Upptime,
+        BetterUptime, Statuspage.io), Aeon's heartbeat skill, and
+        integrators pre-flighting a batch run all ask.
+
+        Returns a small envelope sufficient for both human-readable
+        status pages and automated probes: `queue_depth` (in-flight
+        sims), `completed_24h` (forward progress over the last 24
+        hours), `last_completed_at` (most recent completion heartbeat),
+        `total_sims` (cumulative throughput across the lifetime of
+        the deployment), `surface_count` (capability surface breadth,
+        sourced from the surfaces catalog), `check_at` (the ISO-8601
+        UTC timestamp this response was generated), and a literal
+        `ok: true` so a status-page template that only body-matches
+        works on day one.
+
+        **No auth.** A status probe that requires an internal key
+        cannot be used by the third-party monitors it is built for.
+        The endpoint is added to the `internal_auth_guard` allow-list
+        alongside `/api/openapi.json` and `/api/docs`.
+
+        **`total_sims` is cumulative — public + private + in-flight +
+        failed.** Distinct from `/api/stats.total_sims` (filtered to
+        public + completed). The probe answers a different question:
+        how much has the engine ever processed, not how much
+        successful corpus is visible to readers.
+
+        **`completed_24h` uses `updated_at`, not `created_at`.** A
+        sim created weeks ago but completed in the last 24 hours
+        counts toward the window. `simulation_runner` writes the
+        completion timestamp to `updated_at`.
+
+        **`ok: true` is a literal.** A future regression in the scan
+        that materially degrades the probe should bubble up via the
+        JSON envelope (or a 500) rather than flipping the boolean —
+        that way a downstream alert keyed on `ok` doesn't silently
+        decay into a no-op.
+
+        **No in-process cache.** The surface is meant to be live; a
+        cached response would make the freshness numbers a lie. The
+        only smoothing is `Cache-Control: public, max-age=30` — short
+        enough that a freshly-completed sim appears in
+        `last_completed_at` within half a minute, long enough that a
+        load-balanced fleet of monitors polling at the same cadence
+        doesn't multiply the scan cost.
+
+        Empty deployment returns a fully-zeroed envelope (still
+        `ok: true`, still well-formed) rather than a 404 — a fresh
+        install probing its own status sees a valid response.
+      responses:
+        "200":
+          description: Platform status envelope.
+          headers:
+            Cache-Control:
+              schema: { type: string }
+              description: "`public, max-age=30`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/PlatformStatus"
+
   /api/simulation/{simulation_id}/export:
     get:
       tags: [Export]
@@ -6351,6 +6426,105 @@ components:
             The `created_at` timestamp paired with `newest_sim_id`,
             or `null` on an empty deployment. ISO-8601 — emitted
             verbatim from the underlying sim's `state.json`.
+
+    PlatformStatus:
+      type: object
+      description: |
+        Platform health envelope returned by `/api/status.json`.
+        Distinct from `PlatformStats` (analytics aggregate) — this
+        schema describes whether the deployment is alive and making
+        forward progress, not how the corpus is shaped.
+
+        Three numbers carry the bulk of the signal:
+
+        * `queue_depth` — sims whose `state.json.status` is `"running"`
+          right now. A growing queue depth without a corresponding
+          rise in `completed_24h` indicates the engine is stuck.
+        * `completed_24h` — sims with `status == "completed"` whose
+          `updated_at` falls within the last 86 400 seconds. The
+          forward-progress number a Statuspage-style monitor watches.
+        * `last_completed_at` — the maximum `updated_at` across every
+          completed sim, or `null` on a fresh install. The "most
+          recent heartbeat" timestamp.
+
+        The remaining fields round out the envelope: `total_sims` is
+        the cumulative lifetime count (public + private + in-flight +
+        failed); `surface_count` is the capability surface breadth
+        sourced from `surfaces_catalog.catalog_count()`; `check_at`
+        is the ISO-8601 UTC timestamp the response was generated;
+        `ok` is a literal `true` so a status-page template that only
+        body-matches has a stable anchor.
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal
+        and the consumer gates on the value.
+      required:
+        - ok
+        - schema_version
+        - queue_depth
+        - completed_24h
+        - last_completed_at
+        - total_sims
+        - surface_count
+        - check_at
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+          description: |
+            Literal `true` so a status-page consumer that only
+            body-matches has a stable anchor. A future regression in
+            the scan should bubble up via the envelope (or a 500)
+            rather than flip this boolean.
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        queue_depth:
+          type: integer
+          minimum: 0
+          description: |
+            Count of sims whose `state.json.status` is `"running"`
+            (case-insensitive). A growing depth without rising
+            `completed_24h` indicates the engine is stuck.
+        completed_24h:
+          type: integer
+          minimum: 0
+          description: |
+            Count of sims with `status == "completed"` whose
+            `updated_at` falls within the last 86 400 seconds. The
+            forward-progress number a Statuspage-style monitor watches.
+        last_completed_at:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            The maximum `updated_at` across every completed sim,
+            normalised to ISO-8601 UTC (`...Z` suffix). `null` on a
+            fresh install or a deployment with no completed sims yet.
+        total_sims:
+          type: integer
+          minimum: 0
+          description: |
+            Cumulative lifetime sim count — public + private +
+            in-flight + failed. Distinct from `PlatformStats.total_sims`
+            (filtered to public + completed). Useful for "how much has
+            the engine processed?" rather than "how much successful
+            corpus is visible?"
+        surface_count:
+          type: integer
+          minimum: 0
+          description: |
+            Count of catalogued surfaces sourced from
+            `surfaces_catalog.catalog_count()`. Re-emitted here so a
+            single status probe carries breadth + depth signal without
+            a second round-trip to `/api/surfaces.json`.
+        check_at:
+          type: string
+          format: date-time
+          description: |
+            ISO-8601 UTC timestamp the response was generated, with
+            trailing `Z`. Always present, even on the all-zero
+            envelope returned by a fresh install.
 
     ProjectStats:
       type: object

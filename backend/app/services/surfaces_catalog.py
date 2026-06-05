@@ -355,6 +355,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 147,
         "example_curl": "curl -fsSL 'https://your-host/api/project/<project_id>/stats'",
     },
+    {
+        "key": "platform_status",
+        "endpoint": "/api/status.json",
+        "method": "GET",
+        "type": "platform",
+        "description": "Platform health probe — queue_depth, completed_24h, last_completed_at, ok flag.",
+        "added_in_pr": 149,
+        "example_curl": "curl -fsSL 'https://your-host/api/status.json'",
+    },
     # ── Meta — the catalog endpoint itself ───────────────────────────
     {
         "key": "surfaces_catalog",
