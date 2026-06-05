@@ -119,6 +119,10 @@ _BLUEPRINT_PREFIXES = {
     # per-project sibling of /api/stats. Same file as stats_bp; second
     # blueprint so the URL prefix stays operator-facing — see app/api/stats.py.
     "project_stats_bp":  "/api/project",
+    # status_bp serves /api/status.json — the platform health probe.
+    # Mounted at /api with no sub-prefix, same as surfaces_bp — see
+    # app/__init__.py / app/api/status.py.
+    "status_bp":         "/api",
 }
 
 
