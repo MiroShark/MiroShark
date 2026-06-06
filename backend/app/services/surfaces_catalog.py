@@ -364,6 +364,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 149,
         "example_curl": "curl -fsSL 'https://your-host/api/status.json'",
     },
+    {
+        "key": "batch_status",
+        "endpoint": "/api/simulation/batch-status",
+        "method": "POST",
+        "type": "integration",
+        "description": "Multi-sim status lookup — poll up to 20 sims in one call; publish-gate per id.",
+        "added_in_pr": 150,
+        "example_curl": "curl -fsSL -X POST 'https://your-host/api/simulation/batch-status' -H 'Content-Type: application/json' -d '{\"sim_ids\":[\"sim_aaa\",\"sim_bbb\"]}'",
+    },
     # ── Meta — the catalog endpoint itself ───────────────────────────
     {
         "key": "surfaces_catalog",

@@ -7837,6 +7837,134 @@ def _build_gallery_card_payload(state, sim_dir: str) -> dict:
     }
 
 
+@simulation_bp.route('/batch-status', methods=['POST'])
+def batch_status_lookup():
+    """Multi-sim status lookup — poll up to 20 simulations in one call.
+
+    The publish-gated per-sim surfaces in this codebase answer the
+    question *"what is sim X doing right now?"* one sim at a time. An
+    integrator running parallel batches (AntFleet's benchmark pipeline,
+    Capacitr's polling loop, anyone shipping the ecosystem-table
+    pattern) has to fire N HTTP requests to poll N sims. This endpoint
+    collapses that to a single round-trip.
+
+    Request body::
+
+        {"sim_ids": ["sim_aaa", "sim_bbb", ...]}
+
+    The list is capped at :data:`batch_status.MAX_BATCH_SIZE` (20). A
+    longer list returns ``400``; a malformed body returns ``400``; a
+    non-string id or one that fails the path-traversal check returns
+    ``400`` so the disk read never sees an unsanitised value.
+
+    Response shape::
+
+        {
+          "success": true,
+          "data": {
+            "schema_version": "1",
+            "count": <int>,
+            "results": [
+              {
+                "sim_id": <str>,
+                "found": <bool>,
+                "status": <str | null>,
+                "current_round": <int | null>,
+                "total_rounds": <int | null>,
+                "direction": <"Bullish" | "Neutral" | "Bearish" | null>,
+                "confidence_pct": <float | null>,
+                "quality_health": <str | null>,
+                "completed_at": <ISO-8601 str | null>
+              },
+              ...
+            ]
+          }
+        }
+
+    ``results`` is ordered to match the input ``sim_ids`` so a caller
+    can correlate by index. A duplicate id in the request emits a
+    duplicate entry in the response.
+
+    **No auth.** A polling endpoint that integrators are expected to
+    hit on every batch tick cannot require the internal key — the
+    surface is added to the ``internal_auth_guard`` allow-list
+    alongside ``/api/status.json`` and ``/api/openapi.json``.
+
+    **Publish gate applied per id.** A private sim in the batch
+    returns ``found: false`` rather than leaking its analytics. An
+    unknown id (typo, never existed) returns the same shape — a
+    caller cannot distinguish private from non-existent by reading
+    the response.
+
+    **Analytics fields only on completed sims.** ``"running"`` /
+    ``"failed"`` / ``"cancelled"`` sims return the bare status +
+    ``null`` analytics so a consumer can render the right badge
+    without acting on absent data. Derivation matches the per-sim
+    ``signal.json`` byte-for-byte (same plurality + tie-break in
+    :mod:`signal_service`).
+
+    ``Cache-Control: no-store`` — the response depends on live state
+    per id; a cache would defeat the polling use case.
+    """
+    from ..services import batch_status as batch_status_service
+
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        return jsonify({
+            "success": False,
+            "error": "Request body must be a JSON object with a sim_ids array.",
+        }), 400
+
+    raw_ids = payload.get("sim_ids")
+    if not isinstance(raw_ids, list):
+        return jsonify({
+            "success": False,
+            "error": "sim_ids must be a JSON array.",
+        }), 400
+
+    if len(raw_ids) == 0:
+        return jsonify({
+            "success": False,
+            "error": "sim_ids must contain at least one id.",
+        }), 400
+
+    if len(raw_ids) > batch_status_service.MAX_BATCH_SIZE:
+        return jsonify({
+            "success": False,
+            "error": (
+                f"sim_ids exceeds the per-request cap of "
+                f"{batch_status_service.MAX_BATCH_SIZE}."
+            ),
+        }), 400
+
+    for sim_id in raw_ids:
+        if not batch_status_service.is_valid_sim_id(sim_id):
+            return jsonify({
+                "success": False,
+                "error": (
+                    "Each sim_id must be a non-empty string of "
+                    "alphanumerics, hyphens, underscores, and dots."
+                ),
+            }), 400
+
+    try:
+        data = batch_status_service.build_batch_status(
+            Config.WONDERWALL_SIMULATION_DATA_DIR,
+            list(raw_ids),
+        )
+    except Exception as exc:
+        logger.error(f"batch-status: build failed: {exc}\n{traceback.format_exc()}")
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+    response = jsonify({"success": True, "data": data})
+    # No cache — the response is the live status of N sims; a cached
+    # response would defeat the polling use case the surface is built
+    # for. External CDNs and reverse proxies should pass the request
+    # straight through.
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 @simulation_bp.route('/public', methods=['GET'])
 def list_public_simulations():
     """Gallery feed of simulations the operator has toggled public.

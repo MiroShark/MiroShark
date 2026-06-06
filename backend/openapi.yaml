@@ -1002,6 +1002,106 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/SuccessEnvelope" }
 
+  /api/simulation/batch-status:
+    post:
+      tags: [Simulation Management]
+      summary: Multi-sim status lookup — poll up to 20 simulations in one call.
+      description: |
+        The publish-gated per-sim surfaces in this codebase answer the
+        question *"what is sim X doing right now?"* one sim at a time.
+        An integrator running parallel batches (AntFleet's benchmark
+        pipeline, Capacitr's polling loop) has to fire N HTTP requests
+        to poll N sims. This endpoint collapses that to a single
+        round-trip.
+
+        Request body: a JSON object with a ``sim_ids`` array (1–20
+        ids). Each id must be a non-empty string of alphanumerics,
+        hyphens, underscores, and dots — anything else returns
+        ``400`` before the disk read.
+
+        Response: a parallel array of per-id status entries in the
+        same order as the input. Entries are self-describing: a
+        ``found`` boolean separates the publish-gated subset from the
+        rest, and a ``status`` string carries the current state of
+        the visible subset.
+
+        **No auth.** A polling endpoint that integrators hit on every
+        batch tick cannot require the internal key — the surface is
+        added to the ``internal_auth_guard`` allow-list alongside
+        ``/api/status.json`` and ``/api/openapi.json``.
+
+        **Publish gate applied per id.** A private sim in the batch
+        returns ``found: false`` rather than leaking its analytics.
+        An unknown id (typo, never existed) returns the same shape —
+        a caller cannot distinguish private from non-existent by
+        reading the response. The analytics fields are uniformly
+        ``null`` on the ``found: false`` envelope so the surface is
+        unauthenticated-safe.
+
+        **Analytics fields only on completed sims.** Running, failed,
+        and cancelled sims return the bare ``status`` + ``null``
+        analytics so a consumer can render the right badge without
+        the response pretending the run produced a signal. The
+        ``direction`` / ``confidence_pct`` / ``quality_health`` /
+        ``total_rounds`` fields match the per-sim ``signal.json``
+        byte-for-byte — same plurality + tie-break rules in
+        ``signal_service``.
+
+        **Duplicates preserved.** A duplicate id in the request emits
+        a duplicate entry in the response. ``results`` is a list, not
+        a set — the surface trusts the caller's batching choices.
+
+        **No cache.** The response depends on live per-sim state; a
+        cached response would defeat the polling use case the surface
+        is built for. ``Cache-Control: no-store``.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sim_ids]
+              properties:
+                sim_ids:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  description: |
+                    Simulation IDs to poll. Each ID must match
+                    ``^[A-Za-z0-9_\-\.]{1,128}$``. Duplicates are
+                    preserved in the response.
+                  items:
+                    type: string
+              example:
+                sim_ids:
+                  - sim_aaa111bbb222
+                  - sim_ccc333ddd444
+                  - sim_eee555fff666
+      responses:
+        "200":
+          description: Batch-status envelope.
+          headers:
+            Cache-Control:
+              schema: { type: string }
+              description: "`no-store` — never cache."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/BatchStatusResponse"
+        "400":
+          description: |
+            Body shape was invalid: missing ``sim_ids`` array, empty
+            list, more than 20 ids, or one of the ids failed the
+            character/length check.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
+
   # ────────────────────────────────────────────────────────────────────
   # Interaction
   # ────────────────────────────────────────────────────────────────────
@@ -6925,6 +7025,111 @@ components:
             ISO-8601 UTC timestamp the response was generated, with
             trailing `Z`. Always present, even on the all-zero
             envelope returned by a fresh install.
+
+    BatchStatusResponse:
+      type: object
+      description: |
+        Multi-sim status lookup envelope returned by
+        `POST /api/simulation/batch-status`. Each entry in
+        `results` carries the same fields a single per-sim status
+        check would emit; `count` mirrors the length of the input
+        `sim_ids` array so a caller can assert the loop ran to
+        completion without scanning the array.
+
+        Order is preserved: the i-th entry in `results` is the
+        status for the i-th id in the request. A duplicate id in
+        the request emits a duplicate entry in the response.
+      required: [schema_version, count, results]
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        count:
+          type: integer
+          minimum: 0
+          description: |
+            Length of the `results` array. Equal to the length of the
+            request's `sim_ids` array.
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/BatchStatusEntry"
+
+    BatchStatusEntry:
+      type: object
+      description: |
+        Per-id status envelope inside a `BatchStatusResponse`. The
+        `found` boolean separates the publish-gated subset from the
+        rest; on `found: false` every other field is `null`. Because
+        the endpoint is unauthenticated, the `found: false` shape is
+        byte-identical for an unknown id and a private id — a caller
+        cannot distinguish the two by reading the response.
+      required:
+        - sim_id
+        - found
+        - status
+        - current_round
+        - total_rounds
+        - direction
+        - confidence_pct
+        - quality_health
+        - completed_at
+      properties:
+        sim_id:
+          type: string
+          description: The id this entry describes — echoed from the request.
+        found:
+          type: boolean
+          description: |
+            `true` when the sim exists on disk AND `is_public == true`.
+            `false` for an unknown id, a private id, or a corrupt sim
+            folder. The remaining fields are all `null` on `false`.
+        status:
+          type: [string, "null"]
+          enum: [running, completed, failed, cancelled, idle, null]
+          description: |
+            The simulation's current status, lowercased. `null` when
+            `found` is `false`.
+        current_round:
+          type: [integer, "null"]
+          minimum: 0
+          description: |
+            The current round number from `state.json`. `null` on a
+            `found: false` entry or a state file without the field.
+        total_rounds:
+          type: [integer, "null"]
+          minimum: 0
+          description: |
+            The trajectory's snapshot count for a completed sim, or
+            `null` on a running / failed / private / unknown sim
+            (the final length is unknown until the run terminates).
+        direction:
+          type: [string, "null"]
+          enum: [Bullish, Neutral, Bearish, null]
+          description: |
+            The leading stance for a completed sim — same plurality +
+            tie-break (`bullish > bearish > neutral`) as the per-sim
+            `signal.json`. `null` on any non-completed entry.
+        confidence_pct:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 100
+          description: |
+            Distance from a 33/33/33 split, in percentage points. Same
+            formula as `signal.json.confidence_pct`. `null` on any
+            non-completed entry.
+        quality_health:
+          type: [string, "null"]
+          description: |
+            The sim's quality health label (`excellent` / `good` /
+            `fair` / `poor` / `N/A`). `null` on any non-completed entry.
+        completed_at:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            The completion timestamp from `state.json.updated_at` for
+            a completed sim. `null` on any non-completed entry.
 
     ProjectStats:
       type: object

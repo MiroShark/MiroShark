@@ -60,6 +60,7 @@ Deep dive on every feature. One heading per feature, ordered roughly by when you
 | **Per-Project Simulation Statistics** | `GET /api/project/<project_id>/stats` — per-project sibling of `/api/stats`; same envelope filtered to one workspace + a `quality_distribution` bucket count |
 | **Platform Status Probe** | `GET /api/status.json` — *"is this MiroShark instance up and completing sims?"* for external status monitors (Upptime, BetterUptime, Statuspage); literal `ok: true` + `queue_depth` + `completed_24h` + `last_completed_at` + lifetime `total_sims` + catalog `surface_count` + ISO `check_at` |
 | **Platform Outcome Distribution** | `GET /api/stats/distribution.json` — bucketed breakdowns across direction (bullish/neutral/bearish), confidence (high/medium/low), quality (excellent/good/fair/poor) and round-count (short/medium/long) plus `avg_confidence_pct` + `avg_total_rounds`; the shape companion of `/api/stats` totals |
+| **Multi-Sim Batch Status Lookup** | `POST /api/simulation/batch-status` — poll up to 20 sims in one call; per-id publish gate (private + unknown ids share the `found: false` shape); analytics fields (`direction` / `confidence_pct` / `quality_health` / `total_rounds`) emit only on completed sims; the N-to-1 replacement for polling `/api/simulation/<id>/run-status` per id |
 
 ## Smart Setup (Scenario Auto-Suggest)
 
@@ -821,6 +822,9 @@ Pure stdlib (`os` + `json` + `time` + `datetime`, ~240 LoC in `app/services/plat
 ## Platform Outcome Distribution
 
 The shape companion of [`/api/stats`](#per-project-simulation-statistics). The platform aggregate answers *"how big and how bullish-leaning is the corpus?"* in one envelope. `GET /api/stats/distribution.json` answers the question the aggregate doesn't: *"what do MiroShark results **look like** in aggregate?"* — bucketed breakdowns across four dimensions plus two scalar averages.
+## Multi-Sim Batch Status Lookup
+
+The per-sim run-status endpoint answers *"what is sim X doing right now?"* one sim at a time. An integrator running parallel batches — AntFleet's benchmark pipeline, Capacitr's polling loop, the rest of the ecosystem table running automated workflows — has to fire N HTTP requests to poll N sims. `POST /api/simulation/batch-status` collapses that to a single round-trip.
 
 ```json
 {
@@ -853,6 +857,42 @@ The shape companion of [`/api/stats`](#per-project-simulation-statistics). The p
     "avg_confidence_pct": 58.4,
     "avg_total_rounds": 14.7,
     "newest_completed_at": "2026-06-07T08:42:11Z"
+    "count": 3,
+    "results": [
+      {
+        "sim_id": "sim_aaa111bbb222",
+        "found": true,
+        "status": "completed",
+        "current_round": 12,
+        "total_rounds": 12,
+        "direction": "Bullish",
+        "confidence_pct": 64.5,
+        "quality_health": "excellent",
+        "completed_at": "2026-06-05T18:42:11"
+      },
+      {
+        "sim_id": "sim_ccc333ddd444",
+        "found": true,
+        "status": "running",
+        "current_round": 7,
+        "total_rounds": null,
+        "direction": null,
+        "confidence_pct": null,
+        "quality_health": null,
+        "completed_at": null
+      },
+      {
+        "sim_id": "sim_private_or_ghost",
+        "found": false,
+        "status": null,
+        "current_round": null,
+        "total_rounds": null,
+        "direction": null,
+        "confidence_pct": null,
+        "quality_health": null,
+        "completed_at": null
+      }
+    ]
   }
 }
 ```
@@ -874,6 +914,19 @@ Four semantic distinctions matter:
 The endpoint is cached for 300 seconds (5 minutes) — slower than `/api/stats`' 60-second cache because the consumer profile is different. Press-kit unfurls and dashboards refreshing on a slower beat dominate the call pattern; the 5-minute cache reduces disk churn on bursts without making a fresh sim invisible for an unacceptable window. The `ETag` is `"distribution-<total_analyzed>-<YYYY-MM prefix of newest_completed_at>"` — a polling consumer's `If-None-Match` GET short-circuits to `304 Not Modified` until either a new sim completes (bumping `total_analyzed`) or the first sim of a new calendar month completes (bumping the year-month prefix).
 
 Pure stdlib (`os` + `json` + `time` + `threading` + `datetime`, ~440 LoC in `app/services/outcome_distribution.py`); zero new dependencies — same posture as every other aggregate module. Mounted on the existing `stats_bp` blueprint at `/api/stats/distribution.json` so the URL stays inside the stats family.
+Three semantic guarantees matter:
+
+- **Per-id publish gate.** A private sim in the batch returns `found: false` rather than leaking its analytics. An unknown sim id (typo, never existed) returns the *same* `found: false` envelope. A caller cannot distinguish private from non-existent by reading the response — the existence-of-a-private-sim signal is itself a leak the endpoint refuses to emit.
+- **Analytics only on completed sims.** Running, failed, and cancelled sims return the bare `status` + `null` analytics. A consumer rendering "❌ failed" or "⏳ running" badges must not also see a `direction` — the response doesn't pretend an in-flight run produced a usable signal. Completed sims carry the same `direction` / `confidence_pct` / `quality_health` / `total_rounds` the per-sim `signal.json` reports, derived byte-for-byte from the same `signal_service.compute_signal` helper.
+- **Order preserved, duplicates honored.** `results` is parallel to the input `sim_ids` so a caller can correlate by index. A duplicate id emits a duplicate entry — the surface treats the input as a list, not a set, so a polling loop that batches the same id twice gets the same answer twice and doesn't have to dedupe itself.
+
+The endpoint is unauthenticated — same posture as `/api/status.json` and `/api/openapi.json`, added to the `internal_auth_guard` allow-list. A polling endpoint that integrators hit on every batch tick cannot require the internal key.
+
+Input validation rejects malformed ids (`^[A-Za-z0-9_\-\.]{1,128}$`) at the API boundary so the disk read never sees an unsanitised value. The 20-id cap on `sim_ids` matches the `MAX_BATCH_SIZE` constant in `batch_status` — set tight enough that a runaway caller cannot trigger a 1 000-sim scan in one round-trip, loose enough that a researcher polling a benchmark batch never hits it in practice.
+
+`Cache-Control: no-store` — the response depends on live per-sim state, and a polling consumer asking the same question two seconds later expects fresh data. The route handler reads ≤20 small JSON files per request (state.json, plus trajectory.json + quality.json for any completed sims in the batch), so the worst-case scan is well under a single tick.
+
+Pure stdlib (`os` + `json` + `re`, ~350 LoC in `app/services/batch_status.py`); zero new dependencies — keeps the platform on its 40-PR zero-new-deps streak. Reuses `signal_service.compute_signal` so the signal math stays one place. The drift-test path mirrors `platform_status` / `project_stats`: a static catalog entry + a static OpenAPI guard + an auth-guard guard.
 
 ## BibTeX Academic Citation
 

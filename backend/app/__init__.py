@@ -115,6 +115,15 @@ def create_app(config_class=Config):
         if request.path == '/api/status.json':
             return
 
+        # Exempt the multi-sim batch-status lookup. Same posture as
+        # /api/status.json: external integrators (AntFleet, Capacitr) need
+        # to poll batch runs from keyless clients, and the per-id publish
+        # gate inside batch_status hides private sims behind a found:false
+        # envelope so an anonymous caller can't read the volume or
+        # analytics of any non-public sim.
+        if request.path == '/api/simulation/batch-status':
+            return
+
         # Only protect /api/* routes
         if not request.path.startswith('/api/'):
             return

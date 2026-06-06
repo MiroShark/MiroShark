@@ -90,6 +90,7 @@ curl -s "https://your-host/share/<id>?lang=zh-CN"
 | `GET` | `/api/simulation/<id>/demographics` | 原型分布 |
 | `GET` | `/api/simulation/<id>/quality` | 运行健康诊断 |
 | `POST` | `/api/simulation/compare` | 信念并排对比 |
+| `POST` | `/api/simulation/batch-status` | 多模拟状态批量查询 — 一次调用最多轮询 20 个模拟。请求体 `{"sim_ids": [...]}`(1–20 个 ID;格式 `^[A-Za-z0-9_\-.]{1,128}$`)。响应 `{schema_version, count, results}`,顺序与输入一致;每项含 `sim_id`、`found`、`status`、`current_round`、`total_rounds`、`direction`、`confidence_pct`、`quality_health`、`completed_at`。私有与未知 ID 返回相同的 `{found: false, ...nulls}` 形状(按 ID 应用发布门控;端点无需认证)。仅已完成的模拟返回信号字段。`Cache-Control: no-store` |
 
 ## 交互
 
