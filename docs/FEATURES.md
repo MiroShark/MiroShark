@@ -59,6 +59,7 @@ Deep dive on every feature. One heading per feature, ordered roughly by when you
 | **Ecosystem JSON Registry** | `GET /api/ecosystem.json` — machine-readable list of every external project, agent, and product built on MiroShark; alphabetised, categorised, ETag-cached |
 | **Per-Project Simulation Statistics** | `GET /api/project/<project_id>/stats` — per-project sibling of `/api/stats`; same envelope filtered to one workspace + a `quality_distribution` bucket count |
 | **Platform Status Probe** | `GET /api/status.json` — *"is this MiroShark instance up and completing sims?"* for external status monitors (Upptime, BetterUptime, Statuspage); literal `ok: true` + `queue_depth` + `completed_24h` + `last_completed_at` + lifetime `total_sims` + catalog `surface_count` + ISO `check_at` |
+| **Platform Outcome Distribution** | `GET /api/stats/distribution.json` — bucketed breakdowns across direction (bullish/neutral/bearish), confidence (high/medium/low), quality (excellent/good/fair/poor) and round-count (short/medium/long) plus `avg_confidence_pct` + `avg_total_rounds`; the shape companion of `/api/stats` totals |
 
 ## Smart Setup (Scenario Auto-Suggest)
 
@@ -816,6 +817,63 @@ The route deliberately does not maintain an in-process cache. The surface is mea
 Empty / missing `WONDERWALL_SIMULATION_DATA_DIR` returns a fully-zeroed envelope (still `200`, still `ok: true`, still well-formed) rather than a 404 — a fresh install probing itself should see a valid response, not an error. The `ok` flag is intentionally a *literal* `true` rather than a derived value: a future regression in the scan that materially degrades the probe should bubble up via the JSON envelope (or a 500) rather than silently flip the boolean. A downstream alert keyed on `ok` shouldn't decay into a no-op.
 
 Pure stdlib (`os` + `json` + `time` + `datetime`, ~240 LoC in `app/services/platform_status.py`); zero new dependencies — same posture as `platform_stats`, `project_stats`, and the rest of the platform-level surface modules. Mounted on a new `status_bp` blueprint at `/api/status.json` so the URL stays the short, well-known probe path a status-page template can drop in.
+
+## Platform Outcome Distribution
+
+The shape companion of [`/api/stats`](#per-project-simulation-statistics). The platform aggregate answers *"how big and how bullish-leaning is the corpus?"* in one envelope. `GET /api/stats/distribution.json` answers the question the aggregate doesn't: *"what do MiroShark results **look like** in aggregate?"* — bucketed breakdowns across four dimensions plus two scalar averages.
+
+```json
+{
+  "success": true,
+  "data": {
+    "schema_version": "1",
+    "generated_at": "2026-06-07T09:15:03Z",
+    "total_analyzed": 247,
+    "by_direction": {
+      "bullish": 102, "bullish_pct": 41.3,
+      "neutral": 71,  "neutral_pct": 28.7,
+      "bearish": 74,  "bearish_pct": 30.0
+    },
+    "by_confidence": {
+      "high":   88, "high_pct":   35.6,
+      "medium": 121, "medium_pct": 49.0,
+      "low":    38, "low_pct":    15.4
+    },
+    "by_quality": {
+      "excellent": 79, "excellent_pct": 32.0,
+      "good":      129, "good_pct":      52.2,
+      "fair":      31, "fair_pct":      12.6,
+      "poor":      8,  "poor_pct":      3.2
+    },
+    "by_round_count": {
+      "short":  42,  "short_pct":  17.0,
+      "medium": 167, "medium_pct": 67.6,
+      "long":   38,  "long_pct":   15.4
+    },
+    "avg_confidence_pct": 58.4,
+    "avg_total_rounds": 14.7,
+    "newest_completed_at": "2026-06-07T08:42:11Z"
+  }
+}
+```
+
+Built for the four audiences who hit *"what does this platform produce?"* on day one:
+
+- **Researchers citing MiroShark** need a defensible aggregate to ground a paper claim. *"41.3% of the 247 public, completed sims on `your-host` clear a bullish plurality"* is a number a methods section can cite without re-deriving it from a gallery scrape.
+- **Aeon-style digest skills** can report distribution shifts month-over-month. *"high-confidence sims rose from 28% to 36% of the corpus over the last 30 days"* needs both ends of a comparable bucket — the per-sim signals don't aggregate themselves.
+- **Directory and explorer builders** displaying a MiroShark listing need a one-call characterisation of the platform alongside the totals. A directory card showing *"32% excellent / 52% good"* is more informative than *"248 sims"* alone.
+- **Integrators calibrating thresholds** against the platform baseline can fetch this once and pick a `confidence_pct` cutoff that lands in the top quartile of historical sims, instead of guessing a fixed number that drifts as the corpus shifts.
+
+Four semantic distinctions matter:
+
+- **Same publish gate as `/api/stats`.** Only `is_public == true` AND `status == "completed"` sims contribute to any bucket. `total_analyzed` is a strict subset of every `/api/stats.total_sims` consumer's mental model — a sim that contributes to one contributes to the other, byte-for-byte.
+- **Confidence boundaries are inclusive on the lower edge.** `high` is `confidence_pct >= 70`, `medium` is `40 <= confidence_pct < 70`, `low` is `confidence_pct < 40`. A sim landing exactly on a threshold is classified upward, so a corpus shift that nudges the median past `70` reads as a jump in `high`, not as boundary noise.
+- **Quality bucket sums can be `<= total_analyzed`.** `by_quality` reads `quality.json.health` — sims whose quality file is missing or carries an unrecognised value (older sims, fresh-runner output) are excluded from the bucket but still counted in `total_analyzed`. The sum is conservative on purpose: a researcher counting "good or better" gets the floor, not an inflated number.
+- **Round count derives from `trajectory.json` snapshots.** Same source `peak_round.total_rounds` uses, so a sim's bucket here matches the per-sim peak-round count exactly. A sim with no parseable trajectory contributes to `total_analyzed` but to no round-count bucket.
+
+The endpoint is cached for 300 seconds (5 minutes) — slower than `/api/stats`' 60-second cache because the consumer profile is different. Press-kit unfurls and dashboards refreshing on a slower beat dominate the call pattern; the 5-minute cache reduces disk churn on bursts without making a fresh sim invisible for an unacceptable window. The `ETag` is `"distribution-<total_analyzed>-<YYYY-MM prefix of newest_completed_at>"` — a polling consumer's `If-None-Match` GET short-circuits to `304 Not Modified` until either a new sim completes (bumping `total_analyzed`) or the first sim of a new calendar month completes (bumping the year-month prefix).
+
+Pure stdlib (`os` + `json` + `time` + `threading` + `datetime`, ~440 LoC in `app/services/outcome_distribution.py`); zero new dependencies — same posture as every other aggregate module. Mounted on the existing `stats_bp` blueprint at `/api/stats/distribution.json` so the URL stays inside the stats family.
 
 ## BibTeX Academic Citation
 

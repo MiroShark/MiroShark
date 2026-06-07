@@ -1280,6 +1280,42 @@ export const getProjectStats = async (projectId) => {
 }
 
 /**
+ * Build the absolute URL of the platform-wide outcome distribution
+ * endpoint. Companion of `/api/stats` — `/api/stats` reports totals,
+ * this endpoint reports the shape of those totals (direction,
+ * confidence, quality, and round-count buckets).
+ *
+ * @param {string} [origin] - Override origin (defaults to window.location.origin).
+ * @returns {string}
+ */
+export const getOutcomeDistributionUrl = (origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/stats/distribution.json`
+}
+
+/**
+ * Fetch the platform-wide outcome distribution envelope — bucketed
+ * breakdowns across direction / confidence / quality / round-count,
+ * plus `avg_confidence_pct` and `avg_total_rounds`. Returns the parsed
+ * payload on 200; throws on transport errors. Never 404s — an empty
+ * deployment still returns a fully-zeroed envelope with
+ * `total_analyzed: 0`.
+ *
+ * @returns {Promise<object>}
+ */
+export const getOutcomeDistribution = async () => {
+  const res = await fetch(getOutcomeDistributionUrl(), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    throw new Error(`outcome distribution fetch failed: ${res.status}`)
+  }
+  const body = await res.json()
+  return body?.data ?? body
+}
+
+/**
  * Build the absolute URL of the reproducibility config blob for a
  * simulation.
  *

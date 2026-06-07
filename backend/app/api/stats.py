@@ -35,6 +35,7 @@ from __future__ import annotations
 from flask import Blueprint, Response, jsonify, request
 
 from ..config import Config
+from ..services import outcome_distribution as outcome_distribution_service
 from ..services import platform_stats as platform_stats_service
 from ..services import project_stats as project_stats_service
 from ..services.badge_service import render_platform_badge_svg_bytes
@@ -111,6 +112,70 @@ def get_platform_stats() -> Response:
     response = jsonify({"success": True, "data": payload})
     response.headers["ETag"] = etag
     response.headers["Cache-Control"] = _cache_header()
+    return response
+
+
+def _distribution_cache_header() -> str:
+    """Cache-Control value for the distribution endpoint.
+
+    300 seconds matches the cache TTL on
+    ``outcome_distribution.build_distribution``. Press-kit unfurls,
+    Aeon digests, and dashboards refreshing on a slower beat all pay
+    roughly the cost of one fresh scan per five-minute window.
+    """
+    return "public, max-age=300"
+
+
+@stats_bp.route("/distribution.json", methods=["GET"])
+def get_outcome_distribution() -> Response:
+    """Return the platform-wide outcome distribution as JSON.
+
+    Companion of ``/api/stats``: where ``/api/stats`` reports totals
+    (how many sims, views, projects), this endpoint reports the
+    *shape* of those totals — bucketed breakdowns across four
+    dimensions:
+
+      * ``by_direction`` — bullish / neutral / bearish (counts + pct)
+      * ``by_confidence`` — high (>= 70) / medium (40-70) / low (< 40)
+      * ``by_quality`` — excellent / good / fair / poor
+      * ``by_round_count`` — short (< 10) / medium (10-20) / long (> 20)
+
+    Plus ``avg_confidence_pct`` and ``avg_total_rounds`` as scalar
+    summaries. Same publish gate as ``/api/stats`` (``is_public ==
+    true`` AND ``status == "completed"``) so the
+    ``total_analyzed`` count is a strict subset of every
+    ``/api/stats`` consumer's mental model — a sim that contributes
+    to one contributes to the other.
+
+    ETag header is set; a matching ``If-None-Match`` short-circuits to
+    ``304 Not Modified`` so polling consumers don't pay the JSON
+    serialisation cost on every request. Cache-Control: ``public,
+    max-age=300`` to absorb bursty unfurls.
+
+    Empty deployment returns a fully-zeroed envelope with
+    ``total_analyzed == 0`` rather than ``404`` — a fresh install
+    renders *"0 simulations analysed"* the same way a 1000-sim
+    deployment renders its real numbers.
+    """
+    try:
+        payload = outcome_distribution_service.build_distribution(
+            Config.WONDERWALL_SIMULATION_DATA_DIR
+        )
+    except Exception as exc:
+        logger.error(f"Failed to build outcome distribution: {exc}")
+        return jsonify({"success": False, "error": str(exc)}), 500
+
+    etag = outcome_distribution_service.distribution_etag(payload)
+    if_none_match = (request.headers.get("If-None-Match") or "").strip()
+    if if_none_match and if_none_match == etag:
+        resp = Response(status=304)
+        resp.headers["ETag"] = etag
+        resp.headers["Cache-Control"] = _distribution_cache_header()
+        return resp
+
+    response = jsonify({"success": True, "data": payload})
+    response.headers["ETag"] = etag
+    response.headers["Cache-Control"] = _distribution_cache_header()
     return response
 
 

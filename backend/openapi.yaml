@@ -3034,6 +3034,94 @@ paths:
             The `ETag` and `Cache-Control` headers are still returned
             so the consumer can refresh its cache TTL.
 
+  /api/stats/distribution.json:
+    get:
+      tags: [Platform]
+      summary: Platform-wide outcome distribution across every public, completed simulation.
+      description: |
+        Companion of `/api/stats`. Where `/api/stats` reports totals
+        (how many sims, views, projects), this endpoint reports the
+        *shape* of those totals — bucketed breakdowns across four
+        dimensions plus two scalar averages:
+
+        * `by_direction` — `bullish` / `neutral` / `bearish` (counts
+          + percentages). The plurality rules + tie-break
+          (`bullish > bearish > neutral`) that produce the per-sim
+          `signal.json.direction` produce these buckets, so the
+          fraction of sims in each direction here matches the
+          per-sim verdicts byte-for-byte.
+        * `by_confidence` — `high` (`confidence_pct >= 70`) /
+          `medium` (`40 <= confidence_pct < 70`) / `low`
+          (`confidence_pct < 40`). Boundaries are inclusive on the
+          lower edge so a sim landing exactly on a threshold is
+          classified upward. Matches the *"high-confidence"*
+          threshold quoted in the daily article series — an
+          integrator filtering against `high` here sees the same
+          subset a reader sees in a write-up.
+        * `by_quality` — `excellent` / `good` / `fair` / `poor`.
+          Sourced from `quality.json.health` (case-insensitive,
+          leading-word match). Unrecognised values are excluded so
+          the bucket sum can be `< total_analyzed`.
+        * `by_round_count` — `short` (`< 10` recorded snapshots) /
+          `medium` (`10..20`) / `long` (`> 20`). Round count
+          derives from the number of recorded `trajectory.json`
+          snapshots — same source `peak_round.total_rounds` uses.
+        * `avg_confidence_pct` — mean of the per-sim
+          `confidence_pct` across every contributing sim, rounded
+          to one decimal.
+        * `avg_total_rounds` — mean recorded round count across
+          every sim with a parseable trajectory, rounded to one
+          decimal.
+
+        **Same publish gate as `/api/stats`.** Only `is_public ==
+        true` AND `status == "completed"` sims contribute to any
+        bucket. A private or in-flight sim is invisible to this
+        surface — `total_analyzed` is a strict subset of every
+        `/api/stats` consumer's mental model.
+
+        **Cached for 300 seconds.** A module-level scan cache absorbs
+        bursty press unfurls. The response carries `Cache-Control:
+        public, max-age=300` and a short `ETag` derived from
+        `total_analyzed` + the year-month prefix of
+        `newest_completed_at`; a conditional `If-None-Match` GET
+        short-circuits to `304 Not Modified` without re-serialising
+        the body.
+
+        Empty deployment returns a fully-zeroed envelope with
+        `total_analyzed == 0` rather than `404` — a fresh install
+        renders *"0 simulations analysed"* the same way a 1000-sim
+        deployment renders its real numbers.
+      responses:
+        "200":
+          description: Outcome distribution envelope.
+          headers:
+            ETag:
+              schema: { type: string }
+              description: |
+                Short cache tag derived from `total_analyzed` + the
+                year-month prefix of `newest_completed_at`. Stable
+                across the 300-second cache window; bumps when a new
+                sim completes (within the same month → `total_analyzed`
+                changes) or when the first sim of a new month completes
+                (→ the date prefix changes).
+            Cache-Control:
+              schema: { type: string }
+              description: "`public, max-age=300`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/OutcomeDistribution"
+        "304":
+          description: |
+            `If-None-Match` matched the current `ETag`; body omitted.
+            The `ETag` and `Cache-Control` headers are still returned
+            so the consumer can refresh its cache TTL.
+
   /api/stats/badge.svg:
     get:
       tags: [Platform]
@@ -6298,6 +6386,316 @@ components:
             *computation time*, not the underlying simulation
             completion time. Same posture as `signal.json` (bytewise
             determinism is not a property of this surface).
+
+    OutcomeDistribution:
+      type: object
+      description: |
+        Platform-wide outcome distribution envelope returned by
+        `/api/stats/distribution.json`. Bucketed breakdowns of every
+        simulation under `WONDERWALL_SIMULATION_DATA_DIR` that
+        satisfies `is_public == true` AND `status == "completed"`,
+        across four dimensions plus two scalar averages.
+
+        Companion of `PlatformStats`. Where `PlatformStats` reports
+        totals (how many sims, views, projects), this schema reports
+        the shape of those totals — the answer to *"what do
+        MiroShark results look like in aggregate?"*.
+
+        Schema is versioned via `schema_version`. v1 is the only
+        published version; future breaking changes bump the literal
+        and downstream consumers gate on the value.
+      required:
+        - schema_version
+        - generated_at
+        - total_analyzed
+        - by_direction
+        - by_confidence
+        - by_quality
+        - by_round_count
+        - avg_confidence_pct
+        - avg_total_rounds
+        - newest_completed_at
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        generated_at:
+          type: string
+          format: date-time
+          description: |
+            ISO-8601 UTC timestamp (`...Z` suffix) the response was
+            generated. Always present, even on the all-zero envelope
+            returned by a fresh install.
+        total_analyzed:
+          type: integer
+          minimum: 0
+          description: |
+            Count of simulations satisfying `is_public == true` AND
+            `status == "completed"` — the same filter
+            `PlatformStats.total_sims` uses. A strict subset of every
+            `/api/stats` consumer's mental model.
+        by_direction:
+          type: object
+          description: |
+            Per-stance counts + percentages across every contributing
+            simulation. The same plurality + tie-break rules
+            (`bullish > bearish > neutral`) the per-sim `signal.json`
+            uses produce these buckets — a sim labelled Bullish on
+            its signal.json lands in the `bullish` count here.
+          required:
+            - bullish
+            - neutral
+            - bearish
+            - bullish_pct
+            - neutral_pct
+            - bearish_pct
+          properties:
+            bullish:
+              type: integer
+              minimum: 0
+              description: Number of sims whose plurality stance is Bullish.
+            neutral:
+              type: integer
+              minimum: 0
+              description: Number of sims whose plurality stance is Neutral.
+            bearish:
+              type: integer
+              minimum: 0
+              description: Number of sims whose plurality stance is Bearish.
+            bullish_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `bullish / total_analyzed * 100` rounded to one
+                decimal. `0.0` when `total_analyzed == 0`.
+            neutral_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `neutral / total_analyzed * 100` rounded to one
+                decimal.
+            bearish_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `bearish / total_analyzed * 100` rounded to one
+                decimal.
+        by_confidence:
+          type: object
+          description: |
+            Confidence-tier counts + percentages. Boundaries:
+            `high` is `confidence_pct >= 70`, `medium` is `40 <=
+            confidence_pct < 70`, `low` is `confidence_pct < 40`.
+            Inclusive on the lower edge so a sim landing exactly on
+            a threshold is classified upward. A sim with no
+            derivable signal (empty trajectory) is counted in
+            `total_analyzed` but contributes to no confidence bucket
+            — bucket sums can be `<= total_analyzed`.
+          required:
+            - high
+            - medium
+            - low
+            - high_pct
+            - medium_pct
+            - low_pct
+          properties:
+            high:
+              type: integer
+              minimum: 0
+              description: |
+                Number of sims whose `confidence_pct` is `>= 70`.
+            medium:
+              type: integer
+              minimum: 0
+              description: |
+                Number of sims whose `confidence_pct` is in `[40, 70)`.
+            low:
+              type: integer
+              minimum: 0
+              description: |
+                Number of sims whose `confidence_pct` is `< 40`.
+            high_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `high / total_analyzed * 100` rounded to one decimal.
+                `0.0` when `total_analyzed == 0`.
+            medium_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `medium / total_analyzed * 100` rounded to one
+                decimal.
+            low_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `low / total_analyzed * 100` rounded to one decimal.
+        by_quality:
+          type: object
+          description: |
+            Quality-tier counts + percentages. Reads `quality.json.
+            health` — case-insensitive, leading-word match.
+            Unrecognised values (or sims with no quality.json) are
+            excluded so the bucket sum can be `<= total_analyzed`.
+            Same four-tier scale `ProjectStats.quality_distribution`
+            reads, so a per-project breakdown can be compared
+            directly against this platform aggregate.
+          required:
+            - excellent
+            - good
+            - fair
+            - poor
+            - excellent_pct
+            - good_pct
+            - fair_pct
+            - poor_pct
+          properties:
+            excellent:
+              type: integer
+              minimum: 0
+              description: Number of sims whose `quality.health` is `excellent`.
+            good:
+              type: integer
+              minimum: 0
+              description: Number of sims whose `quality.health` is `good`.
+            fair:
+              type: integer
+              minimum: 0
+              description: Number of sims whose `quality.health` is `fair`.
+            poor:
+              type: integer
+              minimum: 0
+              description: Number of sims whose `quality.health` is `poor`.
+            excellent_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `excellent / total_analyzed * 100` rounded to one
+                decimal.
+            good_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `good / total_analyzed * 100` rounded to one decimal.
+            fair_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `fair / total_analyzed * 100` rounded to one decimal.
+            poor_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `poor / total_analyzed * 100` rounded to one decimal.
+        by_round_count:
+          type: object
+          description: |
+            Round-count tier counts + percentages. Boundaries:
+            `short` is `total_rounds < 10`, `medium` is
+            `10 <= total_rounds <= 20`, `long` is `total_rounds >
+            20`. Round count derives from the number of recorded
+            `trajectory.json` snapshots — same source
+            `peak_round.total_rounds` uses, so a bucket lookup here
+            matches the per-sim peak-round count exactly. A sim with
+            no parseable trajectory contributes to `total_analyzed`
+            but to no round-count bucket — bucket sums can be `<=
+            total_analyzed`.
+          required:
+            - short
+            - medium
+            - long
+            - short_pct
+            - medium_pct
+            - long_pct
+          properties:
+            short:
+              type: integer
+              minimum: 0
+              description: |
+                Number of sims whose recorded round count is `< 10`.
+            medium:
+              type: integer
+              minimum: 0
+              description: |
+                Number of sims whose recorded round count is in
+                `[10, 20]`.
+            long:
+              type: integer
+              minimum: 0
+              description: |
+                Number of sims whose recorded round count is `> 20`.
+            short_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `short / total_analyzed * 100` rounded to one decimal.
+            medium_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `medium / total_analyzed * 100` rounded to one decimal.
+            long_pct:
+              type: number
+              format: float
+              minimum: 0
+              maximum: 100
+              description: |
+                `long / total_analyzed * 100` rounded to one decimal.
+        avg_confidence_pct:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+          description: |
+            Mean of every contributing sim's per-sim `confidence_pct`
+            (same continuous value the per-sim `signal.json` surfaces),
+            rounded to one decimal. `0.0` when no sim contributes a
+            derivable signal (empty deployment or every sim missing
+            its trajectory).
+        avg_total_rounds:
+          type: number
+          format: float
+          minimum: 0
+          description: |
+            Mean recorded round count across every sim with a
+            parseable trajectory, rounded to one decimal. `0.0` when
+            no sim contributes a parseable trajectory.
+        newest_completed_at:
+          type: [string, "null"]
+          format: date-time
+          description: |
+            The `completed_at` (falling back to `updated_at`) of the
+            most recently completed sim, lexicographic max across
+            every contributing sim. `null` on an empty deployment.
+            Together with `total_analyzed` it makes up the ETag
+            input — a new sim completing in a fresh month flips the
+            year-month prefix and bumps the ETag.
 
     PlatformStats:
       type: object

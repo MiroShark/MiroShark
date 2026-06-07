@@ -383,6 +383,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 145,
         "example_curl": "curl -fsSL 'https://your-host/api/ecosystem.json'",
     },
+    {
+        "key": "outcome_distribution",
+        "endpoint": "/api/stats/distribution.json",
+        "method": "GET",
+        "type": "analytics",
+        "description": "Platform-wide outcome distribution — direction / confidence / quality / round-count buckets.",
+        "added_in_pr": 151,
+        "example_curl": "curl -fsSL 'https://your-host/api/stats/distribution.json'",
+    },
 ]
 
 
