@@ -1004,7 +1004,7 @@ paths:
 
   /api/simulation/batch-status:
     post:
-      tags: [Simulation Management]
+      tags: [Simulation Lifecycle]
       summary: Multi-sim status lookup — poll up to 20 simulations in one call.
       description: |
         The publish-gated per-sim surfaces in this codebase answer the
