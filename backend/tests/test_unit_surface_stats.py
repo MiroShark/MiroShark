@@ -89,6 +89,7 @@ def test_surface_keys_includes_every_serve_handler():
         "volatility",
         "clone_json",
         "agents_json",
+        "signed_result",
     }
     assert set(surface_stats.SURFACE_KEYS) == expected
 
