@@ -710,6 +710,50 @@ export const getSignalJson = async (simulationId) => {
 }
 
 /**
+ * Build the absolute URL of the signed-result JSON for a published,
+ * finished simulation. Companion to `signal.json` — returns the same
+ * final-state fields wrapped in an HMAC-SHA256-signed envelope so an
+ * integrator can prove the stored bytes match what MiroShark emitted
+ * without making a live API call back to the deployment. Signing key
+ * is the same `WEBHOOK_SECRET` the outbound webhook delivery service
+ * uses; deployments without that secret return 200 with `signed=false`
+ * + the unsigned result block.
+ *
+ * @param {string} simulationId
+ * @param {string} [origin]
+ * @returns {string}
+ */
+export const getSignedResultJsonUrl = (simulationId, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  return `${base}/api/simulation/${simulationId}/signed-result.json`
+}
+
+/**
+ * Fetch the signed-result envelope for a published simulation.
+ *
+ * Returns the parsed envelope on 200 (which may carry `signed=true` or
+ * `signed=false` depending on whether the deployment has
+ * `WEBHOOK_SECRET` configured), `null` on 404 (sim not ready) or 403
+ * (sim not published), and throws on transport errors.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<object|null>}
+ */
+export const getSignedResultJson = async (simulationId) => {
+  const res = await fetch(getSignedResultJsonUrl(simulationId), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (res.status === 403 || res.status === 404) {
+    return null
+  }
+  if (!res.ok) {
+    throw new Error(`signed-result.json fetch failed: ${res.status}`)
+  }
+  return res.json()
+}
+
+/**
  * Build the absolute URL of the Polymarket-shaped prediction JSON for a
  * completed, published simulation. The fifteenth machine-readable share
  * surface and the first one shaped for a specific external integrator —

@@ -1850,6 +1850,69 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/signed-result.json:
+    get:
+      tags: [Publish & Embed]
+      summary: HMAC-signed wrapper around the trading-signal payload.
+      description: |
+        Returns the same final-state signal fields as `signal.json`
+        wrapped in a canonical envelope plus an HMAC-SHA256 signature
+        over the deterministic JSON encoding of the inner `result`
+        block. The signing key is the same `WEBHOOK_SECRET` the
+        outbound webhook delivery service uses — zero new config, zero
+        new secrets, identical algorithm + recipient-side primitive
+        (`hmac.compare_digest` / `crypto.timingSafeEqual`).
+
+        Closes the offline-verifiability gap: HTTPS guarantees
+        in-transit authenticity, but once an integrator stores the
+        signal locally (Capacitr's settlement ledger, a research
+        archive, an ML pipeline's provenance row) there is no way to
+        prove the stored bytes match what MiroShark actually emitted
+        without re-fetching the sim live. The signature lets a
+        recipient verify origin from any locally held copy without an
+        internet round-trip.
+
+        Canonical-JSON encoding rules (deterministic across implementations):
+        `sort_keys=True`, `separators=(",", ":")`, `ensure_ascii=True`,
+        no trailing newline. A recipient reconstructs the bytes by
+        passing the parsed `result` dict back through the same encoding
+        before verifying the HMAC. The envelope's `signed_at` is
+        wall-clock and never enters the signed material — only the
+        inner `result` block does.
+
+        When `WEBHOOK_SECRET` is empty or unset, the response is still
+        `200` with `signed=false`, `signature=null`, `signing_key_hint=null`,
+        and a human-readable `error` string explaining the missing
+        secret. The unsigned `result` block carries identical fields to
+        `signal.json` — absence of a signature is the missing feature,
+        not an API failure.
+
+        Same publish gate as `signal.json`: private sims return `403`;
+        sims that have not yet recorded any rounds return `404` so a
+        consumer can tell "not ready" apart from "private". Cached
+        5 minutes — matches the `signal.json` / `chart.svg` /
+        `trajectory` cadence.
+
+        Pairs with `cite.bib` (which carries the on-chain DKG UAL when
+        the sim has been anchored) for dual-coverage authenticity:
+        on-chain anchoring for decentralised audit, HMAC for synchronous
+        lightweight verification against any locally held copy.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: |
+            Signed result envelope. `signed=true` carries the HMAC
+            signature; `signed=false` is returned when the deployment
+            has no `WEBHOOK_SECRET` configured (still 200 — the unsigned
+            result is useful).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignedSimulationResult"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/peak-round:
     get:
       tags: [Publish & Embed]
@@ -5785,6 +5848,111 @@ components:
             determinism is not a property of this surface (unlike
             reproduce.json / notebook.ipynb whose bytes need to be
             citation-hashable).
+
+    SignedSimulationResult:
+      type: object
+      description: |
+        HMAC-signed wrapper around the `TradingSignal` payload returned
+        by `/api/simulation/{id}/signed-result.json`. Gives integrators
+        an offline-verifiable provenance primitive: the signature is
+        computed over the canonical JSON encoding of the inner `result`
+        block (`json.dumps(result, sort_keys=True, separators=(",", ":"),
+        ensure_ascii=True)`) using HMAC-SHA256 under the deployment's
+        `WEBHOOK_SECRET` — the same key the outbound webhook delivery
+        service uses. A recipient who already validates webhook
+        signatures with `hmac.compare_digest` / `crypto.timingSafeEqual`
+        re-uses that exact primitive here.
+
+        Verification recipe (Python):
+
+            import hmac, hashlib, json
+            canonical = json.dumps(
+                envelope["result"],
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=True,
+            ).encode("utf-8")
+            expected = hmac.new(SECRET.encode("utf-8"), canonical, hashlib.sha256).hexdigest()
+            assert hmac.compare_digest(expected, envelope["signature"])
+
+        Verification recipe (Node.js):
+
+            const canonical = JSON.stringify(envelope.result, Object.keys(envelope.result).sort());
+            const expected = crypto.createHmac('sha256', SECRET)
+                .update(canonical).digest('hex');
+            crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(envelope.signature));
+
+        The envelope's `signed_at` is wall-clock and is **not** part of
+        the signed material — only the inner `result` block is. Two
+        consecutive requests for the same finished sim emit the same
+        `signature` but different `signed_at` values.
+
+        When `WEBHOOK_SECRET` is empty or unset, the response is still
+        `200` with `signed=false`, `signature=null`, `signing_key_hint=null`,
+        and a human-readable `error` field — the unsigned `result` block
+        is still valid (same fields as `signal.json`).
+      required:
+        - schema_version
+        - simulation_id
+        - signed
+        - signed_at
+        - algorithm
+        - result
+        - signature
+        - signing_key_hint
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id (also present inside `result`).
+        signed:
+          type: boolean
+          description: |
+            `true` when the deployment has a `WEBHOOK_SECRET` configured
+            and the inner `result` block has been signed. `false` when
+            the deployment has no secret — the `result` is still valid,
+            but `signature` and `signing_key_hint` are null and `error`
+            carries a `signing_unavailable: ...` explanation.
+        signed_at:
+          type: string
+          format: date-time
+          description: |
+            UTC timestamp the response envelope was assembled (ISO-8601
+            with trailing `Z`). Wall-clock — **not** part of the signed
+            material. Two requests for the same finished sim emit the
+            same `signature` but different `signed_at`.
+        algorithm:
+          type: string
+          enum: ["hmac-sha256"]
+          description: |
+            Algorithm identifier for the signature. v1 publishes only
+            `hmac-sha256`; a future migration to a different primitive
+            would bump `schema_version` and add a new algorithm string.
+        result:
+          $ref: "#/components/schemas/TradingSignal"
+        signature:
+          type: string
+          nullable: true
+          description: |
+            Lower-case hex SHA-256 HMAC digest (64 characters) computed
+            over the canonical JSON of `result` under the deployment's
+            `WEBHOOK_SECRET`. `null` when `signed=false`.
+        signing_key_hint:
+          type: string
+          nullable: true
+          description: |
+            First 8 characters of the signing secret followed by `...`,
+            so an integrator can confirm both ends are using the same
+            key without exposing the rest. `null` when `signed=false`.
+        error:
+          type: string
+          description: |
+            Present only when `signed=false`. Human-readable explanation
+            of why the payload could not be signed (typically
+            `signing_unavailable: WEBHOOK_SECRET is not configured...`).
 
     StancePeak:
       type: object

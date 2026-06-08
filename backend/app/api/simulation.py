@@ -5659,6 +5659,118 @@ def get_signal_json(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/signed-result.json', methods=['GET'])
+def get_signed_result_json(simulation_id: str):
+    """HMAC-signed wrapper around the ``signal.json`` payload.
+
+    The signal returned by ``/signal.json`` is the canonical
+    machine-readable view of a finished simulation's outcome. HTTPS
+    covers in-transit authenticity, but once an integrator stores the
+    payload locally — Capacitr's settlement ledger, a research archive,
+    an ML pipeline's provenance row — there is no way to prove the stored
+    bytes match what MiroShark actually emitted without re-fetching the
+    sim live.
+
+    This surface returns the same signal fields wrapped in a canonical
+    envelope plus an HMAC-SHA256 signature over the deterministic JSON
+    encoding of the inner ``result`` block. The signing key is the same
+    ``WEBHOOK_SECRET`` the outbound webhook delivery service uses, so a
+    recipient who already verifies a webhook can re-use that exact
+    ``hmac.compare_digest`` / ``crypto.timingSafeEqual`` logic against
+    this payload — zero new config, zero new secrets, no on-chain
+    dependency.
+
+    Pairs with the OriginTrail DKG citation (``cite.bib``) for dual-
+    coverage authenticity: on-chain anchoring for decentralised audit,
+    HMAC for synchronous lightweight verification against any locally
+    held copy.
+
+    Auth posture: private (inherits the sibling ``signal.json`` posture
+    via the default ``internal_auth_guard``). Integrators consuming
+    ``signal.json`` already authenticate with the internal key; the
+    signed variant uses the same gate. The signing-secret divergence is
+    deliberate: auth keeps strangers out of the data layer; the signing
+    key proves origin once the data has been handed to a third party.
+
+    Publish-gate behaviour matches ``signal.json``:
+
+      * private sim → 403 (same body as ``signal.json``)
+      * unknown / not-yet-ready sim → 404 (same body as ``signal.json``)
+      * ``WEBHOOK_SECRET`` absent → 200 with ``signed=false`` + the
+        unsigned result block (still useful — the fields match signal.json
+        exactly; the absence of a signature is the missing feature, not
+        an API failure)
+
+    Cached 5 minutes — same cadence as ``signal.json``. A live sim's
+    final stance can flip round-to-round, so a short cache lets
+    integrators see fresh signatures while crawlers don't hammer the
+    embed-summary build.
+    """
+    from ..services import signal_service
+    from ..services import signed_result as signed_result_service
+    from ..services import surface_stats
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        signal = signal_service.compute_signal(summary)
+        if signal is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Signal not available yet — the simulation hasn't recorded any rounds.",
+                    "尚无可用的信号 — 模拟还没有记录任何回合。",
+                    locale,
+                ),
+            }), 404
+
+        # Inject the sim id into the inner result block so the signature
+        # covers it — a recipient who only kept the inner ``result`` dict
+        # can still re-derive ``simulation_id`` from their own copy
+        # without trusting the envelope.
+        signal["simulation_id"] = simulation_id
+
+        secret = os.environ.get("WEBHOOK_SECRET", "")
+        envelope = signed_result_service.build_signed_result(
+            signal=signal,
+            simulation_id=simulation_id,
+            secret=secret,
+        )
+
+        response = jsonify(envelope)
+        # 5-minute cache — matches signal.json / peak-round / chart.svg.
+        response.headers["Cache-Control"] = "public, max-age=300"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-signed-result.json"'
+        )
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        surface_stats.increment_surface_stat(sim_dir, "signed_result")
+        return response
+
+    except Exception as e:
+        logger.error(
+            f"signed-result.json: failed for {simulation_id}: {e}\n{traceback.format_exc()}"
+        )
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/peak-round', methods=['GET'])
 def get_peak_round(simulation_id: str):
     """Peak-round belief analytics for a published simulation.

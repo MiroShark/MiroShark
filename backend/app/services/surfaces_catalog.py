@@ -327,6 +327,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 137,
         "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/agents.json'",
     },
+    {
+        "key": "signed_result",
+        "endpoint": "/api/simulation/<simulation_id>/signed-result.json",
+        "method": "GET",
+        "type": "integration",
+        "description": "HMAC-SHA256 signed wrapper around signal.json — offline-verifiable provenance via WEBHOOK_SECRET.",
+        "added_in_pr": 152,
+        "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/signed-result.json'",
+    },
     # ── Platform-level surfaces ─────────────────────────────────────
     {
         "key": "platform_stats",
@@ -436,6 +445,7 @@ _PER_SIM_TRACKED_KEYS: frozenset[str] = frozenset(
         "volatility",
         "clone_json",
         "agents_json",
+        "signed_result",
     }
 )
 
