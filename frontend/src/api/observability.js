@@ -11,8 +11,9 @@ export const streamEvents = (simulationId, eventTypes) => {
   if (simulationId) params.set('simulation_id', simulationId)
   if (eventTypes) params.set('event_types', eventTypes)
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001'
-  return new EventSource(`${baseUrl}/api/observability/events/stream?${params}`)
+  const apiBase = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+  const streamPath = `/api/observability/events/stream?${params}`
+  return new EventSource(apiBase ? `${apiBase}${streamPath}` : streamPath)
 }
 
 /**

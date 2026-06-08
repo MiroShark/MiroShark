@@ -1,9 +1,11 @@
 import axios from 'axios'
 import { locale } from '../i18n'
 
-// Create axios instance
+// Default to same-origin `/api` so Vite's dev proxy works when the UI is
+// opened via gpu.local / LAN hostnames. Set VITE_API_BASE_URL for production
+// (e.g. https://api.example.com) or direct backend access on the same machine.
 const service = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001',
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 300000, // 5-minute timeout (ontology generation may take a long time)
   headers: {
     'Content-Type': 'application/json'
@@ -41,18 +43,27 @@ service.interceptors.response.use(
     return res
   },
   error => {
+    const body = error.response?.data
+    const apiMessage =
+      (typeof body === 'object' && body && (body.error || body.message)) ||
+      null
+    if (apiMessage) {
+      console.error('Response error:', apiMessage)
+      return Promise.reject(new Error(apiMessage))
+    }
+
     console.error('Response error:', error)
-    
+
     // Handle timeout
     if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
       console.error('Request timeout')
     }
-    
+
     // Handle network error
     if (error.message === 'Network Error') {
       console.error('Network error - please check your connection')
     }
-    
+
     return Promise.reject(error)
   }
 )
