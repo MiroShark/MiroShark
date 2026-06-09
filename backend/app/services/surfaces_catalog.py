@@ -410,6 +410,15 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 151,
         "example_curl": "curl -fsSL 'https://your-host/api/stats/distribution.json'",
     },
+    {
+        "key": "activity_feed",
+        "endpoint": "/api/activity.json",
+        "method": "GET",
+        "type": "discovery",
+        "description": "Lightweight what-just-completed feed — N most recent public+completed sims; supports ?limit=1-50.",
+        "added_in_pr": 153,
+        "example_curl": "curl -fsSL 'https://your-host/api/activity.json?limit=20'",
+    },
 ]
 
 

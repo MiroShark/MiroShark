@@ -3682,6 +3682,115 @@ paths:
                   data:
                     $ref: "#/components/schemas/PlatformStatus"
 
+  /api/activity.json:
+    get:
+      tags: [Platform]
+      summary: Lightweight what-just-completed feed — N most recent public+completed sims.
+      description: |
+        Sibling of `/api/stats` (analytics aggregate),
+        `/api/surfaces.json` (capability catalog), and `/api/status.json`
+        (liveness probe). Where those four platform surfaces describe
+        the *shape*, *capabilities*, and *health* of the corpus, this
+        one answers the polling-loop question integrators ask between
+        gallery refreshes and a per-sim webhook subscription: *"give
+        me the N most recent completions in a small JSON envelope, no
+        auth, fast cache."*
+
+        Sits between three pre-existing discovery surfaces:
+
+        * **`/api/simulation/public`** is the full filterable gallery
+          (search, dominant-stance, quality-tier, outcome, sort,
+          pagination, the kitchen sink). Heavy payload, designed for
+          UI consumption.
+        * **`/api/feed.rss` + `/api/feed.atom`** are subscription-
+          style syndication feeds for RSS / Atom readers. XML wrapper,
+          designed for human readers via Feedly / Inoreader / etc.
+        * **`/api/status.json`** is a liveness probe (queue depth,
+          completed_24h, last_completed_at) — no per-sim payload.
+
+        None of them serves the *"poll every 30 seconds, render a
+        five-row 'recent runs' strip"* use case. This endpoint does.
+
+        Returns the `limit` most recently completed public simulations
+        in reverse-chronological order, each carrying the small
+        envelope a polling loop needs: `sim_id`, `scenario_title`
+        (truncated to 100 chars), `direction` + `confidence_pct` +
+        `quality_health` (from the same signal pipeline as
+        `signal.json`), `total_rounds` (trajectory snapshot count),
+        `completed_at` (ISO-8601), `project_id`.
+
+        Query params:
+
+        * `limit` (optional, integer, 1–50, default 20) — number of
+          entries to return. Values outside `[1, 50]` clamp into
+          range; non-numeric or absent → 20. The clamp is loose by
+          design — a typo'd query param shouldn't break a polling
+          loop with a 400.
+
+        **Auth posture: public — built for keyless integrator
+        polling.** Added to the `internal_auth_guard` allow-list
+        alongside `/api/status.json` and `/api/simulation/batch-status`.
+        The publish gate is applied per sim inside the service module
+        (`is_public AND status == "completed"`), so an anonymous
+        caller never sees private or in-flight work regardless of
+        request shape — same guarantee `/api/feed.rss` already
+        offers, just in a smaller JSON envelope better suited to
+        polling.
+
+        **`Cache-Control: public, max-age=30`** matches the
+        platform-status probe cadence — a consumer polling both
+        surfaces sees consistent freshness. Short enough that a
+        freshly-completed sim appears within half a minute, long
+        enough that a load-balanced fleet of pollers doesn't multiply
+        the scan cost.
+
+        **`ETag`** derives from `count` + the newest entry's
+        `completed_at`; a conditional `If-None-Match` GET short-
+        circuits to `304` without re-serialising the body.
+
+        Empty deployment returns `{"count": 0, "results": []}` rather
+        than `404` — a fresh install polling itself sees a valid
+        response.
+      parameters:
+        - in: query
+          name: limit
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+          description: |
+            Number of recent completions to return. Clamped silently
+            into `[1, 50]`; non-numeric or absent → 20.
+      responses:
+        "200":
+          description: Activity-feed envelope.
+          headers:
+            ETag:
+              schema: { type: string }
+              description: |
+                Short cache tag derived from `count` + the newest
+                entry's `completed_at`. Bumps when a new sim
+                completes or when the caller varies `?limit=`.
+            Cache-Control:
+              schema: { type: string }
+              description: "`public, max-age=30`."
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, data]
+                properties:
+                  success: { type: boolean, enum: [true] }
+                  data:
+                    $ref: "#/components/schemas/ActivityFeed"
+        "304":
+          description: |
+            `If-None-Match` matched the current `ETag`; body omitted.
+            The `ETag` and `Cache-Control` headers are still returned
+            so the consumer can refresh its cache TTL.
+
   /api/simulation/{simulation_id}/export:
     get:
       tags: [Export]
@@ -7193,6 +7302,145 @@ components:
             ISO-8601 UTC timestamp the response was generated, with
             trailing `Z`. Always present, even on the all-zero
             envelope returned by a fresh install.
+
+    ActivityFeed:
+      type: object
+      description: |
+        Lightweight what-just-completed envelope returned by
+        `/api/activity.json`. Distinct from `PlatformStats` (analytics
+        aggregate), `PlatformStatus` (liveness probe), and the gallery
+        feed surfaces — this schema describes the *N most recent
+        completed sims as small per-sim payloads*, sorted reverse-
+        chronologically. The polling primitive for integrators,
+        status dashboards, and social bots that need to react to
+        completions without subscribing to per-sim webhooks.
+
+        Only `is_public == true` AND `status == "completed"` sims
+        contribute — same publish gate every other platform surface
+        applies. Because `/api/activity.json` is unauthenticated, the
+        gate keeps the feed from leaking private corpus volume to
+        anonymous callers.
+
+        `results[]` is ordered by `completed_at` descending. Ties
+        break on `sim_id` descending so the order is deterministic
+        across calls.
+      required: [schema_version, count, results]
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        count:
+          type: integer
+          minimum: 0
+          maximum: 50
+          description: |
+            Length of the `results` array. Equal to
+            `min(limit, total_eligible_sims)` where `limit` is the
+            request's `?limit=` value (clamped into `[1, 50]`) and
+            `total_eligible_sims` is the corpus-wide count of public
+            completed sims with a usable `completed_at` timestamp.
+        results:
+          type: array
+          maxItems: 50
+          items:
+            $ref: "#/components/schemas/ActivityFeedEntry"
+
+    ActivityFeedEntry:
+      type: object
+      description: |
+        Per-sim entry inside an `ActivityFeed`. Carries the smallest
+        payload a polling consumer needs to render a "recent runs"
+        row and decide whether to fetch the per-sim surfaces for
+        more detail.
+
+        `direction`, `confidence_pct`, and `quality_health` derive
+        from `signal_service.compute_signal` over the same final-
+        round belief split the per-sim `signal.json` surface uses —
+        so an entry's analytics match its per-sim signal byte-for-
+        byte. `total_rounds` is the trajectory snapshot count, the
+        same value `peak_round.total_rounds` and the batch-status
+        surface report. `completed_at` derives from
+        `state.json.updated_at`, falling back to `created_at` for
+        older sims.
+
+        Every analytics field is nullable to handle the rare case of
+        a completed sim with a missing / unparseable trajectory: the
+        entry still appears (the completion is real), but the signal
+        fields are `null` rather than fabricated.
+      required:
+        - sim_id
+        - scenario_title
+        - direction
+        - confidence_pct
+        - quality_health
+        - total_rounds
+        - completed_at
+        - project_id
+      properties:
+        sim_id:
+          type: string
+          description: The simulation id this entry describes.
+        scenario_title:
+          type: string
+          maxLength: 100
+          description: |
+            Scenario text from `simulation_config.json` (the
+            `simulation_requirement` field), truncated to 100
+            characters with a trailing ellipsis on overflow. Empty
+            string when the config is missing — the route emits the
+            raw value rather than a `"(untitled)"` stand-in so a
+            consumer can render its own placeholder.
+        direction:
+          type: [string, "null"]
+          enum: [Bullish, Neutral, Bearish, null]
+          description: |
+            Leading stance from `signal_service.compute_signal`.
+            `null` for a completed sim whose trajectory is missing
+            or carries no parseable belief positions.
+        confidence_pct:
+          type: [number, "null"]
+          format: float
+          minimum: 0
+          maximum: 100
+          description: |
+            Per-sim confidence percentage — the same value the per-
+            sim `signal.json` surface reports. `null` when the
+            signal cannot be derived.
+        quality_health:
+          type: [string, "null"]
+          description: |
+            Quality tier string from `quality.json.health` (e.g.
+            `"Excellent"`, `"Good"`, `"Fair"`, `"Poor"`). `null`
+            when `quality.json` is missing or carries no health
+            field.
+        total_rounds:
+          type: integer
+          minimum: 0
+          description: |
+            Number of recorded `trajectory.json` snapshots — the
+            same value `peak_round.total_rounds` and
+            `BatchStatusEntry.total_rounds` report for a completed
+            sim. `0` for a completed sim whose trajectory file is
+            missing or empty (the completion is still real; the
+            trajectory just wasn't persisted).
+        completed_at:
+          type: string
+          format: date-time
+          description: |
+            ISO-8601 completion timestamp from
+            `state.json.updated_at` (the value `simulation_runner`
+            writes on terminal-state transition), falling back to
+            `created_at` for older sims. Sims without either
+            timestamp are excluded from the feed — they couldn't be
+            placed in the reverse-chronological ordering anyway.
+        project_id:
+          type: [string, "null"]
+          description: |
+            The owning project's `project_id`, or `null` when the
+            sim has no project. Useful for filtering / grouping the
+            stream client-side without re-fetching the per-sim
+            surfaces.
 
     BatchStatusResponse:
       type: object

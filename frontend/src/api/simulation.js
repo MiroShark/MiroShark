@@ -1369,6 +1369,55 @@ export const getProjectStats = async (projectId) => {
 }
 
 /**
+ * Build the absolute URL of the activity-feed endpoint.
+ * Lightweight "what just completed?" polling primitive — the N most
+ * recently completed public sims in reverse-chronological order. Sits
+ * between the full filterable gallery (`/api/simulation/public`) and
+ * the subscription-style feed surfaces (`/api/feed.rss`).
+ *
+ * @param {number} [limit] - 1-50, default 20. Out-of-range values are
+ *   clamped silently by the backend (no 400).
+ * @param {string} [origin] - Override origin (defaults to window.location.origin).
+ * @returns {string}
+ */
+export const getActivityFeedUrl = (limit, origin) => {
+  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
+  if (limit === undefined || limit === null) {
+    return `${base}/api/activity.json`
+  }
+  return `${base}/api/activity.json?limit=${encodeURIComponent(limit)}`
+}
+
+/**
+ * Fetch the activity-feed envelope — the N most recently completed
+ * public simulations. Returns the parsed payload (`schema_version` +
+ * `count` + `results`) on 200; throws on transport errors. Never
+ * 404s — an empty deployment still returns a well-formed envelope
+ * with `count: 0` and `results: []`.
+ *
+ * `results` is ordered by `completed_at` descending. Only public +
+ * completed sims appear (private and in-flight work is hidden by the
+ * publish gate inside the service). Each entry carries `sim_id`,
+ * `scenario_title`, `direction`, `confidence_pct`, `quality_health`,
+ * `total_rounds`, `completed_at`, `project_id`.
+ *
+ * @param {number} [limit] - 1-50, default 20. Values outside the
+ *   range are clamped silently by the backend.
+ * @returns {Promise<{schema_version: string, count: number, results: Array<object>}>}
+ */
+export const getActivityFeed = async (limit) => {
+  const res = await fetch(getActivityFeedUrl(limit), {
+    credentials: 'omit',
+    cache: 'no-store',
+  })
+  if (!res.ok) {
+    throw new Error(`activity feed fetch failed: ${res.status}`)
+  }
+  const body = await res.json()
+  return body?.data ?? body
+}
+
+/**
  * Build the absolute URL of the platform-wide outcome distribution
  * endpoint. Companion of `/api/stats` — `/api/stats` reports totals,
  * this endpoint reports the shape of those totals (direction,

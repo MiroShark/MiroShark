@@ -124,6 +124,17 @@ def create_app(config_class=Config):
         if request.path == '/api/simulation/batch-status':
             return
 
+        # Exempt the activity feed. Same posture as /api/status.json:
+        # Aeon's push-recap skill, status dashboards, and integrator
+        # polling loops (Capacitr, AntFleet, social bots) all need
+        # keyless access to "what just completed?" The publish gate
+        # inside activity_feed restricts the feed to is_public+completed
+        # sims so an anonymous caller can never read private or in-flight
+        # work — same guarantee /api/feed.rss already offers, just in a
+        # smaller JSON envelope better suited to polling.
+        if request.path == '/api/activity.json':
+            return
+
         # Only protect /api/* routes
         if not request.path.startswith('/api/'):
             return
@@ -154,7 +165,7 @@ def create_app(config_class=Config):
         return response
     
     # Register blueprints
-    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp, countries_bp, stats_bp, surfaces_bp, project_stats_bp, status_bp
+    from .api import graph_bp, simulation_bp, report_bp, templates_bp, settings_bp, observability_bp, mcp_bp, docs_bp, feed_bp, share_bp, watch_bp, sitemap_bp, notifications_bp, countries_bp, stats_bp, surfaces_bp, project_stats_bp, status_bp, activity_bp
     app.register_blueprint(graph_bp, url_prefix='/api/graph')
     app.register_blueprint(simulation_bp, url_prefix='/api/simulation')
     app.register_blueprint(report_bp, url_prefix='/api/report')
@@ -211,6 +222,13 @@ def create_app(config_class=Config):
     # consume. Mounted at /api (no sub-prefix) so the URL stays the
     # short, well-known probe path a status-page template can drop in.
     app.register_blueprint(status_bp, url_prefix='/api')
+    # activity_bp serves /api/activity.json — the lightweight
+    # "what just completed?" polling primitive. Sibling of status_bp /
+    # surfaces_bp / stats_bp; sits between the full filterable gallery
+    # (/api/simulation/public) and the subscription feed surfaces
+    # (/api/feed.rss). Mounted at /api (no sub-prefix) so the URL stays
+    # the short, well-known polling path an integrator wires once.
+    app.register_blueprint(activity_bp, url_prefix='/api')
     
     # Health check
     @app.route('/health')
