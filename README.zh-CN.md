@@ -31,7 +31,7 @@
 ## 它做什么
 
 - 你提供一个情景,MiroShark 围绕它构建世界。
-- 数百个有据可依的智能体在 Twitter、Reddit 与一个预测市场上每小时一轮地做出反应。
+- 数百个有据可依的智能体在 Twitter、Reddit 与预测市场上每小时一轮地做出反应。
 - 与任意智能体对话。在运行中投入突发新闻。派生出反事实分支。
 - 生成一份引用真实发帖与交易的复盘报告。
 
@@ -41,9 +41,9 @@
 
 ## 快速开始
 
-推荐路径:**一把 [OpenRouter](https://openrouter.ai/) 密钥 + `./miroshark` 启动器**。首次模拟约 10 分钟、约 $1。
+推荐路径:**一个 [OpenRouter](https://openrouter.ai/) 密钥 + `./miroshark` 启动器**。首次模拟约 10 分钟、约 $1。
 
-**前置条件** — Python 3.11+、Node 18+、Neo4j,以及一把 [OpenRouter 密钥](https://openrouter.ai/)。
+**前置条件** — Python 3.11+、Node 18+、Neo4j,以及一个 [OpenRouter 密钥](https://openrouter.ai/)。
 
 安装 Neo4j — 启动器会替你启动它:
 
@@ -59,16 +59,16 @@ git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
 # 将你的 OpenRouter 密钥粘贴到 LLM_API_KEY / SMART_API_KEY /
 # NER_API_KEY / OPENAI_API_KEY / EMBEDDING_API_KEY 五个字段
-# (同一把密钥,粘 5 处)。默认组合是 Mimo V2 Flash + Gemini 3 Flash。
+# (同一个密钥,粘 5 处)。默认组合是 Mimo V2 Flash + Gemini 3 Flash。
 ./miroshark
 ```
 
 启动器会检查依赖、启动 Neo4j、安装前后端,并在 `:3000` + `:5001` 提供服务。Ctrl+C 停止一切。打开 `http://localhost:3000` 并投入一份文档即可。
 
-**其他路径** — [一键 Railway / Render 部署](docs/INSTALL.zh-CN.md#一键云部署)、[Docker + Ollama](docs/INSTALL.zh-CN.md#方案-bdocker--本地-ollama)、[手动 Ollama](docs/INSTALL.zh-CN.md#方案-c手动--本地-ollama)、[Claude Code CLI](docs/INSTALL.zh-CN.md#方案-dclaude-code无需-api-密钥) — 全部见 **[docs/INSTALL.zh-CN.md](docs/INSTALL.zh-CN.md)**。
+**其他路径** — [一键 Railway / Render 部署](docs/INSTALL.zh-CN.md#一键云部署)、[Docker + Ollama](docs/INSTALL.zh-CN.md#方案-b-docker--本地-ollama)、[手动 Ollama](docs/INSTALL.zh-CN.md#方案-c-手动--本地-ollama)、[Claude Code CLI](docs/INSTALL.zh-CN.md#方案-d-claude-code无需-api-密钥) — 全部见 **[docs/INSTALL.zh-CN.md](docs/INSTALL.zh-CN.md)**。
 
 <p align="center">
-  <img src="./docs/images/miroshark-overview-diagram-v2.jpg" alt="MiroShark 总览" />
+  <img src="./docs/images/miroshark-overview-cn-v2.jpg" alt="MiroShark 总览" />
 </p>
 
 ## 界面语言

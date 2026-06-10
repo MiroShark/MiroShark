@@ -28,7 +28,7 @@
   <img src="./docs/images/simulate-anything-hero-v2.jpg" alt="Simulate anything — $1 per simulation, 10 min first result, 100 agents: input → build world → swarm → report" width="100%" />
 </p>
 
-### What it does
+## What it does
 
 - You bring a scenario. MiroShark builds the world around it.
 - Hundreds of grounded agents. Twitter, Reddit, and a prediction market. Hour by hour.
@@ -39,7 +39,7 @@
   <img src="./docs/images/simulation-phases-v2.jpg" alt="MiroShark pipeline: Phase 1 Ontology Generation → Phase 2 Graph Building → Phase 3 Agent Setup → Phase 4 Simulation Execution → Phase 5 Report & Interaction" width="100%" />
 </p>
 
-### Quick start
+## Quick start
 
 The recommended path: **one [OpenRouter](https://openrouter.ai/) key + the `./miroshark` launcher.** First simulation in ~10 min, ~$1.
 
@@ -71,11 +71,11 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
   <img src="./docs/images/miroshark-overview-diagram-v2.jpg" alt="MiroShark Overview" />
 </p>
 
-### Interface language
+## Interface language
 
 After launching, click the **中 / EN** toggle in the top-right of the navbar to switch between English and Chinese. Your choice is persisted in the browser, and the public gallery card titles + descriptions follow the active locale.
 
-### Use cases
+## Use cases
 
 - **PR crisis testing** — simulate public reaction to a press release before publishing
 - **Market reaction** — feed financial news and observe simulated trader + investor sentiment
@@ -89,7 +89,7 @@ After launching, click the **中 / EN** toggle in the top-right of the navbar to
   <img src="./docs/images/agent-grounding-v2.jpg" alt="Five layers of grounding per agent: demographic seed, web enrichment, semantic search, relationships, graph attributes" width="100%" />
 </p>
 
-### Features
+## Features
 
 A few of the highlights:
 
@@ -110,7 +110,7 @@ A few of the highlights:
   <img src="./docs/images/graph-memory-pipeline-v2.jpg" alt="Graph memory pipeline: ingestion (NER, embed, entity resolution, contradiction check, temporal edges) and retrieval (vector + BM25 + BFS, fused, reranked)" width="100%" />
 </p>
 
-### Documentation
+## Documentation
 
 | | |
 |---|---|
