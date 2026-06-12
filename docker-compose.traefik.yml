@@ -1,0 +1,79 @@
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: miroshark-neo4j
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?NEO4J_PASSWORD must be set in .env}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    restart: unless-stopped
+    networks:
+      - miroshark
+
+  miroshark:
+    build: .
+    container_name: miroshark
+    env_file:
+      - .env
+    environment:
+      # Inside Docker, Neo4j is the compose service name (not localhost).
+      NEO4J_URI: bolt://neo4j:7687
+    # Host ports optional — Traefik routes :3000 (UI) and :5001 (API)
+    depends_on:
+      - neo4j
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=docker-proxynet
+      # Shared security headers (frontend + API)
+      - traefik.http.middlewares.miroshark.headers.SSLRedirect=true
+      - traefik.http.middlewares.miroshark.headers.STSSeconds=315360000
+      - traefik.http.middlewares.miroshark.headers.browserXSSFilter=true
+      - traefik.http.middlewares.miroshark.headers.contentTypeNosniff=true
+      - traefik.http.middlewares.miroshark.headers.forceSTSHeader=true
+      - traefik.http.middlewares.miroshark.headers.SSLHost=${DOMAIN_NAME}
+      - traefik.http.middlewares.miroshark.headers.STSIncludeSubdomains=true
+      - traefik.http.middlewares.miroshark.headers.STSPreload=true
+      # Basic auth (shared user for frontend + API)
+      - traefik.http.middlewares.miroshark-auth.basicauth.users=${AUTHUSER}
+      - traefik.http.middlewares.miroshark-auth.basicauth.removeheader=true
+      # Frontend (Vite :3000) — ${SUBDOMAIN}.${DOMAIN_NAME}
+      - traefik.http.routers.miroshark.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`)
+      - traefik.http.routers.miroshark.tls=true
+      - traefik.http.routers.miroshark.entrypoints=web,web-secure
+      - traefik.http.routers.miroshark.tls.certresolver=tlschallenge
+      - traefik.http.routers.miroshark.middlewares=miroshark-auth@docker, miroshark@docker
+      - traefik.http.routers.miroshark.service=miroshark-web
+      - traefik.http.services.miroshark-web.loadbalancer.server.port=3000
+      # API (Flask :5001) — same host /api (same-origin; avoids cross-subdomain Basic Auth + CORS)
+      - traefik.http.routers.miroshark-api.rule=Host(`${SUBDOMAIN}.${DOMAIN_NAME}`) && PathPrefix(`/api`)
+      - traefik.http.routers.miroshark-api.priority=100
+      - traefik.http.routers.miroshark-api.tls=true
+      - traefik.http.routers.miroshark-api.entrypoints=web,web-secure
+      - traefik.http.routers.miroshark-api.tls.certresolver=tlschallenge
+      - traefik.http.routers.miroshark-api.middlewares=miroshark-auth@docker, miroshark@docker
+      - traefik.http.routers.miroshark-api.service=miroshark-api
+      - traefik.http.services.miroshark-api.loadbalancer.server.port=5001
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+      - ./backend/logs:/app/backend/logs
+    networks:
+      - miroshark
+      - docker-proxynet
+      - traefik-servicenet
+
+volumes:
+  neo4j_data:
+
+networks:
+  miroshark:
+  docker-proxynet:
+     driver: bridge
+     external: true
+     name: docker-proxynet
+  traefik-servicenet:
+     external: true           # this network has to be created once before starting:
+     name: traefik-servicenet

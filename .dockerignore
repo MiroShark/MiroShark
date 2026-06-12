@@ -1,8 +1,7 @@
-# Frontend files (not needed for backend-only Railway deployment)
-frontend/
+# Installed deps are rebuilt in the image (npm ci / uv sync)
 node_modules/
-package.json
-package-lock.json
+frontend/node_modules/
+backend/.venv/
 *.log
 .env
 .env.local

@@ -1,0 +1,53 @@
+# Optional local stack with bundled Ollama (no Traefik).
+# Usage: docker compose -f docker-compose.ollama.yml up -d
+services:
+  neo4j:
+    image: neo4j:5.26-community
+    container_name: miroshark-neo4j
+    environment:
+      - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?NEO4J_PASSWORD must be set in .env}
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    volumes:
+      - neo4j_data:/data
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: miroshark-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  miroshark:
+    image: ghcr.io/aaronjmars/miroshark:latest
+    # Mirror image (replace the address above if pulling is slow)
+    # image: ghcr.nju.edu.cn/aaronjmars/miroshark:latest
+    container_name: miroshark
+    environment:
+      - LLM_API_KEY=ollama
+      - LLM_BASE_URL=http://ollama:11434/v1
+      - LLM_MODEL_NAME=qwen2.5:32b
+      - NEO4J_URI=bolt://neo4j:7687
+      - NEO4J_USER=neo4j
+      - NEO4J_PASSWORD=${NEO4J_PASSWORD:?NEO4J_PASSWORD must be set in .env}
+      - EMBEDDING_MODEL=nomic-embed-text
+      - EMBEDDING_BASE_URL=http://ollama:11434
+      - OPENAI_API_KEY=ollama
+      - OPENAI_API_BASE_URL=http://ollama:11434/v1
+    ports:
+      - "3000:3000"
+      - "5001:5001"
+    depends_on:
+      - neo4j
+      - ollama
+    restart: unless-stopped
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+
+volumes:
+  neo4j_data:
+  ollama_data:
