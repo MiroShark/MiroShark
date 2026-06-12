@@ -3367,19 +3367,44 @@ paths:
         breaking changes bump the literal and a consumer can gate on
         it.
 
-        **`ETag` derives from the catalog length** (`surfaces-v1-<N>`).
-        Bumps when a new surface is appended. A conditional
-        `If-None-Match` GET short-circuits to `304` so a polling
-        consumer doesn't pay the JSON body cost on every request.
+        **Optional `?type=` filter.** Pass `?type=<category>` to narrow
+        the catalog to a single `type` (one of `analytics`,
+        `visualization`, `export`, `embed`, `integration`, `platform`,
+        `discovery`; case-insensitive). `count` then reflects the
+        filtered length; the envelope shape is unchanged. An empty or
+        whitespace-only value is treated as absent (full catalog). An
+        unrecognised value returns `400` with the list of valid
+        categories — a typo'd filter is surfaced as a caller error
+        rather than silently returning an empty catalog that reads like
+        a broken deployment.
+
+        **`ETag` derives from the catalog length** (`surfaces-v1-<N>`),
+        with the category appended for a filtered request
+        (`surfaces-v1-<N>-analytics`) so a filtered and an unfiltered
+        response never collide in a shared cache. Bumps when a new
+        surface is appended. A conditional `If-None-Match` GET
+        short-circuits to `304` so a polling consumer doesn't pay the
+        JSON body cost on every request.
 
         **`Cache-Control: public, max-age=3600`** — the catalog only
         changes when a new PR ships a new surface; one hour is a tight
         bound on the lag between a ship and the catalog reflecting it.
 
-        Always returns `200` (or `304`) — there is no input the caller
-        can supply that would produce a `404`. The catalog is
-        intentionally static so two consecutive calls return
-        bytewise-identical JSON.
+        Returns `200` (or `304`) for every valid request — the catalog
+        is intentionally static so two consecutive calls return
+        bytewise-identical JSON. Only a malformed `?type=` value
+        produces a `400`.
+      parameters:
+        - name: type
+          in: query
+          required: false
+          description: |
+            Narrow the catalog to a single surface category
+            (case-insensitive). Omit for the full catalog.
+          schema:
+            type: string
+            enum:
+              [analytics, visualization, export, embed, integration, platform, discovery]
       responses:
         "200":
           description: Surface catalog envelope.
@@ -3387,8 +3412,9 @@ paths:
             ETag:
               schema: { type: string }
               description: |
-                `surfaces-v<schema>-<count>`. Bumps when a new surface
-                is added; stable across consecutive deployments of the
+                `surfaces-v<schema>-<count>`, with `-<type>` appended
+                for a filtered request. Bumps when a new surface is
+                added; stable across consecutive deployments of the
                 same code revision.
             Cache-Control:
               schema: { type: string }
@@ -3407,6 +3433,13 @@ paths:
             `If-None-Match` matched the current `ETag`; body omitted.
             `ETag` and `Cache-Control` are still returned so the
             consumer can refresh its cache TTL.
+        "400":
+          description: |
+            The `?type=` value is not one of the recognised surface
+            categories. The `error` field names the valid set.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
 
   /api/ecosystem.json:
     get:

@@ -479,19 +479,40 @@ def catalog_count() -> int:
     return len(_CATALOG)
 
 
-def catalog_etag() -> str:
+def is_valid_surface_type(value: Any) -> bool:
+    """Return ``True`` if ``value`` is one of the recognised category
+    strings in ``SURFACE_TYPES``.
+
+    Used by the ``GET /api/surfaces.json?type=<category>`` route to
+    reject an unknown filter with a ``400`` before building the
+    payload. Case-sensitive — the caller lower-cases the raw query
+    value first, matching the lower-case category literals the catalog
+    stores.
+    """
+    return isinstance(value, str) and value in SURFACE_TYPES
+
+
+def catalog_etag(surface_type: str | None = None) -> str:
     """Short ETag derived from the catalog length.
 
     Changes whenever a new surface is appended — same posture as the
     ``/api/stats`` ETag (derived from ``total_sims`` + ``newest_sim_id``).
     A consumer's ``If-None-Match`` GET short-circuits to ``304`` until
     a new surface ships.
+
+    When ``surface_type`` is supplied (a filtered ``?type=`` request),
+    the category is appended (``surfaces-v1-30-analytics``) so a
+    filtered response and the full-catalog response never collide in a
+    shared cache — each ``?type=`` view carries its own validator.
     """
-    return f"surfaces-v{SCHEMA_VERSION}-{len(_CATALOG)}"
+    base = f"surfaces-v{SCHEMA_VERSION}-{len(_CATALOG)}"
+    if surface_type:
+        return f"{base}-{surface_type}"
+    return base
 
 
-def build_response_payload() -> Dict[str, Any]:
-    """Build the full envelope returned by ``GET /api/surfaces.json``.
+def build_response_payload(surface_type: str | None = None) -> Dict[str, Any]:
+    """Build the envelope returned by ``GET /api/surfaces.json``.
 
     Shape::
 
@@ -506,12 +527,21 @@ def build_response_payload() -> Dict[str, Any]:
           ]
         }
 
-    The same envelope is returned to every caller; no per-request
-    state, no caching of mutable state. Two consecutive calls produce
-    bytewise-identical JSON.
+    When ``surface_type`` is ``None`` (the default, an unfiltered
+    request) the full catalog is returned; two consecutive calls
+    produce bytewise-identical JSON. When ``surface_type`` is supplied,
+    ``surfaces`` is filtered to entries whose ``type`` equals it and
+    ``count`` reflects the filtered length — the envelope *shape* is
+    unchanged, only its contents narrow. ``surface_type`` is expected
+    to already be validated (see ``is_valid_surface_type``); an
+    unrecognised value simply yields an empty ``surfaces`` list and a
+    ``count`` of ``0`` rather than raising here.
     """
+    surfaces = get_surfaces_catalog()
+    if surface_type:
+        surfaces = [entry for entry in surfaces if entry["type"] == surface_type]
     return {
         "schema_version": SCHEMA_VERSION,
-        "count": catalog_count(),
-        "surfaces": get_surfaces_catalog(),
+        "count": len(surfaces),
+        "surfaces": surfaces,
     }
