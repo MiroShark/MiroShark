@@ -4,6 +4,7 @@ Settings API — runtime LLM configuration management.
 GET  /api/settings        — return current active config (masked)
 POST /api/settings        — update config at runtime (no restart required)
 POST /api/settings/test-llm — make a minimal test call and return latency
+POST /api/settings/test-searxng — run a test search against SearXNG
 """
 
 import time
@@ -117,6 +118,12 @@ def _current_snapshot() -> dict:
             'has_api_key': bool(Config.EMBEDDING_API_KEY),
         },
         'web_search_model': Config.WEB_SEARCH_MODEL,
+        'searxng_base_url': Config.SEARXNG_BASE_URL,
+        'firecrawl': {
+            'base_url': Config.FIRECRAWL_BASE_URL,
+            'api_key_masked': _mask_key(Config.FIRECRAWL_API_KEY or ''),
+            'has_api_key': bool(Config.FIRECRAWL_API_KEY),
+        },
         'neo4j': {
             'uri': Config.NEO4J_URI,
             'user': Config.NEO4J_USER,
@@ -164,6 +171,8 @@ def update_settings():
       wonderwall: { base_url, model_name, api_key }
       embedding: { provider, base_url, model_name, api_key, dimensions }
       web_search_model: str
+      searxng_base_url: str
+      firecrawl: { base_url, api_key }
       neo4j: { uri, user, password }
     """
     body = request.get_json(silent=True) or {}
@@ -215,6 +224,27 @@ def update_settings():
 
     if 'web_search_model' in body and body['web_search_model'] is not None:
         Config.WEB_SEARCH_MODEL = body['web_search_model']
+
+    if 'searxng_base_url' in body and body['searxng_base_url'] is not None:
+        new_searxng = (body['searxng_base_url'] or '').strip().rstrip('/')
+        if new_searxng and not new_searxng.lower().startswith(('http://', 'https://')):
+            return jsonify({
+                'success': False,
+                'error': 'searxng_base_url must start with http:// or https://',
+            }), 400
+        Config.SEARXNG_BASE_URL = new_searxng
+
+    firecrawl = body.get('firecrawl') or {}
+    if 'base_url' in firecrawl and firecrawl['base_url'] is not None:
+        new_fc = (firecrawl['base_url'] or '').strip().rstrip('/')
+        if new_fc and not new_fc.lower().startswith(('http://', 'https://')):
+            return jsonify({
+                'success': False,
+                'error': 'firecrawl base_url must start with http:// or https://',
+            }), 400
+        Config.FIRECRAWL_BASE_URL = new_fc
+    if firecrawl.get('api_key'):
+        Config.FIRECRAWL_API_KEY = firecrawl['api_key']
 
     neo4j = body.get('neo4j') or {}
     if neo4j.get('uri'): Config.NEO4J_URI = neo4j['uri']
@@ -287,6 +317,41 @@ def test_llm():
             'success': False,
             'error': str(e),
         }), 200  # Return 200 so the frontend can read the error body
+
+
+@settings_bp.route('/test-searxng', methods=['POST'])
+def test_searxng():
+    """
+    Run a one-result test search against a SearXNG instance.
+
+    Body: {"url": "https://sxng.example.org"} — when omitted, the saved
+    ``Config.SEARXNG_BASE_URL`` is tested. Always returns HTTP 200 so the
+    frontend can render the success / failure body uniformly.
+    """
+    from ..utils.searxng_client import SearxngClient, SearxngError
+
+    body = request.get_json(silent=True) or {}
+    url = (body.get('url') or '').strip().rstrip('/') or Config.SEARXNG_BASE_URL
+
+    if not url:
+        return jsonify({
+            'success': False,
+            'error': 'No SearXNG URL configured — provide one in the request or save it in Settings first.',
+        }), 200
+
+    try:
+        client = SearxngClient(base_url=url, max_retries=1)
+        start = time.time()
+        results = client.search('test', max_results=1)
+        latency_ms = round((time.time() - start) * 1000)
+        return jsonify({
+            'success': True,
+            'latency_ms': latency_ms,
+            'result_count': len(results),
+        }), 200
+    except SearxngError as exc:
+        logger.warning("SearXNG test failed: %s", exc)
+        return jsonify({'success': False, 'error': str(exc)}), 200
 
 
 @settings_bp.route('/test-webhook', methods=['POST'])

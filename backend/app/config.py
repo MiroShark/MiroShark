@@ -147,6 +147,19 @@ class Config:
     # for grounded search, or "perplexity/sonar" for fast search). If empty, uses default LLM.
     WEB_SEARCH_MODEL = os.environ.get('WEB_SEARCH_MODEL', '')
 
+    # SearXNG metasearch — when set, web enrichment does real search-then-
+    # synthesize with the DEFAULT LLM instead of requiring a websearch-enabled
+    # model (:online). Falls back to WEB_SEARCH_MODEL when unset or on failure.
+    SEARXNG_BASE_URL = (os.environ.get('SEARXNG_BASE_URL', '') or '').strip().rstrip('/')
+    SEARXNG_TIMEOUT = int(os.environ.get('SEARXNG_TIMEOUT', '10'))
+    SEARXNG_MAX_RESULTS = int(os.environ.get('SEARXNG_MAX_RESULTS', '5'))
+
+    # Firecrawl-for-agents — when set, URL document ingestion scrapes pages
+    # directly (POST /v1/scrape → markdown) instead of asking the websearch
+    # LLM to read them. Falls back to WEB_SEARCH_MODEL when unset or on failure.
+    FIRECRAWL_BASE_URL = (os.environ.get('FIRECRAWL_BASE_URL', '') or '').strip().rstrip('/')
+    FIRECRAWL_API_KEY = os.environ.get('FIRECRAWL_API_KEY', '')
+
     # Wonderwall model — model for Wonderwall/CAMEL agent simulation loop.
     # When not set, uses LLM_MODEL_NAME.
     # Cloud preset: xiaomi/mimo-v2-flash (same as default to reuse quota)

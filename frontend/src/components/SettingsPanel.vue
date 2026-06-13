@@ -61,6 +61,14 @@
               <span class="setup-val">{{ currentSettings.web_search_model || inheritMarker }}</span>
             </div>
             <div class="setup-row">
+              <span class="setup-key">{{ $tr('SearXNG', 'SearXNG') }}</span>
+              <span class="setup-val">{{ currentSettings.searxng_base_url || $tr('— not set —', '— 未设置 —') }}</span>
+            </div>
+            <div class="setup-row">
+              <span class="setup-key">{{ $tr('Firecrawl', 'Firecrawl') }}</span>
+              <span class="setup-val">{{ currentSettings.firecrawl?.base_url || $tr('— not set —', '— 未设置 —') }}</span>
+            </div>
+            <div class="setup-row">
               <span class="setup-key">{{ $tr('API key', 'API 密钥') }}</span>
               <span class="setup-val">
                 <span v-if="currentSettings.llm?.has_api_key">
@@ -336,6 +344,60 @@
                 />
               </div>
             </div>
+
+            <!-- SearXNG -->
+            <div class="advanced-group">
+              <div class="advanced-group-title">{{ $tr('SearXNG (real web search — works with any model)', 'SearXNG(真实网页搜索——适用于任何模型)') }}</div>
+              <div class="field-row">
+                <label class="field-label">{{ $tr('Instance URL', '实例地址') }}</label>
+                <input
+                  v-model="form.searxng_base_url"
+                  class="field-input"
+                  type="text"
+                  placeholder="https://sxng.example.org"
+                />
+              </div>
+              <div class="field-row">
+                <button
+                  class="ai-retry"
+                  :disabled="searxngTesting || !form.searxng_base_url"
+                  @click="testSearxngFire"
+                >
+                  {{ searxngTesting ? $tr('Searching…', '搜索中…') : $tr('Test search', '测试搜索') }}
+                </button>
+                <span v-if="searxngTestResult" class="webhook-test-result" :class="searxngTestResult.success ? 'ok' : 'fail'">
+                  <template v-if="searxngTestResult.success">
+                    ✓ {{ $tr('OK', '正常') }} ({{ searxngTestResult.latency_ms }}ms)
+                  </template>
+                  <template v-else>
+                    ✗ {{ searxngTestResult.error || $tr('Failed', '失败') }}
+                  </template>
+                </span>
+              </div>
+            </div>
+
+            <!-- Firecrawl -->
+            <div class="advanced-group">
+              <div class="advanced-group-title">{{ $tr('Firecrawl (URL import scraping)', 'Firecrawl(URL 导入抓取)') }}</div>
+              <div class="field-row">
+                <label class="field-label">{{ $tr('Instance URL', '实例地址') }}</label>
+                <input
+                  v-model="form.firecrawl.base_url"
+                  class="field-input"
+                  type="text"
+                  placeholder="https://fc.example.org"
+                />
+              </div>
+              <div class="field-row">
+                <label class="field-label">{{ $tr('API key', 'API 密钥') }}</label>
+                <input
+                  v-model="form.firecrawl.api_key"
+                  class="field-input"
+                  type="password"
+                  :placeholder="currentSettings.firecrawl?.has_api_key ? currentSettings.firecrawl.api_key_masked : $tr('not set', '未设置')"
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -572,7 +634,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch } from 'vue'
-import { getSettings, updateSettings, testLlmConnection, testWebhook } from '../api/settings'
+import { getSettings, updateSettings, testLlmConnection, testWebhook, testSearxng } from '../api/settings'
 import { getMcpStatus } from '../api/mcp'
 import { tr } from '../i18n'
 import LocaleToggle from './LocaleToggle.vue'
@@ -601,6 +663,8 @@ const form = reactive({
   wonderwall: { model_name: '', base_url: '', api_key: '' },
   embedding: { provider: 'ollama', model_name: '' },
   web_search_model: '',
+  searxng_base_url: '',
+  firecrawl: { base_url: '', api_key: '' },
   neo4j: {
     uri: '',
     user: '',
@@ -631,6 +695,10 @@ const inheritMarker = tr('— inherits default —', '— 继承默认值 —')
 const webhookTesting = ref(false)
 const webhookTestResult = ref(null)
 
+// SearXNG test state
+const searxngTesting = ref(false)
+const searxngTestResult = ref(null)
+
 // MCP / AI Integration state
 const mcpStatus = ref(null)
 const mcpLoading = ref(false)
@@ -647,6 +715,7 @@ watch(() => props.open, async (isOpen) => {
     saveSuccess.value = false
     testResult.value = null
     webhookTestResult.value = null
+    searxngTestResult.value = null
     form.preset = ''
     form.presetApiKey = ''
     copyState.value = ''
@@ -674,6 +743,9 @@ const loadCurrentSettings = async () => {
       form.embedding.provider = d.embedding?.provider || 'ollama'
       form.embedding.model_name = d.embedding?.model_name || ''
       form.web_search_model = d.web_search_model || ''
+      form.searxng_base_url = d.searxng_base_url || ''
+      form.firecrawl.base_url = d.firecrawl?.base_url || ''
+      form.firecrawl.api_key = '' // never pre-fill
       form.neo4j.uri = d.neo4j?.uri || ''
       form.neo4j.user = d.neo4j?.user || ''
       form.neo4j.password = ''
@@ -857,6 +929,19 @@ const webhookCanTest = computed(() =>
   Boolean(form.integrations.webhook.url?.trim()) || webhookConfigured.value
 )
 
+const testSearxngFire = async () => {
+  searxngTesting.value = true
+  searxngTestResult.value = null
+  try {
+    const res = await testSearxng(form.searxng_base_url?.trim() || '')
+    searxngTestResult.value = res
+  } catch (e) {
+    searxngTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误') }
+  } finally {
+    searxngTesting.value = false
+  }
+}
+
 const testWebhookFire = async () => {
   webhookTesting.value = true
   webhookTestResult.value = null
@@ -904,6 +989,9 @@ const saveSettings = async () => {
       model_name: form.embedding.model_name,
     }
     payload.web_search_model = form.web_search_model
+    payload.searxng_base_url = form.searxng_base_url?.trim() || ''
+    payload.firecrawl = { base_url: form.firecrawl.base_url?.trim() || '' }
+    if (form.firecrawl.api_key) payload.firecrawl.api_key = form.firecrawl.api_key
 
     payload.neo4j = {
       uri: form.neo4j.uri,
@@ -928,6 +1016,7 @@ const saveSettings = async () => {
       currentSettings.value = res.data
       form.llm.api_key = ''
       form.presetApiKey = ''
+      form.firecrawl.api_key = ''
       form.neo4j.password = ''
       // Reset the webhook URL input so the placeholder shows the new
       // masked value and we don't accidentally re-save the same string.

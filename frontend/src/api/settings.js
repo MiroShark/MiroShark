@@ -3,7 +3,8 @@ import service from './index'
 /**
  * Get current active settings (API keys masked).
  * Returns every slot the modal displays: llm, smart, ner, wonderwall,
- * embedding, web_search_model, neo4j, available_presets.
+ * embedding, web_search_model, searxng_base_url, firecrawl, neo4j,
+ * available_presets.
  */
 export const getSettings = () => {
   return service.get('/api/settings')
@@ -21,6 +22,8 @@ export const getSettings = () => {
  *   - wonderwall:         { base_url, model_name, api_key }
  *   - embedding:          { provider, base_url, model_name, api_key, dimensions }
  *   - web_search_model:   string
+ *   - searxng_base_url:   string                        (SearXNG instance for real web search)
+ *   - firecrawl:          { base_url, api_key }         (Firecrawl instance for URL scraping)
  *   - neo4j:              { uri, user, password }
  */
 export const updateSettings = (data) => {
@@ -33,6 +36,20 @@ export const updateSettings = (data) => {
  */
 export const testLlmConnection = () => {
   return service.post('/api/settings/test-llm')
+}
+
+/**
+ * Run a one-result test search against a SearXNG instance.
+ * Pass a URL to test an unsaved value; omit it to test the
+ * currently saved Config.SEARXNG_BASE_URL.
+ *
+ * @param {string} [url]
+ * @returns {Promise<{ success, latency_ms, result_count, error }>}
+ */
+export const testSearxng = (url) => {
+  const body = {}
+  if (url) body.url = url
+  return service.post('/api/settings/test-searxng', body)
 }
 
 /**

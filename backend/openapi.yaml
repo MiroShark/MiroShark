@@ -4685,6 +4685,36 @@ paths:
             application/json:
               schema: { $ref: "#/components/schemas/SuccessEnvelope" }
 
+  /api/settings/test-searxng:
+    post:
+      tags: [Settings & Push]
+      summary: Run a one-result test search against a SearXNG instance.
+      description: |
+        Used by the Settings *Test search* button. Always returns HTTP 200 so
+        the frontend can render success / failure body uniformly. Pass `url`
+        to test an unsaved value; omit to test the currently saved
+        SEARXNG_BASE_URL.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+      responses:
+        "200":
+          description: Search outcome with latency and result count.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  latency_ms: { type: integer }
+                  result_count: { type: integer }
+                  error: { type: string }
+
   /api/settings/test-webhook:
     post:
       tags: [Integrations]
@@ -8460,6 +8490,12 @@ components:
             api_key: { type: string }
             dimensions: { type: integer }
         web_search_model: { type: string }
+        searxng_base_url: { type: string }
+        firecrawl:
+          type: object
+          properties:
+            base_url: { type: string }
+            api_key: { type: string }
         neo4j:
           type: object
           properties:

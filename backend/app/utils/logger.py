@@ -63,17 +63,24 @@ def setup_logger(name: str = 'miroshark', level: int = logging.DEBUG) -> logging
         datefmt='%H:%M:%S'
     )
     
-    # 1. File handler - detailed logs (named by date, with rotation)
+    # 1. File handler - detailed logs (named by date, with rotation).
+    # The log file may be unwritable (e.g. created root-owned by the Docker
+    # container on a bind mount, or a read-only deployment) — degrade to
+    # console-only instead of crashing every importer.
     log_filename = datetime.now().strftime('%Y-%m-%d') + '.log'
-    file_handler = RotatingFileHandler(
-        os.path.join(LOG_DIR, log_filename),
-        maxBytes=10 * 1024 * 1024,  # 10MB
-        backupCount=5,
-        encoding='utf-8'
-    )
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(detailed_formatter)
-    
+    file_handler = None
+    try:
+        file_handler = RotatingFileHandler(
+            os.path.join(LOG_DIR, log_filename),
+            maxBytes=10 * 1024 * 1024,  # 10MB
+            backupCount=5,
+            encoding='utf-8'
+        )
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(detailed_formatter)
+    except OSError as e:
+        print(f"[logger] File logging disabled ({e}); console only", file=sys.stderr)
+
     # 2. Console handler - concise logs (INFO and above)
     # Ensure UTF-8 encoding on Windows to avoid character encoding issues
     _ensure_utf8_stdout()
@@ -81,7 +88,8 @@ def setup_logger(name: str = 'miroshark', level: int = logging.DEBUG) -> logging
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
 
-    logger.addHandler(file_handler)
+    if file_handler is not None:
+        logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
     return logger

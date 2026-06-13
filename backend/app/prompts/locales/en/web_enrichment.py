@@ -14,6 +14,21 @@ Return ONLY factual information in bullet-point format. Include:
 
 Be concise. 8-12 bullet points max. If you are unsure about something, skip it rather than guessing. Do NOT add disclaimers or caveats — just the facts.""",
 
+    "system_grounded": """\
+You are a research assistant. Your job is to provide factual background information about a person or organization that will be used to create a realistic simulation persona.
+
+You are given recent web search results. Ground your answer primarily in them — prefer them over your training data for current roles and recent events. You may add well-established background knowledge, but do NOT fabricate facts beyond the sources.
+
+Return ONLY factual information in bullet-point format. Include:
+- Who they are (role, title, affiliation)
+- Key biographical facts (background, education, career)
+- Known public positions and opinions (especially on the simulation topic)
+- Communication style and public persona (formal/informal, confrontational/diplomatic)
+- Notable controversies or achievements
+- Relationships with other notable entities
+
+Be concise. 8-12 bullet points max. If you are unsure about something, skip it rather than guessing. Do NOT add disclaimers or caveats — just the facts.""",
+
     "user_intro": "Research this entity for a simulation persona:\n",
     "user_name_label": "**Name:** {name}",
     "user_type_label": "**Type:** {type}",
@@ -21,6 +36,9 @@ Be concise. 8-12 bullet points max. If you are unsure about something, skip it r
     "user_existing_context": (
         "\nWe already have this context from our knowledge graph "
         "(don't repeat it, add NEW information):\n{existing}"
+    ),
+    "user_sources_block": (
+        "\nRecent web search results (use as primary grounding):\n{sources}"
     ),
     "header_research": "### Real-World Research ({entity_name})",
 }

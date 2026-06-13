@@ -5,14 +5,15 @@ Triggers automatically when:
 1. The entity looks like a notable/public figure (politician, celebrity, CEO, etc.)
 2. The knowledge graph context is too thin to build a rich persona
 
-Uses the existing LLM client (OpenRouter / OpenAI-compatible API) to research
-the entity. Models with built-in web search (e.g. Perplexity sonar via
-OpenRouter, or OpenAI with browsing) will return live data. Standard models
-still have extensive training data on public figures.
-
-If WEB_SEARCH_MODEL is set in .env, that model is used for research
-(e.g. "perplexity/sonar-pro" for grounded web search). Otherwise falls
-back to the default LLM.
+Research backends, in precedence order:
+1. SearXNG (SEARXNG_BASE_URL set): real web search — top result snippets are
+   injected into the research prompt and the DEFAULT LLM synthesizes them.
+   Works with any model, including local Ollama.
+2. WEB_SEARCH_MODEL (e.g. "perplexity/sonar-pro" or an ":online" OpenRouter
+   variant): a websearch-enabled LLM researches directly. Also the fallback
+   when a SearXNG request fails.
+3. Default LLM, knowledge-only: standard models still have extensive
+   training data on public figures.
 
 Usage:
     enricher = WebEnricher()
@@ -35,6 +36,7 @@ from ..prompts import get_prompt
 from ..utils.i18n import get_active_locale
 from ..utils.llm_client import create_llm_client, LLMClient
 from ..utils.logger import get_logger
+from ..utils.searxng_client import SearxngClient, SearxngError, format_results_block
 
 logger = get_logger("miroshark.web_enrichment")
 
@@ -153,6 +155,23 @@ class WebEnricher:
     # this leak alone.
     _SIM_REQUIREMENT_CHAR_CAP = 1500
 
+    def _search_web(self, entity_name: str, entity_type: str, locale: str) -> list:
+        """Search SearXNG for the entity. Returns [] when unconfigured or failed."""
+        client = SearxngClient()
+        if not client.is_configured():
+            return []
+
+        query = entity_name.strip()
+        # Disambiguate one-word names ("Apple", "Merz") with the entity type.
+        if len(query.split()) == 1 and entity_type:
+            query = f"{query} {entity_type}"
+
+        try:
+            return client.search(query, language=locale)
+        except SearxngError as e:
+            logger.warning(f"SearXNG search failed for '{entity_name}': {e}")
+            return []
+
     def _research(
         self,
         entity_name: str,
@@ -163,8 +182,10 @@ class WebEnricher:
         """Ask the LLM to research the entity.
 
         The prompt is crafted to get factual, structured information that's
-        useful for persona generation. If the model has web search, it'll
-        use it. If not, it draws from training data.
+        useful for persona generation. With SearXNG configured, live search
+        snippets ground the prompt and the default LLM synthesizes them.
+        Otherwise, a model with web search uses it; failing that, the model
+        draws from training data.
         """
         locale = get_active_locale()
 
@@ -184,13 +205,25 @@ class WebEnricher:
             truncated = existing_context[:500] if len(existing_context) > 500 else existing_context
             parts.append(get_prompt("web_enrichment.user_existing_context", locale, existing=truncated))
 
+        # SearXNG path: ground the prompt with live snippets and let the
+        # DEFAULT LLM synthesize — no websearch-enabled model needed.
+        results = self._search_web(entity_name, entity_type, locale)
+        if results:
+            parts.append(get_prompt(
+                "web_enrichment.user_sources_block", locale,
+                sources=format_results_block(results),
+            ))
+            system_prompt = get_prompt("web_enrichment.system_grounded", locale)
+        else:
+            system_prompt = get_prompt("web_enrichment.system", locale)
+
         user_prompt = "\n".join(parts)
 
         try:
-            llm = self._get_llm()
+            llm = create_llm_client() if results else self._get_llm()
             response = llm.chat(
                 messages=[
-                    {"role": "system", "content": get_prompt("web_enrichment.system", locale)},
+                    {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
                 temperature=0.3,

@@ -1,15 +1,18 @@
 """
 URL fetching and text extraction utility for MiroShark document ingestion.
 
-Primary path: ask the configured web-search LLM (WEB_SEARCH_MODEL, e.g.
-`google/gemini-3-flash-preview:online`) to read the URL and return the main readable
-content. This bypasses brittle HTML parsing and handles JS-heavy pages
-that a static parser can't. The model MUST have web access — use an
-`:online` variant on OpenRouter for any model without native browsing,
-otherwise it'll reject URLs dated past its training cutoff.
+Primary path: a self-hosted Firecrawl-for-agents instance (FIRECRAWL_BASE_URL)
+scrapes the page via POST /v1/scrape and returns markdown — handles JS-heavy
+pages (automatic fetch → CycleTLS → Hero browser fallback) and PDFs/DOCX.
 
-SSRF protection: host + resolved-IP validation is still applied so a
-malicious URL can't coerce the model into fetching an internal address.
+Fallback path: ask the configured web-search LLM (WEB_SEARCH_MODEL, e.g.
+`google/gemini-3-flash-preview:online`) to read the URL and return the main
+readable content. The model MUST have web access — use an `:online` variant
+on OpenRouter for any model without native browsing, otherwise it'll reject
+URLs dated past its training cutoff.
+
+SSRF protection: host + resolved-IP validation is applied before either
+path so a malicious URL can't coerce a fetch of an internal address.
 """
 
 import json
@@ -17,6 +20,8 @@ import re
 import socket
 import ipaddress
 from urllib.parse import urlparse
+
+import requests
 
 from ..config import Config
 from ..utils.llm_client import create_llm_client
@@ -86,26 +91,43 @@ def _parse_model_json(raw: str) -> dict:
     raise ValueError(f"Model did not return valid JSON: {raw[:200]}")
 
 
-def fetch_url_text(url: str, timeout: int = 60) -> dict:
+def _fetch_via_firecrawl(url: str, timeout: int) -> tuple:
+    """Scrape a URL via Firecrawl-for-agents. Returns (title, text).
+
+    Raises ValueError on HTTP errors or unusable responses.
     """
-    Fetch a URL via the configured web-search LLM and return its readable content.
+    base = Config.FIRECRAWL_BASE_URL
+    headers = {"Content-Type": "application/json"}
+    if Config.FIRECRAWL_API_KEY:
+        headers["Authorization"] = f"Bearer {Config.FIRECRAWL_API_KEY}"
 
-    Args:
-        url: The URL to fetch (must be http or https).
-        timeout: LLM request timeout in seconds.
+    logger.info(f"Fetching URL via Firecrawl: {url}")
+    try:
+        response = requests.post(
+            f"{base}/v1/scrape",
+            json={"url": url, "formats": ["markdown"], "timeout": timeout * 1000},
+            headers=headers,
+            timeout=timeout + 10,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (requests.exceptions.RequestException, ValueError) as exc:
+        raise ValueError(f"Firecrawl scrape failed: {exc}") from exc
 
-    Returns:
-        dict with keys:
-            - title (str): Page title (or hostname fallback)
-            - text (str): Extracted plain text content
-            - url (str): The original URL
-            - char_count (int): Length of extracted text
+    if not payload.get("success"):
+        raise ValueError(f"Firecrawl scrape failed: {payload.get('error', 'unknown error')}")
 
-    Raises:
-        ValueError: For invalid URLs, blocked addresses, or unextractable content.
+    data = payload.get("data") or {}
+    text = (data.get("markdown") or "").strip()
+    title = ((data.get("metadata") or {}).get("title") or "").strip()
+    return title, text
+
+
+def _fetch_via_llm(url: str, timeout: int) -> tuple:
+    """Extract a URL's content via the web-search LLM. Returns (title, text).
+
+    Raises ValueError when no model is configured or the model fails.
     """
-    _validate_url(url)
-
     model = Config.WEB_SEARCH_MODEL or Config.LLM_MODEL_NAME
     if not model:
         raise ValueError(
@@ -138,8 +160,41 @@ def fetch_url_text(url: str, timeout: int = 60) -> dict:
     if parsed.get("error"):
         raise ValueError(f"Model could not fetch URL: {parsed['error']}")
 
-    text = (parsed.get("text") or "").strip()
-    title = (parsed.get("title") or "").strip()
+    return (parsed.get("title") or "").strip(), (parsed.get("text") or "").strip()
+
+
+def fetch_url_text(url: str, timeout: int = 60) -> dict:
+    """
+    Fetch a URL and return its readable content.
+
+    Uses Firecrawl (FIRECRAWL_BASE_URL) when configured, falling back to the
+    web-search LLM path on failure or when unconfigured.
+
+    Args:
+        url: The URL to fetch (must be http or https).
+        timeout: Per-request timeout in seconds.
+
+    Returns:
+        dict with keys:
+            - title (str): Page title (or hostname fallback)
+            - text (str): Extracted plain text content
+            - url (str): The original URL
+            - char_count (int): Length of extracted text
+
+    Raises:
+        ValueError: For invalid URLs, blocked addresses, or unextractable content.
+    """
+    _validate_url(url)
+
+    title, text = "", ""
+    if Config.FIRECRAWL_BASE_URL:
+        try:
+            title, text = _fetch_via_firecrawl(url, timeout)
+        except ValueError as exc:
+            logger.warning(f"Firecrawl fetch failed, falling back to LLM: {exc}")
+
+    if len(text) < 100:
+        title, text = _fetch_via_llm(url, timeout)
 
     if len(text) < 100:
         raise ValueError(
