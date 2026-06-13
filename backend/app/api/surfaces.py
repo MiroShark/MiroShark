@@ -59,7 +59,20 @@ def _cache_header() -> str:
 
 @surfaces_bp.route("/surfaces.json", methods=["GET"])
 def get_surfaces_catalog() -> Response:
-    """Return the full surface catalog as JSON.
+    """Return the surface catalog as JSON.
+
+    Query params:
+
+    * ``type`` (optional, str) — narrow the catalog to a single
+      category. One of ``analytics``, ``visualization``, ``export``,
+      ``embed``, ``integration``, ``platform``, ``discovery``
+      (case-insensitive). When set, only surfaces of that ``type`` are
+      returned and ``count`` reflects the filtered length. An empty or
+      whitespace-only value is treated as absent (full catalog). An
+      unrecognised value returns ``400`` with the list of valid
+      categories rather than silently emptying the catalog — a typo'd
+      filter is a caller bug worth surfacing, not a "0 surfaces"
+      result that reads like a broken deployment.
 
     Response shape::
 
@@ -81,20 +94,40 @@ def get_surfaces_catalog() -> Response:
         }
 
     ``ETag`` derives from the catalog length — bumps when a new
-    surface is appended. A conditional ``If-None-Match`` GET
-    short-circuits to ``304 Not Modified`` so a polling consumer
+    surface is appended. A filtered (``?type=``) request carries the
+    category in its ``ETag`` so a filtered and an unfiltered response
+    never collide in a shared cache. A conditional ``If-None-Match``
+    GET short-circuits to ``304 Not Modified`` so a polling consumer
     doesn't pay for the JSON body on every request.
 
     ``Cache-Control: public, max-age=3600`` — the catalog only
     changes when a new PR ships a new surface; one hour is a tight
     bound on the lag between a ship and the catalog reflecting it.
 
-    Always returns ``200`` (or ``304``) — there is no input the
-    caller can supply that would produce a ``404``. The catalog is
-    intentionally static so the endpoint is itself idempotent across
-    every deployment of the same code revision.
+    Always returns ``200`` (or ``304``) for any valid request — the
+    catalog is intentionally static, so the endpoint is idempotent
+    across every deployment of the same code revision. Only a
+    malformed ``?type=`` value produces a ``400``.
     """
-    etag = surfaces_catalog_service.catalog_etag()
+    raw_type = request.args.get("type")
+    surface_type: str | None = None
+    if raw_type is not None:
+        normalised = raw_type.strip().lower()
+        if normalised:
+            if not surfaces_catalog_service.is_valid_surface_type(normalised):
+                valid = ", ".join(sorted(surfaces_catalog_service.SURFACE_TYPES))
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": f"Invalid type — must be one of: {valid}.",
+                        }
+                    ),
+                    400,
+                )
+            surface_type = normalised
+
+    etag = surfaces_catalog_service.catalog_etag(surface_type)
     if_none_match = (request.headers.get("If-None-Match") or "").strip()
     if if_none_match and if_none_match == etag:
         resp = Response(status=304)
@@ -102,7 +135,7 @@ def get_surfaces_catalog() -> Response:
         resp.headers["Cache-Control"] = _cache_header()
         return resp
 
-    payload = surfaces_catalog_service.build_response_payload()
+    payload = surfaces_catalog_service.build_response_payload(surface_type)
     response = jsonify({"success": True, "data": payload})
     response.headers["ETag"] = etag
     response.headers["Cache-Control"] = _cache_header()

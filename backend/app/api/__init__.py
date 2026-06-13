@@ -65,3 +65,12 @@ from .surfaces import surfaces_bp  # noqa: E402, F401
 # /api/stats returns. See app/api/status.py.
 from .status import status_bp  # noqa: E402, F401
 
+# activity_bp serves /api/activity.json — the lightweight
+# "what just completed?" polling primitive. Sibling of stats_bp /
+# status_bp / surfaces_bp; sits between the full filterable gallery
+# (/api/simulation/public) and the subscription-style feed surfaces
+# (/api/feed.rss + /api/feed.atom). Built for keyless integrator
+# polling — Aeon push-recap, status dashboards, social bots. See
+# app/api/activity.py.
+from .activity import activity_bp  # noqa: E402, F401
+

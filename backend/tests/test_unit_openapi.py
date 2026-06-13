@@ -123,6 +123,9 @@ _BLUEPRINT_PREFIXES = {
     # Mounted at /api with no sub-prefix, same as surfaces_bp — see
     # app/__init__.py / app/api/status.py.
     "status_bp":         "/api",
+    # activity_bp serves /api/activity.json — the what-just-completed
+    # polling feed. Mounted at /api with no sub-prefix, same as status_bp.
+    "activity_bp":       "/api",
 }
 
 

@@ -34,6 +34,14 @@ Cover the properties the ``GET /api/surfaces.json`` endpoint depends on:
      drops the blueprint also drops the test, not just the surface.
  15. The OpenAPI spec carries an entry for ``/api/surfaces.json`` so
      ``/api/docs`` lists the catalog endpoint.
+ 16. ``is_valid_surface_type`` accepts every recognised category and
+     rejects unknown / non-string values.
+ 17. ``build_response_payload(type)`` returns only that category, the
+     filtered counts partition the full catalog, and the no-filter call
+     is unchanged (backward compatible).
+ 18. ``catalog_etag(type)`` is distinct per category and well-formed.
+ 19. The route reads ``?type=`` and 400s on an unknown value; the
+     OpenAPI spec documents the ``type`` query parameter.
 """
 
 from __future__ import annotations
@@ -307,3 +315,105 @@ def test_openapi_spec_includes_surfaces_catalog_endpoint():
     assert "SurfaceCatalogEntry" in spec_text, (
         "openapi.yaml missing SurfaceCatalogEntry schema"
     )
+
+
+# ── ?type= category filter ─────────────────────────────────────────────
+
+
+def test_is_valid_surface_type_accepts_every_category():
+    """Every literal in ``SURFACE_TYPES`` is a valid filter value — the
+    validator and the catalog can't disagree on what a category is."""
+    for surface_type in surfaces_catalog.SURFACE_TYPES:
+        assert surfaces_catalog.is_valid_surface_type(surface_type), (
+            f"{surface_type!r} should validate"
+        )
+
+
+def test_is_valid_surface_type_rejects_unknown_and_non_string():
+    """Unknown strings, empty string, wrong case, and non-strings all
+    fail validation so the route can 400 them."""
+    assert not surfaces_catalog.is_valid_surface_type("bogus")
+    assert not surfaces_catalog.is_valid_surface_type("")
+    # Case-sensitive — the route lower-cases before calling.
+    assert not surfaces_catalog.is_valid_surface_type("ANALYTICS")
+    assert not surfaces_catalog.is_valid_surface_type(None)
+    assert not surfaces_catalog.is_valid_surface_type(7)
+
+
+def test_filtered_payload_returns_only_that_type():
+    """``build_response_payload(type)`` returns exactly the surfaces of
+    that type, with ``count`` reflecting the filtered length and the
+    envelope shape unchanged."""
+    full = surfaces_catalog.get_surfaces_catalog()
+    for surface_type in surfaces_catalog.SURFACE_TYPES:
+        payload = surfaces_catalog.build_response_payload(surface_type)
+        assert set(payload.keys()) == {"schema_version", "count", "surfaces"}
+        expected = [e for e in full if e["type"] == surface_type]
+        assert payload["count"] == len(expected)
+        assert len(payload["surfaces"]) == payload["count"]
+        assert all(e["type"] == surface_type for e in payload["surfaces"])
+
+
+def test_filtered_counts_partition_the_full_catalog():
+    """Every surface lands in exactly one category bucket — the filtered
+    counts across all categories sum to the full catalog count, so the
+    filter never drops or double-counts a surface."""
+    total = sum(
+        surfaces_catalog.build_response_payload(surface_type)["count"]
+        for surface_type in surfaces_catalog.SURFACE_TYPES
+    )
+    assert total == surfaces_catalog.catalog_count()
+
+
+def test_unfiltered_payload_is_backward_compatible():
+    """No filter (or an explicit ``None``) returns the full catalog —
+    every existing consumer sees the same response it always has."""
+    assert surfaces_catalog.build_response_payload() == (
+        surfaces_catalog.build_response_payload(None)
+    )
+    assert (
+        surfaces_catalog.build_response_payload()["count"]
+        == surfaces_catalog.catalog_count()
+    )
+
+
+def test_filtered_etag_is_distinct_and_well_formed():
+    """A filtered request carries the category in its ETag so a filtered
+    and an unfiltered response never collide in a shared cache."""
+    base = surfaces_catalog.catalog_etag()
+    assert surfaces_catalog.catalog_etag(None) == base
+    for surface_type in surfaces_catalog.SURFACE_TYPES:
+        filtered = surfaces_catalog.catalog_etag(surface_type)
+        assert filtered == f"{base}-{surface_type}"
+        assert filtered != base
+        assert re.fullmatch(r"surfaces-v\d+-\d+-[a-z]+", filtered), (
+            f"filtered etag {filtered!r} malformed"
+        )
+
+
+def test_route_reads_and_validates_type_param():
+    """Static guard on ``app/api/surfaces.py`` — the route reads the
+    ``?type=`` param, validates it through the service, and 400s an
+    unknown value. Matches the suite's static-guard posture (no app
+    spin-up, which would initialise Neo4j)."""
+    text = (_BACKEND / "app" / "api" / "surfaces.py").read_text(encoding="utf-8")
+    assert 'request.args.get("type")' in text, (
+        "surfaces route does not read the ?type= query param"
+    )
+    assert "is_valid_surface_type" in text, (
+        "surfaces route does not validate ?type= through the service"
+    )
+    assert "400" in text, "surfaces route does not 400 an invalid ?type="
+
+
+def test_openapi_spec_documents_type_filter():
+    """The ``?type=`` query parameter must be declared in the OpenAPI
+    document so ``/api/docs`` advertises it."""
+    spec_text = (_BACKEND / "openapi.yaml").read_text(encoding="utf-8")
+    assert "name: type" in spec_text, (
+        "openapi.yaml does not declare the ?type= query parameter"
+    )
+    assert (
+        "[analytics, visualization, export, embed, integration, platform, discovery]"
+        in spec_text
+    ), "openapi.yaml ?type= parameter missing the category enum"
