@@ -128,6 +128,7 @@ A few of the highlights:
 | [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
 | [Ecosystem](ECOSYSTEM.md) | Projects, agents, and products built on top of MiroShark |
 | [Contributing](CONTRIBUTING.md) | Tests and development |
+| [Security](SECURITY.md) | Reporting a vulnerability + operator hardening checklist |
 
 ---
 
