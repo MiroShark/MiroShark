@@ -1,6 +1,6 @@
 services:
   neo4j:
-    image: neo4j:5.15-community
+    image: neo4j:5.26-community
     container_name: miroshark-neo4j
     environment:
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?NEO4J_PASSWORD must be set in .env}
