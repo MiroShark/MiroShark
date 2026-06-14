@@ -18,7 +18,7 @@
 ## 前置依赖
 
 - 一把 OpenAI 兼容 API 密钥(OpenRouter、OpenAI、Anthropic 等),用于本地推理的 Ollama,**或者** Claude Code CLI
-- Python 3.11+、Node.js 18+、Neo4j 5.15+
+- Python 3.11+、Node.js 18+、Neo4j 5.26+
 
 **安装 Neo4j**(`./miroshark` 启动器会替你启动它 — 你只需要装好这个软件包):
 

@@ -15,7 +15,7 @@ flask-compress>=1.17
 openai>=1.0.0
 
 # ============= Neo4j =============
-neo4j>=5.15.0
+neo4j>=5.26.0
 
 # ============= HTTP Requests =============
 # For Ollama embedding API and smoke test script

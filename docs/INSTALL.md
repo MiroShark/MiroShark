@@ -18,7 +18,7 @@ Pick one of the paths below.
 ## Prerequisites
 
 - An OpenAI-compatible API key (OpenRouter, OpenAI, Anthropic…), Ollama for local inference, **or** Claude Code CLI
-- Python 3.11+, Node.js 18+, Neo4j 5.15+
+- Python 3.11+, Node.js 18+, Neo4j 5.26+
 
 **Installing Neo4j** (the `./miroshark` launcher starts it for you — you only need to install the package):
 
