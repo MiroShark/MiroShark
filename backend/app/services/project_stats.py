@@ -70,7 +70,6 @@ Design notes
 
 from __future__ import annotations
 
-import json
 import os
 import re
 import threading
@@ -79,6 +78,7 @@ from typing import Any, Dict, Iterable, Optional, Tuple
 
 from . import signal_service
 from .surface_stats import SURFACE_STATS_FILENAME, SURFACE_KEYS
+from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -105,23 +105,6 @@ _cache_lock = threading.Lock()
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Optional[Any]:
-    """Best-effort JSON load — never raises.
-
-    Returns ``None`` on missing file, unreadable bytes, or invalid JSON.
-    The per-project scan must survive a single corrupt sim folder
-    rather than tanking the whole aggregate, same posture as
-    ``platform_stats._safe_load_json``.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:

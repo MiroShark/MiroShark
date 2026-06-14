@@ -26,7 +26,9 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Optional
+from typing import Optional
+
+from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 # Same threshold the embed-summary, share card, replay GIF, gallery
@@ -51,25 +53,6 @@ MAX_THREAD_TWEETS = 15
 # first ones tell the build-up story; the last ones tell how the
 # resting consensus formed.
 TRUNCATED_HEAD_TAIL = 3
-
-
-# ── On-disk readers ────────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Any:
-    """Read a JSON file, returning ``None`` on missing / corrupt input.
-
-    Mirrors the helper every other share surface uses. The route handler
-    must produce a (possibly minimal) thread rather than 500 when an
-    artefact is missing or malformed.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 # ── Stance computation ────────────────────────────────────────────────────

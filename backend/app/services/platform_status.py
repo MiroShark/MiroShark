@@ -63,11 +63,12 @@ Design notes
 
 from __future__ import annotations
 
-import json
 import os
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, Optional, Tuple
+
+from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -84,24 +85,6 @@ RECENT_WINDOW_SECONDS = 24 * 60 * 60
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Optional[Any]:
-    """Best-effort JSON load — never raises.
-
-    Returns ``None`` on missing file, unreadable bytes, or invalid
-    JSON. The status scan must survive a single corrupt sim folder
-    rather than tanking the whole probe — a status endpoint that 500s
-    on a stray broken ``state.json`` is worse than one that quietly
-    excludes that sim from the counts.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:

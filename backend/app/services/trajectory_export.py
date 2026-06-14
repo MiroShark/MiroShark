@@ -29,6 +29,8 @@ import json
 import os
 from typing import Any, Optional
 
+from ..utils.json_io import safe_load_json as _safe_load_json
+
 
 # Same threshold the embed-summary, share card, replay GIF, gallery
 # card, webhook, transcript, and feed renderers all use. Per-round
@@ -54,24 +56,6 @@ CSV_COLUMNS: tuple[str, ...] = (
     "quality_health",
     "participation_rate",
 )
-
-
-# ── On-disk readers ────────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Any:
-    """Read JSON, returning ``None`` on missing / corrupt input.
-
-    Never raises — the route handler must produce a (possibly empty)
-    feed rather than a 500 when an artifact is malformed on disk.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 # ── Stance computation ────────────────────────────────────────────────────

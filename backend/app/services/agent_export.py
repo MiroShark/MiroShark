@@ -82,11 +82,11 @@ Design notes
 
 from __future__ import annotations
 
-import json
 import os
 from typing import Any, Dict, List, Optional
 
 from . import agent_sparklines_service
+from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 SCHEMA_VERSION = "1"
@@ -114,21 +114,6 @@ STANCE_THRESHOLD = 0.2
 
 
 # ── On-disk readers ────────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Any:
-    """Read JSON, returning ``None`` on missing / corrupt input.
-
-    Never raises — the route handler must resolve a malformed artifact to
-    a clean 404 ("no data yet"), never a 500.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _load_profiles(sim_dir: str) -> List[Dict[str, Any]]:

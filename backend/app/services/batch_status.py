@@ -80,12 +80,12 @@ Design notes
 
 from __future__ import annotations
 
-import json
 import os
 import re
 from typing import Any, Dict, List, Optional, Tuple
 
 from . import signal_service
+from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 # ── Configuration ────────────────────────────────────────────────────────
@@ -111,23 +111,6 @@ _SAFE_SIM_ID = re.compile(r"^[A-Za-z0-9_\-\.]{1,128}$")
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Optional[Any]:
-    """Best-effort JSON load — never raises.
-
-    Returns ``None`` on missing file, unreadable bytes, or invalid
-    JSON. A single corrupt sim folder must not tank the whole batch
-    response: the corresponding entry degrades to ``found: false``
-    rather than the request 500-ing.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _final_belief_from_trajectory(

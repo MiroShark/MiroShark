@@ -79,11 +79,11 @@ Design notes
 
 from __future__ import annotations
 
-import json
 import os
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from . import signal_service
+from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 # ── Configuration ────────────────────────────────────────────────────────
@@ -110,22 +110,6 @@ SCENARIO_TITLE_MAX_CHARS = 100
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Optional[Any]:
-    """Best-effort JSON load — never raises.
-
-    Returns ``None`` on missing file, unreadable bytes, or invalid
-    JSON. Mirrors ``platform_stats._safe_load_json`` so a single
-    corrupt sim folder can't tank the whole feed.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:
