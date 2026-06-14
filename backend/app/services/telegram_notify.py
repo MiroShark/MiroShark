@@ -539,21 +539,10 @@ def send_test_notification(
     if not use_chat:
         return {"ok": False, "message": "Telegram chat id is empty"}
 
-    sample_payload = {
-        "event": "simulation.test",
-        "sim_id": "sim_test_event",
-        "scenario": "Test event from MiroShark — your Telegram bot is configured.",
-        "status": "test",
-        "current_round": 0,
-        "total_rounds": 0,
-        "agent_count": 0,
-        "quality_health": None,
-        "final_consensus": None,
-        "resolution_outcome": None,
-        "share_path": "/share/sim_test_event",
-        "share_card_path": "/api/simulation/sim_test_event/share-card.png",
-        "fired_at": None,
-    }
+    from . import webhook_service
+    sample_payload = webhook_service.build_test_payload(
+        "Test event from MiroShark — your Telegram bot is configured."
+    )
     body = build_telegram_message(sample_payload)
     ok, msg = _post_send_message(use_token, use_chat, body)
     return {"ok": ok, "message": msg}

@@ -424,21 +424,10 @@ def send_test_notification(url: Optional[str] = None) -> Dict[str, Any]:
     if not target:
         return {"ok": False, "message": "Discord webhook URL is empty"}
 
-    sample_payload = {
-        "event": "simulation.test",
-        "sim_id": "sim_test_event",
-        "scenario": "Test event from MiroShark — your Discord webhook is configured.",
-        "status": "test",
-        "current_round": 0,
-        "total_rounds": 0,
-        "agent_count": 0,
-        "quality_health": None,
-        "final_consensus": None,
-        "resolution_outcome": None,
-        "share_path": "/share/sim_test_event",
-        "share_card_path": "/api/simulation/sim_test_event/share-card.png",
-        "fired_at": None,
-    }
+    from . import webhook_service
+    sample_payload = webhook_service.build_test_payload(
+        "Test event from MiroShark — your Discord webhook is configured."
+    )
     embed = build_discord_embed(sample_payload)
     ok, msg = send_discord_payload(target, embed)
     return {"ok": ok, "message": msg}
