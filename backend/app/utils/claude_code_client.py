@@ -36,7 +36,7 @@ class ClaudeCodeClient:
         self.timeout = timeout
         self._verify_claude_installed()
 
-    def _verify_claude_installed(self):
+    def _verify_claude_installed(self) -> None:
         """Check that the claude CLI is available."""
         try:
             result = subprocess.run(
@@ -144,7 +144,14 @@ class ClaudeCodeClient:
         self._emit_event(messages, content, t0)
         return content
 
-    def _emit_event(self, messages, content, t0, *, error=None):
+    def _emit_event(
+        self,
+        messages: List[Dict[str, str]],
+        content: Optional[str],
+        t0: float,
+        *,
+        error: Optional[BaseException] = None,
+    ) -> None:
         """Emit an llm_call observability event (best-effort)."""
         try:
             latency_ms = round((time.perf_counter() - t0) * 1000, 1)

@@ -8,9 +8,10 @@ import sys
 import logging
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
+from typing import Any
 
 
-def _ensure_utf8_stdout():
+def _ensure_utf8_stdout() -> None:
     """
     Ensure stdout/stderr uses UTF-8 encoding
     Fixes character encoding issues on Windows console
@@ -109,18 +110,18 @@ logger = setup_logger()
 
 
 # Convenience methods
-def debug(msg, *args, **kwargs):
+def debug(msg: object, *args: object, **kwargs: Any) -> None:
     logger.debug(msg, *args, **kwargs)
 
-def info(msg, *args, **kwargs):
+def info(msg: object, *args: object, **kwargs: Any) -> None:
     logger.info(msg, *args, **kwargs)
 
-def warning(msg, *args, **kwargs):
+def warning(msg: object, *args: object, **kwargs: Any) -> None:
     logger.warning(msg, *args, **kwargs)
 
-def error(msg, *args, **kwargs):
+def error(msg: object, *args: object, **kwargs: Any) -> None:
     logger.error(msg, *args, **kwargs)
 
-def critical(msg, *args, **kwargs):
+def critical(msg: object, *args: object, **kwargs: Any) -> None:
     logger.critical(msg, *args, **kwargs)
 

@@ -2197,7 +2197,7 @@ def list_simulations():
         }), 500
 
 
-def _get_report_id_for_simulation(simulation_id: str) -> str:
+def _get_report_id_for_simulation(simulation_id: str) -> str | None:
     """
     Get the latest report_id corresponding to a simulation
 
