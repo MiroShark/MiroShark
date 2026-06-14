@@ -84,10 +84,10 @@ import os
 import threading
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from ..utils.logger import get_logger
+from ..utils.timeutils import utc_iso8601 as _now_iso
 
 logger = get_logger("miroshark.waybackclaw")
 
@@ -364,10 +364,6 @@ def _write_record(sim_dir: str, payload: Dict[str, Any]) -> None:
 
 def _sha256_hex(payload_bytes: bytes) -> str:
     return "sha256:" + hashlib.sha256(payload_bytes).hexdigest()
-
-
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _derive_capabilities(repro_blob: Dict[str, Any]) -> List[str]:

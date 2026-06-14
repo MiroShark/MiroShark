@@ -29,6 +29,7 @@ import json
 import os
 from typing import Any, Optional
 
+from ..utils.belief import avg_position as _avg_position
 from ..utils.json_io import safe_load_json as _safe_load_json
 
 
@@ -59,25 +60,6 @@ CSV_COLUMNS: tuple[str, ...] = (
 
 
 # ── Stance computation ────────────────────────────────────────────────────
-
-
-def _avg_position(positions: dict | None) -> Optional[float]:
-    """Mean of an agent's per-topic belief positions for one round.
-
-    The per-topic dict can be empty or contain non-numeric values when
-    a snapshot is mid-write; we filter those out and return ``None`` if
-    no usable values remain.
-    """
-    if not positions:
-        return None
-    values = [
-        float(v)
-        for v in positions.values()
-        if isinstance(v, (int, float)) and not isinstance(v, bool)
-    ]
-    if not values:
-        return None
-    return sum(values) / len(values)
 
 
 def compute_stance_split(

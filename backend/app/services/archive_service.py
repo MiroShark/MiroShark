@@ -73,8 +73,9 @@ import io
 import json
 import logging
 import zipfile
-from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional, Tuple
+
+from ..utils.timeutils import utc_iso8601 as _utc_iso8601
 
 
 SCHEMA_VERSION = "1"
@@ -137,13 +138,6 @@ _URL_PATH_BY_FILENAME: Dict[str, str] = {
 
 
 logger = logging.getLogger(__name__)
-
-
-def _utc_iso8601() -> str:
-    """ISO-8601 UTC ``YYYY-MM-DDTHH:MM:SSZ`` — same shape every other
-    export module uses (``repro_export``, ``signal_service``, the
-    webhook log)."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _sha256_hex(content: bytes) -> str:

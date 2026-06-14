@@ -36,33 +36,12 @@ from ..services.feed import (
     select_public_cards,
 )
 from ..services import surface_stats
+from ..utils.base_url import resolve_public_base_url as _resolve_base_url
 from ..utils.i18n import get_locale
 from ..utils.logger import get_logger
 
 
 logger = get_logger("miroshark.api.feed")
-
-
-def _resolve_base_url() -> str:
-    """Build the absolute URL prefix used inside the feed XML.
-
-    Prefers ``Config.PUBLIC_BASE_URL`` (the operator-supplied canonical
-    deployment URL — same field the webhook payload + share-card use)
-    so a feed served from ``localhost`` but configured for a public host
-    still points at the public host. Falls back to the request's host
-    URL with X-Forwarded-Proto/Host honored when behind a reverse proxy.
-    """
-    explicit = (Config.PUBLIC_BASE_URL or "").strip()
-    if explicit:
-        return explicit.rstrip("/")
-
-    base = (request.host_url or "").rstrip("/")
-    forwarded_proto = request.headers.get("X-Forwarded-Proto")
-    forwarded_host = request.headers.get("X-Forwarded-Host")
-    if forwarded_host:
-        proto = forwarded_proto or ("https" if request.is_secure else "http")
-        base = f"{proto}://{forwarded_host}"
-    return base
 
 
 def _is_truthy(value: str) -> bool:

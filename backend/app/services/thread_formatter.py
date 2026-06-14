@@ -28,6 +28,7 @@ import json
 import os
 from typing import Optional
 
+from ..utils.belief import avg_position as _avg_position
 from ..utils.json_io import safe_load_json as _safe_load_json
 
 
@@ -56,24 +57,6 @@ TRUNCATED_HEAD_TAIL = 3
 
 
 # ── Stance computation ────────────────────────────────────────────────────
-
-
-def _avg_position(positions: dict | None) -> Optional[float]:
-    """Mean of an agent's per-topic belief positions for one round.
-
-    Filters non-numeric values so a snapshot mid-write doesn't crash the
-    build. Returns ``None`` when no usable values remain.
-    """
-    if not positions:
-        return None
-    values = [
-        float(v)
-        for v in positions.values()
-        if isinstance(v, (int, float)) and not isinstance(v, bool)
-    ]
-    if not values:
-        return None
-    return sum(values) / len(values)
 
 
 def _round_stance_split(snapshot: dict) -> dict[str, float]:

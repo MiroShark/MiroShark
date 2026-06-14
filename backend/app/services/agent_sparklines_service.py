@@ -47,6 +47,7 @@ from __future__ import annotations
 import os
 from typing import Any, Optional
 
+from ..utils.belief import avg_position as _avg_position
 from ..utils.json_io import safe_load_json as _safe_load_json
 
 
@@ -98,26 +99,6 @@ def _load_profile_names(sim_dir: str) -> dict[int, str]:
 
 
 # ── Stance helpers ─────────────────────────────────────────────────────────
-
-
-def _avg_position(positions: Any) -> Optional[float]:
-    """Mean of an agent's per-topic belief positions for one round.
-
-    ``positions`` is the ``{topic: float}`` dict from one agent's entry in
-    a snapshot's ``belief_positions``. Non-numeric / boolean values are
-    filtered out; returns ``None`` when no usable value remains so the
-    caller can skip the agent for that round.
-    """
-    if not isinstance(positions, dict) or not positions:
-        return None
-    values = [
-        float(v)
-        for v in positions.values()
-        if isinstance(v, (int, float)) and not isinstance(v, bool)
-    ]
-    if not values:
-        return None
-    return sum(values) / len(values)
 
 
 def _classify_stance(value: float) -> str:

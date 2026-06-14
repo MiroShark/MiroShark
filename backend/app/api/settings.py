@@ -11,7 +11,6 @@ from flask import request, jsonify
 
 from . import settings_bp
 from ..config import Config
-from ..services import webhook_service  # noqa: F401 — kept for namespace-style access
 from ..services.webhook_service import (
     mask_url as mask_webhook_url,
     send_test_webhook,

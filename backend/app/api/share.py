@@ -37,6 +37,7 @@ from flask import Blueprint, Response, request
 
 from ..config import Config
 from ..services.simulation_manager import SimulationManager
+from ..utils.base_url import resolve_public_base_url as _resolve_oembed_base_url
 from ..utils.i18n import get_locale, t as _t
 from ..utils.validation import validate_simulation_id
 
@@ -293,28 +294,6 @@ def share_landing(simulation_id: str):
     # published sims show their card without long delays.
     response.headers["Cache-Control"] = "public, max-age=300"
     return response
-
-
-def _resolve_oembed_base_url() -> str:
-    """Canonical origin for the absolute URLs inside an oEmbed payload.
-
-    Same strategy as the feed / sitemap modules — prefer the operator-set
-    ``Config.PUBLIC_BASE_URL`` (single source of truth across surfaces),
-    falling back to the request host with ``X-Forwarded-Proto`` /
-    ``X-Forwarded-Host`` honoured for reverse-proxy deployments. Returns a
-    value with no trailing slash.
-    """
-    explicit = (Config.PUBLIC_BASE_URL or "").strip()
-    if explicit:
-        return explicit.rstrip("/")
-
-    base = (request.host_url or "").rstrip("/")
-    forwarded_proto = request.headers.get("X-Forwarded-Proto")
-    forwarded_host = request.headers.get("X-Forwarded-Host")
-    if forwarded_host:
-        proto = forwarded_proto or ("https" if request.is_secure else "http")
-        base = f"{proto}://{forwarded_host}"
-    return base
 
 
 def _oembed_allowed_hosts(base_url: str) -> set:

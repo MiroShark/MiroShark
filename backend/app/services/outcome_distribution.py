@@ -72,11 +72,11 @@ from __future__ import annotations
 import os
 import threading
 import time
-from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, Optional, Tuple
 
 from . import signal_service
 from ..utils.json_io import safe_load_json as _safe_load_json
+from ..utils.timeutils import utc_iso8601 as _iso_utc_now
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -255,12 +255,6 @@ def _round_count_bucket(total_rounds: int) -> str:
     if total_rounds > _LONG_ROUND_MIN_EXCLUSIVE:
         return "long"
     return "medium"
-
-
-def _iso_utc_now() -> str:
-    """ISO-8601 UTC ``"YYYY-MM-DDTHH:MM:SSZ"`` — same shape as
-    ``signal_service._iso_utc_now`` and the webhook timestamp."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _bucket_with_pcts(counts: Dict[str, int], total: int) -> Dict[str, Any]:

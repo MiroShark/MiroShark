@@ -23,6 +23,7 @@ import json
 import os
 from typing import Any, Optional
 
+from ..utils.belief import avg_position as _avg_position
 from ..utils.json_io import safe_load_json as _safe_load_json
 
 
@@ -63,21 +64,6 @@ def _classify_stance(value: float) -> str:
     if v < -STANCE_THRESHOLD:
         return "bearish"
     return "neutral"
-
-
-def _avg_position(positions: dict | None) -> Optional[float]:
-    """Mean of an agent's per-topic belief positions for one round.
-
-    ``positions`` is a ``{topic: float}`` dict; we collapse to one
-    scalar so the transcript can label the agent's stance without
-    listing every topic.
-    """
-    if not positions:
-        return None
-    values = [float(v) for v in positions.values() if isinstance(v, (int, float))]
-    if not values:
-        return None
-    return sum(values) / len(values)
 
 
 # ── On-disk artifact loaders ──────────────────────────────────────────────

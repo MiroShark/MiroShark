@@ -79,10 +79,10 @@ import os
 import threading
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
 from typing import Any, Dict, Optional, Tuple
 
 from ..utils.logger import get_logger
+from ..utils.timeutils import utc_iso8601 as _now_iso
 
 logger = get_logger("miroshark.dkg")
 
@@ -455,10 +455,6 @@ def build_turtle(
     lines.append(f'  mir:publishedAt "{_now_iso()}"^^xsd:dateTime .')
 
     return "\n".join(lines) + "\n", repro_sha
-
-
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 # ---- Citation file --------------------------------------------------------
