@@ -127,7 +127,7 @@ A few of the highlights:
 | [WaybackClaw archive](docs/WAYBACKCLAW.md) | WaybackClaw submission — snapshot id + IPFS CID + Nostr event id for any finished sim |
 | [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
 | [Ecosystem](ECOSYSTEM.md) | Projects, agents, and products built on top of MiroShark |
-| [Contributing](CONTRIBUTING.md) | Tests and development |
+| [Contributing](CONTRIBUTING.md) | Local setup, tests, PR conventions, and how to add an API endpoint |
 
 ---
 
