@@ -6,7 +6,7 @@ Triggers automatically when:
 2. The knowledge graph context is too thin to build a rich persona
 
 Research backends, in precedence order:
-1. SearXNG (SEARXNG_BASE_URL set): real web search — top result snippets are
+1. SearXNG (MIROSHARK_SEARXNG_BASE_URL set): real web search — top result snippets are
    injected into the research prompt and the DEFAULT LLM synthesizes them.
    Works with any model, including local Ollama.
 2. WEB_SEARCH_MODEL (e.g. "perplexity/sonar-pro" or an ":online" OpenRouter

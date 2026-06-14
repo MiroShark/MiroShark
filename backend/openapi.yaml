@@ -4693,7 +4693,7 @@ paths:
         Used by the Settings *Test search* button. Always returns HTTP 200 so
         the frontend can render success / failure body uniformly. Pass `url`
         to test an unsaved value; omit to test the currently saved
-        SEARXNG_BASE_URL.
+        MIROSHARK_SEARXNG_BASE_URL.
       requestBody:
         required: false
         content:

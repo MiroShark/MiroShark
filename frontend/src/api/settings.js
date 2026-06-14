@@ -41,7 +41,7 @@ export const testLlmConnection = () => {
 /**
  * Run a one-result test search against a SearXNG instance.
  * Pass a URL to test an unsaved value; omit it to test the
- * currently saved Config.SEARXNG_BASE_URL.
+ * currently saved MIROSHARK_SEARXNG_BASE_URL.
  *
  * @param {string} [url]
  * @returns {Promise<{ success, latency_ms, result_count, error }>}

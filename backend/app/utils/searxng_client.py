@@ -1,7 +1,7 @@
 """
 SearXNG client — real web search via a self-hosted SearXNG instance.
 
-Hits ``GET {SEARXNG_BASE_URL}/search?format=json`` and returns normalized
+Hits ``GET {MIROSHARK_SEARXNG_BASE_URL}/search?format=json`` and returns normalized
 result dicts. When configured, web enrichment uses this to ground persona
 research with live search snippets so ANY model can synthesize them — no
 websearch-enabled LLM (`:online` / Perplexity sonar) required.
@@ -81,7 +81,7 @@ class SearxngClient:
                 or a non-JSON response body.
         """
         if not self.is_configured():
-            raise SearxngError("SEARXNG_BASE_URL is not configured")
+            raise SearxngError("MIROSHARK_SEARXNG_BASE_URL is not configured")
         if not query or not query.strip():
             raise SearxngError("Cannot search with an empty query")
 

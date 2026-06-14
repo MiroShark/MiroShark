@@ -1,7 +1,7 @@
 """
 URL fetching and text extraction utility for MiroShark document ingestion.
 
-Primary path: a self-hosted Firecrawl-for-agents instance (FIRECRAWL_BASE_URL)
+Primary path: a self-hosted Firecrawl-for-agents instance (MIROSHARK_FIRECRAWL_BASE_URL)
 scrapes the page via POST /v1/scrape and returns markdown — handles JS-heavy
 pages (automatic fetch → CycleTLS → Hero browser fallback) and PDFs/DOCX.
 
@@ -167,7 +167,7 @@ def fetch_url_text(url: str, timeout: int = 60) -> dict:
     """
     Fetch a URL and return its readable content.
 
-    Uses Firecrawl (FIRECRAWL_BASE_URL) when configured, falling back to the
+    Uses Firecrawl (MIROSHARK_FIRECRAWL_BASE_URL) when configured, falling back to the
     web-search LLM path on failure or when unconfigured.
 
     Args:
