@@ -32,12 +32,10 @@ Covers the properties ``GET /api/activity.json`` depends on:
 from __future__ import annotations
 
 import json
-import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-import pytest
 
 
 _BACKEND = Path(__file__).resolve().parent.parent
