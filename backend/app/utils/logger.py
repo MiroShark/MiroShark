@@ -41,8 +41,7 @@ def setup_logger(name: str = 'miroshark', level: int = logging.DEBUG) -> logging
     """
     # Ensure log directory exists
     os.makedirs(LOG_DIR, exist_ok=True)
-    
-    # Create logger
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
     
@@ -81,8 +80,7 @@ def setup_logger(name: str = 'miroshark', level: int = logging.DEBUG) -> logging
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
-    
-    # Add handlers
+
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
@@ -105,7 +103,6 @@ def get_logger(name: str = 'miroshark') -> logging.Logger:
     return logger
 
 
-# Create default logger
 logger = setup_logger()
 
 

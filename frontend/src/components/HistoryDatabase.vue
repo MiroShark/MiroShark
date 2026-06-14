@@ -678,7 +678,6 @@ const containerStyle = computed(() => {
   return { minHeight: `${expandedHeight}px` }
 })
 
-// Get card style
 const getCardStyle = (index) => {
   const total = filteredProjects.value.length
 

@@ -43,8 +43,7 @@ def create_app(config_class=Config):
     # Flask >= 2.3 uses app.json.ensure_ascii, older versions use JSON_AS_ASCII config
     if hasattr(app, 'json') and hasattr(app.json, 'ensure_ascii'):
         app.json.ensure_ascii = False
-    
-    # Set up logging
+
     logger = setup_logger('miroshark')
     
     # Only print startup info in the reloader subprocess (avoid printing twice in debug mode)
