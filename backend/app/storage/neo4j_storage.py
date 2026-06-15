@@ -10,7 +10,7 @@ import time
 import uuid
 import logging
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, TypeVar
 
 from neo4j import GraphDatabase
 from neo4j.exceptions import (
@@ -30,6 +30,8 @@ from .search_service import SearchService
 from . import neo4j_schema
 
 logger = logging.getLogger('miroshark.neo4j_storage')
+
+_T = TypeVar("_T")
 
 
 class Neo4jStorage(GraphStorage):
@@ -80,12 +82,14 @@ class Neo4jStorage(GraphStorage):
     # Retry wrapper
     # ----------------------------------------------------------------
 
-    def _call_with_retry(self, func, *args, **kwargs):
+    def _call_with_retry(
+        self, func: Callable[..., _T], *args: Any, **kwargs: Any
+    ) -> _T:
         """
         Execute a function with retry on Neo4j transient errors.
         Replaces 3 different retry patterns from the Zep codebase.
         """
-        last_error = None
+        last_error: Exception
         for attempt in range(self.MAX_RETRIES):
             try:
                 return func(*args, **kwargs)
@@ -98,7 +102,7 @@ class Neo4jStorage(GraphStorage):
                 )
                 time.sleep(wait)
 
-        raise last_error  # type: ignore
+        raise last_error
 
     # ----------------------------------------------------------------
     # Graph lifecycle

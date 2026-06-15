@@ -29,6 +29,9 @@ import json
 import os
 from typing import Any, Optional
 
+from ..utils.belief import avg_position as _avg_position
+from ..utils.json_io import safe_load_json as _safe_load_json
+
 
 # Same threshold the embed-summary, share card, replay GIF, gallery
 # card, webhook, transcript, and feed renderers all use. Per-round
@@ -56,44 +59,7 @@ CSV_COLUMNS: tuple[str, ...] = (
 )
 
 
-# ── On-disk readers ────────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Any:
-    """Read JSON, returning ``None`` on missing / corrupt input.
-
-    Never raises — the route handler must produce a (possibly empty)
-    feed rather than a 500 when an artifact is malformed on disk.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
-
-
 # ── Stance computation ────────────────────────────────────────────────────
-
-
-def _avg_position(positions: dict | None) -> Optional[float]:
-    """Mean of an agent's per-topic belief positions for one round.
-
-    The per-topic dict can be empty or contain non-numeric values when
-    a snapshot is mid-write; we filter those out and return ``None`` if
-    no usable values remain.
-    """
-    if not positions:
-        return None
-    values = [
-        float(v)
-        for v in positions.values()
-        if isinstance(v, (int, float)) and not isinstance(v, bool)
-    ]
-    if not values:
-        return None
-    return sum(values) / len(values)
 
 
 def compute_stance_split(

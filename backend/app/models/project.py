@@ -268,10 +268,7 @@ class ProjectManager:
         safe_filename = f"{uuid.uuid4().hex[:8]}{ext}"
         file_path = os.path.join(files_dir, safe_filename)
 
-        # Save file
         file_storage.save(file_path)
-
-        # Get file size
         file_size = os.path.getsize(file_path)
 
         return {

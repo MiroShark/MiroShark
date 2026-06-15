@@ -22,7 +22,6 @@ from ..utils.i18n import get_locale, t as _t
 from ..models.task import TaskManager, TaskStatus
 from ..models.project import ProjectManager, ProjectStatus
 
-# Get logger
 logger = get_logger('miroshark.api')
 
 

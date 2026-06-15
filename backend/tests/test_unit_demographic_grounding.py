@@ -210,7 +210,10 @@ def test_generator_with_unknown_country_falls_back_to_graph_only():
 
     from app.services.wonderwall_profile_generator import WonderwallProfileGenerator
 
-    gen = WonderwallProfileGenerator(country_code="xx")
+    # __init__ eagerly builds an LLM client (needs LLM_API_KEY); that client is
+    # irrelevant to this demographic-wiring check, so stub its construction out.
+    with patch("app.services.wonderwall_profile_generator.create_llm_client"):
+        gen = WonderwallProfileGenerator(country_code="xx")
     assert gen.country_code == "xx"
     # The pre-sim map is populated only when the sampler returns rows.
     # With an unknown country it stays empty and the worker thread sees
@@ -228,6 +231,7 @@ def test_generator_no_country_means_feature_off():
         # Re-import config to pick up the env override.
         from app import config as _cfg
         _cfg.Config.DEMOGRAPHICS_COUNTRY = ""
-        gen = WonderwallProfileGenerator()
+        with patch("app.services.wonderwall_profile_generator.create_llm_client"):
+            gen = WonderwallProfileGenerator()
         assert gen.country_code is None
         assert gen._demographic_seeds_by_user_id == {}

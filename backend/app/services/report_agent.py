@@ -2880,14 +2880,11 @@ class ReportAgent:
             tools_description=self._get_tools_description(),
         )
 
-        # Build messages
         messages = [{"role": "system", "content": system_prompt}]
-        
-        # Add chat history
+
         for h in chat_history[-10:]:  # Limit history length
             messages.append(h)
-        
-        # Add user message
+
         messages.append({
             "role": "user", 
             "content": message

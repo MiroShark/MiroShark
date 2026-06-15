@@ -86,7 +86,7 @@ def write_simulation_event(
     platform: Optional[str] = None,
     trace_id: Optional[str] = None,
     level: str = 'info',
-):
+) -> None:
     """Append one event to {sim_dir}/events.jsonl.  Safe to call from any process."""
     if not should_log(level):
         return
@@ -162,7 +162,7 @@ class EventLogger:
         platform: Optional[str] = None,
         trace_id: Optional[str] = None,
         level: str = 'info',
-    ):
+    ) -> None:
         """Enqueue an event (non-blocking)."""
         if not should_log(level):
             return
@@ -203,14 +203,14 @@ class EventLogger:
             self._subscribers.append(sub)
         return sub
 
-    def unsubscribe(self, sub: '_Subscriber'):
+    def unsubscribe(self, sub: '_Subscriber') -> None:
         with self._sub_lock:
             try:
                 self._subscribers.remove(sub)
             except ValueError:
                 pass
 
-    def get_recent(self, limit: int = 100) -> List[Dict]:
+    def get_recent(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Return the last N events from the ring buffer."""
         items = list(self._ring)
         return items[-limit:]
@@ -281,7 +281,7 @@ class _Subscriber:
         self._event = threading.Event()
         self.alive = True
 
-    def _push(self, event: Dict):
+    def _push(self, event: Dict[str, Any]) -> None:
         """Called by EventLogger writer thread."""
         if self.simulation_id and event.get('simulation_id') != self.simulation_id:
             return
@@ -290,7 +290,7 @@ class _Subscriber:
         self._buffer.append(event)
         self._event.set()
 
-    def poll(self, timeout: float = 1.0) -> List[Dict]:
+    def poll(self, timeout: float = 1.0) -> List[Dict[str, Any]]:
         """Wait up to timeout seconds, then drain all buffered events."""
         self._event.wait(timeout=timeout)
         self._event.clear()
@@ -302,7 +302,7 @@ class _Subscriber:
                 break
         return events
 
-    def close(self):
+    def close(self) -> None:
         self.alive = False
         self._event.set()
 
@@ -336,7 +336,7 @@ class FileTailer:
                 lines.append(line)
         return lines
 
-    def read_new_events(self) -> List[Dict]:
+    def read_new_events(self) -> List[Dict[str, Any]]:
         """Return parsed events from new lines."""
         events = []
         for line in self.read_new_lines():

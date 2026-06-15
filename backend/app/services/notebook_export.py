@@ -67,8 +67,9 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
+from ..utils.timeutils import utc_iso8601 as _utc_iso8601
 
 
 # Schema versioning — bumping is a deliberate wire-contract break, not a
@@ -91,17 +92,6 @@ CELL_ORDER: tuple[str, ...] = (
 
 
 # ── Helpers ────────────────────────────────────────────────────────────
-
-
-def _utc_iso8601() -> str:
-    """Return UTC ``YYYY-MM-DDTHH:MM:SSZ`` matching the repro-export
-    timestamp grammar.
-
-    Same shape the webhook delivery log + reproduce.json export use so
-    downstream parsers see a single timestamp grammar across every
-    artifact.
-    """
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _safe_str(value: Any, default: str = "") -> str:

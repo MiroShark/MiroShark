@@ -43,8 +43,9 @@ Design notes
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from typing import Any, Literal, Optional
+
+from ..utils.timeutils import utc_iso8601 as _iso_utc_now
 
 
 # ── Bucket thresholds ─────────────────────────────────────────────────────
@@ -155,16 +156,6 @@ def _compute_confidence(leading_pct: float) -> float:
     if confidence > 100.0:
         confidence = 100.0
     return round(confidence, 1)
-
-
-def _iso_utc_now() -> str:
-    """ISO-8601 UTC ``"YYYY-MM-DDTHH:MM:SSZ"`` for the response.
-
-    Same shape as the webhook delivery log's ``timestamp`` field and
-    the reproduce.json blob's ``exported_at`` field — every export
-    surface that timestamps anything uses this format.
-    """
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def compute_signal(summary: Any) -> Optional[dict[str, Any]]:

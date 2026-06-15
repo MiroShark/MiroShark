@@ -17,44 +17,46 @@ thread's context and re-applies it inside the worker.
 import functools
 import threading
 import uuid
-from typing import Callable
+from typing import Callable, TypeVar
 
 _context = threading.local()
+
+_R = TypeVar("_R")
 
 
 class TraceContext:
     """Thread-local storage for correlation fields."""
 
     @staticmethod
-    def set(**kwargs):
+    def set(**kwargs: object) -> None:
         """Set one or more context fields (simulation_id, round_num, agent_id, agent_name, platform, trace_id, run_id, sim_phase, prompt_type)."""
         for k, v in kwargs.items():
             setattr(_context, k, v)
 
     @staticmethod
-    def get(key, default=None):
+    def get(key: str, default: object = None) -> object:
         """Read a context field."""
         return getattr(_context, key, default)
 
     @staticmethod
-    def get_all():
+    def get_all() -> dict[str, object]:
         """Return all context fields as a dict."""
         return {k: v for k, v in _context.__dict__.items() if not k.startswith('_')}
 
     @staticmethod
-    def new_trace():
+    def new_trace() -> str:
         """Generate and set a new trace_id, returning it."""
         trace_id = f"trc_{uuid.uuid4().hex[:12]}"
         _context.trace_id = trace_id
         return trace_id
 
     @staticmethod
-    def clear():
+    def clear() -> None:
         """Remove all context fields."""
         _context.__dict__.clear()
 
     @staticmethod
-    def wrap_fn(fn: Callable) -> Callable:
+    def wrap_fn(fn: Callable[..., _R]) -> Callable[..., _R]:
         """Snapshot the caller's context; restore it in the wrapped fn.
 
         Use this when submitting to a ThreadPoolExecutor so that child

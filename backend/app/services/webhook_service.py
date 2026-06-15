@@ -869,6 +869,38 @@ def build_payload(
     return payload
 
 
+# Synthetic sim id / paths used by every channel's "Send test event" flow.
+TEST_PAYLOAD_SIM_ID = "sim_test_event"
+
+
+def build_test_payload(scenario: str) -> WebhookPayload:
+    """Build the sample :class:`WebhookPayload` used by the Settings
+    ``Send test event`` flow.
+
+    Each notify channel (``slack``/``discord``/``telegram``/``email``)
+    feeds this exact dict to its own message builder; only ``scenario``
+    differs per channel (it names the channel being tested). Centralising
+    the shape here keeps the four channels' test payloads in lockstep with
+    the canonical :class:`WebhookPayload` definition.
+    """
+    payload: WebhookPayload = {
+        "event": "simulation.test",
+        "sim_id": TEST_PAYLOAD_SIM_ID,
+        "scenario": scenario,
+        "status": "test",
+        "current_round": 0,
+        "total_rounds": 0,
+        "agent_count": 0,
+        "quality_health": None,
+        "final_consensus": None,
+        "resolution_outcome": None,
+        "share_path": f"/share/{TEST_PAYLOAD_SIM_ID}",
+        "share_card_path": f"/api/simulation/{TEST_PAYLOAD_SIM_ID}/share-card.png",
+        "fired_at": None,
+    }
+    return payload
+
+
 def _post_json(url: str, payload: Dict[str, Any], timeout: float) -> Tuple[bool, str]:
     """Issue the POST. Returns ``(ok, message)`` — never raises."""
     try:

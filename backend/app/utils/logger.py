@@ -8,9 +8,10 @@ import sys
 import logging
 from datetime import datetime
 from logging.handlers import RotatingFileHandler
+from typing import Any
 
 
-def _ensure_utf8_stdout():
+def _ensure_utf8_stdout() -> None:
     """
     Ensure stdout/stderr uses UTF-8 encoding
     Fixes character encoding issues on Windows console
@@ -40,8 +41,7 @@ def setup_logger(name: str = 'miroshark', level: int = logging.DEBUG) -> logging
     """
     # Ensure log directory exists
     os.makedirs(LOG_DIR, exist_ok=True)
-    
-    # Create logger
+
     logger = logging.getLogger(name)
     logger.setLevel(level)
     
@@ -80,8 +80,7 @@ def setup_logger(name: str = 'miroshark', level: int = logging.DEBUG) -> logging
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
     console_handler.setFormatter(simple_formatter)
-    
-    # Add handlers
+
     logger.addHandler(file_handler)
     logger.addHandler(console_handler)
     
@@ -104,23 +103,22 @@ def get_logger(name: str = 'miroshark') -> logging.Logger:
     return logger
 
 
-# Create default logger
 logger = setup_logger()
 
 
 # Convenience methods
-def debug(msg, *args, **kwargs):
+def debug(msg: object, *args: object, **kwargs: Any) -> None:
     logger.debug(msg, *args, **kwargs)
 
-def info(msg, *args, **kwargs):
+def info(msg: object, *args: object, **kwargs: Any) -> None:
     logger.info(msg, *args, **kwargs)
 
-def warning(msg, *args, **kwargs):
+def warning(msg: object, *args: object, **kwargs: Any) -> None:
     logger.warning(msg, *args, **kwargs)
 
-def error(msg, *args, **kwargs):
+def error(msg: object, *args: object, **kwargs: Any) -> None:
     logger.error(msg, *args, **kwargs)
 
-def critical(msg, *args, **kwargs):
+def critical(msg: object, *args: object, **kwargs: Any) -> None:
     logger.critical(msg, *args, **kwargs)
 

@@ -36,7 +36,6 @@ import json
 import sys
 from pathlib import Path
 
-import pytest
 
 _BACKEND = Path(__file__).resolve().parent.parent
 if str(_BACKEND) not in sys.path:

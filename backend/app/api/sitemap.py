@@ -30,39 +30,18 @@ Neo4j / LLM calls.
 
 from __future__ import annotations
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response, jsonify
 
 from ..config import Config
 from ..services.simulation_manager import SimulationManager
 from ..services import sitemap as sitemap_service
+from ..utils.base_url import resolve_public_base_url as _resolve_base_url
 from ..utils.logger import get_logger
 
 
 logger = get_logger("miroshark.api.sitemap")
 
 sitemap_bp = Blueprint("sitemap", __name__)
-
-
-def _resolve_base_url() -> str:
-    """Build the absolute URL prefix used inside the sitemap document.
-
-    Identical strategy to the feed module — prefer ``Config.PUBLIC_BASE_URL``
-    when the operator has set it (single source of truth across the
-    feed / webhook / share-card / sitemap surfaces) and fall back to
-    the request's host with ``X-Forwarded-Proto`` / ``X-Forwarded-Host``
-    honored for reverse-proxy deployments.
-    """
-    explicit = (Config.PUBLIC_BASE_URL or "").strip()
-    if explicit:
-        return explicit.rstrip("/")
-
-    base = (request.host_url or "").rstrip("/")
-    forwarded_proto = request.headers.get("X-Forwarded-Proto")
-    forwarded_host = request.headers.get("X-Forwarded-Host")
-    if forwarded_host:
-        proto = forwarded_proto or ("https" if request.is_secure else "http")
-        base = f"{proto}://{forwarded_host}"
-    return base
 
 
 @sitemap_bp.route("/sitemap.xml", methods=["GET"])

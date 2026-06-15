@@ -2197,7 +2197,7 @@ def list_simulations():
         }), 500
 
 
-def _get_report_id_for_simulation(simulation_id: str) -> str:
+def _get_report_id_for_simulation(simulation_id: str) -> str | None:
     """
     Get the latest report_id corresponding to a simulation
 
@@ -7852,8 +7852,8 @@ def _build_gallery_card_payload(state, sim_dir: str) -> dict:
             minutes_per_round = max(int(time_config.get("minutes_per_round", 60) or 60), 1)
             hours = int(time_config.get("total_simulation_hours", 0) or 0)
             total_rounds = int(hours * 60 / minutes_per_round)
-        except Exception:
-            pass
+        except (OSError, ValueError, TypeError, json.JSONDecodeError) as e:
+            logger.debug(f"Could not read {config_path}: {e}")
 
     # Cap the scenario to a tweet-sized headline so the gallery stays
     # visually even regardless of how verbose the operator was.
@@ -7915,8 +7915,8 @@ def _build_gallery_card_payload(state, sim_dir: str) -> dict:
                     "bearish": round(nbe / total * 100, 1),
                 }
                 break
-        except Exception:
-            pass
+        except (OSError, ValueError, TypeError, ZeroDivisionError, json.JSONDecodeError) as e:
+            logger.debug(f"Could not read {trajectory_path}: {e}")
 
     resolution_outcome = None
     resolution_path = os.path.join(sim_dir, "resolution.json")
@@ -7925,8 +7925,8 @@ def _build_gallery_card_payload(state, sim_dir: str) -> dict:
             with open(resolution_path, 'r', encoding='utf-8') as f:
                 r = json.load(f)
             resolution_outcome = r.get("actual_outcome")
-        except Exception:
-            pass
+        except (OSError, json.JSONDecodeError) as e:
+            logger.debug(f"Could not read {resolution_path}: {e}")
 
     outcome = _read_outcome_file(sim_dir)
 

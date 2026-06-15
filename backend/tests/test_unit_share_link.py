@@ -25,12 +25,10 @@ Coverage targets:
 
 from __future__ import annotations
 
-import os
 import sys
 from pathlib import Path
 from typing import Any, Dict
 
-import pytest
 
 
 _BACKEND = Path(__file__).resolve().parent.parent

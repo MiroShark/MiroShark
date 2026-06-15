@@ -16,6 +16,8 @@ from ..config import Config
 from .event_logger import EventLogger, LOG_PROMPTS
 
 if TYPE_CHECKING:
+    from openai.types.chat import ChatCompletion
+
     from .claude_code_client import ClaudeCodeClient
 
 
@@ -208,7 +210,16 @@ class LLMClient:
             break
         return out
 
-    def _emit_llm_event(self, messages, content, t0, *, response=None, error=None, temperature=0.7):
+    def _emit_llm_event(
+        self,
+        messages: List[Dict[str, str]],
+        content: Optional[str],
+        t0: float,
+        *,
+        response: "Optional[ChatCompletion]" = None,
+        error: Optional[BaseException] = None,
+        temperature: float = 0.7,
+    ) -> None:
         """Emit an llm_call observability event (best-effort, never raises)."""
         try:
             latency_ms = round((time.perf_counter() - t0) * 1000, 1)

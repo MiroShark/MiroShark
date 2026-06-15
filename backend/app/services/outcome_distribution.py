@@ -69,14 +69,14 @@ Design notes
 
 from __future__ import annotations
 
-import json
 import os
 import threading
 import time
-from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, Optional, Tuple
 
 from . import signal_service
+from ..utils.json_io import safe_load_json as _safe_load_json
+from ..utils.timeutils import utc_iso8601 as _iso_utc_now
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -107,22 +107,6 @@ _cache_lock = threading.Lock()
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Optional[Any]:
-    """Best-effort JSON load — never raises.
-
-    Returns ``None`` on missing file, unreadable bytes, or invalid JSON.
-    Mirrors ``platform_stats._safe_load_json`` so a single corrupt sim
-    folder can't tank the aggregate.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:
@@ -271,12 +255,6 @@ def _round_count_bucket(total_rounds: int) -> str:
     if total_rounds > _LONG_ROUND_MIN_EXCLUSIVE:
         return "long"
     return "medium"
-
-
-def _iso_utc_now() -> str:
-    """ISO-8601 UTC ``"YYYY-MM-DDTHH:MM:SSZ"`` — same shape as
-    ``signal_service._iso_utc_now`` and the webhook timestamp."""
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _bucket_with_pcts(counts: Dict[str, int], total: int) -> Dict[str, Any]:

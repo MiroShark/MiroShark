@@ -142,8 +142,7 @@ class SimulationLogManager:
     def _setup_main_logger(self):
         """Set up the main simulation logger"""
         log_path = os.path.join(self.simulation_dir, "simulation.log")
-        
-        # Create logger
+
         self._main_logger = logging.getLogger(f"simulation.{os.path.basename(self.simulation_dir)}")
         self._main_logger.setLevel(logging.INFO)
         self._main_logger.handlers.clear()

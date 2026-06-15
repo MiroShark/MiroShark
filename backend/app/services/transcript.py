@@ -23,6 +23,9 @@ import json
 import os
 from typing import Any, Optional
 
+from ..utils.belief import avg_position as _avg_position
+from ..utils.json_io import safe_load_json as _safe_load_json
+
 
 # Same threshold the embed-summary, share card, replay GIF, gallery
 # card, and webhook all use — keep these surfaces in sync so an agent
@@ -63,38 +66,7 @@ def _classify_stance(value: float) -> str:
     return "neutral"
 
 
-def _avg_position(positions: dict | None) -> Optional[float]:
-    """Mean of an agent's per-topic belief positions for one round.
-
-    ``positions`` is a ``{topic: float}`` dict; we collapse to one
-    scalar so the transcript can label the agent's stance without
-    listing every topic.
-    """
-    if not positions:
-        return None
-    values = [float(v) for v in positions.values() if isinstance(v, (int, float))]
-    if not values:
-        return None
-    return sum(values) / len(values)
-
-
 # ── On-disk artifact loaders ──────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Any:
-    """Read a JSON file, returning ``None`` on missing/corrupt input.
-
-    Never raises — every artifact except ``trajectory.json`` is
-    optional, and a corrupt artifact must degrade the transcript
-    rather than 500 the endpoint.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _load_profile_names(sim_dir: str) -> dict[int, str]:

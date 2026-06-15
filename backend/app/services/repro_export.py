@@ -74,8 +74,9 @@ from __future__ import annotations
 
 import json
 import os
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
+
+from ..utils.timeutils import utc_iso8601 as _utc_iso8601
 
 
 SCHEMA_VERSION = "1"
@@ -99,16 +100,6 @@ REQUIRED_KEYS: frozenset[str] = frozenset(
         "config_reasoning",
     }
 )
-
-
-def _utc_iso8601() -> str:
-    """Return the current UTC time as an ISO-8601 ``Z``-suffixed string.
-
-    Matches the timestamp shape used by the webhook delivery log + the
-    transcript front matter so downstream parsers see one timestamp
-    grammar across every export.
-    """
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _safe_int(value: Any, default: int = 0) -> int:

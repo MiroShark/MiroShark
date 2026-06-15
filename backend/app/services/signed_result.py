@@ -58,8 +58,9 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
-from datetime import datetime, timezone
 from typing import Any, Dict, Optional
+
+from ..utils.timeutils import utc_iso8601 as _iso_utc_now
 
 
 SCHEMA_VERSION = "1"
@@ -73,15 +74,6 @@ ALGORITHM = "hmac-sha256"
 # JSON-Web-Signature-ish primitive uses. Recipients verify by recomputing
 # the hex digest and ``hmac.compare_digest``-ing against this field.
 _KEY_HINT_LENGTH = 8
-
-
-def _iso_utc_now() -> str:
-    """ISO-8601 UTC ``"YYYY-MM-DDTHH:MM:SSZ"`` for the envelope timestamp.
-
-    Same shape every other export surface uses (signal_service,
-    webhook_service log, reproduce.json's ``exported_at``).
-    """
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def canonical_json(payload: Dict[str, Any]) -> bytes:

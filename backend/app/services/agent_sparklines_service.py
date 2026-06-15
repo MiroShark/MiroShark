@@ -44,9 +44,11 @@ Design notes
 
 from __future__ import annotations
 
-import json
 import os
 from typing import Any, Optional
+
+from ..utils.belief import avg_position as _avg_position
+from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 TRAJECTORY_FILENAME = "trajectory.json"
@@ -67,21 +69,6 @@ STANCE_COLORS: dict[str, str] = {
 
 
 # ── On-disk readers ────────────────────────────────────────────────────────
-
-
-def _safe_load_json(path: str) -> Any:
-    """Read JSON, returning ``None`` on missing / corrupt input.
-
-    Never raises — the route handler must resolve a malformed artifact to
-    a clean 404 ("no data yet"), never a 500.
-    """
-    if not path or not os.path.exists(path):
-        return None
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return None
 
 
 def _load_profile_names(sim_dir: str) -> dict[int, str]:
@@ -112,26 +99,6 @@ def _load_profile_names(sim_dir: str) -> dict[int, str]:
 
 
 # ── Stance helpers ─────────────────────────────────────────────────────────
-
-
-def _avg_position(positions: Any) -> Optional[float]:
-    """Mean of an agent's per-topic belief positions for one round.
-
-    ``positions`` is the ``{topic: float}`` dict from one agent's entry in
-    a snapshot's ``belief_positions``. Non-numeric / boolean values are
-    filtered out; returns ``None`` when no usable value remains so the
-    caller can skip the agent for that round.
-    """
-    if not isinstance(positions, dict) or not positions:
-        return None
-    values = [
-        float(v)
-        for v in positions.values()
-        if isinstance(v, (int, float)) and not isinstance(v, bool)
-    ]
-    if not values:
-        return None
-    return sum(values) / len(values)
 
 
 def _classify_stance(value: float) -> str:
