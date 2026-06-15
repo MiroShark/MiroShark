@@ -1,0 +1,78 @@
+# Dependabot keeps MiroShark's dependencies current across every ecosystem in
+# the repo. Minor and patch updates are grouped into a single PR per ecosystem
+# each week to keep review noise low; major updates open as individual PRs so
+# breaking changes get scrutinised on their own. Commit messages use the repo's
+# existing `chore:` prefix for dependency bumps.
+version: 2
+updates:
+  # Python backend (requirements.txt + pyproject.toml). camel-ai is exact-pinned
+  # at 0.2.78; Dependabot surfaces newer releases as reviewable, CI-tested PRs
+  # instead of silently floating the pin.
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    groups:
+      backend-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Root npm package (dev tooling — concurrently).
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore"
+    groups:
+      root-npm-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Frontend npm package (Vue 3 + Vite app).
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+    groups:
+      frontend-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # GitHub Actions used by tests.yml and docker-image.yml.
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore"
+    groups:
+      actions-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  # Docker base image (python:3.11) used by the published container.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 2
+    commit-message:
+      prefix: "chore"
