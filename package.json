@@ -13,7 +13,7 @@
     "build": "cd frontend && npm run build"
   },
   "devDependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^10.0.3"
   },
   "engines": {
     "node": ">=18.0.0"
