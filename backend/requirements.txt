@@ -45,7 +45,7 @@ pywebpush>=2.0.0
 
 # ============= Game Theory (optional — report_agent.analyze_equilibrium) =============
 # Enables the Nash equilibrium tool on the ReACT report agent. Silent no-op if absent.
-nashpy>=0.0.41
+nashpy>=0.0.43
 
 # ============= Demographic Grounding (optional) =============
 # Powers backend/app/services/demographic_sampler.py — pulls Nemotron
