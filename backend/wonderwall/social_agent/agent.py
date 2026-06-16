@@ -169,7 +169,7 @@ class SocialAgent(ChatAgent):
             "\n"
             "What do you think Helen should do?")
 
-    async def _aget_model_response(self, openai_messages, num_tokens, **kwargs):
+    async def _aget_model_response(self, openai_messages, *args, **kwargs):
         """Filter empty-content messages that Gemini rejects with INVALID_ARGUMENT,
         and emit llm_call observability events for Wonderwall subprocess visibility."""
         import os as _os
@@ -238,7 +238,7 @@ class SocialAgent(ChatAgent):
         error_msg = None
         result = None
         try:
-            result = await super()._aget_model_response(filtered, num_tokens, **kwargs)
+            result = await super()._aget_model_response(filtered, *args, **kwargs)
             return result
         except Exception as e:
             error_msg = str(e)
