@@ -28,7 +28,7 @@ dependencies = [
     # Wonderwall social media simulation (Wonderwall fork)
     # Wonderwall (wonderwall package) is bundled directly in backend/wonderwall/
     # "camel-oasis==0.2.5",  # replaced by bundled Wonderwall
-    "camel-ai==0.2.78",
+    "camel-ai==0.2.90",
 
     # Wonderwall runtime dependencies (used by recsys, agent_graph, agents_generator)
     # These are hard imports that crash on startup if missing.
