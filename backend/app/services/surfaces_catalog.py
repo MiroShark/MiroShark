@@ -427,7 +427,7 @@ _CATALOG: List[Dict[str, Any]] = [
         "method": "GET",
         "type": "analytics",
         "description": "Estimated run cost — headline USD figure + token/latency totals and per-model/per-phase breakdown.",
-        "added_in_pr": None,
+        "added_in_pr": 179,
         "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/cost.json'",
     },
 ]
