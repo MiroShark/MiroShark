@@ -2800,10 +2800,20 @@ async def run_synchronized_simulation(
             log_info(f"[{name}] Trajectory saved: {traj_path}")
             log_info(f"[{name}] {tracker.get_summary()}")
 
-    # End loggers
-    for logger, name in [(twitter_logger, "Twitter"), (reddit_logger, "Reddit"), (polymarket_logger, "Polymarket")]:
+    # End loggers — report each platform's actual action count. The
+    # per-platform `*_result.total_actions` are accumulated every round (and
+    # surfaced in the progress line above); emitting a hardcoded 0 here made
+    # the runner log `total_actions=0` even on fully successful runs, masking
+    # whether the agent loop did anything.
+    for logger, name, result in [
+        (twitter_logger, "Twitter", twitter_result),
+        (reddit_logger, "Reddit", reddit_result),
+        (polymarket_logger, "Polymarket", polymarket_result),
+    ]:
         if logger:
-            logger.log_simulation_end(total_rounds, 0)
+            logger.log_simulation_end(
+                total_rounds, result.total_actions if result else 0
+            )
 
     return twitter_result, reddit_result, polymarket_result
 
