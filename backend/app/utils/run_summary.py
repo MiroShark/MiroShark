@@ -76,31 +76,24 @@ def _get_model_cost(model: str, tokens_in: int, tokens_out: int) -> float:
     return cost
 
 
-def generate_run_summary(
+def _collect_llm_events(
     events_path: str,
     *,
     sim_id: Optional[str] = None,
     start_after: Optional[str] = None,
     output_dir: Optional[str] = None,
-) -> Dict[str, Any]:
+) -> List[Dict[str, Any]]:
+    """Read ``llm_call`` events from the global + per-sim events.jsonl pair.
+
+    Reads the global ``events_path`` and (when ``output_dir`` is given and
+    distinct) the per-simulation ``events.jsonl``, keeps only ``llm_call``
+    events, applies the optional ``sim_id`` / ``start_after`` filters, and
+    deduplicates by ``event_id``. Returns the matching events in read
+    order. Shared by :func:`generate_run_summary` (writes a markdown
+    report) and :func:`collect_cost_summary` (returns the numbers as data)
+    so both see the same call set.
     """
-    Generate a run summary from events.jsonl files.
-
-    Reads both the global events.jsonl (LLMClient calls from Flask process)
-    and the per-simulation events.jsonl (Wonderwall agent calls from subprocess),
-    deduplicates by event_id, and merges into a single summary.
-
-    Args:
-        events_path: Path to global events.jsonl
-        sim_id: Optional simulation ID filter
-        start_after: Optional ISO timestamp — only include events after this
-        output_dir: Directory to write run_summary.md (defaults to events_path parent)
-
-    Returns:
-        Summary dict with all aggregated data.
-    """
-    # Collect event files to read: global + per-sim
-    event_files = []
+    event_files: List[str] = []
     if os.path.exists(events_path):
         event_files.append(events_path)
     if output_dir:
@@ -108,12 +101,7 @@ def generate_run_summary(
         if os.path.exists(sim_events) and sim_events != events_path:
             event_files.append(sim_events)
 
-    if not event_files:
-        logger.warning(f"Events file not found: {events_path}")
-        return {}
-
-    # Load and filter events from all files, deduplicate by event_id
-    events = []
+    events: List[Dict[str, Any]] = []
     seen_ids = set()
     for fpath in event_files:
         with open(fpath, "r", encoding="utf-8") as f:
@@ -137,7 +125,65 @@ def generate_run_summary(
                 if eid:
                     seen_ids.add(eid)
                 events.append(e)
+    return events
 
+
+def collect_cost_summary(
+    events_path: str,
+    *,
+    sim_id: Optional[str] = None,
+    output_dir: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Aggregate cost / token / latency stats without writing or printing.
+
+    Pure counterpart to :func:`generate_run_summary` — reads the same
+    global + per-sim ``events.jsonl`` pair, filters to this sim's
+    ``llm_call`` events, and returns the aggregated summary dict (the same
+    shape :func:`_aggregate` produces, including ``total_cost`` priced off
+    :data:`MODEL_PRICING`). Returns ``{}`` when no matching LLM-call events
+    exist. Used by the ``cost.json`` surface, which needs the figures as
+    structured data rather than a markdown file on disk.
+    """
+    events = _collect_llm_events(events_path, sim_id=sim_id, output_dir=output_dir)
+    if not events:
+        return {}
+    return _aggregate(events)
+
+
+def generate_run_summary(
+    events_path: str,
+    *,
+    sim_id: Optional[str] = None,
+    start_after: Optional[str] = None,
+    output_dir: Optional[str] = None,
+) -> Dict[str, Any]:
+    """
+    Generate a run summary from events.jsonl files.
+
+    Reads both the global events.jsonl (LLMClient calls from Flask process)
+    and the per-simulation events.jsonl (Wonderwall agent calls from subprocess),
+    deduplicates by event_id, and merges into a single summary.
+
+    Args:
+        events_path: Path to global events.jsonl
+        sim_id: Optional simulation ID filter
+        start_after: Optional ISO timestamp — only include events after this
+        output_dir: Directory to write run_summary.md (defaults to events_path parent)
+
+    Returns:
+        Summary dict with all aggregated data.
+    """
+    # Collect llm_call events from the global + per-sim logs (dedup by id).
+    has_global = os.path.exists(events_path)
+    sim_events = os.path.join(output_dir, "events.jsonl") if output_dir else None
+    has_sim = bool(sim_events and sim_events != events_path and os.path.exists(sim_events))
+    if not has_global and not has_sim:
+        logger.warning(f"Events file not found: {events_path}")
+        return {}
+
+    events = _collect_llm_events(
+        events_path, sim_id=sim_id, start_after=start_after, output_dir=output_dir
+    )
     if not events:
         logger.info("No LLM call events found for summary")
         return {}

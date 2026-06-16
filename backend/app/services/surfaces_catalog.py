@@ -419,6 +419,17 @@ _CATALOG: List[Dict[str, Any]] = [
         "added_in_pr": 153,
         "example_curl": "curl -fsSL 'https://your-host/api/activity.json?limit=20'",
     },
+    # ── Late-appended per-sim surface (order is contract; new entries
+    #     append to the end — see module docstring) ───────────────────
+    {
+        "key": "cost",
+        "endpoint": "/api/simulation/<simulation_id>/cost.json",
+        "method": "GET",
+        "type": "analytics",
+        "description": "Estimated run cost — headline USD figure + token/latency totals and per-model/per-phase breakdown.",
+        "added_in_pr": None,
+        "example_curl": "curl -fsSL 'https://your-host/api/simulation/<simulation_id>/cost.json'",
+    },
 ]
 
 
@@ -455,6 +466,7 @@ _PER_SIM_TRACKED_KEYS: frozenset[str] = frozenset(
         "clone_json",
         "agents_json",
         "signed_result",
+        "cost",
     }
 )
 

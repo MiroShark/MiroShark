@@ -2006,6 +2006,48 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /api/simulation/{simulation_id}/cost.json:
+    get:
+      tags: [Publish & Embed]
+      summary: Estimated cost breakdown for a published sim.
+      description: |
+        The "$1 to simulate anything" claim, made queryable per run.
+        Every other analytics surface answers *what the swarm decided*
+        (`signal.json`, `volatility`, `peak-round`) or *how to reproduce
+        it* (`reproduce.json`, `clone.json`). None answer the first
+        question an evaluator asks: *what did this run cost?*
+
+        The figure is already computed at completion — `run_summary`
+        prices the sim's LLM calls off an OpenRouter table and writes
+        `run_summary.md` to disk — but only as markdown;
+        `/api/observability/stats` exposes tokens but no dollar figure.
+        This surface returns it as structured JSON: a headline
+        `estimated_cost_usd` plus token / latency totals and per-model /
+        per-phase breakdowns.
+
+        Honest by construction (`is_estimate: true` +
+        `pricing_basis`). Calls on models absent from the price table
+        count as $0, so the figure is a *lower bound* — stated rather
+        than hidden.
+
+        Same publish gate as every other share surface
+        (`is_public=true`). Returns `404` when the simulation has logged
+        no LLM calls yet (no cost to report) so a consumer can tell a
+        "not ready" sim (404) apart from a "private" sim (403). Cached
+        for 60 seconds — a live sim accrues cost round-to-round; a
+        completed sim's cost is stable.
+      parameters:
+        - $ref: "#/components/parameters/SimulationIdPath"
+      responses:
+        "200":
+          description: Estimated cost / token / latency breakdown.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CostResponse"
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /api/simulation/{simulation_id}/clone.json:
     get:
       tags: [Publish & Embed]
@@ -6263,6 +6305,178 @@ components:
           description: |
             Number of round-over-round deltas — always
             `total_rounds - 1`.
+
+    CostResponse:
+      type: object
+      description: |
+        Estimated cost / token / latency breakdown returned by
+        `/api/simulation/{id}/cost.json` — the "$1 to simulate
+        anything" claim as structured data. Derived from the same LLM
+        call log `run_summary.md` aggregates, priced off
+        `run_summary.MODEL_PRICING` (OpenRouter list prices).
+
+        `is_estimate` is always `true` and `pricing_basis` documents the
+        method: calls on models absent from the price table count as
+        `$0`, so `estimated_cost_usd` is a *lower bound* on true spend.
+        Schema is versioned via `schema_version`; v1 is the only
+        published version.
+      required:
+        - schema_version
+        - simulation_id
+        - currency
+        - is_estimate
+        - pricing_basis
+        - estimated_cost_usd
+        - totals
+        - latency_ms
+        - wall_clock
+        - by_model
+        - by_phase
+      properties:
+        schema_version:
+          type: string
+          enum: ["1"]
+          description: Schema version literal — bumped on breaking changes.
+        simulation_id:
+          type: string
+          description: Echoed simulation id.
+        currency:
+          type: string
+          enum: [USD]
+          description: Currency of every monetary field. Always `USD`.
+        is_estimate:
+          type: boolean
+          description: |
+            Always `true`. The figure is derived from a static price
+            table, not a billed invoice — never present it as ground
+            truth.
+        pricing_basis:
+          type: string
+          description: |
+            Human-readable note describing how the cost was computed and
+            why it is a lower bound (untracked models price at $0).
+        estimated_cost_usd:
+          type: number
+          format: float
+          minimum: 0
+          description: |
+            Headline figure — estimated total USD cost of every priced
+            LLM call in this run, rounded to four decimals.
+        totals:
+          type: object
+          description: Aggregate call / token / time counters for the run.
+          properties:
+            llm_calls:
+              type: integer
+              minimum: 0
+              description: Total LLM calls logged for the sim.
+            errors:
+              type: integer
+              minimum: 0
+              description: Calls that recorded an error.
+            tokens_input:
+              type: integer
+              minimum: 0
+              description: Summed prompt tokens across all calls.
+            tokens_output:
+              type: integer
+              minimum: 0
+              description: Summed completion tokens across all calls.
+            tokens_total:
+              type: integer
+              minimum: 0
+              description: `tokens_input + tokens_output`.
+            llm_seconds:
+              type: number
+              format: float
+              minimum: 0
+              description: Summed LLM wall time in seconds (one decimal).
+        latency_ms:
+          type: object
+          description: Per-call latency distribution in milliseconds.
+          properties:
+            p50:
+              type: integer
+              minimum: 0
+              description: Median per-call latency.
+            p90:
+              type: integer
+              minimum: 0
+              description: 90th-percentile per-call latency.
+            max:
+              type: integer
+              minimum: 0
+              description: Slowest single call.
+        wall_clock:
+          type: object
+          description: |
+            ISO-8601 timestamps of the first and last logged call.
+            Either field is `null` when no timestamps were recorded.
+          properties:
+            start:
+              type: string
+              nullable: true
+              description: Timestamp of the earliest logged call.
+            end:
+              type: string
+              nullable: true
+              description: Timestamp of the latest logged call.
+        by_model:
+          type: array
+          description: |
+            Per-model breakdown, ordered by descending cost. Each row
+            carries the model id plus its call / token / error counts and
+            estimated cost.
+          items:
+            $ref: "#/components/schemas/CostBreakdownRow"
+        by_phase:
+          type: array
+          description: |
+            Per-pipeline-phase breakdown (Profile Generation, Wonderwall
+            Simulation, Report Generation, …), ordered by descending LLM
+            wall time. Same row shape as `by_model` with a `phase` label.
+          items:
+            $ref: "#/components/schemas/CostBreakdownRow"
+
+    CostBreakdownRow:
+      type: object
+      description: |
+        One row of a cost breakdown — either a model (`model` key) or a
+        pipeline phase (`phase` key); exactly one label key is present.
+      required:
+        - calls
+        - tokens_input
+        - tokens_output
+        - errors
+        - estimated_cost_usd
+      properties:
+        model:
+          type: string
+          description: Model id — present in `by_model` rows.
+        phase:
+          type: string
+          description: Pipeline phase name — present in `by_phase` rows.
+        calls:
+          type: integer
+          minimum: 0
+          description: LLM calls attributed to this group.
+        tokens_input:
+          type: integer
+          minimum: 0
+          description: Summed prompt tokens for this group.
+        tokens_output:
+          type: integer
+          minimum: 0
+          description: Summed completion tokens for this group.
+        errors:
+          type: integer
+          minimum: 0
+          description: Calls in this group that recorded an error.
+        estimated_cost_usd:
+          type: number
+          format: float
+          minimum: 0
+          description: Estimated USD cost for this group (four decimals).
 
     ClonePayloadBody:
       type: object

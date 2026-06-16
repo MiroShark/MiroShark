@@ -103,6 +103,7 @@ SURFACE_KEYS: frozenset[str] = frozenset(
         "clone_json",
         "agents_json",
         "signed_result",
+        "cost",
     }
 )
 

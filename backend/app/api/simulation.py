@@ -5940,6 +5940,88 @@ def get_volatility(simulation_id: str):
         }), 500
 
 
+@simulation_bp.route('/<simulation_id>/cost.json', methods=['GET'])
+def get_cost_json(simulation_id: str):
+    """Estimated cost breakdown for a published simulation — the
+    "$1 to simulate anything" claim, made queryable per run.
+
+    Every analytics surface so far answers *what the swarm decided*
+    (``signal.json`` / ``volatility`` / ``peak-round``) or *how to
+    reproduce it* (``reproduce.json`` / ``clone.json``). None answer the
+    first question an evaluator actually asks: *what did this run cost?*
+    The number already exists — ``run_summary`` prices the sim's LLM
+    calls off an OpenRouter table and writes ``run_summary.md`` at
+    completion — but only as a markdown file on disk;
+    ``/api/observability/stats`` exposes tokens but no dollar figure. This
+    surface returns it as structured JSON: a headline
+    ``estimated_cost_usd`` plus token / latency totals and per-model /
+    per-phase breakdowns.
+
+    Honest by construction. The payload is flagged ``is_estimate`` and
+    carries a ``pricing_basis`` note; calls on models absent from the
+    price table count as $0, so the figure is a lower bound — stated
+    rather than hidden.
+
+    Same publish gate as every other share surface (``is_public=true``).
+    Returns ``404`` when the simulation has logged no LLM calls yet (no
+    cost to report) so a consumer can tell a "not ready" sim (404) apart
+    from a "private" sim (403).
+    """
+    from ..services import cost_service
+    from ..services import surface_stats
+    from flask import Response
+
+    locale = get_locale(request)
+    try:
+        try:
+            summary = _build_embed_summary_payload(simulation_id)
+        except LookupError as exc:
+            return jsonify({"success": False, "error": str(exc)}), 404
+
+        if not summary.get("is_public"):
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                    locale,
+                ),
+            }), 403
+
+        sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
+        payload = cost_service.build_cost_payload(sim_dir, simulation_id)
+        if payload is None:
+            return jsonify({
+                "success": False,
+                "error": _t(
+                    "Cost data not available yet — the simulation has logged no LLM calls.",
+                    "暂无成本数据 — 该模拟尚未记录任何 LLM 调用。",
+                    locale,
+                ),
+            }), 404
+
+        # Pretty-printed + sorted keys so ``curl > cost.json`` produces a
+        # diff-friendly file, matching the volatility / peak-round posture.
+        body = json.dumps(payload, indent=2, sort_keys=True, ensure_ascii=False).encode("utf-8")
+        response = Response(body, mimetype="application/json; charset=utf-8")
+        # 60-second cache. A live sim accrues cost round-to-round, so a
+        # short cache lets a cost tracker poll without re-scanning the
+        # whole events log on every hit; a completed sim's cost is stable.
+        response.headers["Cache-Control"] = "public, max-age=60"
+        response.headers["Content-Disposition"] = (
+            f'inline; filename="miroshark-{simulation_id[:12]}-cost.json"'
+        )
+        surface_stats.increment_surface_stat(sim_dir, "cost")
+        return response
+
+    except Exception as e:
+        logger.error(f"cost.json: failed for {simulation_id}: {e}\n{traceback.format_exc()}")
+        return jsonify({
+            "success": False,
+            "error": str(e),
+        }), 500
+
+
 @simulation_bp.route('/<simulation_id>/clone.json', methods=['GET'])
 def get_clone_json(simulation_id: str):
     """Clone payload for a published simulation — the *inputs* surface.
