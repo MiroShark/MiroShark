@@ -90,6 +90,7 @@ def test_surface_keys_includes_every_serve_handler():
         "clone_json",
         "agents_json",
         "signed_result",
+        "cost",
     }
     assert set(surface_stats.SURFACE_KEYS) == expected
 

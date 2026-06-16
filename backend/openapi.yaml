@@ -6385,7 +6385,7 @@ components:
             tokens_total:
               type: integer
               minimum: 0
-              description: `tokens_input + tokens_output`.
+              description: "`tokens_input + tokens_output`."
             llm_seconds:
               type: number
               format: float
