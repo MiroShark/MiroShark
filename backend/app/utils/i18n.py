@@ -16,7 +16,7 @@ import contextvars
 from typing import Any, Mapping, Optional
 
 
-SUPPORTED = ("en", "zh-CN")
+SUPPORTED = ("en", "zh-CN", "de", "fr")
 DEFAULT = "en"
 
 # Active locale for the current execution context. Set at the API entry
@@ -42,6 +42,10 @@ def normalize_locale(raw: Optional[str]) -> str:
         return "zh-CN"
     if head_lc.startswith("en"):
         return "en"
+    if head_lc.startswith("de"):
+        return "de"
+    if head_lc.startswith("fr"):
+        return "fr"
     return DEFAULT
 
 
@@ -116,14 +120,20 @@ class use_locale:
             self._token = None
 
 
-def t(en: str, zh: str, locale: str = DEFAULT) -> str:
-    """Pick a translation given a locale.
+def t(en: str, zh: str = "", locale: str = DEFAULT, *, de: str = "", fr: str = "") -> str:
+    """Pick a translation for ``locale``, falling back to the English source.
 
-    Falls back to the English source if no Chinese is provided.
+    ``en`` is the canonical source string. ``zh`` (kept positional for the
+    existing two-language call sites) / ``de`` / ``fr`` are optional per-locale
+    overrides; an empty or omitted override falls back to English — so a call
+    site that hasn't been translated yet stays English under any locale.
+
+    Adding a language: add a keyword here keyed to its BCP-47 code below,
+    append the code to :data:`SUPPORTED`, add a branch in
+    :func:`normalize_locale`, and create ``app/prompts/locales/<locale>/``.
     """
-    if locale == "zh-CN" and zh:
-        return zh
-    return en
+    overrides = {"zh-CN": zh, "de": de, "fr": fr}
+    return overrides.get(locale) or en
 
 
 def apply_i18n(payload: Any, locale: str) -> Any:

@@ -129,8 +129,17 @@ def test_normalize_locale_picks_first_tag_from_accept_language_list():
     assert normalize_locale("en-US,en;q=0.9,zh;q=0.8") == "en"
 
 
+def test_normalize_locale_maps_de_and_fr_prefixes():
+    assert normalize_locale("de") == "de"
+    assert normalize_locale("de-DE") == "de"
+    assert normalize_locale("DE-at") == "de"
+    assert normalize_locale("fr") == "fr"
+    assert normalize_locale("fr-FR") == "fr"
+    assert normalize_locale("FR-ca") == "fr"
+
+
 def test_normalize_locale_unknown_tag_falls_back_to_default():
-    assert normalize_locale("fr-FR") == DEFAULT
+    assert normalize_locale("ja-JP") == DEFAULT
     assert normalize_locale("klingon") == DEFAULT
     assert normalize_locale("xx-YY,zz;q=0.9") == DEFAULT
 
@@ -213,9 +222,21 @@ def test_t_falls_back_to_english_when_zh_is_empty_under_zh_cn():
 
 
 def test_t_unknown_locale_falls_back_to_english():
-    """Adding a 3rd locale must not break callers that haven't migrated yet."""
+    """A call site that hasn't supplied a string for the active locale stays
+    English — so adding locales never breaks un-migrated callers."""
     assert t("hello", "你好", "fr") == "hello"
+    assert t("hello", "你好", "de") == "hello"
     assert t("hello", "你好", "klingon") == "hello"
+
+
+def test_t_returns_german_and_french_when_supplied():
+    assert t("hello", "你好", "de", de="hallo") == "hallo"
+    assert t("hello", "你好", "fr", fr="bonjour") == "bonjour"
+    # An empty override under its own locale still falls back to English.
+    assert t("hello", "你好", "de", de="") == "hello"
+    # Providing de/fr never disturbs the English or Chinese paths.
+    assert t("hello", "你好", "en", de="hallo", fr="bonjour") == "hello"
+    assert t("hello", "你好", "zh-CN", de="hallo", fr="bonjour") == "你好"
 
 
 # ── apply_i18n ──────────────────────────────────────────────────────────────

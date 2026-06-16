@@ -2,8 +2,11 @@ import { ref, computed } from 'vue'
 
 const STORAGE_KEY = 'miroshark.locale'
 const ZH_WARNING_KEY = 'miroshark.zh-warning-seen'
-const SUPPORTED = ['en', 'zh-CN']
+const SUPPORTED = ['en', 'zh-CN', 'de', 'fr']
 const DEFAULT_LOCALE = 'en'
+
+// Compact display labels for the language selector (sized for the nav pill).
+const LABELS = { 'en': 'EN', 'zh-CN': '中', 'de': 'DE', 'fr': 'FR' }
 
 function readInitial() {
   try {
@@ -57,11 +60,20 @@ export function dismissZhWarning() {
 }
 
 export function toggleLocale() {
-  setLocale(locale.value === 'zh-CN' ? 'en' : 'zh-CN')
+  // Cycle through the supported locales (kept for callers that used the old
+  // binary toggle; the nav now renders a full selector via setLocale).
+  const i = SUPPORTED.indexOf(locale.value)
+  setLocale(SUPPORTED[(i + 1) % SUPPORTED.length])
 }
 
-export function tr(en, zh) {
-  if (locale.value === 'zh-CN' && zh != null && zh !== '') return zh
+export function tr(en, zh, extra) {
+  const loc = locale.value
+  if (loc === 'zh-CN') return (zh != null && zh !== '') ? zh : en
+  // German / French (and any future locale) are supplied via an optional map
+  // keyed by locale code, e.g. tr('Hello', '你好', { de: 'Hallo', fr: 'Bonjour' }).
+  // Existing two-arg tr(en, zh) calls fall back to English under those locales
+  // until a string is added.
+  if (extra && extra[loc] != null && extra[loc] !== '') return extra[loc]
   return en
 }
 
@@ -89,3 +101,4 @@ export const i18nPlugin = {
 }
 
 export const SUPPORTED_LOCALES = SUPPORTED
+export const LOCALE_LABELS = LABELS

@@ -1,32 +1,45 @@
 <template>
-  <button
-    class="locale-toggle"
-    :class="{ active: locale === 'zh-CN' }"
-    type="button"
-    :title="locale === 'zh-CN' ? 'Switch to English' : '切换到中文'"
-    :aria-label="locale === 'zh-CN' ? 'Switch to English' : 'Switch to Chinese'"
-    @click="toggleLocale"
-  >
-    <span class="locale-toggle-flag" aria-hidden="true">{{ locale === 'zh-CN' ? '中' : 'EN' }}</span>
-    <span class="locale-toggle-text">{{ locale === 'zh-CN' ? 'EN' : '中' }}</span>
-  </button>
+  <div class="locale-select-wrap">
+    <select
+      class="locale-select"
+      :value="locale"
+      aria-label="Select language"
+      title="Select language"
+      @change="onChange"
+    >
+      <option v-for="loc in locales" :key="loc" :value="loc">{{ labels[loc] }}</option>
+    </select>
+    <span class="locale-select-caret" aria-hidden="true">▾</span>
+  </div>
 </template>
 
 <script setup>
-import { useI18n } from '../i18n'
+import { useI18n, SUPPORTED_LOCALES, LOCALE_LABELS } from '../i18n'
 
-const { locale, toggleLocale } = useI18n()
+const { locale, setLocale } = useI18n()
+const locales = SUPPORTED_LOCALES
+const labels = LOCALE_LABELS
+
+function onChange(event) {
+  setLocale(event.target.value)
+}
 </script>
 
 <style scoped>
-/* Matches the dark glossy nav-pill family on the Home view. The
-   original orange Hyperstitions look is intentionally dropped. */
-.locale-toggle {
+/* Matches the dark glossy nav-pill family on the Home view. Replaces the old
+   binary EN/中 toggle with a selector now that more than two locales exist. */
+.locale-select-wrap {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+}
+
+.locale-select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
   height: 36px;
-  padding: 0 10px;
+  padding: 0 26px 0 12px;
   font-family: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   font-size: 11px;
   font-weight: 600;
@@ -44,32 +57,28 @@ const { locale, toggleLocale } = useI18n()
   transition: border-color 180ms ease, transform 180ms ease, color 180ms ease;
 }
 
-.locale-toggle:hover {
+.locale-select:hover {
   color: #ffffff;
   border-color: rgba(167, 139, 250, 0.55);
   transform: translateY(-1px);
 }
 
-.locale-toggle.active {
-  color: #ffffff;
-  border-color: rgba(167, 139, 250, 0.55);
+.locale-select:focus-visible {
+  outline: none;
+  border-color: rgba(167, 139, 250, 0.75);
 }
 
-.locale-toggle-flag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 22px;
-  padding: 2px 6px;
-  border-radius: 9999px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #f4f1ff;
-  background: linear-gradient(180deg, rgba(167, 139, 250, 0.35) 0%, rgba(76, 29, 149, 0.55) 100%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+.locale-select option {
+  /* Native option lists render on the OS theme; keep them legible. */
+  color: #14122a;
+  background: #ece8ff;
 }
 
-.locale-toggle-text {
-  opacity: 0.65;
+.locale-select-caret {
+  position: absolute;
+  right: 10px;
+  font-size: 9px;
+  color: #cfc6ff;
+  pointer-events: none;
 }
 </style>
