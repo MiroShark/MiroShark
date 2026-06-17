@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="./README.zh-CN.md">中文</a> · <a href="./README.ja.md">日本語</a>
+  <b>English</b> · <a href="./README.zh-CN.md">中文</a> · <a href="./README.ja.md">日本語</a> · <a href="./README.fr.md">Français</a>
 </p>
 
 <p align="center">
@@ -73,7 +73,7 @@ The launcher checks dependencies, starts Neo4j, installs frontend + backend, and
 
 ## Interface language
 
-After launching, click the **中 / EN** toggle in the top-right of the navbar to switch between English and Chinese. Your choice is persisted in the browser, and the public gallery card titles + descriptions follow the active locale.
+After launching, use the language selector in the top-right of the navbar to switch between **English**, **中文** (Chinese), **DE** (German), and **FR** (French). Your choice is persisted in the browser, and the public gallery card titles + descriptions follow the active locale.
 
 ## Use cases
 
