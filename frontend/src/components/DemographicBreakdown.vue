@@ -4,19 +4,19 @@
     <div class="demo-header">
       <div class="demo-title">
         <span class="demo-icon">◇</span>
-        <span class="demo-label">{{ $tr('DEMOGRAPHIC BREAKDOWN', '人口分布') }}</span>
+        <span class="demo-label">{{ $tr('DEMOGRAPHIC BREAKDOWN', '人口分布', 'DEMOGRAFISCHE AUFSCHLÜSSELUNG') }}</span>
       </div>
       <div class="demo-header-actions">
         <span v-if="meta" class="demo-meta">
-          {{ meta.agents_with_stance }}/{{ meta.total_agents }} {{ $tr('agents with belief data', '个智能体含信念数据') }}
+          {{ meta.agents_with_stance }}/{{ meta.total_agents }} {{ $tr('agents with belief data', '个智能体含信念数据', 'Agenten mit Überzeugungsdaten') }}
         </span>
         <button
           class="demo-export-btn"
           :disabled="!hasData"
           @click="refresh"
-          :title="$tr('Refresh demographic breakdown', '刷新人口分布')"
+          :title="$tr('Refresh demographic breakdown', '刷新人口分布', 'Demografische Aufschlüsselung aktualisieren')"
         >
-          ↻ {{ $tr('Refresh', '刷新') }}
+          ↻ {{ $tr('Refresh', '刷新', 'Aktualisieren') }}
         </button>
       </div>
     </div>
@@ -38,7 +38,7 @@
     <!-- Loading -->
     <div v-if="loading" class="demo-state">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Computing demographic breakdown...', '正在计算人口分布...') }}</span>
+      <span>{{ $tr('Computing demographic breakdown...', '正在计算人口分布...', 'Demografische Aufschlüsselung wird berechnet...') }}</span>
     </div>
 
     <!-- Error -->
@@ -46,31 +46,31 @@
 
     <!-- No data -->
     <div v-else-if="!hasData" class="demo-state">
-      <span>{{ $tr('No demographic data available.', '暂无人口数据。') }}</span>
-      <span class="demo-hint">{{ $tr('Run a simulation to generate agent profiles.', '运行一次模拟以生成智能体画像。') }}</span>
+      <span>{{ $tr('No demographic data available.', '暂无人口数据。', 'Keine demografischen Daten verfügbar.') }}</span>
+      <span class="demo-hint">{{ $tr('Run a simulation to generate agent profiles.', '运行一次模拟以生成智能体画像。', 'Führen Sie eine Simulation aus, um Agentenprofile zu generieren.') }}</span>
     </div>
 
     <!-- Main content -->
     <div v-else class="demo-content">
       <!-- Top divergence callout -->
       <div v-if="topDivergence" class="demo-highlight">
-        <span class="demo-highlight-label">{{ $tr('KEY SUBGROUP DYNAMIC', '关键子群体动态') }}</span>
+        <span class="demo-highlight-label">{{ $tr('KEY SUBGROUP DYNAMIC', '关键子群体动态', 'WICHTIGE UNTERGRUPPEN-DYNAMIK') }}</span>
         <span class="demo-highlight-text">{{ topDivergence.headline }}</span>
       </div>
       <div v-else-if="meta && !meta.has_trajectory" class="demo-highlight demo-highlight-muted">
-        <span class="demo-highlight-label">{{ $tr('NOTICE', '提示') }}</span>
+        <span class="demo-highlight-label">{{ $tr('NOTICE', '提示', 'HINWEIS') }}</span>
         <span class="demo-highlight-text">
-          {{ $tr('This simulation has no belief trajectory — stance comparisons will be unavailable, but counts and influence remain accurate.', '此模拟没有信念轨迹 — 立场对比将不可用,但数量和影响力数据仍然准确。') }}
+          {{ $tr('This simulation has no belief trajectory — stance comparisons will be unavailable, but counts and influence remain accurate.', '此模拟没有信念轨迹 — 立场对比将不可用,但数量和影响力数据仍然准确。', 'Diese Simulation hat keine Überzeugungstrajektorie — Haltungsvergleiche sind nicht verfügbar, aber Zählungen und Einfluss bleiben korrekt.') }}
         </span>
       </div>
 
       <!-- Legend -->
       <div class="demo-legend">
-        <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨') }}</span>
-        <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立') }}</span>
-        <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌') }}</span>
+        <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨', 'Optimistisch') }}</span>
+        <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立', 'Neutral') }}</span>
+        <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌', 'Pessimistisch') }}</span>
         <span class="legend-sep">·</span>
-        <span class="legend-item">{{ $tr('Stance mean: -1 ↔ +1', '立场均值: -1 ↔ +1') }}</span>
+        <span class="legend-item">{{ $tr('Stance mean: -1 ↔ +1', '立场均值: -1 ↔ +1', 'Haltungsmittelwert: -1 ↔ +1') }}</span>
       </div>
 
       <!-- Segment list for active tab -->
@@ -82,7 +82,7 @@
         >
           <div class="demo-row-head">
             <span class="demo-row-label">{{ formatSegmentLabel(segment.label) }}</span>
-            <span class="demo-row-count">{{ segment.count }} {{ $tr(segment.count === 1 ? 'agent' : 'agents', '个智能体') }}</span>
+            <span class="demo-row-count">{{ segment.count }} {{ $tr(segment.count === 1 ? 'agent' : 'agents', '个智能体', segment.count === 1 ? 'Agent' : 'Agenten') }}</span>
           </div>
 
           <!-- Stance distribution bar -->
@@ -90,17 +90,17 @@
             <div
               class="stance-seg stance-bullish"
               :style="{ width: segment.bullish_pct + '%' }"
-              :title="$tr('Bullish:', '看涨:') + ` ${segment.bullish_pct}%`"
+              :title="$tr('Bullish:', '看涨:', 'Optimistisch:') + ` ${segment.bullish_pct}%`"
             ></div>
             <div
               class="stance-seg stance-neutral"
               :style="{ width: segment.neutral_pct + '%' }"
-              :title="$tr('Neutral:', '中立:') + ` ${segment.neutral_pct}%`"
+              :title="$tr('Neutral:', '中立:', 'Neutral:') + ` ${segment.neutral_pct}%`"
             ></div>
             <div
               class="stance-seg stance-bearish"
               :style="{ width: segment.bearish_pct + '%' }"
-              :title="$tr('Bearish:', '看跌:') + ` ${segment.bearish_pct}%`"
+              :title="$tr('Bearish:', '看跌:', 'Pessimistisch:') + ` ${segment.bearish_pct}%`"
             ></div>
           </div>
           <div v-else class="stance-bar stance-empty"></div>
@@ -108,7 +108,7 @@
           <!-- Metrics row -->
           <div class="demo-metrics">
             <span class="metric">
-              <span class="metric-label">{{ $tr('mean', '均值') }}</span>
+              <span class="metric-label">{{ $tr('mean', '均值', 'Mittelwert') }}</span>
               <span class="metric-value" :class="stanceClass(segment.final_stance_mean)">
                 {{ formatStance(segment.final_stance_mean) }}
               </span>
@@ -118,11 +118,11 @@
               <span class="metric-value">{{ formatNumber(segment.final_stance_std) }}</span>
             </span>
             <span class="metric">
-              <span class="metric-label">{{ $tr('volatility', '波动率') }}</span>
+              <span class="metric-label">{{ $tr('volatility', '波动率', 'Volatilität') }}</span>
               <span class="metric-value">{{ formatNumber(segment.stance_volatility) }}</span>
             </span>
             <span class="metric">
-              <span class="metric-label">{{ $tr('influence', '影响力') }}</span>
+              <span class="metric-label">{{ $tr('influence', '影响力', 'Einfluss') }}</span>
               <span class="metric-value">{{ formatInfluence(segment.influence_mean) }}</span>
             </span>
           </div>
@@ -131,7 +131,7 @@
 
       <!-- Footer hint -->
       <div class="demo-footer-hint">
-        {{ $tr(`Stance values average each agent's final belief across tracked topics (-1 bearish → +1 bullish). Volatility is the mean absolute change from round 0 to the final round.`, '立场值为每个智能体在跟踪话题上的最终信念均值(-1 看跌 → +1 看涨)。波动率为从第 0 轮到最终轮的绝对变化均值。') }}
+        {{ $tr(`Stance values average each agent's final belief across tracked topics (-1 bearish → +1 bullish). Volatility is the mean absolute change from round 0 to the final round.`, '立场值为每个智能体在跟踪话题上的最终信念均值(-1 看跌 → +1 看涨)。波动率为从第 0 轮到最终轮的绝对变化均值。', 'Haltungswerte mitteln den abschließenden Glauben jedes Agenten über verfolgte Themen (-1 pessimistisch → +1 optimistisch). Volatilität ist die mittlere absolute Änderung von Runde 0 bis zur letzten Runde.') }}
       </div>
     </div>
   </div>
@@ -188,15 +188,15 @@ const hasStanceData = (segment) =>
   (segment.bullish_pct + segment.neutral_pct + segment.bearish_pct) > 0
 
 const formatSegmentLabel = (raw) => {
-  if (!raw) return tr('unknown', '未知')
+  if (!raw) return tr('unknown', '未知', 'unbekannt')
   const map = {
-    unknown: tr('Unknown', '未知'),
-    individual: tr('Individual', '个人'),
-    institutional: tr('Institutional', '机构'),
-    inactive: tr('Inactive', '不活跃'),
-    male: tr('Male', '男性'),
-    female: tr('Female', '女性'),
-    other: tr('Other', '其他'),
+    unknown: tr('Unknown', '未知', 'Unbekannt'),
+    individual: tr('Individual', '个人', 'Einzelperson'),
+    institutional: tr('Institutional', '机构', 'Institutionell'),
+    inactive: tr('Inactive', '不活跃', 'Inaktiv'),
+    male: tr('Male', '男性', 'Männlich'),
+    female: tr('Female', '女性', 'Weiblich'),
+    other: tr('Other', '其他', 'Sonstige'),
     twitter: 'X / Twitter',
     reddit: 'Reddit',
     polymarket: 'Polymarket',
@@ -206,11 +206,11 @@ const formatSegmentLabel = (raw) => {
 
 const translateTabLabel = (label) => {
   const map = {
-    'Age': tr('Age', '年龄'),
-    'Gender': tr('Gender', '性别'),
-    'Country': tr('Country', '国家'),
-    'Actor type': tr('Actor type', '主体类型'),
-    'Platform': tr('Platform', '平台'),
+    'Age': tr('Age', '年龄', 'Alter'),
+    'Gender': tr('Gender', '性别', 'Geschlecht'),
+    'Country': tr('Country', '国家', 'Land'),
+    'Actor type': tr('Actor type', '主体类型', 'Akteurstyp'),
+    'Platform': tr('Platform', '平台', 'Plattform'),
   }
   return map[label] || label
 }
@@ -253,10 +253,10 @@ const load = async (opts = {}) => {
     } else if (res.success && !res.data) {
       payload.value = null
     } else {
-      error.value = res.error || tr('Failed to load demographic breakdown.', '加载人口分布失败。')
+      error.value = res.error || tr('Failed to load demographic breakdown.', '加载人口分布失败。', 'Demografische Aufschlüsselung konnte nicht geladen werden.')
     }
   } catch (err) {
-    error.value = err.message || tr('Failed to load demographic breakdown.', '加载人口分布失败。')
+    error.value = err.message || tr('Failed to load demographic breakdown.', '加载人口分布失败。', 'Demografische Aufschlüsselung konnte nicht geladen werden.')
   } finally {
     loading.value = false
   }

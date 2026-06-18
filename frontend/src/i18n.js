@@ -19,6 +19,7 @@ function readInitial() {
 export const locale = ref(readInitial())
 
 export const isZh = computed(() => locale.value === 'zh-CN')
+export const isDe = computed(() => locale.value === 'de')
 
 export const showZhWarning = ref(false)
 
@@ -69,10 +70,13 @@ export function toggleLocale() {
 export function tr(en, zh, extra) {
   const loc = locale.value
   if (loc === 'zh-CN') return (zh != null && zh !== '') ? zh : en
-  // German / French (and any future locale) are supplied via an optional map
-  // keyed by locale code, e.g. tr('Hello', '你好', { de: 'Hallo', fr: 'Bonjour' }).
-  // Existing two-arg tr(en, zh) calls fall back to English under those locales
-  // until a string is added.
+  // Third arg accepts either a positional German string — tr('Hello', '你好',
+  // 'Hallo') — or a locale map for additional languages, e.g.
+  // tr('Hello', '你好', { de: 'Hallo', fr: 'Bonjour' }). Calls that omit it
+  // fall back to English under de/fr until a string is added.
+  if (typeof extra === 'string') {
+    return (loc === 'de' && extra !== '') ? extra : en
+  }
   if (extra && extra[loc] != null && extra[loc] !== '') return extra[loc]
   return en
 }
@@ -81,6 +85,7 @@ export function useI18n() {
   return {
     locale,
     isZh,
+    isDe,
     setLocale,
     toggleLocale,
     tr,
@@ -93,6 +98,7 @@ export const i18nPlugin = {
   install(app) {
     app.config.globalProperties.$tr = tr
     app.config.globalProperties.$isZh = () => locale.value === 'zh-CN'
+    app.config.globalProperties.$isDe = () => locale.value === 'de'
     app.config.globalProperties.$setLocale = setLocale
     app.config.globalProperties.$toggleLocale = toggleLocale
     app.config.globalProperties.$showZhWarning = showZhWarning

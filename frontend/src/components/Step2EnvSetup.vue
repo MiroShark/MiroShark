@@ -6,37 +6,37 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">01</span>
-            <span class="step-title">{{ $tr('Simulation Instance Initialization', '模拟实例初始化') }}</span>
+            <span class="step-title">{{ $tr('Simulation Instance Initialization', '模拟实例初始化', 'Simulationsinstanz-Initialisierung') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 0" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成') }}</span>
-            <span v-else-if="simulationId" class="badge processing"><span class="badge-dot"></span>{{ $tr('Initializing', '初始化中') }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Loading', '加载中…') }}</span>
+            <span v-if="phase > 0" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', 'Abgeschlossen') }}</span>
+            <span v-else-if="simulationId" class="badge processing"><span class="badge-dot"></span>{{ $tr('Initializing', '初始化中', 'Wird initialisiert') }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Loading', '加载中…', 'Wird geladen') }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/create</p>
           <p class="description">
-            {{ $tr('Create a new simulation instance and fetch simulation world parameter templates', '创建一个新的模拟实例并获取模拟世界参数模板') }}
+            {{ $tr('Create a new simulation instance and fetch simulation world parameter templates', '创建一个新的模拟实例并获取模拟世界参数模板', 'Neue Simulationsinstanz erstellen und Simulationswelt-Parametervorlagen abrufen') }}
           </p>
 
           <div v-if="simulationId" class="info-card">
             <div class="info-row" @click="copyValue(projectData?.project_id)">
-              <span class="info-label">{{ $tr('Project ID', '项目 ID') }}</span>
+              <span class="info-label">{{ $tr('Project ID', '项目 ID', 'Projekt-ID') }}</span>
               <span class="info-value mono copyable">{{ projectData?.project_id }}</span>
             </div>
             <div class="info-row" @click="copyValue(projectData?.graph_id)">
-              <span class="info-label">{{ $tr('Graph ID', '图谱 ID') }}</span>
+              <span class="info-label">{{ $tr('Graph ID', '图谱 ID', 'Graph-ID') }}</span>
               <span class="info-value mono copyable">{{ projectData?.graph_id }}</span>
             </div>
             <div class="info-row" @click="copyValue(simulationId)">
-              <span class="info-label">{{ $tr('Simulation ID', '模拟 ID') }}</span>
+              <span class="info-label">{{ $tr('Simulation ID', '模拟 ID', 'Simulations-ID') }}</span>
               <span class="info-value mono copyable">{{ simulationId }}</span>
             </div>
             <div class="info-row" @click="copyValue(taskId)">
-              <span class="info-label">{{ $tr('Task ID', '任务 ID') }}</span>
-              <span class="info-value mono copyable">{{ taskId || $tr('Async task completed', '异步任务已完成') }}</span>
+              <span class="info-label">{{ $tr('Task ID', '任务 ID', 'Aufgaben-ID') }}</span>
+              <span class="info-value mono copyable">{{ taskId || $tr('Async task completed', '异步任务已完成', 'Asynchrone Aufgabe abgeschlossen') }}</span>
             </div>
           </div>
         </div>
@@ -47,41 +47,41 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">02</span>
-            <span class="step-title">{{ $tr('Generate Agent Profiles', '生成智能体画像') }}</span>
+            <span class="step-title">{{ $tr('Generate Agent Profiles', '生成智能体画像', 'Agent-Profile generieren') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 1" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成') }}</span>
+            <span v-if="phase > 1" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', 'Abgeschlossen') }}</span>
             <span v-else-if="phase === 1" class="badge processing"><span class="badge-dot"></span>{{ prepareProgress }}%</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中') }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', 'Ausstehend') }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr('Combines context to automatically invoke tools, organize entities and relationships from the knowledge graph, initialize simulated individuals, and assign them unique behaviors and memories based on reality seeds', '结合上下文自动调用工具,从知识图谱整理实体与关系,初始化模拟个体,并基于现实种子赋予其独特的行为与记忆') }}
+            {{ $tr('Combines context to automatically invoke tools, organize entities and relationships from the knowledge graph, initialize simulated individuals, and assign them unique behaviors and memories based on reality seeds', '结合上下文自动调用工具,从知识图谱整理实体与关系,初始化模拟个体,并基于现实种子赋予其独特的行为与记忆', 'Kombiniert Kontext, um automatisch Werkzeuge aufzurufen, Entitäten und Beziehungen aus dem Wissensgraphen zu organisieren, simulierte Individuen zu initialisieren und ihnen einzigartige Verhaltensweisen und Erinnerungen auf Basis von Realitätskeimen zuzuweisen') }}
           </p>
 
           <!-- Profiles Stats -->
           <div v-if="profiles.length > 0" class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ profiles.length }}</span>
-              <span class="stat-label">{{ $tr('Current Agents', '当前智能体') }}</span>
+              <span class="stat-label">{{ $tr('Current Agents', '当前智能体', 'Aktuelle Agenten') }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ expectedTotal || '-' }}</span>
-              <span class="stat-label">{{ $tr('Expected Total Agents', '预期智能体总数') }}</span>
+              <span class="stat-label">{{ $tr('Expected Total Agents', '预期智能体总数', 'Erwartete Gesamtanzahl Agenten') }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ totalTopicsCount }}</span>
-              <span class="stat-label">{{ $tr('Reality Seed Topics', '现实种子话题') }}</span>
+              <span class="stat-label">{{ $tr('Reality Seed Topics', '现实种子话题', 'Realitätskeim-Themen') }}</span>
             </div>
           </div>
 
           <!-- Profiles List Preview -->
           <div v-if="profiles.length > 0" class="profiles-preview">
             <div class="preview-header">
-              <span class="preview-title">{{ $tr('Generated Agent Profiles', '已生成的智能体画像') }}</span>
+              <span class="preview-title">{{ $tr('Generated Agent Profiles', '已生成的智能体画像', 'Generierte Agent-Profile') }}</span>
             </div>
             <div class="profiles-list">
               <div
@@ -91,13 +91,13 @@
                 @click="selectProfile(profile)"
               >
                 <div class="profile-header">
-                  <span class="profile-realname">{{ profile.username || $tr('Unknown', '未知') }}</span>
+                  <span class="profile-realname">{{ profile.username || $tr('Unknown', '未知', 'Unbekannt') }}</span>
                   <span class="profile-username">@{{ profile.name || `agent_${idx}` }}</span>
                 </div>
                 <div class="profile-meta">
-                  <span class="profile-profession">{{ profile.profession || $tr('Unknown Profession', '未知职业') }}</span>
+                  <span class="profile-profession">{{ profile.profession || $tr('Unknown Profession', '未知职业', 'Unbekannter Beruf') }}</span>
                 </div>
-                <p class="profile-bio">{{ profile.bio || $tr('No bio available', '暂无简介') }}</p>
+                <p class="profile-bio">{{ profile.bio || $tr('No bio available', '暂无简介', 'Keine Vorstellung verfügbar') }}</p>
                 <div v-if="profile.interested_topics?.length" class="profile-topics">
                   <span
                     v-for="topic in profile.interested_topics.slice(0, 3)"
@@ -115,7 +115,7 @@
               class="profiles-toggle"
               @click="profilesExpanded = !profilesExpanded"
             >
-              {{ profilesExpanded ? $tr('Show less', '收起') : $tr('Show all ', '查看全部 ') + profiles.length + $tr(' agents', ' 个智能体') }}
+              {{ profilesExpanded ? $tr('Show less', '收起', 'Weniger anzeigen') : $tr('Show all ', '查看全部 ', 'Alle anzeigen ') + profiles.length + $tr(' agents', ' 个智能体', ' Agenten') }}
             </button>
           </div>
         </div>
@@ -126,29 +126,29 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">03</span>
-            <span class="step-title">{{ $tr('Generate Simulation Config', '生成模拟配置') }}</span>
+            <span class="step-title">{{ $tr('Generate Simulation Config', '生成模拟配置', 'Simulationskonfiguration generieren') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 2" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成') }}</span>
-            <span v-else-if="configError" class="badge error"><span class="badge-dot"></span>{{ $tr('Failed', '失败') }}</span>
-            <span v-else-if="phase === 2" class="badge processing"><span class="badge-dot"></span>{{ $tr('Generating', '生成中') }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中') }}</span>
+            <span v-if="phase > 2" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', 'Abgeschlossen') }}</span>
+            <span v-else-if="configError" class="badge error"><span class="badge-dot"></span>{{ $tr('Failed', '失败', 'Fehlgeschlagen') }}</span>
+            <span v-else-if="phase === 2" class="badge processing"><span class="badge-dot"></span>{{ $tr('Generating', '生成中', 'Wird generiert') }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', 'Ausstehend') }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr('LLM intelligently configures world time flow, recommendation algorithms, each individual\'s active time periods, posting frequency, event triggers, and other parameters based on simulation requirements and reality seeds', 'LLM 根据模拟需求与现实种子,智能配置世界时间流速、推荐算法、每个个体的活跃时段、发帖频率、事件触发等参数') }}
+            {{ $tr(`LLM intelligently configures world time flow, recommendation algorithms, each individual's active time periods, posting frequency, event triggers, and other parameters based on simulation requirements and reality seeds`, 'LLM 根据模拟需求与现实种子,智能配置世界时间流速、推荐算法、每个个体的活跃时段、发帖频率、事件触发等参数', 'LLM konfiguriert intelligent Weltzeitfluss, Empfehlungsalgorithmen, aktive Zeiträume jedes Einzelnen, Beitragshäufigkeit, Ereignisauslöser und weitere Parameter basierend auf Simulationsanforderungen und Realitätskeimen') }}
           </p>
 
           <!-- Config Error Panel -->
           <div v-if="configError" class="config-error-panel">
-            <div class="config-error-title">{{ $tr('Config Generation Failed', '配置生成失败') }}</div>
+            <div class="config-error-title">{{ $tr('Config Generation Failed', '配置生成失败', 'Konfigurationsgenerierung fehlgeschlagen') }}</div>
             <div class="config-error-msg">{{ configError }}</div>
             <div class="config-error-hint">
-              {{ $tr('Common causes: OpenRouter API key invalid or quota exceeded, model name not found, network timeout.', '常见原因:OpenRouter API 密钥无效或额度耗尽、模型名称未找到、网络超时。') }}
-              {{ $tr('Check your', '请检查您的') }} <code>.env</code> {{ $tr('values for', '中的') }} <code>OPENROUTER_API_KEY</code> {{ $tr('and', '与') }} <code>OPENROUTER_MODEL</code>.
+              {{ $tr('Common causes: OpenRouter API key invalid or quota exceeded, model name not found, network timeout.', '常见原因:OpenRouter API 密钥无效或额度耗尽、模型名称未找到、网络超时。', 'Häufige Ursachen: OpenRouter API-Schlüssel ungültig oder Kontingent überschritten, Modellname nicht gefunden, Netzwerkzeitüberschreitung.') }}
+              {{ $tr('Check your', '请检查您的', 'Bitte überprüfen Sie Ihre') }} <code>.env</code> {{ $tr('values for', '中的', 'Werte für') }} <code>OPENROUTER_API_KEY</code> {{ $tr('and', '与', 'und') }} <code>OPENROUTER_MODEL</code>.
             </div>
             <button
               class="retry-config-btn"
@@ -156,7 +156,7 @@
               @click="handleConfigRetry"
             >
               <span v-if="isConfigRetrying" class="loading-spinner-small"></span>
-              {{ isConfigRetrying ? $tr('Retrying...', '重试中…') : $tr('Retry Config Generation', '重新生成配置') }}
+              {{ isConfigRetrying ? $tr('Retrying...', '重试中…', 'Wird wiederholt…') : $tr('Retry Config Generation', '重新生成配置', 'Konfiguration neu generieren') }}
             </button>
           </div>
 
@@ -166,40 +166,40 @@
             <div class="config-block">
               <div class="config-grid">
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Simulation Duration', '模拟时长') }}</span>
-                  <span class="config-item-value">{{ simulationConfig.time_config?.total_simulation_hours || '-' }} {{ $tr('hours', '小时') }}</span>
+                  <span class="config-item-label">{{ $tr('Simulation Duration', '模拟时长', 'Simulationsdauer') }}</span>
+                  <span class="config-item-value">{{ simulationConfig.time_config?.total_simulation_hours || '-' }} {{ $tr('hours', '小时', 'Stunden') }}</span>
                 </div>
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Duration Per Round', '每轮时长') }}</span>
-                  <span class="config-item-value">{{ simulationConfig.time_config?.minutes_per_round || '-' }} {{ $tr('min', '分钟') }}</span>
+                  <span class="config-item-label">{{ $tr('Duration Per Round', '每轮时长', 'Dauer pro Runde') }}</span>
+                  <span class="config-item-value">{{ simulationConfig.time_config?.minutes_per_round || '-' }} {{ $tr('min', '分钟', 'Min') }}</span>
                 </div>
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Total Rounds', '总轮次') }}</span>
-                  <span class="config-item-value">{{ Math.floor((simulationConfig.time_config?.total_simulation_hours * 60 / simulationConfig.time_config?.minutes_per_round)) || '-' }} {{ $tr('rounds', '轮') }}</span>
+                  <span class="config-item-label">{{ $tr('Total Rounds', '总轮次', 'Gesamtrunden') }}</span>
+                  <span class="config-item-value">{{ Math.floor((simulationConfig.time_config?.total_simulation_hours * 60 / simulationConfig.time_config?.minutes_per_round)) || '-' }} {{ $tr('rounds', '轮', 'Runden') }}</span>
                 </div>
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Active Per Hour', '每小时活跃数') }}</span>
+                  <span class="config-item-label">{{ $tr('Active Per Hour', '每小时活跃数', 'Aktive pro Stunde') }}</span>
                   <span class="config-item-value">{{ simulationConfig.time_config?.agents_per_hour_min }}-{{ simulationConfig.time_config?.agents_per_hour_max }}</span>
                 </div>
               </div>
               <div class="time-periods">
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Peak Hours', '高峰时段') }}</span>
+                  <span class="period-label">{{ $tr('Peak Hours', '高峰时段', 'Hauptzeit') }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.peak_hours?.join(':00, ') }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.peak_activity_multiplier }}</span>
                 </div>
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Working Hours', '工作时段') }}</span>
+                  <span class="period-label">{{ $tr('Working Hours', '工作时段', 'Arbeitszeiten') }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.work_hours?.[0] }}:00-{{ simulationConfig.time_config?.work_hours?.slice(-1)[0] }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.work_activity_multiplier }}</span>
                 </div>
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Morning Hours', '清晨时段') }}</span>
+                  <span class="period-label">{{ $tr('Morning Hours', '清晨时段', 'Morgenzeitraum') }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.morning_hours?.[0] }}:00-{{ simulationConfig.time_config?.morning_hours?.slice(-1)[0] }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.morning_activity_multiplier }}</span>
                 </div>
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Off-Peak Hours', '低峰时段') }}</span>
+                  <span class="period-label">{{ $tr('Off-Peak Hours', '低峰时段', 'Ruhezeitraum') }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.off_peak_hours?.[0] }}:00-{{ simulationConfig.time_config?.off_peak_hours?.slice(-1)[0] }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.off_peak_activity_multiplier }}</span>
                 </div>
@@ -209,7 +209,7 @@
             <!-- Agent Configuration -->
             <div class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">{{ $tr('Agent Configuration', '智能体配置') }}</span>
+                <span class="config-block-title">{{ $tr('Agent Configuration', '智能体配置', 'Agent-Konfiguration') }}</span>
                 <span class="config-block-badge">{{ simulationConfig.agent_configs?.length || 0 }}</span>
               </div>
               <div class="agents-cards">
@@ -221,7 +221,7 @@
                   <!-- Card Header -->
                   <div class="agent-card-header">
                     <div class="agent-identity">
-                      <span class="agent-id">{{ $tr('Agent', '智能体') }} {{ agent.agent_id }}</span>
+                      <span class="agent-id">{{ $tr('Agent', '智能体', 'Agent') }} {{ agent.agent_id }}</span>
                       <span class="agent-name">{{ agent.entity_name }}</span>
                     </div>
                     <div class="agent-tags">
@@ -232,7 +232,7 @@
 
                   <!-- Profile Info (from generated profiles) -->
                   <div v-if="getAgentProfile(agent.agent_id)" class="agent-profile-info">
-                    <span class="profile-profession-tag">{{ getAgentProfile(agent.agent_id).profession || $tr('Unknown', '未知') }}</span>
+                    <span class="profile-profession-tag">{{ getAgentProfile(agent.agent_id).profession || $tr('Unknown', '未知', 'Unbekannt') }}</span>
                     <span v-if="getAgentProfile(agent.agent_id).country" class="profile-country-tag">{{ getAgentProfile(agent.agent_id).country }}</span>
                     <span v-if="getAgentProfile(agent.agent_id).mbti" class="profile-mbti-tag">{{ getAgentProfile(agent.agent_id).mbti }}</span>
                     <p class="profile-bio-snippet">{{ (getAgentProfile(agent.agent_id).bio || '').slice(0, 120) }}{{ (getAgentProfile(agent.agent_id).bio || '').length > 120 ? '...' : '' }}</p>
@@ -240,7 +240,7 @@
 
                   <!-- Active Timeline -->
                   <div class="agent-timeline">
-                    <span class="timeline-label">{{ $tr('Active Hours', '活跃时段') }}</span>
+                    <span class="timeline-label">{{ $tr('Active Hours', '活跃时段', 'Aktiver Zeitraum') }}</span>
                     <div class="mini-timeline">
                       <div 
                         v-for="hour in 24" 
@@ -263,34 +263,34 @@
                   <div class="agent-params">
                     <div class="param-group">
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Posts/hr', '帖子/小时') }}</span>
+                        <span class="param-label">{{ $tr('Posts/hr', '帖子/小时', 'Beiträge/Std') }}</span>
                         <span class="param-value">{{ agent.posts_per_hour }}</span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Comments/hr', '评论/小时') }}</span>
+                        <span class="param-label">{{ $tr('Comments/hr', '评论/小时', 'Kommentare/Std') }}</span>
                         <span class="param-value">{{ agent.comments_per_hour }}</span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Response Delay', '响应延迟') }}</span>
-                        <span class="param-value">{{ agent.response_delay_min }}-{{ agent.response_delay_max }}{{ $tr('min', '分钟') }}</span>
+                        <span class="param-label">{{ $tr('Response Delay', '响应延迟', 'Antwortverzögerung') }}</span>
+                        <span class="param-value">{{ agent.response_delay_min }}-{{ agent.response_delay_max }}{{ $tr('min', '分钟', 'Min') }}</span>
                       </div>
                     </div>
                     <div class="param-group">
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Activity Level', '活跃水平') }}</span>
+                        <span class="param-label">{{ $tr('Activity Level', '活跃水平', 'Aktivitätsniveau') }}</span>
                         <span class="param-value with-bar">
                           <span class="mini-bar" :style="{ width: (agent.activity_level * 100) + '%' }"></span>
                           {{ (agent.activity_level * 100).toFixed(0) }}%
                         </span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Sentiment Tendency', '情绪倾向') }}</span>
+                        <span class="param-label">{{ $tr('Sentiment Tendency', '情绪倾向', 'Stimmungstendenz') }}</span>
                         <span class="param-value" :class="agent.sentiment_bias > 0 ? 'positive' : agent.sentiment_bias < 0 ? 'negative' : 'neutral'">
                           {{ agent.sentiment_bias > 0 ? '+' : '' }}{{ agent.sentiment_bias?.toFixed(1) }}
                         </span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Influence', '影响力') }}</span>
+                        <span class="param-label">{{ $tr('Influence', '影响力', 'Einfluss') }}</span>
                         <span class="param-value highlight">{{ agent.influence_weight?.toFixed(1) }}</span>
                       </div>
                     </div>
@@ -302,14 +302,14 @@
                 class="profiles-toggle"
                 @click="agentCardsExpanded = !agentCardsExpanded"
               >
-                {{ agentCardsExpanded ? $tr('Show less', '收起') : $tr('Show all ', '查看全部 ') + simulationConfig.agent_configs.length + $tr(' agents', ' 个智能体') }}
+                {{ agentCardsExpanded ? $tr('Show less', '收起', 'Weniger anzeigen') : $tr('Show all ', '查看全部 ', 'Alle anzeigen ') + simulationConfig.agent_configs.length + $tr(' agents', ' 个智能体', ' Agenten') }}
               </button>
             </div>
 
             <!-- Platform Configuration -->
             <div class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">{{ $tr('Recommendation Algorithm Configuration', '推荐算法配置') }}</span>
+                <span class="config-block-title">{{ $tr('Recommendation Algorithm Configuration', '推荐算法配置', 'Empfehlungsalgorithmus-Konfiguration') }}</span>
               </div>
               <div class="platforms-grid">
                 <div v-if="simulationConfig.twitter_config" class="platform-card">
@@ -318,23 +318,23 @@
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重') }}</span>
+                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重', 'Zeitgewichtung') }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.recency_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重') }}</span>
+                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重', 'Popularitätsgewichtung') }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.popularity_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重') }}</span>
+                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重', 'Relevanzgewichtung') }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.relevance_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值') }}</span>
+                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值', 'Viraler Schwellenwert') }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.viral_threshold }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度') }}</span>
+                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度', 'Echokammer-Stärke') }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.echo_chamber_strength }}</span>
                     </div>
                   </div>
@@ -345,23 +345,23 @@
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重') }}</span>
+                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重', 'Zeitgewichtung') }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.recency_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重') }}</span>
+                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重', 'Popularitätsgewichtung') }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.popularity_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重') }}</span>
+                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重', 'Relevanzgewichtung') }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.relevance_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值') }}</span>
+                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值', 'Viraler Schwellenwert') }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.viral_threshold }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度') }}</span>
+                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度', 'Echokammer-Stärke') }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.echo_chamber_strength }}</span>
                     </div>
                   </div>
@@ -372,20 +372,20 @@
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Market Maker', '做市商') }}</span>
-                      <span class="param-value">{{ $tr('Constant-Product AMM', '恒定乘积 AMM') }}</span>
+                      <span class="param-label">{{ $tr('Market Maker', '做市商', 'Market Maker') }}</span>
+                      <span class="param-value">{{ $tr('Constant-Product AMM', '恒定乘积 AMM', 'Constant-Product AMM') }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Initial Liquidity', '初始流动性') }}</span>
-                      <span class="param-value">{{ $tr('$100 per outcome', '每个结果 $100') }}</span>
+                      <span class="param-label">{{ $tr('Initial Liquidity', '初始流动性', 'Initiale Liquidität') }}</span>
+                      <span class="param-value">{{ $tr('$100 per outcome', '每个结果 $100', '$100 pro Ergebnis') }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Trading Actions', '交易操作') }}</span>
-                      <span class="param-value">{{ $tr('Buy/Sell YES & NO shares', '买入/卖出 YES 与 NO 份额') }}</span>
+                      <span class="param-label">{{ $tr('Trading Actions', '交易操作', 'Handelsaktionen') }}</span>
+                      <span class="param-value">{{ $tr('Buy/Sell YES & NO shares', '买入/卖出 YES 与 NO 份额', 'YES & NO Anteile kaufen/verkaufen') }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Market-Media Bridge', '市场-媒体桥接') }}</span>
-                      <span class="param-value">{{ $tr('Enabled (prices feed social media)', '已启用(价格反馈至社交媒体)') }}</span>
+                      <span class="param-label">{{ $tr('Market-Media Bridge', '市场-媒体桥接', 'Markt-Medien-Brücke') }}</span>
+                      <span class="param-value">{{ $tr('Enabled (prices feed social media)', '已启用(价格反馈至社交媒体)', 'Aktiviert (Preise speisen soziale Medien)') }}</span>
                     </div>
                   </div>
                 </div>
@@ -395,7 +395,7 @@
             <!-- LLM Configuration Reasoning -->
             <div v-if="simulationConfig.generation_reasoning" class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">{{ $tr('LLM Configuration Reasoning', 'LLM 配置推理') }}</span>
+                <span class="config-block-title">{{ $tr('LLM Configuration Reasoning', 'LLM 配置推理', 'LLM-Konfigurationsableitung') }}</span>
               </div>
               <div class="reasoning-content">
                 <div 
@@ -416,19 +416,19 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">04</span>
-            <span class="step-title">{{ $tr('Initial Activation Orchestration', '初始激活编排') }}</span>
+            <span class="step-title">{{ $tr('Initial Activation Orchestration', '初始激活编排', 'Initiale Aktivierungsanordnung') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 3" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成') }}</span>
-            <span v-else-if="phase === 3" class="badge processing"><span class="badge-dot"></span>{{ $tr('Orchestrating', '编排中') }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中') }}</span>
+            <span v-if="phase > 3" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', 'Abgeschlossen') }}</span>
+            <span v-else-if="phase === 3" class="badge processing"><span class="badge-dot"></span>{{ $tr('Orchestrating', '编排中', 'Wird angeordnet') }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', 'Ausstehend') }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr('Based on narrative direction, automatically generate initial activation events and hot topics to guide the initial state of the simulation world', '根据叙事方向,自动生成初始激活事件与热门话题,以引导模拟世界的初始状态') }}
+            {{ $tr('Based on narrative direction, automatically generate initial activation events and hot topics to guide the initial state of the simulation world', '根据叙事方向,自动生成初始激活事件与热门话题,以引导模拟世界的初始状态', 'Basierend auf der Narrativrichtung automatisch initiale Aktivierungsereignisse und Trendthemen generieren, um den Anfangszustand der Simulationswelt zu leiten') }}
           </p>
 
           <div v-if="simulationConfig?.event_config" class="orchestration-content">
@@ -445,14 +445,14 @@
                     </linearGradient>
                   </defs>
                 </svg>
-                {{ $tr('Narrative Guidance Direction', '叙事引导方向') }}
+                {{ $tr('Narrative Guidance Direction', '叙事引导方向', 'Narrative Führungsrichtung') }}
               </span>
               <p class="narrative-text">{{ simulationConfig.event_config.narrative_direction }}</p>
             </div>
 
             <!-- Hot Topics -->
             <div class="topics-section">
-              <span class="box-label">{{ $tr('Initial Hot Topics', '初始热门话题') }}</span>
+              <span class="box-label">{{ $tr('Initial Hot Topics', '初始热门话题', 'Initiale Trendthemen') }}</span>
               <div class="hot-topics-grid">
                 <span v-for="topic in simulationConfig.event_config.hot_topics" :key="topic" class="hot-topic-tag">
                   # {{ topic }}
@@ -462,7 +462,7 @@
 
             <!-- Initial Posts Stream -->
             <div class="initial-posts-section">
-              <span class="box-label">{{ $tr('Initial Activation Sequence (', '初始激活序列(') }}{{ simulationConfig.event_config.initial_posts.length }}{{ $tr(')', ')') }}</span>
+              <span class="box-label">{{ $tr('Initial Activation Sequence (', '初始激活序列(', 'Initiale Aktivierungssequenz (') }}{{ simulationConfig.event_config.initial_posts.length }}{{ $tr(')', ')', ')') }}</span>
               <div class="posts-timeline">
                 <div v-for="(post, idx) in simulationConfig.event_config.initial_posts" :key="idx" class="timeline-item">
                   <div class="timeline-marker"></div>
@@ -470,7 +470,7 @@
                     <div class="post-header">
                       <span class="post-role">{{ post.poster_type }}</span>
                       <span class="post-agent-info">
-                        <span class="post-id">{{ $tr('Agent', '智能体') }} {{ post.poster_agent_id }}</span>
+                        <span class="post-id">{{ $tr('Agent', '智能体', 'Agent') }} {{ post.poster_agent_id }}</span>
                         <span class="post-username">@{{ getAgentUsername(post.poster_agent_id) }}</span>
                       </span>
                     </div>
@@ -488,29 +488,29 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">05</span>
-            <span class="step-title">{{ $tr('Preparation Complete', '准备完成') }}</span>
+            <span class="step-title">{{ $tr('Preparation Complete', '准备完成', 'Vorbereitung abgeschlossen') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase >= 4" class="badge processing"><span class="badge-dot"></span>{{ $tr('In Progress', '进行中') }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中') }}</span>
+            <span v-if="phase >= 4" class="badge processing"><span class="badge-dot"></span>{{ $tr('In Progress', '进行中', 'In Bearbeitung') }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', 'Ausstehend') }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/start</p>
-          <p class="description">{{ $tr('Simulation environment is ready, you can start running the simulation', '模拟环境已就绪,您可以开始运行模拟') }}</p>
+          <p class="description">{{ $tr('Simulation environment is ready, you can start running the simulation', '模拟环境已就绪,您可以开始运行模拟', 'Simulationsumgebung vollständig vorbereitet, Simulation kann gestartet werden') }}</p>
 
           <!-- Simulation rounds config - only shown after config generation and rounds calculation -->
           <div v-if="simulationConfig && autoGeneratedRounds" class="rounds-config-section">
             <div class="rounds-header">
               <div class="header-left">
-                <span class="section-title">{{ $tr('Simulation Round Settings', '模拟轮次设置') }}</span>
-                <span class="section-desc">{{ $tr('MiroShark automatically plans to simulate ', 'MiroShark 已自动规划模拟 ') }}<span class="desc-highlight">{{ simulationConfig?.time_config?.total_simulation_hours || '-' }}</span>{{ $tr(' hours of reality, each round represents ', ' 小时的现实时间,每一轮代表 ') }}<span class="desc-highlight">{{ simulationConfig?.time_config?.minutes_per_round || '-' }}</span>{{ $tr(' minutes of elapsed time', ' 分钟的流逝时间') }}</span>
+                <span class="section-title">{{ $tr('Simulation Round Settings', '模拟轮次设置', 'Simulationsrunden-Einstellung') }}</span>
+                <span class="section-desc">{{ $tr('MiroShark automatically plans to simulate ', 'MiroShark 已自动规划模拟 ', 'MiroShark plant automatisch die Simulation von ') }}<span class="desc-highlight">{{ simulationConfig?.time_config?.total_simulation_hours || '-' }}</span>{{ $tr(' hours of reality, each round represents ', ' 小时的现实时间,每一轮代表 ', ' Stunden Realität, jede Runde repräsentiert ') }}<span class="desc-highlight">{{ simulationConfig?.time_config?.minutes_per_round || '-' }}</span>{{ $tr(' minutes of elapsed time', ' 分钟的流逝时间', ' Minuten abgelaufene Zeit') }}</span>
               </div>
               <label class="switch-control">
                 <input type="checkbox" v-model="useCustomRounds">
                 <span class="switch-track"></span>
-                <span class="switch-label">{{ $tr('Custom', '自定义') }}</span>
+                <span class="switch-label">{{ $tr('Custom', '自定义', 'Benutzerdefiniert') }}</span>
               </label>
             </div>
             
@@ -519,10 +519,10 @@
                 <div class="slider-display">
                   <div class="slider-main-value">
                     <span class="val-num">{{ customMaxRounds }}</span>
-                    <span class="val-unit">{{ $tr('rounds', '轮') }}</span>
+                    <span class="val-unit">{{ $tr('rounds', '轮', 'Runden') }}</span>
                   </div>
                   <div class="slider-meta-info">
-                    <span>{{ $tr('Estimated duration ~', '预计时长约 ') }}{{ Math.round(customMaxRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟') }}</span>
+                    <span>{{ $tr('Estimated duration ~', '预计时长约 ', 'Geschätzte Dauer ~') }}{{ Math.round(customMaxRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟', 'Min') }}</span>
                   </div>
                 </div>
 
@@ -543,7 +543,7 @@
                       :class="{ active: customMaxRounds === 40 }"
                       @click="customMaxRounds = 40"
                       :style="{ position: 'absolute', left: `calc(${(40 - 10) / (naturalMaxRounds - 10) * 100}% - 30px)` }"
-                    >40 {{ $tr('(Recommended)', '(推荐)') }}</span>
+                    >40 {{ $tr('(Recommended)', '(推荐)', '(Empfohlen)') }}</span>
                     <span>{{ naturalMaxRounds }}</span>
                   </div>
                 </div>
@@ -553,7 +553,7 @@
                 <div class="auto-info-card">
                   <div class="auto-value">
                     <span class="val-num">{{ autoGeneratedRounds }}</span>
-                    <span class="val-unit">{{ $tr('rounds', '轮') }}</span>
+                    <span class="val-unit">{{ $tr('rounds', '轮', 'Runden') }}</span>
                   </div>
                   <div class="auto-content">
                     <div class="auto-meta-row">
@@ -562,11 +562,11 @@
                           <circle cx="12" cy="12" r="10"></circle>
                           <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        {{ $tr('Estimated duration ~', '预计时长约 ') }}{{ Math.round(autoGeneratedRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟') }}
+                        {{ $tr('Estimated duration ~', '预计时长约 ', 'Geschätzte Dauer ~') }}{{ Math.round(autoGeneratedRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟', 'Min') }}
                       </span>
                     </div>
                     <div class="auto-desc">
-                      <p class="highlight-tip" @click="useCustomRounds = true">{{ $tr('First time? Switch to ‘Custom Mode’ to reduce rounds for a quick preview ➝', '首次体验?切换至「自定义模式」减少轮次以快速预览 ➝') }}</p>
+                      <p class="highlight-tip" @click="useCustomRounds = true">{{ $tr(`First time? Switch to ‘Custom Mode’ to reduce rounds for a quick preview ➝`, '首次体验?切换至「自定义模式」减少轮次以快速预览 ➝', 'Zum ersten Mal? Wechsle zum „Anpassen-Modus“, um Runden für eine schnelle Vorschau zu reduzieren ➝') }}</p>
                     </div>
                   </div>
                 </div>
@@ -579,14 +579,14 @@
               class="action-btn secondary"
               @click="$emit('go-back')"
             >
-              {{ $tr('← Back to Graph', '← 返回图谱') }}
+              {{ $tr('← Back to Graph', '← 返回图谱', '← Zurück zum Graph-Aufbau') }}
             </button>
             <button
               class="action-btn primary"
               :disabled="phase < 4"
               @click="handleStartSimulation"
             >
-              {{ hasRunBefore ? $tr('Resume Simulation ➝', '继续模拟 ➝') : $tr('Start Simulation ➝', '开始模拟 ➝') }}
+              {{ hasRunBefore ? $tr('Resume Simulation ➝', '继续模拟 ➝', 'Simulation fortsetzen ➝') : $tr('Start Simulation ➝', '开始模拟 ➝', 'Dual-Welt-Parallelsimulation starten ➝') }}
             </button>
           </div>
         </div>
@@ -612,32 +612,32 @@
           <!-- Basic Info -->
           <div class="modal-info-grid">
             <div class="info-item">
-              <span class="info-label">{{ $tr('Apparent Age', '表观年龄') }}</span>
-              <span class="info-value">{{ selectedProfile.age || '-' }} {{ $tr('years old', '岁') }}</span>
+              <span class="info-label">{{ $tr('Apparent Age', '表观年龄', 'Alter') }}</span>
+              <span class="info-value">{{ selectedProfile.age || '-' }} {{ $tr('years old', '岁', 'Jahre') }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">{{ $tr('Apparent Gender', '表观性别') }}</span>
-              <span class="info-value">{{ { male: $tr('Male', '男'), female: $tr('Female', '女'), other: $tr('Other', '其他') }[selectedProfile.gender] || selectedProfile.gender }}</span>
+              <span class="info-label">{{ $tr('Apparent Gender', '表观性别', 'Geschlecht') }}</span>
+              <span class="info-value">{{ { male: $tr('Male', '男', 'Männlich'), female: $tr('Female', '女', 'Weiblich'), other: $tr('Other', '其他', 'Divers') }[selectedProfile.gender] || selectedProfile.gender }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">{{ $tr('Country/Region', '国家/地区') }}</span>
+              <span class="info-label">{{ $tr('Country/Region', '国家/地区', 'Land/Region') }}</span>
               <span class="info-value">{{ selectedProfile.country || '-' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">{{ $tr('Apparent MBTI', '表观 MBTI') }}</span>
+              <span class="info-label">{{ $tr('Apparent MBTI', '表观 MBTI', 'Scheinbares MBTI') }}</span>
               <span class="info-value mbti">{{ selectedProfile.mbti || '-' }}</span>
             </div>
           </div>
 
           <!-- Bio -->
           <div class="modal-section">
-            <span class="section-label">{{ $tr('Persona Summary', '人设摘要') }}</span>
-            <p class="section-bio">{{ selectedProfile.bio || $tr('No bio available', '暂无简介') }}</p>
+            <span class="section-label">{{ $tr('Persona Summary', '人设摘要', 'Persona-Vorstellung') }}</span>
+            <p class="section-bio">{{ selectedProfile.bio || $tr('No bio available', '暂无简介', 'Keine Vorstellung verfügbar') }}</p>
           </div>
 
           <!-- Related Topics -->
           <div class="modal-section" v-if="selectedProfile.interested_topics?.length">
-            <span class="section-label">{{ $tr('Real-World Seed Related Topics', '现实种子相关话题') }}</span>
+            <span class="section-label">{{ $tr('Real-World Seed Related Topics', '现实种子相关话题', 'Realitätskeim-bezogene Themen') }}</span>
             <div class="topics-grid">
               <span
                 v-for="topic in selectedProfile.interested_topics"
@@ -649,25 +649,25 @@
 
           <!-- Detailed Persona -->
           <div class="modal-section" v-if="selectedProfile.persona">
-            <span class="section-label">{{ $tr('Detailed Persona Background', '详细人设背景') }}</span>
+            <span class="section-label">{{ $tr('Detailed Persona Background', '详细人设背景', 'Detaillierter Persona-Hintergrund') }}</span>
 
             <!-- Persona Dimension Overview -->
             <div class="persona-dimensions">
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Full Event Experience', '完整事件经历') }}</span>
-                <span class="dim-desc">{{ $tr('Complete behavioral trajectory in this event', '在此事件中的完整行为轨迹') }}</span>
+                <span class="dim-title">{{ $tr('Full Event Experience', '完整事件经历', 'Ereignis-Panoramaerfahrung') }}</span>
+                <span class="dim-desc">{{ $tr('Complete behavioral trajectory in this event', '在此事件中的完整行为轨迹', 'Vollständige Verhaltenstrajektorie in diesem Ereignis') }}</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Behavioral Pattern Profile', '行为模式画像') }}</span>
-                <span class="dim-desc">{{ $tr('Experience summary and behavioral style preferences', '经历摘要与行为风格偏好') }}</span>
+                <span class="dim-title">{{ $tr('Behavioral Pattern Profile', '行为模式画像', 'Verhaltensprofilierung') }}</span>
+                <span class="dim-desc">{{ $tr('Experience summary and behavioral style preferences', '经历摘要与行为风格偏好', 'Erfahrungszusammenfassung und Verhaltensstilpräferenzen') }}</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Unique Memory Imprint', '独特记忆烙印') }}</span>
-                <span class="dim-desc">{{ $tr('Memories formed from real-world seeds', '由现实种子形成的记忆') }}</span>
+                <span class="dim-title">{{ $tr('Unique Memory Imprint', '独特记忆烙印', 'Einzigartige Erinnerungsprägungen') }}</span>
+                <span class="dim-desc">{{ $tr('Memories formed from real-world seeds', '由现实种子形成的记忆', 'Aus Realitätskeimen geformte Erinnerungen') }}</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Social Relationship Network', '社交关系网络') }}</span>
-                <span class="dim-desc">{{ $tr('Individual connections and interaction graph', '个体连接与互动图') }}</span>
+                <span class="dim-title">{{ $tr('Social Relationship Network', '社交关系网络', 'Soziales Beziehungsnetzwerk') }}</span>
+                <span class="dim-desc">{{ $tr('Individual connections and interaction graph', '个体连接与互动图', 'Individuelle Verbindungen und Interaktionsgraph') }}</span>
               </div>
             </div>
 
@@ -683,8 +683,8 @@
     <!-- Bottom Info / Logs -->
     <div class="system-logs" :class="{ collapsed: dashboardCollapsed }">
       <div class="log-header" @click="dashboardCollapsed = !dashboardCollapsed">
-        <span class="log-title">{{ $tr('SYSTEM DASHBOARD', '系统面板') }} <span class="log-toggle">{{ dashboardCollapsed ? '▲' : '▼' }}</span></span>
-        <span class="log-id">{{ simulationId || $tr('NO_SIMULATION', '无模拟') }}</span>
+        <span class="log-title">{{ $tr('SYSTEM DASHBOARD', '系统面板', 'SYSTEM-DASHBOARD') }} <span class="log-toggle">{{ dashboardCollapsed ? '▲' : '▼' }}</span></span>
+        <span class="log-id">{{ simulationId || $tr('NO_SIMULATION', '无模拟', 'KEINE_SIMULATION') }}</span>
       </div>
       <div v-show="!dashboardCollapsed" class="log-content" ref="logContent">
         <div class="log-line" v-for="(log, idx) in systemLogs" :key="idx">
@@ -761,7 +761,7 @@ watch(currentStage, (newStage) => {
     phase.value = 2
     // Entering config generation phase, start polling config
     if (!configTimer) {
-      addLog(tr('Starting to generate Dual-Platform Simulation Config...', '开始生成双平台模拟配置…'))
+      addLog(tr('Starting to generate Dual-Platform Simulation Config...', '开始生成双平台模拟配置…', 'Generierung der Dual-Plattform-Simulationskonfiguration wird gestartet…'))
       startConfigPolling()
     }
   } else if (newStage === 'Preparing Simulation Scripts' || newStage === 'copying_scripts') {
@@ -839,10 +839,10 @@ const handleStartSimulation = () => {
   if (useCustomRounds.value) {
     // User custom rounds, pass max_rounds parameter
     params.maxRounds = customMaxRounds.value
-    addLog(tr(`Starting simulation, custom rounds: ${customMaxRounds.value} rounds`, `开始模拟,自定义轮次:${customMaxRounds.value} 轮`))
+    addLog(tr(`Starting simulation, custom rounds: ${customMaxRounds.value} rounds`, `开始模拟,自定义轮次:${customMaxRounds.value} 轮`, `Simulation wird gestartet, benutzerdefinierte Runden: ${customMaxRounds.value} Runden`))
   } else {
     // User chose to keep auto-generated rounds, no max_rounds parameter passed
-    addLog(tr(`Starting simulation, using auto-configured rounds: ${autoGeneratedRounds.value} rounds`, `开始模拟,使用自动配置轮次:${autoGeneratedRounds.value} 轮`))
+    addLog(tr(`Starting simulation, using auto-configured rounds: ${autoGeneratedRounds.value} rounds`, `开始模拟,使用自动配置轮次:${autoGeneratedRounds.value} 轮`, `Simulation wird gestartet, automatisch konfigurierte Runden: ${autoGeneratedRounds.value} Runden`))
   }
   
   emit('next-step', params)
@@ -862,15 +862,15 @@ const selectProfile = (profile) => {
 // Automatically start simulation preparation
 const startPrepareSimulation = async () => {
   if (!props.simulationId) {
-    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId'))
+    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId', 'Fehler: simulationId fehlt'))
     emit('update-status', 'error')
     return
   }
 
   // Mark first step complete, start second step
   phase.value = 1
-  addLog(tr(`Simulation instance created: ${props.simulationId}`, `模拟实例已创建:${props.simulationId}`))
-  addLog(tr('Preparing simulation environment...', '正在准备模拟环境…'))
+  addLog(tr(`Simulation instance created: ${props.simulationId}`, `模拟实例已创建:${props.simulationId}`, `Simulationsinstanz erstellt: ${props.simulationId}`))
+  addLog(tr('Preparing simulation environment...', '正在准备模拟环境…', 'Simulationsumgebung wird vorbereitet…'))
   emit('update-status', 'processing')
   
   try {
@@ -882,35 +882,35 @@ const startPrepareSimulation = async () => {
     
     if (res.success && res.data) {
       if (res.data.already_prepared) {
-        addLog(tr('Detected existing completed preparation, using directly', '检测到已完成的准备,直接使用'))
+        addLog(tr('Detected existing completed preparation, using directly', '检测到已完成的准备,直接使用', 'Vorhandene abgeschlossene Vorbereitung erkannt, wird direkt verwendet'))
         await loadPreparedData()
         return
       }
 
       taskId.value = res.data.task_id
-      addLog(tr(`Preparation task started`, '准备任务已启动'))
-      addLog(tr(`  └─ Task ID: ${res.data.task_id}`, `  └─ 任务 ID:${res.data.task_id}`))
+      addLog(tr(`Preparation task started`, '准备任务已启动', 'Vorbereitungsaufgabe gestartet'))
+      addLog(tr(`  └─ Task ID: ${res.data.task_id}`, `  └─ 任务 ID:${res.data.task_id}`, `  └─ Aufgaben-ID: ${res.data.task_id}`))
 
       // Set Expected Total Agents immediately (from prepare API response)
       if (res.data.expected_entities_count) {
         expectedTotal.value = res.data.expected_entities_count
-        addLog(tr(`Read ${res.data.expected_entities_count} entities from knowledge graph`, `从知识图谱读取 ${res.data.expected_entities_count} 个实体`))
+        addLog(tr(`Read ${res.data.expected_entities_count} entities from knowledge graph`, `从知识图谱读取 ${res.data.expected_entities_count} 个实体`, `${res.data.expected_entities_count} Entitäten aus dem Wissensgraphen gelesen`))
         if (res.data.entity_types && res.data.entity_types.length > 0) {
-          addLog(tr(`  └─ Entity types: ${res.data.entity_types.join(', ')}`, `  └─ 实体类型:${res.data.entity_types.join('、')}`))
+          addLog(tr(`  └─ Entity types: ${res.data.entity_types.join(', ')}`, `  └─ 实体类型:${res.data.entity_types.join('、')}`, `  └─ Entitätstypen: ${res.data.entity_types.join(', ')}`))
         }
       }
 
-      addLog(tr('Starting to poll preparation progress...', '开始轮询准备进度…'))
+      addLog(tr('Starting to poll preparation progress...', '开始轮询准备进度…', 'Fortschritt der Vorbereitung wird abgefragt…'))
       // Start polling progress
       startPolling()
       // Start fetching profiles in real-time
       startProfilesPolling()
     } else {
-      addLog(tr(`Preparation failed: ${res.error || 'Unknown error'}`, `准备失败:${res.error || '未知错误'}`))
+      addLog(tr(`Preparation failed: ${res.error || 'Unknown error'}`, `准备失败:${res.error || '未知错误'}`, `Vorbereitung fehlgeschlagen: ${res.error || 'Unbekannter Fehler'}`))
       emit('update-status', 'error')
     }
   } catch (err) {
-    addLog(tr(`Preparation error: ${err.message}`, `准备出错:${err.message}`))
+    addLog(tr(`Preparation error: ${err.message}`, `准备出错:${err.message}`, `Vorbereitungsfehler: ${err.message}`))
     emit('update-status', 'error')
   }
 }
@@ -984,12 +984,12 @@ const pollPrepareStatus = async () => {
       
       // Check if completed
       if (data.status === 'completed' || data.status === 'ready' || data.already_prepared) {
-        addLog(tr('✓ Preparation completed', '✓ 准备完成'))
+        addLog(tr('✓ Preparation completed', '✓ 准备完成', '✓ Vorbereitung abgeschlossen'))
         stopPolling()
         stopProfilesPolling()
         await loadPreparedData()
       } else if (data.status === 'failed') {
-        addLog(tr(`✗ Preparation failed: ${data.error || 'Unknown error'}`, `✗ 准备失败:${data.error || '未知错误'}`))
+        addLog(tr(`✗ Preparation failed: ${data.error || 'Unknown error'}`, `✗ 准备失败:${data.error || '未知错误'}`, `✗ Vorbereitung fehlgeschlagen: ${data.error || 'Unbekannter Fehler'}`))
         stopPolling()
         stopProfilesPolling()
       }
@@ -1028,13 +1028,13 @@ const fetchProfilesRealtime = async () => {
         const latestProfile = profiles.value[currentCount - 1]
         const profileName = latestProfile?.name || latestProfile?.username || `Agent_${currentCount}`
         if (currentCount === 1) {
-          addLog(tr(`Starting to generate agent personas...`, '开始生成智能体人设…'))
+          addLog(tr(`Starting to generate agent personas...`, '开始生成智能体人设…', 'Agent-Personas werden generiert…'))
         }
-        addLog(tr(`→ Agent persona ${currentCount}/${total}: ${profileName} (${latestProfile?.profession || 'Unknown Profession'})`, `→ 智能体人设 ${currentCount}/${total}:${profileName}(${latestProfile?.profession || '未知职业'})`))
+        addLog(tr(`→ Agent persona ${currentCount}/${total}: ${profileName} (${latestProfile?.profession || 'Unknown Profession'})`, `→ 智能体人设 ${currentCount}/${total}:${profileName}(${latestProfile?.profession || '未知职业'})`, `→ Agent-Persona ${currentCount}/${total}: ${profileName} (${latestProfile?.profession || 'Unbekannter Beruf'})`))
 
         // If all generated
         if (expectedTotal.value && currentCount >= expectedTotal.value) {
-          addLog(tr(`✓ All ${currentCount} agent personas generated`, `✓ 已生成全部 ${currentCount} 个智能体人设`))
+          addLog(tr(`✓ All ${currentCount} agent personas generated`, `✓ 已生成全部 ${currentCount} 个智能体人设`, `✓ Alle ${currentCount} Agent-Personas generiert`))
         }
       }
     }
@@ -1063,8 +1063,8 @@ const fetchConfigRealtime = async () => {
   // Client-side timeout: give up after CONFIG_POLL_TIMEOUT_MS
   if (configPollStartTime && Date.now() - configPollStartTime > CONFIG_POLL_TIMEOUT_MS) {
     stopConfigPolling()
-    configError.value = tr('Config generation timed out after 90 seconds. The LLM may be unresponsive or overloaded.', '配置生成在 90 秒后超时。LLM 可能无响应或负载过高。')
-    addLog(tr('✗ Config generation timed out (90s). Use "Retry Config" to try again.', '✗ 配置生成超时(90 秒)。请使用「重新生成配置」再次尝试。'))
+    configError.value = tr('Config generation timed out after 90 seconds. The LLM may be unresponsive or overloaded.', '配置生成在 90 秒后超时。LLM 可能无响应或负载过高。', 'Konfigurationsgenerierung nach 90 Sekunden abgebrochen. LLM reagiert möglicherweise nicht oder ist überlastet.')
+    addLog(tr('✗ Config generation timed out (90s). Use "Retry Config" to try again.', '✗ 配置生成超时(90 秒)。请使用「重新生成配置」再次尝试。', '✗ Konfigurationsgenerierung abgebrochen (90 s). Verwenden Sie „Konfiguration wiederholen", um es erneut zu versuchen.'))
     return
   }
 
@@ -1077,9 +1077,9 @@ const fetchConfigRealtime = async () => {
       // Backend reported a generation failure
       if (data.config_error || data.status === 'failed') {
         stopConfigPolling()
-        const reason = data.config_error || tr('Generation failed — check your OpenRouter API key and model name', '生成失败 — 请检查您的 OpenRouter API 密钥与模型名称')
+        const reason = data.config_error || tr('Generation failed — check your OpenRouter API key and model name', '生成失败 — 请检查您的 OpenRouter API 密钥与模型名称', 'Generierung fehlgeschlagen — überprüfen Sie Ihren OpenRouter API-Schlüssel und Modellnamen')
         configError.value = reason
-        addLog(tr(`✗ Config generation failed: ${reason}`, `✗ 配置生成失败:${reason}`))
+        addLog(tr(`✗ Config generation failed: ${reason}`, `✗ 配置生成失败:${reason}`, `✗ Konfigurationsgenerierung fehlgeschlagen: ${reason}`))
         return
       }
 
@@ -1087,41 +1087,41 @@ const fetchConfigRealtime = async () => {
       if (data.generation_stage && data.generation_stage !== lastLoggedConfigStage) {
         lastLoggedConfigStage = data.generation_stage
         if (data.generation_stage === 'generating_profiles') {
-          addLog(tr('Generating agent persona configuration...', '生成智能体人设配置中…'))
+          addLog(tr('Generating agent persona configuration...', '生成智能体人设配置中…', 'Agent-Persona-Konfiguration wird generiert…'))
         } else if (data.generation_stage === 'generating_config') {
-          addLog(tr('Calling LLM to generate simulation configuration parameters...', '调用 LLM 生成模拟配置参数中…'))
+          addLog(tr('Calling LLM to generate simulation configuration parameters...', '调用 LLM 生成模拟配置参数中…', 'LLM wird aufgerufen, um Simulationskonfigurationsparameter zu generieren…'))
         }
       }
 
       // If config has been generated
       if (data.config_generated && data.config) {
         simulationConfig.value = data.config
-        addLog(tr('✓ Simulation configuration generated', '✓ 模拟配置已生成'))
+        addLog(tr('✓ Simulation configuration generated', '✓ 模拟配置已生成', '✓ Simulationskonfiguration generiert'))
 
         // Show detailed config summary
         if (data.summary) {
-          addLog(tr(`  ├─ Agent count: ${data.summary.total_agents}`, `  ├─ 智能体数量:${data.summary.total_agents}`))
-          addLog(tr(`  ├─ Simulation duration: ${data.summary.simulation_hours} hours`, `  ├─ 模拟时长:${data.summary.simulation_hours} 小时`))
-          addLog(tr(`  ├─ Initial posts: ${data.summary.initial_posts_count}`, `  ├─ 初始帖子:${data.summary.initial_posts_count}`))
-          addLog(tr(`  ├─ Hot topics: ${data.summary.hot_topics_count}`, `  ├─ 热门话题:${data.summary.hot_topics_count}`))
-          addLog(tr(`  └─ Platform config: Twitter ${data.summary.has_twitter_config ? '✓' : '✗'}, Reddit ${data.summary.has_reddit_config ? '✓' : '✗'}`, `  └─ 平台配置:Twitter ${data.summary.has_twitter_config ? '✓' : '✗'},Reddit ${data.summary.has_reddit_config ? '✓' : '✗'}`))
+          addLog(tr(`  ├─ Agent count: ${data.summary.total_agents}`, `  ├─ 智能体数量:${data.summary.total_agents}`, `  ├─ Agentenanzahl: ${data.summary.total_agents}`))
+          addLog(tr(`  ├─ Simulation duration: ${data.summary.simulation_hours} hours`, `  ├─ 模拟时长:${data.summary.simulation_hours} 小时`, `  ├─ Simulationsdauer: ${data.summary.simulation_hours} Stunden`))
+          addLog(tr(`  ├─ Initial posts: ${data.summary.initial_posts_count}`, `  ├─ 初始帖子:${data.summary.initial_posts_count}`, `  ├─ Initiale Beiträge: ${data.summary.initial_posts_count}`))
+          addLog(tr(`  ├─ Hot topics: ${data.summary.hot_topics_count}`, `  ├─ 热门话题:${data.summary.hot_topics_count}`, `  ├─ Trendthemen: ${data.summary.hot_topics_count}`))
+          addLog(tr(`  └─ Platform config: Twitter ${data.summary.has_twitter_config ? '✓' : '✗'}, Reddit ${data.summary.has_reddit_config ? '✓' : '✗'}`, `  └─ 平台配置:Twitter ${data.summary.has_twitter_config ? '✓' : '✗'},Reddit ${data.summary.has_reddit_config ? '✓' : '✗'}`, `  └─ Plattformkonfiguration: Twitter ${data.summary.has_twitter_config ? '✓' : '✗'}, Reddit ${data.summary.has_reddit_config ? '✓' : '✗'}`))
         }
 
         // Show time configuration details
         if (data.config.time_config) {
           const tc = data.config.time_config
-          addLog(tr(`Time config: ${tc.minutes_per_round} minutes per round, ${Math.floor((tc.total_simulation_hours * 60) / tc.minutes_per_round)} rounds total`, `时间配置:每轮 ${tc.minutes_per_round} 分钟,共 ${Math.floor((tc.total_simulation_hours * 60) / tc.minutes_per_round)} 轮`))
+          addLog(tr(`Time config: ${tc.minutes_per_round} minutes per round, ${Math.floor((tc.total_simulation_hours * 60) / tc.minutes_per_round)} rounds total`, `时间配置:每轮 ${tc.minutes_per_round} 分钟,共 ${Math.floor((tc.total_simulation_hours * 60) / tc.minutes_per_round)} 轮`, `Zeitkonfiguration: ${tc.minutes_per_round} Minuten pro Runde, ${Math.floor((tc.total_simulation_hours * 60) / tc.minutes_per_round)} Runden gesamt`))
         }
 
         // Show event configuration
         if (data.config.event_config?.narrative_direction) {
           const narrative = data.config.event_config.narrative_direction
-          addLog(tr(`Narrative direction: ${narrative.length > 50 ? narrative.substring(0, 50) + '...' : narrative}`, `叙事方向:${narrative.length > 50 ? narrative.substring(0, 50) + '…' : narrative}`))
+          addLog(tr(`Narrative direction: ${narrative.length > 50 ? narrative.substring(0, 50) + '...' : narrative}`, `叙事方向:${narrative.length > 50 ? narrative.substring(0, 50) + '…' : narrative}`, `Narrativrichtung: ${narrative.length > 50 ? narrative.substring(0, 50) + '...' : narrative}`))
         }
 
         stopConfigPolling()
         phase.value = 4
-        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟'))
+        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation'))
         emit('update-status', 'completed')
       }
     }
@@ -1135,20 +1135,20 @@ const handleConfigRetry = async () => {
   isConfigRetrying.value = true
   configError.value = null
   lastLoggedConfigStage = ''
-  addLog(tr('Retrying config generation...', '正在重试配置生成…'))
+  addLog(tr('Retrying config generation...', '正在重试配置生成…', 'Konfigurationsgenerierung wird wiederholt…'))
 
   try {
     const res = await retrySimulationConfig(props.simulationId)
     if (res.success) {
-      addLog(tr('Config retry started — waiting for LLM...', '配置重试已启动 — 正在等待 LLM…'))
+      addLog(tr('Config retry started — waiting for LLM...', '配置重试已启动 — 正在等待 LLM…', 'Konfigurationswiederholung gestartet — warte auf LLM…'))
       startConfigPolling()
     } else {
-      configError.value = res.error || tr('Retry failed — check backend logs', '重试失败 — 请检查后端日志')
-      addLog(tr(`✗ Retry failed: ${res.error || 'unknown error'}`, `✗ 重试失败:${res.error || '未知错误'}`))
+      configError.value = res.error || tr('Retry failed — check backend logs', '重试失败 — 请检查后端日志', 'Wiederholung fehlgeschlagen — Backend-Logs überprüfen')
+      addLog(tr(`✗ Retry failed: ${res.error || 'unknown error'}`, `✗ 重试失败:${res.error || '未知错误'}`, `✗ Wiederholung fehlgeschlagen: ${res.error || 'Unbekannter Fehler'}`))
     }
   } catch (err) {
-    configError.value = err.message || tr('Retry request failed', '重试请求失败')
-    addLog(tr(`✗ Retry error: ${err.message}`, `✗ 重试出错:${err.message}`))
+    configError.value = err.message || tr('Retry request failed', '重试请求失败', 'Wiederholungsanforderung fehlgeschlagen')
+    addLog(tr(`✗ Retry error: ${err.message}`, `✗ 重试出错:${err.message}`, `✗ Wiederholungsfehler: ${err.message}`))
   } finally {
     isConfigRetrying.value = false
   }
@@ -1156,11 +1156,11 @@ const handleConfigRetry = async () => {
 
 const loadPreparedData = async () => {
   phase.value = 2
-  addLog(tr('Loading existing configuration data...', '正在加载已有配置数据…'))
+  addLog(tr('Loading existing configuration data...', '正在加载已有配置数据…', 'Vorhandene Konfigurationsdaten werden geladen…'))
 
   // Fetch profiles one last time
   await fetchProfilesRealtime()
-  addLog(tr(`Loaded ${profiles.value.length} agent personas`, `已加载 ${profiles.value.length} 个智能体人设`))
+  addLog(tr(`Loaded ${profiles.value.length} agent personas`, `已加载 ${profiles.value.length} 个智能体人设`, `${profiles.value.length} Agent-Personas geladen`))
 
   // Get config (using real-time API)
   try {
@@ -1168,26 +1168,26 @@ const loadPreparedData = async () => {
     if (res.success && res.data) {
       if (res.data.config_generated && res.data.config) {
         simulationConfig.value = res.data.config
-        addLog(tr('✓ Simulation configuration loaded successfully', '✓ 模拟配置加载成功'))
+        addLog(tr('✓ Simulation configuration loaded successfully', '✓ 模拟配置加载成功', '✓ Simulationskonfiguration erfolgreich geladen'))
 
         // Show detailed config summary
         if (res.data.summary) {
-          addLog(tr(`  ├─ Agent count: ${res.data.summary.total_agents}`, `  ├─ 智能体数量:${res.data.summary.total_agents}`))
-          addLog(tr(`  ├─ Simulation duration: ${res.data.summary.simulation_hours} hours`, `  ├─ 模拟时长:${res.data.summary.simulation_hours} 小时`))
-          addLog(tr(`  └─ Initial posts: ${res.data.summary.initial_posts_count}`, `  └─ 初始帖子:${res.data.summary.initial_posts_count}`))
+          addLog(tr(`  ├─ Agent count: ${res.data.summary.total_agents}`, `  ├─ 智能体数量:${res.data.summary.total_agents}`, `  ├─ Agentenanzahl: ${res.data.summary.total_agents}`))
+          addLog(tr(`  ├─ Simulation duration: ${res.data.summary.simulation_hours} hours`, `  ├─ 模拟时长:${res.data.summary.simulation_hours} 小时`, `  ├─ Simulationsdauer: ${res.data.summary.simulation_hours} Stunden`))
+          addLog(tr(`  └─ Initial posts: ${res.data.summary.initial_posts_count}`, `  └─ 初始帖子:${res.data.summary.initial_posts_count}`, `  └─ Initiale Beiträge: ${res.data.summary.initial_posts_count}`))
         }
 
-        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟'))
+        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation'))
         phase.value = 4
         emit('update-status', 'completed')
       } else {
         // Config not yet generated, start polling
-        addLog(tr('Config generating, starting to poll...', '配置生成中,开始轮询…'))
+        addLog(tr('Config generating, starting to poll...', '配置生成中,开始轮询…', 'Konfiguration wird generiert, Abfrage wird gestartet…'))
         startConfigPolling()
       }
     }
   } catch (err) {
-    addLog(tr(`Failed to load configuration: ${err.message}`, `加载配置失败:${err.message}`))
+    addLog(tr(`Failed to load configuration: ${err.message}`, `加载配置失败:${err.message}`, `Konfiguration konnte nicht geladen werden: ${err.message}`))
     emit('update-status', 'error')
   }
 }
@@ -1221,7 +1221,7 @@ onMounted(async () => {
       // no run state — fresh simulation
     }
 
-    addLog(tr('Step 2 Agent Setup Initializing', '第 2 步 智能体配置初始化中'))
+    addLog(tr('Step 2 Agent Setup Initializing', '第 2 步 智能体配置初始化中', 'Schritt 2 Agent-Einrichtung wird initialisiert'))
     startPrepareSimulation()
   }
 })

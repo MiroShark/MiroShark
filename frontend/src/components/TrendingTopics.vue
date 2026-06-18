@@ -2,21 +2,21 @@
   <div v-if="shouldRender" class="tt-wrap">
     <div class="tt-head">
       <span class="tt-label">
-        <span class="tt-dot">◉</span> {{ $tr(`What's Trending`, '热门话题') }}
+        <span class="tt-dot">◉</span> {{ $tr(`What's Trending`, '热门话题', 'Trendthemen') }}
         <span class="tt-sub">{{ statusLine }}</span>
       </span>
       <button
         v-if="!loading"
         class="tt-refresh"
         type="button"
-        :title="$tr('Refresh feeds', '刷新源')"
+        :title="$tr('Refresh feeds', '刷新源', 'Feeds aktualisieren')"
         @click="refresh"
       >↻</button>
     </div>
 
     <div v-if="loading && items.length === 0" class="tt-loading">
       <span class="tt-spinner"></span>
-      {{ $tr('Pulling current headlines from public feeds…', '正在从公共源拉取最新头条…') }}
+      {{ $tr('Pulling current headlines from public feeds…', '正在从公共源拉取最新头条…', 'Aktuelle Schlagzeilen aus öffentlichen Feeds werden geladen…') }}
     </div>
 
     <div v-else-if="items.length > 0" class="tt-grid">
@@ -37,7 +37,7 @@
         </div>
         <div class="tt-title">{{ item.title }}</div>
         <div class="tt-cta">
-          <span class="tt-cta-text">{{ $tr('Simulate', '模拟') }}</span>
+          <span class="tt-cta-text">{{ $tr('Simulate', '模拟', 'Simulieren') }}</span>
           <span class="tt-cta-arrow">→</span>
         </div>
       </button>
@@ -85,10 +85,10 @@ const shouldRender = computed(() => {
 })
 
 const statusLine = computed(() => {
-  if (loading.value) return tr('// fetching…', '// 抓取中…')
+  if (loading.value) return tr('// fetching…', '// 抓取中…', '// wird abgerufen…')
   if (!fetchedAt.value) return ''
   const ago = relativeTime(fetchedAt.value)
-  return cached.value ? `// ${tr('cached · refreshed', '已缓存 · 刷新于')} ${ago}` : `// ${tr('refreshed', '刷新于')} ${ago}`
+  return cached.value ? `// ${tr('cached · refreshed', '已缓存 · 刷新于', 'zwischengespeichert · aktualisiert')} ${ago}` : `// ${tr('refreshed', '刷新于', 'aktualisiert')} ${ago}`
 })
 
 const relativeTime = (iso) => {
@@ -96,13 +96,13 @@ const relativeTime = (iso) => {
   const t = Date.parse(iso)
   if (Number.isNaN(t)) return ''
   const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000))
-  if (diffSec < 60) return tr('just now', '刚刚')
+  if (diffSec < 60) return tr('just now', '刚刚', 'gerade eben')
   const diffMin = Math.floor(diffSec / 60)
-  if (diffMin < 60) return `${diffMin}${tr('m ago', ' 分钟前')}`
+  if (diffMin < 60) return `${diffMin}${tr('m ago', ' 分钟前', ' Min. her')}`
   const diffHr = Math.floor(diffMin / 60)
-  if (diffHr < 24) return `${diffHr}${tr('h ago', ' 小时前')}`
+  if (diffHr < 24) return `${diffHr}${tr('h ago', ' 小时前', ' Std. her')}`
   const diffDay = Math.floor(diffHr / 24)
-  return `${diffDay}${tr('d ago', ' 天前')}`
+  return `${diffDay}${tr('d ago', ' 天前', ' T. her')}`
 }
 
 const load = async ({ force = false } = {}) => {

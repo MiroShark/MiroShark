@@ -18,15 +18,15 @@
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            {{ { graph: $tr('Graph', '图谱'), workbench: $tr('Workbench', '工作台') }[mode] }}
+            {{ { graph: $tr('Graph', '图谱', 'Graph'), workbench: $tr('Workbench', '工作台', 'Arbeitsbereich') }[mode] }}
           </button>
         </div>
       </div>
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">{{ $tr('Step 4/4', '第 4/4 步') }}</span>
-          <span class="step-name">{{ $tr('Deep Interaction', '深度交互') }}</span>
+          <span class="step-num">{{ $tr('Step 4/4', '第 4/4 步', 'Schritt 4/4') }}</span>
+          <span class="step-name">{{ $tr('Deep Interaction', '深度交互', 'Tiefe Interaktion') }}</span>
         </div>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
@@ -116,10 +116,10 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return tr('Error', '错误')
-  if (currentStatus.value === 'completed') return tr('Completed', '已完成')
-  if (currentStatus.value === 'processing') return tr('Processing', '处理中')
-  return tr('Ready', '就绪')
+  if (currentStatus.value === 'error') return tr('Error', '错误', 'Fehler')
+  if (currentStatus.value === 'completed') return tr('Completed', '已完成', 'Abgeschlossen')
+  if (currentStatus.value === 'processing') return tr('Processing', '处理中', 'Wird verarbeitet')
+  return tr('Ready', '就绪', 'Bereit')
 })
 
 // --- Helpers ---

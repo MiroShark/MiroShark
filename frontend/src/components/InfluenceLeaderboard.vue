@@ -4,15 +4,15 @@
     <div class="lb-header">
       <div class="lb-title">
         <span class="lb-icon">◈</span>
-        <span class="lb-label">{{ $tr('AGENT INFLUENCE LEADERBOARD', '智能体影响力排行榜') }}</span>
+        <span class="lb-label">{{ $tr('AGENT INFLUENCE LEADERBOARD', '智能体影响力排行榜', 'AGENTEN-EINFLUSS-RANGLISTE') }}</span>
       </div>
       <button
         class="export-btn"
         :disabled="!agents.length"
         @click="exportReport"
-        :title="$tr('Download influence report as JSON', '下载影响力报告 JSON')"
+        :title="$tr('Download influence report as JSON', '下载影响力报告 JSON', 'Einfluss-Bericht als JSON herunterladen')"
       >
-        {{ $tr('Export JSON ↓', '导出 JSON ↓') }}
+        {{ $tr('Export JSON ↓', '导出 JSON ↓', 'JSON exportieren ↓') }}
       </button>
     </div>
 
@@ -27,8 +27,8 @@
               <div>
                 <div class="iv-name">{{ interviewAgent.agent_name }}</div>
                 <div class="iv-meta">
-                  {{ $tr('Rank', '排名') }} #{{ interviewAgent.rank }} · {{ interviewAgent.influence_score }} {{ $tr('pts', '分') }}
-                  · {{ interviewAgent.posts_created }} {{ $tr('posts', '帖子') }}
+                  {{ $tr('Rank', '排名', 'Rang') }} #{{ interviewAgent.rank }} · {{ interviewAgent.influence_score }} {{ $tr('pts', '分', 'Pkt.') }}
+                  · {{ interviewAgent.posts_created }} {{ $tr('posts', '帖子', 'Beiträge') }}
                 </div>
               </div>
             </div>
@@ -38,8 +38,8 @@
           <!-- Chat thread -->
           <div class="iv-thread" ref="threadEl">
             <div v-if="!interviewHistory.length && !interviewLoading" class="iv-empty">
-              {{ $tr('Ask', '询问') }} {{ interviewAgent.agent_name }} {{ $tr('about their simulation experience.', '关于他们的模拟体验。') }}
-              {{ $tr(`Try: "Why did you post so much in the early rounds?" or "What changed your mind?"`, '试试:"你为什么在前几轮发帖这么多?" 或 "什么改变了你的想法?"') }}
+              {{ $tr('Ask', '询问', 'Fragen Sie') }} {{ interviewAgent.agent_name }} {{ $tr('about their simulation experience.', '关于他们的模拟体验。', 'nach ihrer Simulationserfahrung.') }}
+              {{ $tr(`Try: "Why did you post so much in the early rounds?" or "What changed your mind?"`, '试试:"你为什么在前几轮发帖这么多?" 或 "什么改变了你的想法?"', 'Versuchen Sie: „Warum haben Sie in den frühen Runden so viel gepostet?" oder „Was hat Ihre Meinung geändert?"') }}
             </div>
             <div
               v-for="(qa, i) in interviewHistory"
@@ -47,7 +47,7 @@
               class="iv-qa-pair"
             >
               <div class="iv-question">
-                <span class="iv-role">{{ $tr('You', '你') }}</span>
+                <span class="iv-role">{{ $tr('You', '你', 'Sie') }}</span>
                 <span class="iv-text">{{ qa.question }}</span>
               </div>
               <div class="iv-answer">
@@ -57,7 +57,7 @@
             </div>
             <div v-if="interviewLoading" class="iv-thinking">
               <div class="iv-dots"><span></span><span></span><span></span></div>
-              <span>{{ interviewAgent.agent_name }} {{ $tr('is thinking...', '正在思考...') }}</span>
+              <span>{{ interviewAgent.agent_name }} {{ $tr('is thinking...', '正在思考...', 'denkt nach...') }}</span>
             </div>
           </div>
 
@@ -68,7 +68,7 @@
               v-model="interviewQuestion"
               class="iv-input"
               type="text"
-              :placeholder="$tr('Ask a question...', '提问...')"
+              :placeholder="$tr('Ask a question...', '提问...', 'Frage stellen...')"
               :disabled="interviewLoading"
               @keydown.enter.prevent="submitQuestion"
             />
@@ -77,7 +77,7 @@
               :disabled="interviewLoading || !interviewQuestion.trim()"
               @click="submitQuestion"
             >
-              {{ $tr('Ask', '提问') }}
+              {{ $tr('Ask', '提问', 'Fragen') }}
             </button>
           </div>
 
@@ -89,15 +89,15 @@
 
     <!-- Score legend -->
     <div class="lb-legend">
-      <span class="legend-item"><span class="legend-dot engage"></span>{{ $tr('Engagement ×3', '互动 ×3') }}</span>
-      <span class="legend-item"><span class="legend-dot platform"></span>{{ $tr('Platforms ×5', '平台 ×5') }}</span>
-      <span class="legend-item"><span class="legend-dot post"></span>{{ $tr('Posts ×1', '帖子 ×1') }}</span>
+      <span class="legend-item"><span class="legend-dot engage"></span>{{ $tr('Engagement ×3', '互动 ×3', 'Engagement ×3') }}</span>
+      <span class="legend-item"><span class="legend-dot platform"></span>{{ $tr('Platforms ×5', '平台 ×5', 'Plattformen ×5') }}</span>
+      <span class="legend-item"><span class="legend-dot post"></span>{{ $tr('Posts ×1', '帖子 ×1', 'Beiträge ×1') }}</span>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="lb-loading">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Computing influence scores...', '正在计算影响力分数...') }}</span>
+      <span>{{ $tr('Computing influence scores...', '正在计算影响力分数...', 'Einfluss-Scores werden berechnet...') }}</span>
     </div>
 
     <!-- Error -->
@@ -105,7 +105,7 @@
 
     <!-- Empty -->
     <div v-else-if="!agents.length" class="lb-empty">
-      {{ $tr('No simulation data available yet. Run the simulation first.', '尚无模拟数据。请先运行模拟。') }}
+      {{ $tr('No simulation data available yet. Run the simulation first.', '尚无模拟数据。请先运行模拟。', 'Noch keine Simulationsdaten verfügbar. Bitte zuerst die Simulation starten.') }}
     </div>
 
     <!-- Leaderboard rows -->
@@ -136,12 +136,12 @@
 
         <!-- Score breakdown -->
         <div class="lb-breakdown">
-          <div class="bd-item" :title="$tr('Engagement received (likes, reposts, quotes)', '收到的互动(点赞、转发、引用)')">
-            <span class="bd-label engage">{{ $tr('ENG', '互动') }}</span>
+          <div class="bd-item" :title="$tr('Engagement received (likes, reposts, quotes)', '收到的互动(点赞、转发、引用)', 'Erhaltenes Engagement (Likes, Reposts, Zitate)')">
+            <span class="bd-label engage">{{ $tr('ENG', '互动', 'ENG') }}</span>
             <span class="bd-value">{{ agent.engagement_received }}</span>
           </div>
-          <div class="bd-item" :title="$tr('Original posts created', '发布的原创帖子')">
-            <span class="bd-label post">{{ $tr('PST', '帖子') }}</span>
+          <div class="bd-item" :title="$tr('Original posts created', '发布的原创帖子', 'Erstellte Original-Beiträge')">
+            <span class="bd-label post">{{ $tr('PST', '帖子', 'BEI') }}</span>
             <span class="bd-value">{{ agent.posts_created }}</span>
           </div>
         </div>
@@ -161,16 +161,16 @@
         <button
           class="iv-btn"
           @click.stop="openInterview(agent)"
-          :title="$tr('Interview this agent about their simulation', '采访这位智能体关于其模拟的经历')"
+          :title="$tr('Interview this agent about their simulation', '采访这位智能体关于其模拟的经历', 'Diesen Agenten zur Simulation befragen')"
         >
-          ▶ {{ $tr('Interview', '采访') }}
+          ▶ {{ $tr('Interview', '采访', 'Befragen') }}
         </button>
       </div>
     </div>
 
     <!-- Footer -->
     <div v-if="totalAgents > agents.length" class="lb-footer">
-      {{ $tr('Showing top', '显示前') }} {{ agents.length }} {{ $tr('of', '/共') }} {{ totalAgents }} {{ $tr('agents', '个智能体') }}
+      {{ $tr('Showing top', '显示前', 'Zeige Top') }} {{ agents.length }} {{ $tr('of', '/共', 'von') }} {{ totalAgents }} {{ $tr('agents', '个智能体', 'Agenten') }}
     </div>
   </div>
 </template>
@@ -218,10 +218,10 @@ const load = async () => {
       agents.value = res.data.agents || []
       totalAgents.value = res.data.total_agents || 0
     } else {
-      error.value = res.error || tr('Failed to load influence data.', '加载影响力数据失败。')
+      error.value = res.error || tr('Failed to load influence data.', '加载影响力数据失败。', 'Einfluss-Daten konnten nicht geladen werden.')
     }
   } catch (err) {
-    error.value = err.message || tr('Failed to load influence data.', '加载影响力数据失败。')
+    error.value = err.message || tr('Failed to load influence data.', '加载影响力数据失败。', 'Einfluss-Daten konnten nicht geladen werden.')
   } finally {
     loading.value = false
   }
@@ -301,10 +301,10 @@ const submitQuestion = async () => {
       await nextTick()
       scrollThread()
     } else {
-      interviewError.value = res.error || tr('Failed to get a response.', '未能获取回复。')
+      interviewError.value = res.error || tr('Failed to get a response.', '未能获取回复。', 'Keine Antwort erhalten.')
     }
   } catch (err) {
-    interviewError.value = err.message || tr('Request failed.', '请求失败。')
+    interviewError.value = err.message || tr('Request failed.', '请求失败。', 'Anfrage fehlgeschlagen.')
   } finally {
     interviewLoading.value = false
     await nextTick()

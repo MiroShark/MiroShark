@@ -3,22 +3,22 @@
     <div class="cf-header">
       <div class="cf-title">
         <span class="cf-icon">⤷</span>
-        <span class="cf-label">{{ $tr('COUNTERFACTUAL BRANCH', '反事实分支') }}</span>
+        <span class="cf-label">{{ $tr('COUNTERFACTUAL BRANCH', '反事实分支', 'KONTRAFAKTISCHER ZWEIG') }}</span>
       </div>
       <span class="cf-hint">
-        {{ $tr('Fork this simulation from round N with a narrative injection. Preserves the agent population; the runner promotes your injection into a director event when round', '从第 N 轮派生此模拟,并注入一段叙事。保留智能体人群;当达到第') }} {{ triggerRound || 'N' }} {{ $tr('arrives.', '轮时,运行器会将你的注入提升为导演事件。') }}
+        {{ $tr('Fork this simulation from round N with a narrative injection. Preserves the agent population; the runner promotes your injection into a director event when round', '从第 N 轮派生此模拟,并注入一段叙事。保留智能体人群;当达到第', 'Diese Simulation ab Runde N mit einer narrativen Injektion verzweigen. Die Agentenpopulation bleibt erhalten; der Runner befördert Ihre Injektion zu einem Direktionsereignis, wenn Runde') }} {{ triggerRound || 'N' }} {{ $tr('arrives.', '轮时,运行器会将你的注入提升为导演事件。', 'erreicht wird.') }}
       </span>
     </div>
 
     <!-- Preset-branch dropdown (when the source template declared them) -->
     <div v-if="presetBranches.length" class="cf-preset-row">
-      <label class="cf-preset-label">{{ $tr('Preset', '预设') }}</label>
+      <label class="cf-preset-label">{{ $tr('Preset', '预设', 'Voreinstellung') }}</label>
       <select
         class="cf-preset-select"
         :value="selectedPresetId"
         @change="applyPreset($event.target.value)"
       >
-        <option value="">{{ $tr('— custom —', '— 自定义 —') }}</option>
+        <option value="">{{ $tr('— custom —', '— 自定义 —', '— Benutzerdefiniert —') }}</option>
         <option
           v-for="b in presetBranches"
           :key="b.id"
@@ -29,7 +29,7 @@
 
     <!-- Trigger round picker -->
     <div class="cf-form-row">
-      <label class="cf-form-label">{{ $tr('Trigger round', '触发轮次') }}</label>
+      <label class="cf-form-label">{{ $tr('Trigger round', '触发轮次', 'Auslöserunde') }}</label>
       <input
         type="number"
         class="cf-form-input cf-form-input--narrow"
@@ -39,31 +39,31 @@
         :disabled="busy"
       />
       <span class="cf-form-meta">
-        {{ $tr('of', '共') }} {{ totalRounds || '?' }} · {{ $tr('currently at round', '当前在第') }} {{ currentRound }}
+        {{ $tr('of', '共', 'von') }} {{ totalRounds || '?' }} · {{ $tr('currently at round', '当前在第', 'aktuell in Runde') }} {{ currentRound }}
       </span>
     </div>
 
     <!-- Short label -->
     <div class="cf-form-row">
-      <label class="cf-form-label">{{ $tr('Label', '标签') }}</label>
+      <label class="cf-form-label">{{ $tr('Label', '标签', 'Bezeichnung') }}</label>
       <input
         type="text"
         class="cf-form-input"
         v-model="label"
         maxlength="80"
-        :placeholder="$tr('e.g. CEO resigns', '例如 CEO 辞职')"
+        :placeholder="$tr('e.g. CEO resigns', '例如 CEO 辞职', 'z. B. CEO tritt zurück')"
         :disabled="busy"
       />
     </div>
 
     <!-- Injection text -->
     <div class="cf-form-row cf-form-row--stack">
-      <label class="cf-form-label">{{ $tr('Injection (breaking-news style)', '注入内容(突发新闻风格)') }}</label>
+      <label class="cf-form-label">{{ $tr('Injection (breaking-news style)', '注入内容(突发新闻风格)', 'Injektion (Breaking-News-Stil)') }}</label>
       <textarea
         class="cf-form-textarea"
         v-model="injectionText"
         maxlength="2000"
-        :placeholder="$tr(`The board has just announced the CEO's resignation, effective immediately. The CFO steps in as interim lead.`, '董事会刚刚宣布 CEO 立即辞职,CFO 作为临时负责人接任。')"
+        :placeholder="$tr(`The board has just announced the CEO's resignation, effective immediately. The CFO steps in as interim lead.`, '董事会刚刚宣布 CEO 立即辞职,CFO 作为临时负责人接任。', 'Der Vorstand hat soeben den sofortigen Rücktritt des CEO bekanntgegeben. Der CFO übernimmt als Interims-Chef.')"
         rows="4"
         :disabled="busy"
       ></textarea>
@@ -74,11 +74,11 @@
 
     <div v-if="error" class="cf-error">{{ error }}</div>
     <div v-if="result" class="cf-result">
-      {{ $tr('Branch created:', '分支已创建:') }} <code>{{ result.simulation_id }}</code>
+      {{ $tr('Branch created:', '分支已创建:', 'Zweig erstellt:') }} <code>{{ result.simulation_id }}</code>
       <span v-if="result.config_diff?.counterfactual?.label">
         · "{{ result.config_diff.counterfactual.label }}"
       </span>
-      <button class="cf-open-btn" @click="openBranch">{{ $tr('Open →', '打开 →') }}</button>
+      <button class="cf-open-btn" @click="openBranch">{{ $tr('Open →', '打开 →', 'Öffnen →') }}</button>
     </div>
 
     <div class="cf-actions">
@@ -86,14 +86,14 @@
         class="cf-cancel"
         @click="$emit('close')"
         :disabled="busy"
-      >{{ $tr('Cancel', '取消') }}</button>
+      >{{ $tr('Cancel', '取消', 'Abbrechen') }}</button>
       <button
         class="cf-submit"
         :disabled="!canSubmit || busy"
         @click="submit"
       >
         <span v-if="busy" class="cf-spinner"></span>
-        {{ busy ? $tr('Forking…', '派生中…') : $tr('Fork branch →', '派生分支 →') }}
+        {{ busy ? $tr('Forking…', '派生中…', 'Wird verzweigt…') : $tr('Fork branch →', '派生分支 →', 'Zweig erstellen →') }}
       </button>
     </div>
   </div>
@@ -157,12 +157,12 @@ const submit = async () => {
       branchId: selectedPresetId.value || undefined,
     })
     if (!res.success) {
-      error.value = res.error || tr('Branch failed.', '分支创建失败。')
+      error.value = res.error || tr('Branch failed.', '分支创建失败。', 'Zweig-Erstellung fehlgeschlagen.')
       return
     }
     result.value = res.data
   } catch (err) {
-    error.value = err?.response?.data?.error || err?.message || tr('Branch failed.', '分支创建失败。')
+    error.value = err?.response?.data?.error || err?.message || tr('Branch failed.', '分支创建失败。', 'Zweig-Erstellung fehlgeschlagen.')
   } finally {
     busy.value = false
   }

@@ -8,7 +8,7 @@
           <!-- Report Header -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">{{ $tr('Prediction Report', '预测报告') }}</span>
+              <span class="report-tag">{{ $tr('Prediction Report', '预测报告', 'Vorhersagebericht') }}</span>
               <span class="report-id copyable" @click="copyReportId">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -58,7 +58,7 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">{{ $tr('Generating', '正在生成') }} {{ section.title }}...</span>
+                  <span class="loading-text">{{ $tr('Generating', '正在生成', 'Wird generiert') }} {{ section.title }}...</span>
                 </div>
               </div>
             </div>
@@ -72,7 +72,7 @@
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
           </div>
-          <span class="waiting-text">{{ $tr('Waiting for Report Agent...', '等待报告智能体...') }}</span>
+          <span class="waiting-text">{{ $tr('Waiting for Report Agent...', '等待报告智能体...', 'Warte auf Report Agent...') }}</span>
         </div>
       </div>
 
@@ -89,15 +89,15 @@
         <div class="workflow-overview" v-if="agentLogs.length > 0 || reportOutline">
           <div class="workflow-metrics">
             <div class="metric">
-              <span class="metric-label">{{ $tr('Sections', '章节') }}</span>
+              <span class="metric-label">{{ $tr('Sections', '章节', 'Abschnitte') }}</span>
               <span class="metric-value mono">{{ completedSections }}/{{ totalSections }}</span>
             </div>
             <div class="metric">
-              <span class="metric-label">{{ $tr('Elapsed', '已耗时') }}</span>
+              <span class="metric-label">{{ $tr('Elapsed', '已耗时', 'Verstrichene Zeit') }}</span>
               <span class="metric-value mono">{{ formatElapsedTime }}</span>
             </div>
             <div class="metric">
-              <span class="metric-label">{{ $tr('Tools', '工具') }}</span>
+              <span class="metric-label">{{ $tr('Tools', '工具', 'Tools') }}</span>
               <span class="metric-value mono">{{ totalToolCalls }}</span>
             </div>
             <div class="metric metric-right">
@@ -129,7 +129,7 @@
 
           <!-- Next Step Button - shown after completion -->
           <button v-if="isComplete" class="next-step-btn" @click="goToInteraction">
-            <span>{{ $tr('Enter Deep Interaction', '进入深度交互') }}</span>
+            <span>{{ $tr('Enter Deep Interaction', '进入深度交互', 'Zur vertieften Interaktion') }}</span>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
@@ -144,7 +144,7 @@
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>{{ isExporting === 'json' ? $tr('Exporting...', '导出中...') : $tr('Export JSON', '导出 JSON') }}</span>
+              <span>{{ isExporting === 'json' ? $tr('Exporting...', '导出中...', 'Wird exportiert...') : $tr('Export JSON', '导出 JSON', 'JSON exportieren') }}</span>
             </button>
             <button class="export-btn" @click="downloadExport('csv')" :disabled="isExporting">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
@@ -152,7 +152,7 @@
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>{{ isExporting === 'csv' ? $tr('Exporting...', '导出中...') : $tr('Export CSV', '导出 CSV') }}</span>
+              <span>{{ isExporting === 'csv' ? $tr('Exporting...', '导出中...', 'Wird exportiert...') : $tr('Export CSV', '导出 CSV', 'CSV exportieren') }}</span>
             </button>
           </div>
 
@@ -162,14 +162,14 @@
             class="regenerate-btn"
             @click="regenerateReport"
             :disabled="isRegenerating || !simulationId"
-            :title="$tr('Re-run the whole report from scratch', '从头重新生成整篇报告')"
+            :title="$tr('Re-run the whole report from scratch', '从头重新生成整篇报告', 'Gesamten Bericht neu generieren')"
           >
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" :class="{ spinning: isRegenerating }">
               <polyline points="23 4 23 10 17 10"></polyline>
               <polyline points="1 20 1 14 7 14"></polyline>
               <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
             </svg>
-            <span>{{ isRegenerating ? $tr('Regenerating...', '重新生成中...') : $tr('Regenerate Report', '重新生成报告') }}</span>
+            <span>{{ isRegenerating ? $tr('Regenerating...', '重新生成中...', 'Wird neu generiert...') : $tr('Regenerate Report', '重新生成报告', 'Bericht neu generieren') }}</span>
           </button>
 
           <div class="workflow-divider"></div>
@@ -202,11 +202,11 @@
                   <!-- Report Start -->
                   <template v-if="log.action === 'report_start'">
                     <div class="info-row">
-                      <span class="info-key">{{ $tr('Simulation', '模拟') }}</span>
+                      <span class="info-key">{{ $tr('Simulation', '模拟', 'Simulation') }}</span>
                       <span class="info-val mono">{{ log.details?.simulation_id }}</span>
                     </div>
                     <div class="info-row" v-if="log.details?.simulation_requirement">
-                      <span class="info-key">{{ $tr('Requirement', '需求') }}</span>
+                      <span class="info-key">{{ $tr('Requirement', '需求', 'Anforderung') }}</span>
                       <span class="info-val">{{ log.details.simulation_requirement }}</span>
                     </div>
                   </template>
@@ -218,7 +218,7 @@
                   <template v-if="log.action === 'planning_complete'">
                     <div class="status-message success">{{ log.details?.message }}</div>
                     <div class="outline-badge" v-if="log.details?.outline">
-                      {{ log.details.outline.sections?.length || 0 }} {{ $tr('sections planned', '个章节已规划') }}
+                      {{ log.details.outline.sections?.length || 0 }} {{ $tr('sections planned', '个章节已规划', 'Abschnitte geplant') }}
                     </div>
                   </template>
 
@@ -343,12 +343,12 @@
                   <!-- LLM Response -->
                   <template v-if="log.action === 'llm_response'">
                     <div class="llm-meta">
-                      <span class="meta-tag">{{ $tr('Iteration', '迭代') }} {{ log.details?.iteration }}</span>
+                      <span class="meta-tag">{{ $tr('Iteration', '迭代', 'Iteration') }} {{ log.details?.iteration }}</span>
                       <span class="meta-tag" :class="{ active: log.details?.has_tool_calls }">
-                        {{ $tr('Tools:', '工具:') }} {{ log.details?.has_tool_calls ? $tr('Yes', '是') : $tr('No', '否') }}
+                        {{ $tr('Tools:', '工具:', 'Tools:') }} {{ log.details?.has_tool_calls ? $tr('Yes', '是', 'Ja') : $tr('No', '否', 'Nein') }}
                       </span>
                       <span class="meta-tag" :class="{ active: log.details?.has_final_answer, 'final-answer': log.details?.has_final_answer }">
-                        {{ $tr('Final:', '最终:') }} {{ log.details?.has_final_answer ? $tr('Yes', '是') : $tr('No', '否') }}
+                        {{ $tr('Final:', '最终:', 'Abschließend:') }} {{ log.details?.has_final_answer ? $tr('Yes', '是', 'Ja') : $tr('No', '否', 'Nein') }}
                       </span>
                     </div>
                     <!-- Show special hint when this is the final answer -->
@@ -356,7 +356,7 @@
                       <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="20 6 9 17 4 12"></polyline>
                       </svg>
-                      <span>{{ $tr('Section', '章节') }} "{{ log.section_title }}" {{ $tr('content generated', '内容已生成') }}</span>
+                      <span>{{ $tr('Section', '章节', 'Abschnitt') }} "{{ log.section_title }}" {{ $tr('content generated', '内容已生成', 'Inhalt generiert') }}</span>
                     </div>
                     <div v-if="expandedLogs.has(log.timestamp) && log.details?.response" class="llm-content">
                       <pre>{{ log.details.response }}</pre>
@@ -370,7 +370,7 @@
                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                         <polyline points="22 4 12 14.01 9 11.01"></polyline>
                       </svg>
-                      <span>{{ $tr('Report Generation Complete', '报告生成完成') }}</span>
+                      <span>{{ $tr('Report Generation Complete', '报告生成完成', 'Berichterstellung abgeschlossen') }}</span>
                     </div>
                   </template>
                 </div>
@@ -383,17 +383,17 @@
                   <div class="footer-actions">
                     <!-- Tool Call: Show/Hide Params -->
                     <button v-if="log.action === 'tool_call' && log.details?.parameters" class="action-btn" @click.stop="toggleLogExpand(log)">
-                      {{ expandedLogs.has(log.timestamp) ? $tr('Hide Params', '隐藏参数') : $tr('Show Params', '显示参数') }}
+                      {{ expandedLogs.has(log.timestamp) ? $tr('Hide Params', '隐藏参数', 'Parameter verbergen') : $tr('Show Params', '显示参数', 'Parameter anzeigen') }}
                     </button>
 
                     <!-- Tool Result: Raw/Structured View -->
                     <button v-if="log.action === 'tool_result'" class="action-btn" @click.stop="toggleRawResult(log.timestamp, $event)">
-                      {{ showRawResult[log.timestamp] ? $tr('Structured View', '结构化视图') : $tr('Raw Output', '原始输出') }}
+                      {{ showRawResult[log.timestamp] ? $tr('Structured View', '结构化视图', 'Strukturierte Ansicht') : $tr('Raw Output', '原始输出', 'Rohausgabe') }}
                     </button>
 
                     <!-- LLM Response: Show/Hide Response -->
                     <button v-if="log.action === 'llm_response' && log.details?.response" class="action-btn" @click.stop="toggleLogExpand(log)">
-                      {{ expandedLogs.has(log.timestamp) ? $tr('Hide Response', '隐藏响应') : $tr('Show Response', '显示响应') }}
+                      {{ expandedLogs.has(log.timestamp) ? $tr('Hide Response', '隐藏响应', 'Antwort verbergen') : $tr('Show Response', '显示响应', 'Antwort anzeigen') }}
                     </button>
                   </div>
                 </div>
@@ -404,7 +404,7 @@
           <!-- Empty State -->
           <div v-if="agentLogs.length === 0 && !isComplete" class="workflow-empty">
             <div class="empty-pulse"></div>
-            <span>{{ $tr('Waiting for agent activity...', '等待智能体活动...') }}</span>
+            <span>{{ $tr('Waiting for agent activity...', '等待智能体活动...', 'Warte auf Agent-Aktivität...') }}</span>
           </div>
         </div>
       </div>
@@ -413,7 +413,7 @@
     <!-- Bottom Console Logs -->
     <div class="console-logs" :class="{ collapsed: consoleCollapsed }">
       <div class="log-header" @click="consoleCollapsed = !consoleCollapsed">
-        <span class="log-title">{{ $tr('CONSOLE OUTPUT', '控制台输出') }} <span class="log-toggle">{{ consoleCollapsed ? '▲' : '▼' }}</span></span>
+        <span class="log-title">{{ $tr('CONSOLE OUTPUT', '控制台输出', 'KONSOLENAUSGABE') }} <span class="log-toggle">{{ consoleCollapsed ? '▲' : '▼' }}</span></span>
         <span class="log-id">{{ reportId || 'NO_REPORT' }}</span>
       </div>
       <div v-show="!consoleCollapsed" class="log-content" ref="logContent">
@@ -465,14 +465,14 @@ const regenerateReport = async () => {
   if (!props.simulationId || isRegenerating.value) return
   isRegenerating.value = true
   try {
-    addLog(`${tr('Regenerating report…', '正在重新生成报告…')}`)
+    addLog(`${tr('Regenerating report…', '正在重新生成报告…', 'Bericht wird neu generiert…')}`)
     const res = await generateReport({
       simulation_id: props.simulationId,
       force_regenerate: true
     })
     if (res.success && res.data?.report_id) {
       const newId = res.data.report_id
-      addLog(`${tr('Report regeneration started', '报告重新生成已启动')}: ${newId}`)
+      addLog(`${tr('Report regeneration started', '报告重新生成已启动', 'Neugenerierung des Berichts gestartet')}: ${newId}`)
       if (newId === props.reportId) {
         // Same id (shouldn't happen — backend mints a new one) — hard reset.
         isComplete.value = false
@@ -487,10 +487,10 @@ const regenerateReport = async () => {
         router.push({ name: 'Report', params: { reportId: newId } })
       }
     } else {
-      addLog(`${tr('Failed to start regeneration', '重新生成启动失败')}: ${res.error || tr('Unknown error', '未知错误')}`)
+      addLog(`${tr('Failed to start regeneration', '重新生成启动失败', 'Neugenerierung konnte nicht gestartet werden')}: ${res.error || tr('Unknown error', '未知错误', 'Unbekannter Fehler')}`)
     }
   } catch (err) {
-    addLog(`${tr('Regeneration error', '重新生成出错')}: ${err.message}`)
+    addLog(`${tr('Regeneration error', '重新生成出错', 'Fehler bei der Neugenerierung')}: ${err.message}`)
   } finally {
     isRegenerating.value = false
   }
@@ -605,36 +605,42 @@ const toolConfig = {
   'insight_forge': {
     name: 'Deep Insight',
     nameZh: '深度洞察',
+    nameDe: 'Tiefe Analyse',
     color: 'purple',
     icon: 'lightbulb' // Lightbulb icon - represents insight
   },
   'panorama_search': {
     name: 'Panorama Search',
     nameZh: '全景检索',
+    nameDe: 'Panorama-Suche',
     color: 'blue',
     icon: 'globe' // Globe icon - represents panoramic search
   },
   'interview_agents': {
     name: 'Agent Interview',
     nameZh: '智能体访谈',
+    nameDe: 'Agenten-Interview',
     color: 'green',
     icon: 'users' // Users icon - represents conversation
   },
   'quick_search': {
     name: 'Quick Search',
     nameZh: '快速检索',
+    nameDe: 'Schnellsuche',
     color: 'orange',
     icon: 'zap' // Lightning icon - represents speed
   },
   'get_graph_statistics': {
     name: 'Graph Stats',
     nameZh: '图谱统计',
+    nameDe: 'Graph-Statistiken',
     color: 'cyan',
     icon: 'chart' // Chart icon - represents statistics
   },
   'get_entities_by_type': {
     name: 'Entity Query',
     nameZh: '实体查询',
+    nameDe: 'Entitäts-Abfrage',
     color: 'pink',
     icon: 'database' // Database icon - represents entities
   }
@@ -643,7 +649,7 @@ const toolConfig = {
 const getToolDisplayName = (toolName) => {
   const cfg = toolConfig[toolName]
   if (!cfg) return toolName
-  return tr(cfg.name, cfg.nameZh)
+  return tr(cfg.name, cfg.nameZh, cfg.nameDe)
 }
 
 const getToolColor = (toolName) => {
@@ -1087,30 +1093,30 @@ const InsightDisplay = {
     const formatSize = (length) => {
       if (!length) return ''
       if (length >= 1000) {
-        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符')}`
+        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符', 'k Zeichen')}`
       }
-      return `${length} ${tr('chars', '字符')}`
+      return `${length} ${tr('chars', '字符', 'Zeichen')}`
     }
 
     return () => h('div', { class: 'insight-display' }, [
       // Header Section - like interview header
       h('div', { class: 'insight-header' }, [
         h('div', { class: 'header-main' }, [
-          h('div', { class: 'header-title' }, tr('Deep Insight', '深度洞察')),
+          h('div', { class: 'header-title' }, tr('Deep Insight', '深度洞察', 'Tiefe Analyse')),
           h('div', { class: 'header-stats' }, [
             h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.stats.facts || props.result.facts.length),
-              h('span', { class: 'stat-label' }, tr('Facts', '事实'))
+              h('span', { class: 'stat-label' }, tr('Facts', '事实', 'Fakten'))
             ]),
             h('span', { class: 'stat-divider' }, '/'),
             h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.stats.entities || props.result.entities.length),
-              h('span', { class: 'stat-label' }, tr('Entities', '实体'))
+              h('span', { class: 'stat-label' }, tr('Entities', '实体', 'Entitäten'))
             ]),
             h('span', { class: 'stat-divider' }, '/'),
             h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.stats.relationships || props.result.relations.length),
-              h('span', { class: 'stat-label' }, tr('Relations', '关系'))
+              h('span', { class: 'stat-label' }, tr('Relations', '关系', 'Beziehungen'))
             ]),
             props.resultLength && h('span', { class: 'stat-divider' }, '·'),
             props.resultLength && h('span', { class: 'stat-size' }, formatSize(props.resultLength))
@@ -1118,7 +1124,7 @@ const InsightDisplay = {
         ]),
         props.result.query && h('div', { class: 'header-topic' }, props.result.query),
         props.result.simulationRequirement && h('div', { class: 'header-scenario' }, [
-          h('span', { class: 'scenario-label' }, tr('Prediction Scenario: ', '预测情景:')),
+          h('span', { class: 'scenario-label' }, tr('Prediction Scenario: ', '预测情景:', 'Vorhersageszenario: ')),
           h('span', { class: 'scenario-text' }, props.result.simulationRequirement)
         ])
       ]),
@@ -1129,25 +1135,25 @@ const InsightDisplay = {
           class: ['insight-tab', { active: activeTab.value === 'facts' }],
           onClick: () => { activeTab.value = 'facts' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Current Key Memories', '当前关键记忆')} (${props.result.facts.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Current Key Memories', '当前关键记忆', 'Aktuelle Schlüsselerinnerungen')} (${props.result.facts.length})`)
         ]),
         h('button', {
           class: ['insight-tab', { active: activeTab.value === 'entities' }],
           onClick: () => { activeTab.value = 'entities' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Core Entities', '核心实体')} (${props.result.entities.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Core Entities', '核心实体', 'Kernentitäten')} (${props.result.entities.length})`)
         ]),
         h('button', {
           class: ['insight-tab', { active: activeTab.value === 'relations' }],
           onClick: () => { activeTab.value = 'relations' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Relationship Chains', '关系链')} (${props.result.relations.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Relationship Chains', '关系链', 'Beziehungsketten')} (${props.result.relations.length})`)
         ]),
         props.result.subQueries.length > 0 && h('button', {
           class: ['insight-tab', { active: activeTab.value === 'subqueries' }],
           onClick: () => { activeTab.value = 'subqueries' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Sub-questions', '子问题')} (${props.result.subQueries.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Sub-questions', '子问题', 'Teilfragen')} (${props.result.subQueries.length})`)
         ])
       ]),
       
@@ -1156,8 +1162,8 @@ const InsightDisplay = {
         // Facts Tab
         activeTab.value === 'facts' && props.result.facts.length > 0 && h('div', { class: 'facts-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Latest key facts associated with temporal memory', '与时序记忆相关的最新关键事实')),
-            h('span', { class: 'panel-count' }, `${props.result.facts.length} ${tr('items', '项')}`)
+            h('span', { class: 'panel-title' }, tr('Latest key facts associated with temporal memory', '与时序记忆相关的最新关键事实', 'Neueste Schlüsselfakten aus dem Zeitgedächtnis')),
+            h('span', { class: 'panel-count' }, `${props.result.facts.length} ${tr('items', '项', 'Einträge')}`)
           ]),
           h('div', { class: 'facts-list' },
             (expandedFacts.value ? props.result.facts : props.result.facts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) =>
@@ -1170,35 +1176,35 @@ const InsightDisplay = {
           props.result.facts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedFacts.value = !expandedFacts.value }
-          }, expandedFacts.value ? `${tr('Collapse', '收起')} ▲` : `${tr('Expand All', '全部展开')} ${props.result.facts.length} ${tr('items', '项')} ▼`)
+          }, expandedFacts.value ? `${tr('Collapse', '收起', 'Einklappen')} ▲` : `${tr('Expand All', '全部展开', 'Alle ausklappen')} ${props.result.facts.length} ${tr('items', '项', 'Einträge')} ▼`)
         ]),
 
         // Entities Tab
         activeTab.value === 'entities' && props.result.entities.length > 0 && h('div', { class: 'entities-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Core Entities', '核心实体')),
-            h('span', { class: 'panel-count' }, `${props.result.entities.length} ${tr('entities', '个实体')}`)
+            h('span', { class: 'panel-title' }, tr('Core Entities', '核心实体', 'Kernentitäten')),
+            h('span', { class: 'panel-count' }, `${props.result.entities.length} ${tr('entities', '个实体', 'Entitäten')}`)
           ]),
           h('div', { class: 'entities-grid' },
             (expandedEntities.value ? props.result.entities : props.result.entities.slice(0, 12)).map((entity, i) =>
               h('div', { class: 'entity-tag', key: i, title: entity.summary || '' }, [
                 h('span', { class: 'entity-name' }, entity.name),
                 h('span', { class: 'entity-type' }, entity.type),
-                entity.relatedFactsCount > 0 && h('span', { class: 'entity-fact-count' }, `${entity.relatedFactsCount} ${tr('facts', '事实')}`)
+                entity.relatedFactsCount > 0 && h('span', { class: 'entity-fact-count' }, `${entity.relatedFactsCount} ${tr('facts', '事实', 'Fakten')}`)
               ])
             )
           ),
           props.result.entities.length > 12 && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedEntities.value = !expandedEntities.value }
-          }, expandedEntities.value ? `${tr('Collapse', '收起')} ▲` : `${tr('Expand All', '全部展开')} ${props.result.entities.length} ${tr('entities', '个实体')} ▼`)
+          }, expandedEntities.value ? `${tr('Collapse', '收起', 'Einklappen')} ▲` : `${tr('Expand All', '全部展开', 'Alle ausklappen')} ${props.result.entities.length} ${tr('entities', '个实体', 'Entitäten')} ▼`)
         ]),
 
         // Relations Tab
         activeTab.value === 'relations' && props.result.relations.length > 0 && h('div', { class: 'relations-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Relationship Chains', '关系链')),
-            h('span', { class: 'panel-count' }, `${props.result.relations.length} ${tr('items', '项')}`)
+            h('span', { class: 'panel-title' }, tr('Relationship Chains', '关系链', 'Beziehungsketten')),
+            h('span', { class: 'panel-count' }, `${props.result.relations.length} ${tr('items', '项', 'Einträge')}`)
           ]),
           h('div', { class: 'relations-list' },
             (expandedRelations.value ? props.result.relations : props.result.relations.slice(0, INITIAL_SHOW_COUNT)).map((rel, i) => 
@@ -1216,14 +1222,14 @@ const InsightDisplay = {
           props.result.relations.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedRelations.value = !expandedRelations.value }
-          }, expandedRelations.value ? `${tr('Collapse', '收起')} ▲` : `${tr('Expand All', '全部展开')} ${props.result.relations.length} ${tr('items', '项')} ▼`)
+          }, expandedRelations.value ? `${tr('Collapse', '收起', 'Einklappen')} ▲` : `${tr('Expand All', '全部展开', 'Alle ausklappen')} ${props.result.relations.length} ${tr('items', '项', 'Einträge')} ▼`)
         ]),
 
         // Sub-queries Tab
         activeTab.value === 'subqueries' && props.result.subQueries.length > 0 && h('div', { class: 'subqueries-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Drift query generated analysis sub-questions', '漂移查询生成的分析子问题')),
-            h('span', { class: 'panel-count' }, `${props.result.subQueries.length} ${tr('questions', '个问题')}`)
+            h('span', { class: 'panel-title' }, tr('Drift query generated analysis sub-questions', '漂移查询生成的分析子问题', 'Durch Drift-Abfrage generierte Analyse-Teilfragen')),
+            h('span', { class: 'panel-count' }, `${props.result.subQueries.length} ${tr('questions', '个问题', 'Fragen')}`)
           ]),
           h('div', { class: 'subqueries-list' },
             props.result.subQueries.map((sq, i) =>
@@ -1236,9 +1242,9 @@ const InsightDisplay = {
         ]),
 
         // Empty state
-        activeTab.value === 'facts' && props.result.facts.length === 0 && h('div', { class: 'empty-state' }, tr('No current key memories', '暂无当前关键记忆')),
-        activeTab.value === 'entities' && props.result.entities.length === 0 && h('div', { class: 'empty-state' }, tr('No core entities', '暂无核心实体')),
-        activeTab.value === 'relations' && props.result.relations.length === 0 && h('div', { class: 'empty-state' }, tr('No relationship chains', '暂无关系链'))
+        activeTab.value === 'facts' && props.result.facts.length === 0 && h('div', { class: 'empty-state' }, tr('No current key memories', '暂无当前关键记忆', 'Keine aktuellen Schlüsselerinnerungen')),
+        activeTab.value === 'entities' && props.result.entities.length === 0 && h('div', { class: 'empty-state' }, tr('No core entities', '暂无核心实体', 'Keine Kernentitäten')),
+        activeTab.value === 'relations' && props.result.relations.length === 0 && h('div', { class: 'empty-state' }, tr('No relationship chains', '暂无关系链', 'Keine Beziehungsketten'))
       ])
     ])
   }
@@ -1258,25 +1264,25 @@ const PanoramaDisplay = {
     const formatSize = (length) => {
       if (!length) return ''
       if (length >= 1000) {
-        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符')}`
+        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符', 'k Zeichen')}`
       }
-      return `${length} ${tr('chars', '字符')}`
+      return `${length} ${tr('chars', '字符', 'Zeichen')}`
     }
-    
+
     return () => h('div', { class: 'panorama-display' }, [
       // Header Section
       h('div', { class: 'panorama-header' }, [
         h('div', { class: 'header-main' }, [
-          h('div', { class: 'header-title' }, tr('Panorama Search', '全景检索')),
+          h('div', { class: 'header-title' }, tr('Panorama Search', '全景检索', 'Panorama-Suche')),
           h('div', { class: 'header-stats' }, [
             h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.stats.nodes),
-              h('span', { class: 'stat-label' }, tr('Nodes', '节点'))
+              h('span', { class: 'stat-label' }, tr('Nodes', '节点', 'Knoten'))
             ]),
             h('span', { class: 'stat-divider' }, '/'),
             h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.stats.edges),
-              h('span', { class: 'stat-label' }, tr('Edges', '边'))
+              h('span', { class: 'stat-label' }, tr('Edges', '边', 'Kanten'))
             ]),
             props.resultLength && h('span', { class: 'stat-divider' }, '·'),
             props.resultLength && h('span', { class: 'stat-size' }, formatSize(props.resultLength))
@@ -1291,19 +1297,19 @@ const PanoramaDisplay = {
           class: ['panorama-tab', { active: activeTab.value === 'active' }],
           onClick: () => { activeTab.value = 'active' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Current Valid Memories', '当前有效记忆')} (${props.result.activeFacts.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Current Valid Memories', '当前有效记忆', 'Aktuelle gültige Erinnerungen')} (${props.result.activeFacts.length})`)
         ]),
         h('button', {
           class: ['panorama-tab', { active: activeTab.value === 'historical' }],
           onClick: () => { activeTab.value = 'historical' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Historical Memories', '历史记忆')} (${props.result.historicalFacts.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Historical Memories', '历史记忆', 'Historische Erinnerungen')} (${props.result.historicalFacts.length})`)
         ]),
         h('button', {
           class: ['panorama-tab', { active: activeTab.value === 'entities' }],
           onClick: () => { activeTab.value = 'entities' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Involved Entities', '相关实体')} (${props.result.entities.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Involved Entities', '相关实体', 'Beteiligte Entitäten')} (${props.result.entities.length})`)
         ])
       ]),
       
@@ -1312,8 +1318,8 @@ const PanoramaDisplay = {
         // Active Facts Tab
         activeTab.value === 'active' && h('div', { class: 'facts-panel active-facts' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Current Valid Memories', '当前有效记忆')),
-            h('span', { class: 'panel-count' }, `${props.result.activeFacts.length} ${tr('items', '项')}`)
+            h('span', { class: 'panel-title' }, tr('Current Valid Memories', '当前有效记忆', 'Aktuelle gültige Erinnerungen')),
+            h('span', { class: 'panel-count' }, `${props.result.activeFacts.length} ${tr('items', '项', 'Einträge')}`)
           ]),
           props.result.activeFacts.length > 0 ? h('div', { class: 'facts-list' },
             (expandedActive.value ? props.result.activeFacts : props.result.activeFacts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) =>
@@ -1322,18 +1328,18 @@ const PanoramaDisplay = {
                 h('div', { class: 'fact-content' }, fact)
               ])
             )
-          ) : h('div', { class: 'empty-state' }, tr('No current valid memories', '暂无当前有效记忆')),
+          ) : h('div', { class: 'empty-state' }, tr('No current valid memories', '暂无当前有效记忆', 'Keine aktuellen gültigen Erinnerungen')),
           props.result.activeFacts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedActive.value = !expandedActive.value }
-          }, expandedActive.value ? `${tr('Collapse', '收起')} ▲` : `${tr('Expand All', '全部展开')} ${props.result.activeFacts.length} ${tr('items', '项')} ▼`)
+          }, expandedActive.value ? `${tr('Collapse', '收起', 'Einklappen')} ▲` : `${tr('Expand All', '全部展开', 'Alle ausklappen')} ${props.result.activeFacts.length} ${tr('items', '项', 'Einträge')} ▼`)
         ]),
 
         // Historical Facts Tab
         activeTab.value === 'historical' && h('div', { class: 'facts-panel historical-facts' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Historical Memories', '历史记忆')),
-            h('span', { class: 'panel-count' }, `${props.result.historicalFacts.length} ${tr('items', '项')}`)
+            h('span', { class: 'panel-title' }, tr('Historical Memories', '历史记忆', 'Historische Erinnerungen')),
+            h('span', { class: 'panel-count' }, `${props.result.historicalFacts.length} ${tr('items', '项', 'Einträge')}`)
           ]),
           props.result.historicalFacts.length > 0 ? h('div', { class: 'facts-list' },
             (expandedHistorical.value ? props.result.historicalFacts : props.result.historicalFacts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) => 
@@ -1354,18 +1360,18 @@ const PanoramaDisplay = {
                 ])
               ])
             )
-          ) : h('div', { class: 'empty-state' }, tr('No historical memories', '暂无历史记忆')),
+          ) : h('div', { class: 'empty-state' }, tr('No historical memories', '暂无历史记忆', 'Keine historischen Erinnerungen')),
           props.result.historicalFacts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedHistorical.value = !expandedHistorical.value }
-          }, expandedHistorical.value ? `${tr('Collapse', '收起')} ▲` : `${tr('Expand All', '全部展开')} ${props.result.historicalFacts.length} ${tr('items', '项')} ▼`)
+          }, expandedHistorical.value ? `${tr('Collapse', '收起', 'Einklappen')} ▲` : `${tr('Expand All', '全部展开', 'Alle ausklappen')} ${props.result.historicalFacts.length} ${tr('items', '项', 'Einträge')} ▼`)
         ]),
 
         // Entities Tab
         activeTab.value === 'entities' && h('div', { class: 'entities-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Involved Entities', '相关实体')),
-            h('span', { class: 'panel-count' }, `${props.result.entities.length} ${tr('entities', '个实体')}`)
+            h('span', { class: 'panel-title' }, tr('Involved Entities', '相关实体', 'Beteiligte Entitäten')),
+            h('span', { class: 'panel-count' }, `${props.result.entities.length} ${tr('entities', '个实体', 'Entitäten')}`)
           ]),
           props.result.entities.length > 0 ? h('div', { class: 'entities-grid' },
             (expandedEntities.value ? props.result.entities : props.result.entities.slice(0, 8)).map((entity, i) =>
@@ -1374,11 +1380,11 @@ const PanoramaDisplay = {
                 entity.type && h('span', { class: 'entity-type' }, entity.type)
               ])
             )
-          ) : h('div', { class: 'empty-state' }, tr('No involved entities', '暂无相关实体')),
+          ) : h('div', { class: 'empty-state' }, tr('No involved entities', '暂无相关实体', 'Keine beteiligten Entitäten')),
           props.result.entities.length > 8 && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedEntities.value = !expandedEntities.value }
-          }, expandedEntities.value ? `${tr('Collapse', '收起')} ▲` : `${tr('Expand All', '全部展开')} ${props.result.entities.length} ${tr('entities', '个实体')} ▼`)
+          }, expandedEntities.value ? `${tr('Collapse', '收起', 'Einklappen')} ▲` : `${tr('Expand All', '全部展开', 'Alle ausklappen')} ${props.result.entities.length} ${tr('entities', '个实体', 'Entitäten')} ▼`)
         ])
       ])
     ])
@@ -1393,11 +1399,11 @@ const InterviewDisplay = {
     const formatSize = (length) => {
       if (!length) return ''
       if (length >= 1000) {
-        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符')}`
+        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符', 'k Zeichen')}`
       }
-      return `${length} ${tr('chars', '字符')}`
+      return `${length} ${tr('chars', '字符', 'Zeichen')}`
     }
-    
+
     // Clean quote text - remove leading list numbers to avoid double numbering
     const cleanQuoteText = (text) => {
       if (!text) return ''
@@ -1538,16 +1544,16 @@ const InterviewDisplay = {
       // Header Section
       h('div', { class: 'interview-header' }, [
         h('div', { class: 'header-main' }, [
-          h('div', { class: 'header-title' }, tr('Agent Interview', '智能体访谈')),
+          h('div', { class: 'header-title' }, tr('Agent Interview', '智能体访谈', 'Agenten-Interview')),
           h('div', { class: 'header-stats' }, [
             h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.successCount || props.result.interviews.length),
-              h('span', { class: 'stat-label' }, tr('Interviewed', '已访谈'))
+              h('span', { class: 'stat-label' }, tr('Interviewed', '已访谈', 'Befragt'))
             ]),
             props.result.totalCount > 0 && h('span', { class: 'stat-divider' }, '/'),
             props.result.totalCount > 0 && h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.totalCount),
-              h('span', { class: 'stat-label' }, tr('Total', '总数'))
+              h('span', { class: 'stat-label' }, tr('Total', '总数', 'Gesamt'))
             ]),
             props.resultLength && h('span', { class: 'stat-divider' }, '·'),
             props.resultLength && h('span', { class: 'stat-size' }, formatSize(props.resultLength))
@@ -1564,7 +1570,7 @@ const InterviewDisplay = {
           onClick: () => { activeIndex.value = i }
         }, [
           h('span', { class: 'tab-avatar' }, interview.name ? interview.name.charAt(0) : (i + 1)),
-          h('span', { class: 'tab-name' }, interview.title || interview.name || `${tr('Agent', '智能体')} ${i + 1}`)
+          h('span', { class: 'tab-name' }, interview.title || interview.name || `${tr('Agent', '智能体', 'Agent')} ${i + 1}`)
         ]))
       ),
       
@@ -1574,7 +1580,7 @@ const InterviewDisplay = {
         h('div', { class: 'agent-profile' }, [
           h('div', { class: 'profile-avatar' }, props.result.interviews[activeIndex.value]?.name?.charAt(0) || 'A'),
           h('div', { class: 'profile-info' }, [
-            h('div', { class: 'profile-name' }, props.result.interviews[activeIndex.value]?.name || tr('Agent', '智能体')),
+            h('div', { class: 'profile-name' }, props.result.interviews[activeIndex.value]?.name || tr('Agent', '智能体', 'Agent')),
             h('div', { class: 'profile-role' }, props.result.interviews[activeIndex.value]?.role || ''),
             props.result.interviews[activeIndex.value]?.bio && h('div', { class: 'profile-bio' }, props.result.interviews[activeIndex.value].bio)
           ])
@@ -1582,7 +1588,7 @@ const InterviewDisplay = {
 
         // Selection Reason
         props.result.interviews[activeIndex.value]?.selectionReason && h('div', { class: 'selection-reason' }, [
-          h('div', { class: 'reason-label' }, tr('Selection Reason', '选择理由')),
+          h('div', { class: 'reason-label' }, tr('Selection Reason', '选择理由', 'Auswahlgrund')),
           h('div', { class: 'reason-content' }, props.result.interviews[activeIndex.value].selectionReason)
         ]),
         
@@ -1590,7 +1596,7 @@ const InterviewDisplay = {
         h('div', { class: 'qa-thread' }, 
           (props.result.interviews[activeIndex.value]?.questions?.length > 0 
             ? props.result.interviews[activeIndex.value].questions 
-            : [props.result.interviews[activeIndex.value]?.question || tr('No question available', '暂无问题')]
+            : [props.result.interviews[activeIndex.value]?.question || tr('No question available', '暂无问题', 'Keine Frage verfügbar')]
           ).map((question, qIdx) => {
             const interview = props.result.interviews[activeIndex.value]
             const currentPlatform = getPlatformTab(activeIndex.value, qIdx)
@@ -1605,7 +1611,7 @@ const InterviewDisplay = {
               h('div', { class: 'qa-question' }, [
                 h('div', { class: 'qa-badge q-badge' }, `Q${qIdx + 1}`),
                 h('div', { class: 'qa-content' }, [
-                  h('div', { class: 'qa-sender' }, tr('Interviewer', '访谈者')),
+                  h('div', { class: 'qa-sender' }, tr('Interviewer', '访谈者', 'Interviewer')),
                   h('div', { class: 'qa-text' }, question)
                 ])
               ]),
@@ -1615,7 +1621,7 @@ const InterviewDisplay = {
                 h('div', { class: 'qa-badge a-badge' }, `A${qIdx + 1}`),
                 h('div', { class: 'qa-content' }, [
                   h('div', { class: 'qa-answer-header' }, [
-                    h('div', { class: 'qa-sender' }, interview?.name || tr('Agent', '智能体')),
+                    h('div', { class: 'qa-sender' }, interview?.name || tr('Agent', '智能体', 'Agent')),
                     // Dual platform toggle buttons (only shown when both platforms have real answers)
                     hasDualPlatform && h('div', { class: 'platform-switch' }, [
                       h('button', {
@@ -1652,7 +1658,7 @@ const InterviewDisplay = {
                   !isPlaceholder && answerText.length > 400 && h('button', {
                     class: 'expand-answer-btn',
                     onClick: () => toggleAnswer(expandKey)
-                  }, isExpanded ? tr('Show Less', '收起') : tr('Show More', '查看更多'))
+                  }, isExpanded ? tr('Show Less', '收起', 'Weniger anzeigen') : tr('Show More', '查看更多', 'Mehr anzeigen'))
                 ])
               ])
             ])
@@ -1661,7 +1667,7 @@ const InterviewDisplay = {
         
         // Key Quotes Section
         props.result.interviews[activeIndex.value]?.quotes?.length > 0 && h('div', { class: 'quotes-section' }, [
-          h('div', { class: 'quotes-header' }, tr('Key Quotes', '关键引述')),
+          h('div', { class: 'quotes-header' }, tr('Key Quotes', '关键引述', 'Schlüsselzitate')),
           h('div', { class: 'quotes-list' },
             props.result.interviews[activeIndex.value].quotes.slice(0, 3).map((quote, qi) => {
               const cleanedQuote = cleanQuoteText(quote)
@@ -1678,7 +1684,7 @@ const InterviewDisplay = {
 
       // Summary Section (Collapsible)
       props.result.summary && h('div', { class: 'summary-section' }, [
-        h('div', { class: 'summary-header' }, tr('Interview Summary', '访谈总结')),
+        h('div', { class: 'summary-header' }, tr('Interview Summary', '访谈总结', 'Interview-Zusammenfassung')),
         h('div', { 
           class: 'summary-content',
           innerHTML: renderMarkdown(props.result.summary.length > 500 ? props.result.summary.substring(0, 500) + '...' : props.result.summary)
@@ -1705,27 +1711,27 @@ const QuickSearchDisplay = {
     const formatSize = (length) => {
       if (!length) return ''
       if (length >= 1000) {
-        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符')}`
+        return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符', 'k Zeichen')}`
       }
-      return `${length} ${tr('chars', '字符')}`
+      return `${length} ${tr('chars', '字符', 'Zeichen')}`
     }
-    
+
     return () => h('div', { class: 'quick-search-display' }, [
       // Header Section
       h('div', { class: 'quicksearch-header' }, [
         h('div', { class: 'header-main' }, [
-          h('div', { class: 'header-title' }, tr('Quick Search', '快速检索')),
+          h('div', { class: 'header-title' }, tr('Quick Search', '快速检索', 'Schnellsuche')),
           h('div', { class: 'header-stats' }, [
             h('span', { class: 'stat-item' }, [
               h('span', { class: 'stat-value' }, props.result.count || props.result.facts.length),
-              h('span', { class: 'stat-label' }, tr('Results', '结果'))
+              h('span', { class: 'stat-label' }, tr('Results', '结果', 'Ergebnisse'))
             ]),
             props.resultLength && h('span', { class: 'stat-divider' }, '·'),
             props.resultLength && h('span', { class: 'stat-size' }, formatSize(props.resultLength))
           ])
         ]),
         props.result.query && h('div', { class: 'header-query' }, [
-          h('span', { class: 'query-label' }, tr('Search: ', '搜索:')),
+          h('span', { class: 'query-label' }, tr('Search: ', '搜索:', 'Suche: ')),
           h('span', { class: 'query-text' }, props.result.query)
         ])
       ]),
@@ -1736,19 +1742,19 @@ const QuickSearchDisplay = {
           class: ['quicksearch-tab', { active: activeTab.value === 'facts' }],
           onClick: () => { activeTab.value = 'facts' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Facts', '事实')} (${props.result.facts.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Facts', '事实', 'Fakten')} (${props.result.facts.length})`)
         ]),
         hasEdges.value && h('button', {
           class: ['quicksearch-tab', { active: activeTab.value === 'edges' }],
           onClick: () => { activeTab.value = 'edges' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Relationships', '关系')} (${props.result.edges.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Relationships', '关系', 'Beziehungen')} (${props.result.edges.length})`)
         ]),
         hasNodes.value && h('button', {
           class: ['quicksearch-tab', { active: activeTab.value === 'nodes' }],
           onClick: () => { activeTab.value = 'nodes' }
         }, [
-          h('span', { class: 'tab-label' }, `${tr('Nodes', '节点')} (${props.result.nodes.length})`)
+          h('span', { class: 'tab-label' }, `${tr('Nodes', '节点', 'Knoten')} (${props.result.nodes.length})`)
         ])
       ]),
 
@@ -1757,8 +1763,8 @@ const QuickSearchDisplay = {
         // Facts (always show if no tabs, or when facts tab is active)
         ((!showTabs.value) || activeTab.value === 'facts') && h('div', { class: 'facts-panel' }, [
           !showTabs.value && h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Search Results', '搜索结果')),
-            h('span', { class: 'panel-count' }, `${props.result.facts.length} ${tr('items', '项')}`)
+            h('span', { class: 'panel-title' }, tr('Search Results', '搜索结果', 'Suchergebnisse')),
+            h('span', { class: 'panel-count' }, `${props.result.facts.length} ${tr('items', '项', 'Einträge')}`)
           ]),
           props.result.facts.length > 0 ? h('div', { class: 'facts-list' },
             (expandedFacts.value ? props.result.facts : props.result.facts.slice(0, INITIAL_SHOW_COUNT)).map((fact, i) =>
@@ -1767,18 +1773,18 @@ const QuickSearchDisplay = {
                 h('div', { class: 'fact-content' }, fact)
               ])
             )
-          ) : h('div', { class: 'empty-state' }, tr('No relevant results found', '未找到相关结果')),
+          ) : h('div', { class: 'empty-state' }, tr('No relevant results found', '未找到相关结果', 'Keine relevanten Ergebnisse gefunden')),
           props.result.facts.length > INITIAL_SHOW_COUNT && h('button', {
             class: 'expand-btn',
             onClick: () => { expandedFacts.value = !expandedFacts.value }
-          }, expandedFacts.value ? `${tr('Collapse', '收起')} ▲` : `${tr('Expand All', '全部展开')} ${props.result.facts.length} ${tr('items', '项')} ▼`)
+          }, expandedFacts.value ? `${tr('Collapse', '收起', 'Einklappen')} ▲` : `${tr('Expand All', '全部展开', 'Alle ausklappen')} ${props.result.facts.length} ${tr('items', '项', 'Einträge')} ▼`)
         ]),
 
         // Edges Tab
         activeTab.value === 'edges' && hasEdges.value && h('div', { class: 'edges-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Related Relationships', '相关关系')),
-            h('span', { class: 'panel-count' }, `${props.result.edges.length} ${tr('items', '项')}`)
+            h('span', { class: 'panel-title' }, tr('Related Relationships', '相关关系', 'Verwandte Beziehungen')),
+            h('span', { class: 'panel-count' }, `${props.result.edges.length} ${tr('items', '项', 'Einträge')}`)
           ]),
           h('div', { class: 'edges-list' },
             props.result.edges.map((edge, i) => 
@@ -1798,8 +1804,8 @@ const QuickSearchDisplay = {
         // Nodes Tab
         activeTab.value === 'nodes' && hasNodes.value && h('div', { class: 'nodes-panel' }, [
           h('div', { class: 'panel-header' }, [
-            h('span', { class: 'panel-title' }, tr('Related Nodes', '相关节点')),
-            h('span', { class: 'panel-count' }, `${props.result.nodes.length} ${tr('nodes', '个节点')}`)
+            h('span', { class: 'panel-title' }, tr('Related Nodes', '相关节点', 'Verwandte Knoten')),
+            h('span', { class: 'panel-count' }, `${props.result.nodes.length} ${tr('nodes', '个节点', 'Knoten')}`)
           ]),
           h('div', { class: 'nodes-grid' },
             props.result.nodes.map((node, i) => 
@@ -1823,9 +1829,9 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (isComplete.value) return tr('Completed', '已完成')
-  if (agentLogs.value.length > 0) return tr('Generating...', '生成中...')
-  return tr('Waiting', '等待中')
+  if (isComplete.value) return tr('Completed', '已完成', 'Abgeschlossen')
+  if (agentLogs.value.length > 0) return tr('Generating...', '生成中...', 'Wird generiert...')
+  return tr('Waiting', '等待中', 'Warten')
 })
 
 const totalSections = computed(() => {
@@ -1891,7 +1897,7 @@ const activeStep = computed(() => {
   if (doneSteps.length > 0) return doneSteps[doneSteps.length - 1]
   
   // Otherwise return the first step
-  return steps[0] || { noLabel: '--', title: tr('Waiting to Start', '等待开始'), status: 'todo', meta: '' }
+  return steps[0] || { noLabel: '--', title: tr('Waiting to Start', '等待开始', 'Warten auf Start'), status: 'todo', meta: '' }
 })
 
 const workflowSteps = computed(() => {
@@ -1902,9 +1908,9 @@ const workflowSteps = computed(() => {
   steps.push({
     key: 'planning',
     noLabel: 'PL',
-    title: tr('Planning / Outline', '规划 / 大纲'),
+    title: tr('Planning / Outline', '规划 / 大纲', 'Planung / Gliederung'),
     status: planningStatus,
-    meta: planningStatus === 'active' ? tr('IN PROGRESS', '进行中') : ''
+    meta: planningStatus === 'active' ? tr('IN PROGRESS', '进行中', 'IN BEARBEITUNG') : ''
   })
 
   // Sections (if outline exists)
@@ -1920,7 +1926,7 @@ const workflowSteps = computed(() => {
       noLabel: String(idx).padStart(2, '0'),
       title: section.title,
       status,
-      meta: status === 'active' ? tr('IN PROGRESS', '进行中') : ''
+      meta: status === 'active' ? tr('IN PROGRESS', '进行中', 'IN BEARBEITUNG') : ''
     })
   })
 
@@ -1929,9 +1935,9 @@ const workflowSteps = computed(() => {
   steps.push({
     key: 'complete',
     noLabel: 'OK',
-    title: tr('Complete', '完成'),
+    title: tr('Complete', '完成', 'Abgeschlossen'),
     status: completeStatus,
-    meta: completeStatus === 'active' ? tr('FINALIZING', '收尾中') : ''
+    meta: completeStatus === 'active' ? tr('FINALIZING', '收尾中', 'WIRD ABGESCHLOSSEN') : ''
   })
 
   return steps
@@ -1971,8 +1977,8 @@ const formatParams = (params) => {
 
 const formatResultSize = (length) => {
   if (!length) return ''
-  if (length < 1000) return `${length} ${tr('chars', '字符')}`
-  return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符')}`
+  if (length < 1000) return `${length} ${tr('chars', '字符', 'Zeichen')}`
+  return `${(length / 1000).toFixed(1)}${tr('k chars', 'k 字符', 'k Zeichen')}`
 }
 
 const getTimelineItemClass = (log, idx, total) => {
@@ -1995,16 +2001,16 @@ const getConnectorClass = (log, idx, total) => {
 
 const getActionLabel = (action) => {
   const labels = {
-    'report_start': tr('Report Started', '报告已启动'),
-    'planning_start': tr('Planning', '规划中'),
-    'planning_complete': tr('Plan Complete', '规划完成'),
-    'section_start': tr('Section Start', '章节开始'),
-    'section_content': tr('Content Ready', '内容就绪'),
-    'section_complete': tr('Section Done', '章节完成'),
-    'tool_call': tr('Tool Call', '工具调用'),
-    'tool_result': tr('Tool Result', '工具结果'),
-    'llm_response': tr('LLM Response', 'LLM 响应'),
-    'report_complete': tr('Complete', '完成')
+    'report_start': tr('Report Started', '报告已启动', 'Bericht gestartet'),
+    'planning_start': tr('Planning', '规划中', 'Planung'),
+    'planning_complete': tr('Plan Complete', '规划完成', 'Planung abgeschlossen'),
+    'section_start': tr('Section Start', '章节开始', 'Abschnitt gestartet'),
+    'section_content': tr('Content Ready', '内容就绪', 'Inhalt bereit'),
+    'section_complete': tr('Section Done', '章节完成', 'Abschnitt abgeschlossen'),
+    'tool_call': tr('Tool Call', '工具调用', 'Tool-Aufruf'),
+    'tool_result': tr('Tool Result', '工具结果', 'Tool-Ergebnis'),
+    'llm_response': tr('LLM Response', 'LLM 响应', 'LLM-Antwort'),
+    'report_complete': tr('Complete', '完成', 'Abgeschlossen')
   }
   return labels[action] || action
 }
@@ -2177,7 +2183,7 @@ const stopPolling = () => {
 // Lifecycle
 onMounted(() => {
   if (props.reportId) {
-    addLog(`${tr('Report Agent initialized', '报告智能体已初始化')}: ${props.reportId}`)
+    addLog(`${tr('Report Agent initialized', '报告智能体已初始化', 'Report Agent initialisiert')}: ${props.reportId}`)
     startPolling()
   }
 })

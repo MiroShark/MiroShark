@@ -1,15 +1,15 @@
 <template>
   <div v-if="countries.length > 0" class="country-picker">
     <label class="cp-row">
-      <span class="cp-label">{{ $tr('Demographic country', '人口国别') }}</span>
+      <span class="cp-label">{{ $tr('Demographic country', '人口国别', 'Demografisches Land') }}</span>
       <select
         class="cp-select"
         v-model="selectedCode"
         :disabled="disabled"
         @change="onCountryChange"
-        :title="$tr('Anchor each agent in a real census-grounded persona row from the chosen country (optional)', '可选:让每个智能体的人物画像基于所选国家真实的人口统计数据')"
+        :title="$tr('Anchor each agent in a real census-grounded persona row from the chosen country (optional)', '可选:让每个智能体的人物画像基于所选国家真实的人口统计数据', 'Jeden Agenten optional in einer realen volkszählungsbasierten Persona des gewählten Landes verankern (optional)')"
       >
-        <option value="">{{ $tr('None (graph-only)', '不启用(仅用图谱)') }}</option>
+        <option value="">{{ $tr('None (graph-only)', '不启用(仅用图谱)', 'Keine (nur Graph)') }}</option>
         <option v-for="c in countries" :key="c.code" :value="c.code">
           {{ c.flag_emoji }} {{ c.name }}
         </option>
@@ -25,7 +25,7 @@
           v-if="selectedGeography.length > 0"
           :disabled="disabled"
           @click="selectedGeography = []; emitValue()"
-        >{{ $tr('Clear', '清除') }}</button>
+        >{{ $tr('Clear', '清除', 'Zurücksetzen') }}</button>
       </div>
       <div class="cp-chips">
         <button
@@ -39,14 +39,15 @@
         >{{ v }}</button>
       </div>
       <p v-if="selectedGeography.length === 0" class="cp-hint">
-        {{ $tr('No filter → sample across all regions.', '不选 → 在所有地区抽样') }}
+        {{ $tr('No filter → sample across all regions.', '不选 → 在所有地区抽样', 'Kein Filter → Stichprobe aus allen Regionen.') }}
       </p>
     </div>
 
     <p v-if="selectedCode" class="cp-foot-hint">
       {{ $tr(
         'First run downloads the Nemotron dataset (~hundreds of MB) into the backend cache.',
-        '首次运行会将 Nemotron 数据集(数百 MB)下载到后端缓存。'
+        '首次运行会将 Nemotron 数据集(数百 MB)下载到后端缓存。',
+        'Beim ersten Ausführen wird der Nemotron-Datensatz (~mehrere hundert MB) in den Backend-Cache heruntergeladen.'
       ) }}
     </p>
   </div>
@@ -79,7 +80,7 @@ const selectedGeography = ref(
 )
 
 const geographyValues = computed(() => geoCache.value[selectedCode.value]?.values || [])
-const geographyLabel = computed(() => geoCache.value[selectedCode.value]?.label || tr('Geography', '地区'))
+const geographyLabel = computed(() => geoCache.value[selectedCode.value]?.label || tr('Geography', '地区', 'Geografie'))
 
 onMounted(async () => {
   try {
@@ -108,12 +109,12 @@ async function loadCountryDetail(code) {
     const res = await getCountry(code)
     if (res?.success) {
       geoCache.value[code] = {
-        label: res.data?.geography?.label || tr('Geography', '地区'),
+        label: res.data?.geography?.label || tr('Geography', '地区', 'Geografie'),
         values: res.data?.geography?.values || [],
       }
     }
   } catch (err) {
-    geoCache.value[code] = { label: tr('Geography', '地区'), values: [] }
+    geoCache.value[code] = { label: tr('Geography', '地区', 'Geografie'), values: [] }
   }
 }
 

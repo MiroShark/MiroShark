@@ -9,11 +9,11 @@
         </div>
       </div>
       <div class="header-center">
-        <span class="page-tag">{{ $tr('Simulation Comparison', '模拟对比') }}</span>
+        <span class="page-tag">{{ $tr('Simulation Comparison', '模拟对比', 'Simulationsvergleich') }}</span>
       </div>
       <div class="header-right">
         <button v-if="data" class="download-btn" @click="downloadComparison">
-          {{ $tr('↓ Export JSON', '↓ 导出 JSON') }}
+          {{ $tr('↓ Export JSON', '↓ 导出 JSON', '↓ JSON exportieren') }}
         </button>
         <LocaleToggle />
       </div>
@@ -22,21 +22,21 @@
     <!-- Simulation Selector -->
     <div class="selector-bar">
       <div class="selector-group">
-        <label class="selector-label">{{ $tr('Simulation A', '模拟 A') }}</label>
+        <label class="selector-label">{{ $tr('Simulation A', '模拟 A', 'Simulation A') }}</label>
         <select class="sim-select" v-model="selectedId1" @change="onSelectionChange">
-          <option value="">{{ $tr('Select simulation…', '选择模拟…') }}</option>
+          <option value="">{{ $tr('Select simulation…', '选择模拟…', 'Simulation auswählen…') }}</option>
           <option v-for="s in simulations" :key="s.simulation_id" :value="s.simulation_id">
             {{ formatId(s.simulation_id) }} — {{ s.status }}
           </option>
         </select>
       </div>
 
-      <div class="vs-badge">{{ $tr('VS', '对比') }}</div>
+      <div class="vs-badge">{{ $tr('VS', '对比', 'VS') }}</div>
 
       <div class="selector-group">
-        <label class="selector-label">{{ $tr('Simulation B', '模拟 B') }}</label>
+        <label class="selector-label">{{ $tr('Simulation B', '模拟 B', 'Simulation B') }}</label>
         <select class="sim-select" v-model="selectedId2" @change="onSelectionChange">
-          <option value="">{{ $tr('Select simulation…', '选择模拟…') }}</option>
+          <option value="">{{ $tr('Select simulation…', '选择模拟…', 'Simulation auswählen…') }}</option>
           <option v-for="s in simulations" :key="s.simulation_id" :value="s.simulation_id">
             {{ formatId(s.simulation_id) }} — {{ s.status }}
           </option>
@@ -49,7 +49,7 @@
         @click="runComparison"
       >
         <span v-if="loading" class="loading-spinner-small"></span>
-        {{ loading ? $tr('Comparing…', '对比中…') : $tr('Compare', '对比') }}
+        {{ loading ? $tr('Comparing…', '对比中…', 'Vergleich läuft…') : $tr('Compare', '对比', 'Vergleichen') }}
       </button>
     </div>
 
@@ -59,7 +59,7 @@
     <!-- Loading -->
     <div v-else-if="loading" class="cmp-loading">
       <div class="loading-ring"></div>
-      <span>{{ $tr('Running comparison…', '正在对比…') }}</span>
+      <span>{{ $tr('Running comparison…', '正在对比…', 'Vergleich wird durchgeführt…') }}</span>
     </div>
 
     <!-- Results -->
@@ -67,7 +67,7 @@
 
       <!-- Divergence Banner -->
       <div class="divergence-banner">
-        <div class="divergence-label">{{ $tr('Outcome Divergence Score', '结果分歧度') }}</div>
+        <div class="divergence-label">{{ $tr('Outcome Divergence Score', '结果分歧度', 'Ergebnis-Divergenzwert') }}</div>
         <div class="divergence-score" :class="divergenceClass">
           {{ (data.divergence_score * 100).toFixed(1) }}%
         </div>
@@ -81,15 +81,15 @@
           <div class="metric-grid">
             <div class="metric-item">
               <span class="metric-val">{{ data.sim1.profiles_count }}</span>
-              <span class="metric-lbl">{{ $tr('Agents', '智能体') }}</span>
+              <span class="metric-lbl">{{ $tr('Agents', '智能体', 'Agenten') }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-val">{{ data.sim1.total_rounds }}</span>
-              <span class="metric-lbl">{{ $tr('Rounds', '轮次') }}</span>
+              <span class="metric-lbl">{{ $tr('Rounds', '轮次', 'Runden') }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-val">{{ data.sim1.total_actions.toLocaleString() }}</span>
-              <span class="metric-lbl">{{ $tr('Actions', '动作') }}</span>
+              <span class="metric-lbl">{{ $tr('Actions', '动作', 'Aktionen') }}</span>
             </div>
           </div>
         </div>
@@ -99,15 +99,15 @@
           <div class="metric-grid">
             <div class="metric-item">
               <span class="metric-val">{{ data.sim2.profiles_count }}</span>
-              <span class="metric-lbl">{{ $tr('Agents', '智能体') }}</span>
+              <span class="metric-lbl">{{ $tr('Agents', '智能体', 'Agenten') }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-val">{{ data.sim2.total_rounds }}</span>
-              <span class="metric-lbl">{{ $tr('Rounds', '轮次') }}</span>
+              <span class="metric-lbl">{{ $tr('Rounds', '轮次', 'Runden') }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-val">{{ data.sim2.total_actions.toLocaleString() }}</span>
-              <span class="metric-lbl">{{ $tr('Actions', '动作') }}</span>
+              <span class="metric-lbl">{{ $tr('Actions', '动作', 'Aktionen') }}</span>
             </div>
           </div>
         </div>
@@ -118,7 +118,7 @@
 
         <!-- Influence Leaderboard Comparison -->
         <div class="cmp-section full-width">
-          <div class="section-title">{{ $tr('Influence Leaderboard', '影响力榜单') }}</div>
+          <div class="section-title">{{ $tr('Influence Leaderboard', '影响力榜单', 'Einfluss-Rangliste') }}</div>
           <div class="leaderboard-compare">
             <div class="lb-col">
               <div class="lb-header sim-a-color">{{ formatId(data.id1) }}</div>
@@ -136,7 +136,7 @@
                   :title="getRankDeltaTitle(agent.agent_name, 'sim1')"
                 >{{ getRankDeltaLabel(agent.agent_name, 'sim1') }}</span>
               </div>
-              <div v-if="!data.sim1.influence.length" class="lb-empty">{{ $tr('No data', '无数据') }}</div>
+              <div v-if="!data.sim1.influence.length" class="lb-empty">{{ $tr('No data', '无数据', 'Keine Daten') }}</div>
             </div>
 
             <div class="lb-col">
@@ -155,14 +155,14 @@
                   :title="getRankDeltaTitle(agent.agent_name, 'sim2')"
                 >{{ getRankDeltaLabel(agent.agent_name, 'sim2') }}</span>
               </div>
-              <div v-if="!data.sim2.influence.length" class="lb-empty">{{ $tr('No data', '无数据') }}</div>
+              <div v-if="!data.sim2.influence.length" class="lb-empty">{{ $tr('No data', '无数据', 'Keine Daten') }}</div>
             </div>
           </div>
         </div>
 
         <!-- Activity Timeline Chart -->
         <div class="cmp-section full-width" v-if="data.sim1.timeline.length || data.sim2.timeline.length">
-          <div class="section-title">{{ $tr('Activity per Round', '每轮活动量') }}</div>
+          <div class="section-title">{{ $tr('Activity per Round', '每轮活动量', 'Aktivität pro Runde') }}</div>
           <div class="chart-container">
             <svg ref="chartSvg" class="activity-chart" :viewBox="`0 0 ${chartW} ${chartH}`" preserveAspectRatio="none">
               <!-- Grid lines -->
@@ -214,7 +214,7 @@
             <div class="chart-legend">
               <span class="legend-item sim-a-color">● {{ formatId(data.id1) }}</span>
               <span class="legend-item sim-b-color">● {{ formatId(data.id2) }}</span>
-              <span class="legend-label">{{ $tr('Total actions / round', '每轮动作总数') }}</span>
+              <span class="legend-label">{{ $tr('Total actions / round', '每轮动作总数', 'Aktionen gesamt / Runde') }}</span>
             </div>
           </div>
         </div>
@@ -224,26 +224,26 @@
           class="cmp-section full-width"
           v-if="data.sim1.markets.length || data.sim2.markets.length"
         >
-          <div class="section-title">{{ $tr('Prediction Market Final Prices', '预测市场最终价格') }}</div>
+          <div class="section-title">{{ $tr('Prediction Market Final Prices', '预测市场最终价格', 'Vorhersagemarkt-Endpreise') }}</div>
           <div class="markets-compare">
             <div class="market-col">
               <div class="market-col-header sim-a-color">{{ formatId(data.id1) }}</div>
               <div v-for="m in data.sim1.markets" :key="m.market_id" class="market-row">
-                <span class="market-id">{{ $tr('Market', '市场') }} {{ m.market_id }}</span>
+                <span class="market-id">{{ $tr('Market', '市场', 'Markt') }} {{ m.market_id }}</span>
                 <div class="market-bar-wrap">
                   <div class="market-bar" :style="{ width: (m.price_yes * 100) + '%', background: '#a78bfa' }"></div>
                 </div>
-                <span class="market-price">{{ (m.price_yes * 100).toFixed(1) }}% {{ $tr('YES', '是') }}</span>
+                <span class="market-price">{{ (m.price_yes * 100).toFixed(1) }}% {{ $tr('YES', '是', 'JA') }}</span>
               </div>
             </div>
             <div class="market-col">
               <div class="market-col-header sim-b-color">{{ formatId(data.id2) }}</div>
               <div v-for="m in data.sim2.markets" :key="m.market_id" class="market-row">
-                <span class="market-id">{{ $tr('Market', '市场') }} {{ m.market_id }}</span>
+                <span class="market-id">{{ $tr('Market', '市场', 'Markt') }} {{ m.market_id }}</span>
                 <div class="market-bar-wrap">
                   <div class="market-bar" :style="{ width: (m.price_yes * 100) + '%', background: '#c4b5fd' }"></div>
                 </div>
-                <span class="market-price">{{ (m.price_yes * 100).toFixed(1) }}% {{ $tr('YES', '是') }}</span>
+                <span class="market-price">{{ (m.price_yes * 100).toFixed(1) }}% {{ $tr('YES', '是', 'JA') }}</span>
               </div>
             </div>
           </div>
@@ -254,7 +254,7 @@
 
     <!-- Empty State -->
     <div v-else-if="!loading && !error" class="cmp-empty">
-      <p>{{ $tr('Select two simulations above and click Compare to see the diff.', '在上方选择两个模拟并点击对比以查看差异。') }}</p>
+      <p>{{ $tr('Select two simulations above and click Compare to see the diff.', '在上方选择两个模拟并点击对比以查看差异。', 'Wählen Sie oben zwei Simulationen aus und klicken Sie auf Vergleichen, um die Unterschiede zu sehen.') }}</p>
     </div>
   </div>
 </template>
@@ -320,10 +320,10 @@ const runComparison = async () => {
     if (res.data?.success) {
       data.value = res.data.data
     } else {
-      error.value = res.data?.error || tr('Comparison failed', '对比失败')
+      error.value = res.data?.error || tr('Comparison failed', '对比失败', 'Vergleich fehlgeschlagen')
     }
   } catch (err) {
-    error.value = err?.response?.data?.error || err.message || tr('Comparison failed', '对比失败')
+    error.value = err?.response?.data?.error || err.message || tr('Comparison failed', '对比失败', 'Vergleich fehlgeschlagen')
   } finally {
     loading.value = false
   }
@@ -345,9 +345,9 @@ const divergenceClass = computed(() => {
 const divergenceDescription = computed(() => {
   if (!data.value) return ''
   const s = data.value.divergence_score
-  if (s < 0.2) return tr('Simulations produced very similar influence rankings — comparable outcomes.', '两次模拟的影响力排名非常相似 — 结果可比。')
-  if (s < 0.5) return tr('Moderate divergence — some agents shifted in relative influence between runs.', '中等分歧 — 部分智能体在两次运行中相对影响力发生变化。')
-  return tr('High divergence — the two simulations produced substantially different influence outcomes.', '高度分歧 — 两次模拟产生了截然不同的影响力结果。')
+  if (s < 0.2) return tr('Simulations produced very similar influence rankings — comparable outcomes.', '两次模拟的影响力排名非常相似 — 结果可比。', 'Simulationen erzeugten sehr ähnliche Einfluss-Rankings — vergleichbare Ergebnisse.')
+  if (s < 0.5) return tr('Moderate divergence — some agents shifted in relative influence between runs.', '中等分歧 — 部分智能体在两次运行中相对影响力发生变化。', 'Mäßige Divergenz — einige Agenten verschoben ihren relativen Einfluss zwischen den Läufen.')
+  return tr('High divergence — the two simulations produced substantially different influence outcomes.', '高度分歧 — 两次模拟产生了截然不同的影响力结果。', 'Hohe Divergenz — die zwei Simulationen erzeugten deutlich unterschiedliche Einflussergebnisse.')
 })
 
 // Rank delta helpers
@@ -372,9 +372,9 @@ const getRankDeltaClass = (name, simKey) => {
 
 const getRankDeltaTitle = (name, simKey) => {
   const label = getRankDeltaLabel(name, simKey)
-  if (label === '—') return tr('Not in other simulation\'s top 10', '不在另一次模拟的前 10 名中')
-  if (label === '=') return tr('Same rank in both simulations', '两次模拟中排名相同')
-  return `${tr('Rank difference:', '排名差:')} ${label.replace(/[▲▼]/, '')}`
+  if (label === '—') return tr('Not in other simulation\'s top 10', '不在另一次模拟的前 10 名中', 'Nicht in den Top 10 der anderen Simulation')
+  if (label === '=') return tr('Same rank in both simulations', '两次模拟中排名相同', 'Gleicher Rang in beiden Simulationen')
+  return `${tr('Rank difference:', '排名差:', 'Rangunterschied:')} ${label.replace(/[▲▼]/, '')}`
 }
 
 // Chart point computation — shared Y-axis scale across both timelines

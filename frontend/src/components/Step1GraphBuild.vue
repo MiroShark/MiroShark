@@ -6,32 +6,32 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">01</span>
-            <span class="step-title">{{ $tr('Ontology Generation', '本体生成') }}</span>
+            <span class="step-title">{{ $tr('Ontology Generation', '本体生成', 'Ontologie-Generierung') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="currentPhase > 0" class="badge success">{{ $tr('Completed', '已完成') }}</span>
-            <span v-else-if="currentPhase === 0" class="badge processing">{{ $tr('Generating', '生成中') }}</span>
-            <span v-else class="badge pending">{{ $tr('Waiting', '等待中') }}</span>
+            <span v-if="currentPhase > 0" class="badge success">{{ $tr('Completed', '已完成', 'Abgeschlossen') }}</span>
+            <span v-else-if="currentPhase === 0" class="badge processing">{{ $tr('Generating', '生成中', 'Wird generiert') }}</span>
+            <span v-else class="badge pending">{{ $tr('Waiting', '等待中', 'Wartend') }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/graph/ontology/generate</p>
           <p class="description">
-            {{ $tr('LLM analyzes document content and simulation requirements, extracts reality seeds, and automatically generates a suitable ontology structure', 'LLM 分析文档内容与模拟需求,提取现实种子,并自动生成合适的本体结构') }}
+            {{ $tr('LLM analyzes document content and simulation requirements, extracts reality seeds, and automatically generates a suitable ontology structure', 'LLM 分析文档内容与模拟需求,提取现实种子,并自动生成合适的本体结构', 'LLM analysiert Dokumentinhalte und Simulationsanforderungen, extrahiert Realitätssamen und generiert automatisch eine geeignete Ontologiestruktur') }}
           </p>
 
           <!-- Loading / Progress -->
           <div v-if="currentPhase === 0 && ontologyProgress" class="progress-section">
             <div class="spinner-sm"></div>
-            <span>{{ ontologyProgress.message || $tr('Analyzing documents...', '分析文档中...') }}</span>
+            <span>{{ ontologyProgress.message || $tr('Analyzing documents...', '分析文档中...', 'Dokumente werden analysiert...') }}</span>
           </div>
 
           <!-- Detail Overlay -->
           <div v-if="selectedOntologyItem" class="ontology-detail-overlay">
             <div class="detail-header">
                <div class="detail-title-group">
-                  <span class="detail-type-badge">{{ selectedOntologyItem.itemType === 'entity' ? $tr('ENTITY', '实体') : $tr('RELATION', '关系') }}</span>
+                  <span class="detail-type-badge">{{ selectedOntologyItem.itemType === 'entity' ? $tr('ENTITY', '实体', 'ENTITÄT') : $tr('RELATION', '关系', 'RELATION') }}</span>
                   <span class="detail-name">{{ selectedOntologyItem.name }}</span>
                </div>
                <button class="close-btn" @click="selectedOntologyItem = null">×</button>
@@ -41,7 +41,7 @@
 
                <!-- Attributes -->
                <div class="detail-section" v-if="selectedOntologyItem.attributes?.length">
-                  <span class="section-label">{{ $tr('ATTRIBUTES', '属性') }}</span>
+                  <span class="section-label">{{ $tr('ATTRIBUTES', '属性', 'ATTRIBUTE') }}</span>
                   <div class="attr-list">
                      <div v-for="attr in selectedOntologyItem.attributes" :key="attr.name" class="attr-item">
                         <span class="attr-name">{{ attr.name }}</span>
@@ -53,7 +53,7 @@
 
                <!-- Examples (Entity) -->
                <div class="detail-section" v-if="selectedOntologyItem.examples?.length">
-                  <span class="section-label">{{ $tr('EXAMPLES', '示例') }}</span>
+                  <span class="section-label">{{ $tr('EXAMPLES', '示例', 'BEISPIELE') }}</span>
                   <div class="example-list">
                      <span v-for="ex in selectedOntologyItem.examples" :key="ex" class="example-tag">{{ ex }}</span>
                   </div>
@@ -61,7 +61,7 @@
 
                <!-- Source/Target (Relation) -->
                <div class="detail-section" v-if="selectedOntologyItem.source_targets?.length">
-                  <span class="section-label">{{ $tr('CONNECTIONS', '连接') }}</span>
+                  <span class="section-label">{{ $tr('CONNECTIONS', '连接', 'VERBINDUNGEN') }}</span>
                   <div class="conn-list">
                      <div v-for="(conn, idx) in selectedOntologyItem.source_targets" :key="idx" class="conn-item">
                         <span class="conn-node">{{ conn.source }}</span>
@@ -75,7 +75,7 @@
 
           <!-- Generated Entity Tags -->
           <div v-if="projectData?.ontology?.entity_types" class="tags-container" :class="{ 'dimmed': selectedOntologyItem }">
-            <span class="tag-label">{{ $tr('GENERATED ENTITY TYPES', '已生成的实体类型') }}</span>
+            <span class="tag-label">{{ $tr('GENERATED ENTITY TYPES', '已生成的实体类型', 'GENERIERTE ENTITÄTSTYPEN') }}</span>
             <div class="tags-list">
               <span
                 v-for="entity in projectData.ontology.entity_types"
@@ -90,7 +90,7 @@
 
           <!-- Generated Relation Tags -->
           <div v-if="projectData?.ontology?.edge_types" class="tags-container" :class="{ 'dimmed': selectedOntologyItem }">
-            <span class="tag-label">{{ $tr('GENERATED RELATION TYPES', '已生成的关系类型') }}</span>
+            <span class="tag-label">{{ $tr('GENERATED RELATION TYPES', '已生成的关系类型', 'GENERIERTE RELATIONSTYPEN') }}</span>
             <div class="tags-list">
               <span
                 v-for="rel in projectData.ontology.edge_types"
@@ -110,34 +110,34 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">02</span>
-            <span class="step-title">{{ $tr('GraphRAG Build', 'GraphRAG 构建') }}</span>
+            <span class="step-title">{{ $tr('GraphRAG Build', 'GraphRAG 构建', 'GraphRAG-Aufbau') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="currentPhase > 1" class="badge success">{{ $tr('Completed', '已完成') }}</span>
+            <span v-if="currentPhase > 1" class="badge success">{{ $tr('Completed', '已完成', 'Abgeschlossen') }}</span>
             <span v-else-if="currentPhase === 1" class="badge processing">{{ buildProgress?.progress || 0 }}%</span>
-            <span v-else class="badge pending">{{ $tr('Waiting', '等待中') }}</span>
+            <span v-else class="badge pending">{{ $tr('Waiting', '等待中', 'Wartend') }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/graph/build</p>
           <p class="description">
-            {{ $tr('Based on the generated ontology, automatically chunks documents and builds a knowledge graph via Neo4j, extracting entities and relationships, forming temporal memory and community summaries', '基于生成的本体,自动对文档分块,通过 Neo4j 构建知识图谱,提取实体与关系,形成时序记忆与社区摘要') }}
+            {{ $tr('Based on the generated ontology, automatically chunks documents and builds a knowledge graph via Neo4j, extracting entities and relationships, forming temporal memory and community summaries', '基于生成的本体,自动对文档分块,通过 Neo4j 构建知识图谱,提取实体与关系,形成时序记忆与社区摘要', 'Basierend auf der generierten Ontologie werden Dokumente automatisch aufgeteilt und ein Wissensgraph über Neo4j aufgebaut, Entitäten und Beziehungen extrahiert sowie temporale Erinnerungen und Community-Zusammenfassungen gebildet') }}
           </p>
 
           <!-- Stats Cards -->
           <div class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.nodes }}</span>
-              <span class="stat-label">{{ $tr('Entity Nodes', '实体节点') }}</span>
+              <span class="stat-label">{{ $tr('Entity Nodes', '实体节点', 'Entity-Knoten') }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.edges }}</span>
-              <span class="stat-label">{{ $tr('Relation Edges', '关系边') }}</span>
+              <span class="stat-label">{{ $tr('Relation Edges', '关系边', 'Beziehungskanten') }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ graphStats.types }}</span>
-              <span class="stat-label">{{ $tr('Schema Types', '模式类型') }}</span>
+              <span class="stat-label">{{ $tr('Schema Types', '模式类型', 'Schema-Typen') }}</span>
             </div>
           </div>
         </div>
@@ -148,15 +148,15 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">03</span>
-            <span class="step-title">{{ $tr('Build Complete', '构建完成') }}</span>
+            <span class="step-title">{{ $tr('Build Complete', '构建完成', 'Build abgeschlossen') }}</span>
           </div>
           <div class="step-status">
-            <span v-if="currentPhase >= 2" class="badge accent">{{ $tr('Ready to launch', '可以启动') }}</span>
+            <span v-if="currentPhase >= 2" class="badge accent">{{ $tr('Ready to launch', '可以启动', 'Bereit zum Starten') }}</span>
           </div>
         </div>
 
         <div class="card-content">
-          <p class="description">{{ $tr('Graph build is complete. Please proceed to the next step for simulation agent setup.', '图谱构建完成。请进入下一步进行模拟智能体配置。') }}</p>
+          <p class="description">{{ $tr('Graph build is complete. Please proceed to the next step for simulation agent setup.', '图谱构建完成。请进入下一步进行模拟智能体配置。', 'Graph-Build ist abgeschlossen. Bitte fahren Sie mit dem nächsten Schritt zur Agentenkonfiguration fort.') }}</p>
 
           <!-- Existing simulations -->
           <div v-if="existingSimulations.length > 0" class="existing-sims">
@@ -174,16 +174,16 @@
 
           <div class="sim-settings">
             <label class="sim-setting-row" for="market-count-select">
-              <span class="sim-setting-label">{{ $tr('Prediction markets', '预测市场') }}</span>
+              <span class="sim-setting-label">{{ $tr('Prediction markets', '预测市场', 'Vorhersagemärkte') }}</span>
               <select
                 id="market-count-select"
                 class="sim-setting-select"
                 v-model.number="marketCount"
                 :disabled="creatingSimulation"
-                :title="$tr('How many prediction markets to generate for this simulation', '为本次模拟生成多少个预测市场')"
+                :title="$tr('How many prediction markets to generate for this simulation', '为本次模拟生成多少个预测市场', 'Wie viele Vorhersagemärkte für diese Simulation generiert werden sollen')"
               >
                 <option v-for="n in 5" :key="n" :value="n">
-                  {{ n }} {{ $tr(n === 1 ? 'market' : 'markets', '个市场') }}
+                  {{ n }} {{ $tr(n === 1 ? 'market' : 'markets', '个市场', n === 1 ? 'Markt' : 'Märkte') }}
                 </option>
               </select>
             </label>
@@ -196,7 +196,7 @@
             @click="handleEnterEnvSetup"
           >
             <span v-if="creatingSimulation" class="spinner-sm"></span>
-            {{ creatingSimulation ? $tr('Creating...', '创建中...') : (existingSimulations.length > 0 ? $tr('New Simulation ➝', '新建模拟 ➝') : $tr('Enter Agent Setup ➝', '进入智能体配置 ➝')) }}
+            {{ creatingSimulation ? $tr('Creating...', '创建中...', 'Wird erstellt...') : (existingSimulations.length > 0 ? $tr('New Simulation ➝', '新建模拟 ➝', 'Neue Simulation ➝') : $tr('Enter Agent Setup ➝', '进入智能体配置 ➝', 'Zur Agentenkonfiguration ➝')) }}
           </button>
         </div>
       </div>
@@ -205,8 +205,8 @@
     <!-- Bottom Info / Logs -->
     <div class="system-logs" :class="{ collapsed: dashboardCollapsed }">
       <div class="log-header" @click="dashboardCollapsed = !dashboardCollapsed">
-        <span class="log-title">{{ $tr('SYSTEM DASHBOARD', '系统面板') }} <span class="log-toggle">{{ dashboardCollapsed ? '▲' : '▼' }}</span></span>
-        <span class="log-id">{{ projectData?.project_id || $tr('NO_PROJECT', '无项目') }}</span>
+        <span class="log-title">{{ $tr('SYSTEM DASHBOARD', '系统面板', 'SYSTEM-DASHBOARD') }} <span class="log-toggle">{{ dashboardCollapsed ? '▲' : '▼' }}</span></span>
+        <span class="log-id">{{ projectData?.project_id || $tr('NO_PROJECT', '无项目', 'KEIN_PROJEKT') }}</span>
       </div>
       <div v-show="!dashboardCollapsed" class="log-content" ref="logContent">
         <div class="log-line" v-for="(log, idx) in systemLogs" :key="idx">
@@ -297,11 +297,11 @@ const handleEnterEnvSetup = async () => {
       })
     } else {
       console.error('Failed to create simulation:', res.error)
-      alert(tr('Failed to create simulation: ', '创建模拟失败:') + (res.error || tr('Unknown error', '未知错误')))
+      alert(tr('Failed to create simulation: ', '创建模拟失败:', 'Simulation konnte nicht erstellt werden: ') + (res.error || tr('Unknown error', '未知错误', 'Unbekannter Fehler')))
     }
   } catch (err) {
     console.error('Simulation creation error:', err)
-    alert(tr('Simulation creation error: ', '创建模拟出错:') + err.message)
+    alert(tr('Simulation creation error: ', '创建模拟出错:', 'Fehler bei der Simulationserstellung: ') + err.message)
   } finally {
     creatingSimulation.value = false
   }

@@ -10,11 +10,11 @@
       </div>
 
       <div class="header-center">
-        <div class="replay-badge">{{ $tr('REPLAY', '回放') }}</div>
+        <div class="replay-badge">{{ $tr('REPLAY', '回放', 'WIEDERGABE') }}</div>
       </div>
 
       <div class="header-right">
-        <button class="back-btn" @click="goBack">{{ $tr('← Back', '← 返回') }}</button>
+        <button class="back-btn" @click="goBack">{{ $tr('← Back', '← 返回', '← Zurück') }}</button>
         <LocaleToggle />
       </div>
     </header>
@@ -22,13 +22,13 @@
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Loading simulation data...', '加载模拟数据中...') }}</span>
+      <span>{{ $tr('Loading simulation data...', '加载模拟数据中...', 'Simulationsdaten werden geladen...') }}</span>
     </div>
 
     <!-- Error State -->
     <div v-else-if="error" class="error-state">
       <span>{{ error }}</span>
-      <button class="action-btn secondary" @click="router.push('/')">{{ $tr('Home', '首页') }}</button>
+      <button class="action-btn secondary" @click="router.push('/')">{{ $tr('Home', '首页', 'Startseite') }}</button>
     </div>
 
     <!-- Main Replay -->
@@ -60,7 +60,7 @@
 
           <!-- Round Info -->
           <div class="round-display">
-            <span class="round-label">{{ $tr('ROUND', '轮次') }}</span>
+            <span class="round-label">{{ $tr('ROUND', '轮次', 'RUNDE') }}</span>
             <span class="round-current">{{ currentRound }}</span>
             <span class="round-separator">/</span>
             <span class="round-total">{{ totalRounds }}</span>
@@ -83,7 +83,7 @@
         <!-- Stats -->
         <div class="playback-stats">
           <span class="stat-item">
-            <span class="stat-label">{{ $tr('EVENTS', '事件') }}</span>
+            <span class="stat-label">{{ $tr('EVENTS', '事件', 'EREIGNISSE') }}</span>
             <span class="stat-value">{{ visibleActions.length }}</span>
             <span class="stat-total">/ {{ allActions.length }}</span>
           </span>
@@ -99,7 +99,7 @@
           </span>
           <span class="stat-divider"></span>
           <span class="stat-item">
-            <span class="stat-label">{{ $tr('PM', '预测市场') }}</span>
+            <span class="stat-label">{{ $tr('PM', '预测市场', 'PM') }}</span>
             <span class="stat-value">{{ visiblePolymarketCount }}</span>
           </span>
         </div>
@@ -120,7 +120,7 @@
             >
               <!-- Round Divider -->
               <div v-if="action._isRoundStart" class="round-divider">
-                <span class="round-tag">{{ $tr('ROUND', '轮次') }} {{ action.round_num }}</span>
+                <span class="round-tag">{{ $tr('ROUND', '轮次', 'RUNDE') }} {{ action.round_num }}</span>
               </div>
 
               <div class="timeline-marker">
@@ -158,14 +158,14 @@
                       {{ action.action_args.quote_content }}
                     </div>
                     <div v-if="action.action_args?.original_content" class="quoted-block">
-                      <div class="quote-label">@{{ action.action_args.original_author_name || $tr('User', '用户') }}</div>
+                      <div class="quote-label">@{{ action.action_args.original_author_name || $tr('User', '用户', 'Nutzer') }}</div>
                       <div class="quote-text">{{ truncate(action.action_args.original_content, 150) }}</div>
                     </div>
                   </template>
 
                   <!-- REPOST -->
                   <template v-if="action.action_type === 'REPOST'">
-                    <div class="repost-info">{{ $tr('Reposted', '已转发') }} @{{ action.action_args?.original_author_name || $tr('User', '用户') }}</div>
+                    <div class="repost-info">{{ $tr('Reposted', '已转发', 'Weitergeleitet') }} @{{ action.action_args?.original_author_name || $tr('User', '用户', 'Nutzer') }}</div>
                     <div v-if="action.action_args?.original_content" class="repost-content">
                       {{ truncate(action.action_args.original_content, 200) }}
                     </div>
@@ -173,7 +173,7 @@
 
                   <!-- LIKE_POST -->
                   <template v-if="action.action_type === 'LIKE_POST'">
-                    <div class="like-info">{{ $tr('Liked', '点赞') }} @{{ action.action_args?.post_author_name || $tr('User', '用户') }}{{ $tr("'s post", ' 的帖子') }}</div>
+                    <div class="like-info">{{ $tr('Liked', '点赞', 'Geliked') }} @{{ action.action_args?.post_author_name || $tr('User', '用户', 'Nutzer') }}{{ $tr("'s post", ' 的帖子', 's Beitrag') }}</div>
                     <div v-if="action.action_args?.post_content" class="liked-content">
                       "{{ truncate(action.action_args.post_content, 120) }}"
                     </div>
@@ -185,29 +185,29 @@
                       {{ action.action_args.content }}
                     </div>
                     <div v-if="action.action_args?.post_id" class="comment-context">
-                      {{ $tr('Reply to post', '回复帖子') }} #{{ action.action_args.post_id }}
+                      {{ $tr('Reply to post', '回复帖子', 'Antwort auf Beitrag') }} #{{ action.action_args.post_id }}
                     </div>
                   </template>
 
                   <!-- FOLLOW -->
                   <template v-if="action.action_type === 'FOLLOW'">
-                    <div class="follow-info">{{ $tr('Followed', '已关注') }} @{{ action.action_args?.target_user_name || action.action_args?.target_user || $tr('User', '用户') }}</div>
+                    <div class="follow-info">{{ $tr('Followed', '已关注', 'Gefolgt') }} @{{ action.action_args?.target_user_name || action.action_args?.target_user || $tr('User', '用户', 'Nutzer') }}</div>
                   </template>
 
                   <!-- SEARCH_POSTS -->
                   <template v-if="action.action_type === 'SEARCH_POSTS'">
-                    <div class="search-info">{{ $tr('Search:', '搜索:') }} <span class="search-query">"{{ action.action_args?.query || '' }}"</span></div>
+                    <div class="search-info">{{ $tr('Search:', '搜索:', 'Suche:') }} <span class="search-query">"{{ action.action_args?.query || '' }}"</span></div>
                   </template>
 
                   <!-- DISLIKE_POST -->
                   <template v-if="action.action_type === 'DISLIKE_POST'">
-                    <div class="like-info">{{ $tr('Disliked', '已踩') }} @{{ action.action_args?.post_author_name || $tr('User', '用户') }}{{ $tr("'s post", ' 的帖子') }}</div>
+                    <div class="like-info">{{ $tr('Disliked', '已踩', 'Abgelehnt') }} @{{ action.action_args?.post_author_name || $tr('User', '用户', 'Nutzer') }}{{ $tr("'s post", ' 的帖子', 's Beitrag') }}</div>
                   </template>
 
                   <!-- BUY_SHARES -->
                   <template v-if="action.action_type === 'BUY_SHARES'">
                     <div class="trade-info">
-                      <span class="trade-direction buy">{{ $tr('BUY', '买入') }}</span>
+                      <span class="trade-direction buy">{{ $tr('BUY', '买入', 'KAUFEN') }}</span>
                       <span>{{ formatNum(action.action_args?.shares) }} <strong>{{ action.action_args?.outcome }}</strong> @ ${{ formatNum(action.action_args?.price) }}</span>
                     </div>
                   </template>
@@ -215,7 +215,7 @@
                   <!-- SELL_SHARES -->
                   <template v-if="action.action_type === 'SELL_SHARES'">
                     <div class="trade-info">
-                      <span class="trade-direction sell">{{ $tr('SELL', '卖出') }}</span>
+                      <span class="trade-direction sell">{{ $tr('SELL', '卖出', 'VERKAUFEN') }}</span>
                       <span>{{ formatNum(action.action_args?.shares) }} <strong>{{ action.action_args?.outcome }}</strong> → ${{ formatNum(action.action_args?.usd_received) }}</span>
                     </div>
                   </template>
@@ -227,7 +227,7 @@
 
                   <!-- DO_NOTHING -->
                   <template v-if="action.action_type === 'DO_NOTHING'">
-                    <div class="idle-info">{{ $tr('Action Skipped', '已跳过动作') }}</div>
+                    <div class="idle-info">{{ $tr('Action Skipped', '已跳过动作', 'Aktion übersprungen') }}</div>
                   </template>
 
                   <!-- Generic fallback -->
@@ -244,7 +244,7 @@
           </TransitionGroup>
 
           <div v-if="allActions.length === 0" class="empty-state">
-            <span>{{ $tr('No simulation data found', '未找到模拟数据') }}</span>
+            <span>{{ $tr('No simulation data found', '未找到模拟数据', 'Keine Simulationsdaten gefunden') }}</span>
           </div>
         </div>
       </div>
@@ -308,13 +308,13 @@ const loadData = async () => {
     const detailRes = await getRunStatusDetail(simulationId.value)
 
     if (!detailRes.success || !detailRes.data) {
-      error.value = tr('Failed to load simulation data', '加载模拟数据失败')
+      error.value = tr('Failed to load simulation data', '加载模拟数据失败', 'Simulationsdaten konnten nicht geladen werden')
       return
     }
 
     const actions = detailRes.data.all_actions || []
     if (actions.length === 0) {
-      error.value = tr('No actions found for this simulation', '此模拟未找到任何动作')
+      error.value = tr('No actions found for this simulation', '此模拟未找到任何动作', 'Keine Aktionen für diese Simulation gefunden')
       return
     }
 
@@ -341,7 +341,7 @@ const loadData = async () => {
     totalRounds.value = detailRes.data.total_rounds || maxRound
     currentRound.value = 0
   } catch (err) {
-    error.value = `${tr('Error', '错误')}: ${err.message}`
+    error.value = `${tr('Error', '错误', 'Fehler')}: ${err.message}`
   } finally {
     loading.value = false
   }
@@ -422,15 +422,15 @@ const goBack = () => {
 // Helpers
 const getActionTypeLabel = (type) => {
   const labels = {
-    'CREATE_POST': tr('POST', '发帖'), 'REPOST': tr('REPOST', '转发'), 'LIKE_POST': tr('LIKE', '点赞'),
-    'CREATE_COMMENT': tr('COMMENT', '评论'), 'LIKE_COMMENT': tr('LIKE', '点赞'), 'DISLIKE_POST': tr('DISLIKE', '踩'),
-    'DISLIKE_COMMENT': tr('DISLIKE', '踩'), 'MUTE': tr('MUTE', '静音'), 'DO_NOTHING': tr('IDLE', '空闲'),
-    'FOLLOW': tr('FOLLOW', '关注'), 'SEARCH_POSTS': tr('SEARCH', '搜索'), 'QUOTE_POST': tr('QUOTE', '引用'),
-    'UPVOTE_POST': tr('UPVOTE', '顶'), 'DOWNVOTE_POST': tr('DOWNVOTE', '踩'),
-    'BUY_SHARES': tr('BUY', '买入'), 'SELL_SHARES': tr('SELL', '卖出'), 'CREATE_MARKET': tr('NEW MARKET', '新市场'),
-    'BROWSE_MARKETS': tr('BROWSE', '浏览'), 'VIEW_PORTFOLIO': tr('PORTFOLIO', '组合'), 'COMMENT_ON_MARKET': tr('COMMENT', '评论'),
+    'CREATE_POST': tr('POST', '发帖', 'BEITRAG'), 'REPOST': tr('REPOST', '转发', 'TEILEN'), 'LIKE_POST': tr('LIKE', '点赞', 'LIKE'),
+    'CREATE_COMMENT': tr('COMMENT', '评论', 'KOMMENTAR'), 'LIKE_COMMENT': tr('LIKE', '点赞', 'LIKE'), 'DISLIKE_POST': tr('DISLIKE', '踩', 'ABLEHNEN'),
+    'DISLIKE_COMMENT': tr('DISLIKE', '踩', 'ABLEHNEN'), 'MUTE': tr('MUTE', '静音', 'STUMM'), 'DO_NOTHING': tr('IDLE', '空闲', 'INAKTIV'),
+    'FOLLOW': tr('FOLLOW', '关注', 'FOLGEN'), 'SEARCH_POSTS': tr('SEARCH', '搜索', 'SUCHEN'), 'QUOTE_POST': tr('QUOTE', '引用', 'ZITIEREN'),
+    'UPVOTE_POST': tr('UPVOTE', '顶', 'HOCHVOTEN'), 'DOWNVOTE_POST': tr('DOWNVOTE', '踩', 'DOWNVOTEN'),
+    'BUY_SHARES': tr('BUY', '买入', 'KAUFEN'), 'SELL_SHARES': tr('SELL', '卖出', 'VERKAUFEN'), 'CREATE_MARKET': tr('NEW MARKET', '新市场', 'NEUER MARKT'),
+    'BROWSE_MARKETS': tr('BROWSE', '浏览', 'DURCHSUCHEN'), 'VIEW_PORTFOLIO': tr('PORTFOLIO', '组合', 'PORTFOLIO'), 'COMMENT_ON_MARKET': tr('COMMENT', '评论', 'KOMMENTAR'),
   }
-  return labels[type] || type || tr('UNKNOWN', '未知')
+  return labels[type] || type || tr('UNKNOWN', '未知', 'UNBEKANNT')
 }
 
 const getActionTypeClass = (type) => {

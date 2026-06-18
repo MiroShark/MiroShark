@@ -1,12 +1,12 @@
 <template>
   <div class="network-panel">
     <div class="panel-header">
-      <span class="panel-title">{{ $tr('Agent Network', '智能体网络') }}</span>
+      <span class="panel-title">{{ $tr('Agent Network', '智能体网络', 'Agentennetzwerk') }}</span>
       <div class="header-tools">
-        <span class="node-count" v-if="networkStats.nodes">{{ networkStats.nodes }} {{ $tr('agents', '智能体') }} · {{ networkStats.edges }} {{ $tr('links', '连接') }}</span>
-        <button class="tool-btn" @click="resetView" :title="$tr('Reset View', '重置视图')">
+        <span class="node-count" v-if="networkStats.nodes">{{ networkStats.nodes }} {{ $tr('agents', '智能体', 'Agenten') }} · {{ networkStats.edges }} {{ $tr('links', '连接', 'Verbindungen') }}</span>
+        <button class="tool-btn" @click="resetView" :title="$tr('Reset View', '重置视图', 'Ansicht zurücksetzen')">
           <span class="icon-refresh">↻</span>
-          <span class="btn-text">{{ $tr('Reset', '重置') }}</span>
+          <span class="btn-text">{{ $tr('Reset', '重置', 'Zurücksetzen') }}</span>
         </button>
       </div>
     </div>
@@ -26,7 +26,7 @@
           @input="onRoundChange"
         />
         <span class="round-label">
-          <template v-if="currentRound === 0">{{ $tr('ALL', '全部') }}</template>
+          <template v-if="currentRound === 0">{{ $tr('ALL', '全部', 'ALLE') }}</template>
           <template v-else>R{{ currentRound }}/{{ maxRound }}</template>
         </span>
       </div>
@@ -42,7 +42,7 @@
           <div class="agent-avatar" :style="{ background: selectedAgent.color }">{{ selectedAgent.name[0] }}</div>
           <div class="agent-meta">
             <span class="agent-name">{{ selectedAgent.name }}</span>
-            <span class="agent-stats-line">{{ selectedAgent.actionCount }} {{ $tr('actions', '动作') }} · {{ selectedAgent.connections }} {{ $tr('connections', '连接') }}</span>
+            <span class="agent-stats-line">{{ selectedAgent.actionCount }} {{ $tr('actions', '动作', 'Aktionen') }} · {{ selectedAgent.connections }} {{ $tr('connections', '连接', 'Verbindungen') }}</span>
           </div>
           <button class="detail-close" @click="selectedAgent = null">×</button>
         </div>
@@ -65,19 +65,19 @@
       <!-- Empty State -->
       <div v-if="!hasData" class="empty-state">
         <div class="pulse-ring"></div>
-        <span>{{ $tr('Waiting for agent interactions...', '等待智能体互动...') }}</span>
+        <span>{{ $tr('Waiting for agent interactions...', '等待智能体互动...', 'Warte auf Agenteninteraktionen...') }}</span>
       </div>
     </div>
 
     <!-- Legend -->
     <div class="network-legend" v-if="hasData">
-      <span class="legend-title">{{ $tr('Platforms', '平台') }}</span>
+      <span class="legend-title">{{ $tr('Platforms', '平台', 'Plattformen') }}</span>
       <div class="legend-items">
         <div class="legend-item"><span class="legend-dot" style="background: #f4f1ff"></span><span>X</span></div>
         <div class="legend-item"><span class="legend-dot" style="background: #a78bfa"></span><span>Reddit</span></div>
         <div class="legend-item"><span class="legend-dot" style="background: #c4b5fd"></span><span>Polymarket</span></div>
       </div>
-      <div class="legend-hint">{{ $tr('Node size = activity · Edge thickness = interactions', '节点大小 = 活跃度 · 边粗细 = 互动次数') }}</div>
+      <div class="legend-hint">{{ $tr('Node size = activity · Edge thickness = interactions', '节点大小 = 活跃度 · 边粗细 = 互动次数', 'Knotengröße = Aktivität · Kantendicke = Interaktionen') }}</div>
     </div>
   </div>
 </template>

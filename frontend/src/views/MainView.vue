@@ -25,7 +25,7 @@
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">{{ $tr('Step', '步骤') }} {{ currentStep }}/4</span>
+          <span class="step-num">{{ $tr('Step', '步骤', 'Schritt') }} {{ currentStep }}/4</span>
           <span class="step-name">{{ stepName(currentStep - 1) }}</span>
         </div>
         <div class="step-divider"></div>
@@ -99,12 +99,14 @@ const viewMode = ref('split') // graph | split | workbench
 const currentStep = ref(1) // 1: Graph Construction, 2: Agent Setup, 3: Start Simulation, 4: Report Generation, 5: Deep Interaction
 const stepNamesEn = ['Graph Construction', 'Agent Setup', 'Start Simulation', 'Report Generation']
 const stepNamesZh = ['图谱构建', '智能体配置', '启动模拟', '生成报告']
+const stepNamesDe = ['Graph-Aufbau', 'Agenten-Einrichtung', 'Simulation starten', 'Bericht generieren']
 const stepNames = stepNamesEn // legacy ref kept for handlers below
-const stepName = (i) => tr(stepNamesEn[i] || '', stepNamesZh[i] || '')
+const stepName = (i) => tr(stepNamesEn[i] || '', stepNamesZh[i] || '', stepNamesDe[i] || '')
 const viewModeLabel = (mode) => {
   const en = { graph: 'Graph', split: 'Split', workbench: 'Workbench' }
   const zh = { graph: '图谱', split: '分屏', workbench: '工作台' }
-  return tr(en[mode], zh[mode])
+  const de = { graph: 'Graph', split: 'Geteilt', workbench: 'Arbeitsbereich' }
+  return tr(en[mode], zh[mode], de[mode])
 }
 
 // Data State
@@ -145,11 +147,11 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (error.value) return tr('Error', '错误')
-  if (currentPhase.value >= 2) return tr('Ready', '就绪')
-  if (currentPhase.value === 1) return tr('Building Graph', '构建图谱中')
-  if (currentPhase.value === 0) return tr('Generating Ontology', '生成本体中')
-  return tr('Idle', '空闲')
+  if (error.value) return tr('Error', '错误', 'Fehler')
+  if (currentPhase.value >= 2) return tr('Ready', '就绪', 'Bereit')
+  if (currentPhase.value === 1) return tr('Building Graph', '构建图谱中', 'Graph wird aufgebaut')
+  if (currentPhase.value === 0) return tr('Generating Ontology', '生成本体中', 'Ontologie wird generiert')
+  return tr('Idle', '空闲', 'Leerlauf')
 })
 
 // --- Helpers ---
@@ -207,7 +209,7 @@ const handleNewProject = async () => {
   const hasTemplate = !!pending.templateSeedText
   const hasUrlDocs = pending.urlDocs && pending.urlDocs.length > 0
   if (!pending.isPending || (!hasFiles && !hasTemplate && !hasUrlDocs)) {
-    error.value = tr('No pending files found.', '没有待处理的文件。')
+    error.value = tr('No pending files found.', '没有待处理的文件。', 'Keine ausstehenden Dateien gefunden.')
     addLog('Error: No pending files found for new project.')
     return
   }
@@ -246,7 +248,7 @@ const handleNewProject = async () => {
       addLog(`Ontology generated successfully for project ${res.data.project_id}`)
       await startBuildGraph()
     } else {
-      error.value = res.error || tr('Ontology generation failed', '本体生成失败')
+      error.value = res.error || tr('Ontology generation failed', '本体生成失败', 'Ontologie-Generierung fehlgeschlagen')
       addLog(`Error generating ontology: ${error.value}`)
     }
   } catch (err) {
@@ -295,7 +297,7 @@ const updatePhaseByStatus = (status) => {
     case 'ontology_generated': currentPhase.value = 0; break;
     case 'graph_building': currentPhase.value = 1; break;
     case 'graph_completed': currentPhase.value = 2; break;
-    case 'failed': error.value = tr('Project failed', '项目失败'); break;
+    case 'failed': error.value = tr('Project failed', '项目失败', 'Projekt fehlgeschlagen'); break;
   }
 }
 

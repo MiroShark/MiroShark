@@ -12,25 +12,25 @@
 
     <!-- Track Record Summary (shown when any simulation has been resolved) -->
     <div v-if="trackRecord" class="track-record-bar">
-      <span class="track-record-label">{{ $tr('Track Record', '战绩记录') }}</span>
-      <span class="track-record-stat">{{ trackRecord.total }} {{ $tr('resolved', '已结算') }}</span>
+      <span class="track-record-label">{{ $tr('Track Record', '战绩记录', 'Erfolgsbilanz') }}</span>
+      <span class="track-record-stat">{{ trackRecord.total }} {{ $tr('resolved', '已结算', 'abgeschlossen') }}</span>
       <span v-if="trackRecord.overallAccuracy !== null" class="track-record-accuracy" :class="trackRecord.overallAccuracy >= 60 ? 'good' : 'poor'">
-        {{ trackRecord.overallAccuracy }}% {{ $tr('accurate', '准确') }}
+        {{ trackRecord.overallAccuracy }}% {{ $tr('accurate', '准确', 'korrekt') }}
       </span>
-      <span v-if="trackRecord.correct > 0" class="track-record-correct">{{ trackRecord.correct }} {{ $tr('correct', '正确') }}</span>
+      <span v-if="trackRecord.correct > 0" class="track-record-correct">{{ trackRecord.correct }} {{ $tr('correct', '正确', 'richtig') }}</span>
     </div>
 
     <!-- Title Area -->
     <div class="section-header">
       <div class="section-line"></div>
-      <span class="section-title">{{ $tr('Simulation Records', '模拟记录') }}</span>
+      <span class="section-title">{{ $tr('Simulation Records', '模拟记录', 'Simulationsverläufe') }}</span>
       <div class="section-line"></div>
       <button
         v-if="projects.length >= 2"
         class="compare-mode-btn"
         :class="{ active: compareMode }"
         @click="toggleCompareMode"
-      >{{ compareMode ? (compareSelections.length === 2 ? $tr('Compare →', '对比 →') : `${compareSelections.length}/2 ${$tr('selected', '已选')}`) : $tr('⇄ Compare', '⇄ 对比') }}</button>
+      >{{ compareMode ? (compareSelections.length === 2 ? $tr('Compare →', '对比 →', 'Vergleichen →') : `${compareSelections.length}/2 ${$tr('selected', '已选', 'ausgewählt')}`) : $tr('⇄ Compare', '⇄ 对比', '⇄ Vergleichen') }}</button>
     </div>
 
     <!-- Search & Filter Bar -->
@@ -39,33 +39,33 @@
         <input
           v-model="searchQuery"
           class="search-input"
-          :placeholder="$tr('Search scenarios...', '搜索情景...')"
+          :placeholder="$tr('Search scenarios...', '搜索情景...', 'Szenarien suchen...')"
           type="text"
         />
         <span v-if="searchQuery" class="search-clear" @click="searchQuery = ''">×</span>
       </div>
       <div class="filter-controls">
         <select v-model="statusFilter" class="filter-select">
-          <option value="all">{{ $tr('All Status', '全部状态') }}</option>
-          <option value="completed">{{ $tr('Completed', '已完成') }}</option>
-          <option value="in-progress">{{ $tr('In Progress', '进行中') }}</option>
-          <option value="not-started">{{ $tr('Not Started', '未开始') }}</option>
+          <option value="all">{{ $tr('All Status', '全部状态', 'Alle Status') }}</option>
+          <option value="completed">{{ $tr('Completed', '已完成', 'Abgeschlossen') }}</option>
+          <option value="in-progress">{{ $tr('In Progress', '进行中', 'In Bearbeitung') }}</option>
+          <option value="not-started">{{ $tr('Not Started', '未开始', 'Nicht gestartet') }}</option>
         </select>
         <select v-model="dateFilter" class="filter-select">
-          <option value="all">{{ $tr('All Time', '全部时间') }}</option>
-          <option value="today">{{ $tr('Today', '今天') }}</option>
-          <option value="week">{{ $tr('This Week', '本周') }}</option>
-          <option value="month">{{ $tr('This Month', '本月') }}</option>
+          <option value="all">{{ $tr('All Time', '全部时间', 'Gesamte Zeit') }}</option>
+          <option value="today">{{ $tr('Today', '今天', 'Heute') }}</option>
+          <option value="week">{{ $tr('This Week', '本周', 'Diese Woche') }}</option>
+          <option value="month">{{ $tr('This Month', '本月', 'Diesen Monat') }}</option>
         </select>
         <select v-model="sortOrder" class="filter-select">
-          <option value="newest">{{ $tr('Newest First', '最新优先') }}</option>
-          <option value="oldest">{{ $tr('Oldest First', '最早优先') }}</option>
-          <option value="most-agents">{{ $tr('Most Agents', '智能体最多') }}</option>
-          <option value="most-rounds">{{ $tr('Most Rounds', '轮次最多') }}</option>
+          <option value="newest">{{ $tr('Newest First', '最新优先', 'Neueste zuerst') }}</option>
+          <option value="oldest">{{ $tr('Oldest First', '最早优先', 'Älteste zuerst') }}</option>
+          <option value="most-agents">{{ $tr('Most Agents', '智能体最多', 'Meiste Agenten') }}</option>
+          <option value="most-rounds">{{ $tr('Most Rounds', '轮次最多', 'Meiste Runden') }}</option>
         </select>
         <label class="forks-only-label">
           <input type="checkbox" v-model="forksOnly" class="forks-only-check" />
-          {{ $tr('Forks Only', '仅派生') }}
+          {{ $tr('Forks Only', '仅派生', 'Nur Forks') }}
         </label>
       </div>
       <span
@@ -93,7 +93,7 @@
             <span
               v-if="project.parent_simulation_id"
               class="fork-badge"
-              :title="$tr('Forked from', '派生自') + ' ' + formatSimulationId(project.parent_simulation_id)"
+              :title="$tr('Forked from', '派生自', 'Geforkt von') + ' ' + formatSimulationId(project.parent_simulation_id)"
             >⑂</span>
             <span
               v-if="project.resolution"
@@ -104,7 +104,7 @@
             <span
               v-else-if="project.status === 'completed'"
               class="resolution-badge pending"
-              :title="$tr('Awaiting outcome resolution', '等待结果结算')"
+              :title="$tr('Awaiting outcome resolution', '等待结果结算', 'Warte auf Ergebnisauflösung')"
             >⏳</span>
             <span
               v-if="project.quality && project.quality.health"
@@ -115,16 +115,16 @@
             <span
               class="status-icon"
               :class="{ available: project.project_id, unavailable: !project.project_id }"
-              :title="$tr('Graph Build', '图谱构建')"
+              :title="$tr('Graph Build', '图谱构建', 'Graph-Aufbau')"
             >◇</span>
             <span
               class="status-icon available"
-              :title="$tr('Agent Setup', '智能体配置')"
+              :title="$tr('Agent Setup', '智能体配置', 'Agenten-Einrichtung')"
             >◈</span>
             <span
               class="status-icon"
               :class="{ available: project.report_id, unavailable: !project.report_id }"
-              :title="$tr('Analysis Report', '分析报告')"
+              :title="$tr('Analysis Report', '分析报告', 'Analysebericht')"
             >◆</span>
           </div>
         </div>
@@ -146,13 +146,13 @@
             </div>
             <!-- Show hint if more files exist -->
             <div v-if="project.files.length > 3" class="files-more">
-              +{{ project.files.length - 3 }} {{ $tr('files', '个文件') }}
+              +{{ project.files.length - 3 }} {{ $tr('files', '个文件', 'Dateien') }}
             </div>
           </div>
           <!-- Placeholder when no files -->
           <div class="files-empty" v-else>
             <span class="empty-file-icon">◇</span>
-            <span class="empty-file-text">{{ $tr('No files', '无文件') }}</span>
+            <span class="empty-file-text">{{ $tr('No files', '无文件', 'Keine Dateien') }}</span>
           </div>
         </div>
 
@@ -189,14 +189,14 @@
     <!-- No results state (projects exist but filters hide them all) -->
     <div v-else-if="projects.length > 0 && !loading" class="no-results-state">
       <span class="no-results-icon">◇</span>
-      <span class="no-results-text">{{ $tr('No simulations match your filters', '没有匹配筛选条件的模拟') }}</span>
-      <button class="clear-filters-btn" @click="clearFilters">{{ $tr('Clear Filters', '清除筛选') }}</button>
+      <span class="no-results-text">{{ $tr('No simulations match your filters', '没有匹配筛选条件的模拟', 'Keine Simulationen entsprechen deinen Filtern') }}</span>
+      <button class="clear-filters-btn" @click="clearFilters">{{ $tr('Clear Filters', '清除筛选', 'Filter löschen') }}</button>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="loading-state">
       <span class="loading-spinner"></span>
-      <span class="loading-text">{{ $tr('Loading...', '加载中...') }}</span>
+      <span class="loading-text">{{ $tr('Loading...', '加载中...', 'Laden...') }}</span>
     </div>
 
     <!-- History Replay Detail Modal -->
@@ -220,13 +220,13 @@
             <div class="modal-body">
               <!-- Simulation Requirement -->
               <div class="modal-section">
-                <div class="modal-label">{{ $tr('Simulation Requirement', '模拟需求') }}</div>
-                <div class="modal-requirement">{{ selectedProject.simulation_requirement || $tr('None', '无') }}</div>
+                <div class="modal-label">{{ $tr('Simulation Requirement', '模拟需求', 'Simulationsanforderung') }}</div>
+                <div class="modal-requirement">{{ selectedProject.simulation_requirement || $tr('None', '无', 'Keine') }}</div>
               </div>
 
               <!-- File List -->
               <div class="modal-section">
-                <div class="modal-label">{{ $tr('Associated Files', '关联文件') }}</div>
+                <div class="modal-label">{{ $tr('Associated Files', '关联文件', 'Zugehörige Dateien') }}</div>
                 <div class="modal-files" v-if="selectedProject.files && selectedProject.files.length > 0">
                   <component
                     :is="fileLinkFor(file, selectedProject) ? 'a' : 'div'"
@@ -243,14 +243,14 @@
                     <span class="modal-file-name">{{ file.filename }}</span>
                   </component>
                 </div>
-                <div class="modal-empty" v-else>{{ $tr('No associated files', '无关联文件') }}</div>
+                <div class="modal-empty" v-else>{{ $tr('No associated files', '无关联文件', 'Keine zugehörigen Dateien') }}</div>
               </div>
             </div>
 
             <!-- Simulation Replay Divider -->
             <div class="modal-divider">
               <span class="divider-line"></span>
-              <span class="divider-text">{{ $tr('Simulation Replay', '模拟回放') }}</span>
+              <span class="divider-text">{{ $tr('Simulation Replay', '模拟回放', 'Simulationswiedergabe') }}</span>
               <span class="divider-line"></span>
             </div>
 
@@ -261,25 +261,25 @@
                 @click="goToProject"
                 :disabled="!selectedProject.project_id"
               >
-                <span class="btn-step">{{ $tr('Step1', '第1步') }}</span>
+                <span class="btn-step">{{ $tr('Step1', '第1步', 'Schritt 1') }}</span>
                 <span class="btn-icon">◇</span>
-                <span class="btn-text">{{ $tr('Graph Build', '图谱构建') }}</span>
+                <span class="btn-text">{{ $tr('Graph Build', '图谱构建', 'Graph-Aufbau') }}</span>
               </button>
               <button
                 class="modal-btn btn-simulation"
                 @click="goToSimulation"
               >
-                <span class="btn-step">{{ $tr('Step2', '第2步') }}</span>
+                <span class="btn-step">{{ $tr('Step2', '第2步', 'Schritt 2') }}</span>
                 <span class="btn-icon">◈</span>
-                <span class="btn-text">{{ $tr('Agent Setup', '智能体配置') }}</span>
+                <span class="btn-text">{{ $tr('Agent Setup', '智能体配置', 'Agenten-Einrichtung') }}</span>
               </button>
               <button
                 class="modal-btn btn-simrun"
                 @click="goToSimulationRun"
               >
-                <span class="btn-step">{{ $tr('Step3', '第3步') }}</span>
+                <span class="btn-step">{{ $tr('Step3', '第3步', 'Schritt 3') }}</span>
                 <span class="btn-icon">◆</span>
-                <span class="btn-text">{{ $tr('Simulation Run', '模拟运行') }}</span>
+                <span class="btn-text">{{ $tr('Simulation Run', '模拟运行', 'Simulationslauf') }}</span>
               </button>
               <button
                 class="modal-btn btn-replay"
@@ -288,86 +288,86 @@
               >
                 <span class="btn-step">▶</span>
                 <span class="btn-icon">◈</span>
-                <span class="btn-text">{{ $tr('Replay', '回放') }}</span>
+                <span class="btn-text">{{ $tr('Replay', '回放', 'Wiedergabe') }}</span>
               </button>
               <button
                 class="modal-btn btn-report"
                 @click="goToReport"
                 :disabled="!selectedProject.report_id"
               >
-                <span class="btn-step">{{ $tr('Step4', '第4步') }}</span>
+                <span class="btn-step">{{ $tr('Step4', '第4步', 'Schritt 4') }}</span>
                 <span class="btn-icon">◆</span>
-                <span class="btn-text">{{ $tr('Analysis Report', '分析报告') }}</span>
+                <span class="btn-text">{{ $tr('Analysis Report', '分析报告', 'Analysebericht') }}</span>
               </button>
               <button
                 class="modal-btn btn-interaction"
                 @click="goToInteraction"
                 :disabled="!selectedProject.report_id"
               >
-                <span class="btn-step">{{ $tr('Step5', '第5步') }}</span>
+                <span class="btn-step">{{ $tr('Step5', '第5步', 'Schritt 5') }}</span>
                 <span class="btn-icon">◈</span>
-                <span class="btn-text">{{ $tr('Deep Interaction', '深度互动') }}</span>
+                <span class="btn-text">{{ $tr('Deep Interaction', '深度互动', 'Vertiefte Interaktion') }}</span>
               </button>
             </div>
             <!-- Non-replayable Hint -->
             <div class="modal-playback-hint">
-              <span class="hint-text">{{ $tr('Select a step to replay from the simulation history', '从模拟历史中选择一个步骤进行回放') }}</span>
+              <span class="hint-text">{{ $tr('Select a step to replay from the simulation history', '从模拟历史中选择一个步骤进行回放', 'Schritt aus dem Simulationsverlauf zur Wiedergabe auswählen') }}</span>
             </div>
 
             <!-- Resolve Prediction Section (completed simulations only) -->
             <div v-if="selectedProject.status === 'completed' || selectedProject.current_round > 0" class="modal-resolve-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">{{ $tr('Prediction Outcome', '预测结果') }}</span>
+                <span class="divider-text">{{ $tr('Prediction Outcome', '预测结果', 'Vorhersageergebnis') }}</span>
                 <span class="divider-line"></span>
               </div>
 
               <!-- Already resolved: show result -->
               <div v-if="selectedProject.resolution && !showResolvePanel" class="resolve-result">
                 <div class="resolve-result-row">
-                  <span class="resolve-label">{{ $tr('Actual Outcome', '实际结果') }}</span>
+                  <span class="resolve-label">{{ $tr('Actual Outcome', '实际结果', 'Tatsächliches Ergebnis') }}</span>
                   <span class="resolve-value outcome-badge" :class="selectedProject.resolution.actual_outcome === 'YES' ? 'yes' : 'no'">
                     {{ selectedProject.resolution.actual_outcome }}
                   </span>
                 </div>
                 <div v-if="selectedProject.resolution.predicted_consensus" class="resolve-result-row">
-                  <span class="resolve-label">{{ $tr('Agent Consensus', '智能体共识') }}</span>
+                  <span class="resolve-label">{{ $tr('Agent Consensus', '智能体共识', 'Agenten-Konsens') }}</span>
                   <span class="resolve-value outcome-badge" :class="selectedProject.resolution.predicted_consensus === 'YES' ? 'yes' : 'no'">
                     {{ selectedProject.resolution.predicted_consensus }}
                     <span class="resolve-confidence">{{ Math.round(selectedProject.resolution.predicted_confidence * 100) }}%</span>
                   </span>
                 </div>
                 <div v-if="selectedProject.resolution.accuracy_score !== null" class="resolve-result-row">
-                  <span class="resolve-label">{{ $tr('Accuracy', '准确率') }}</span>
+                  <span class="resolve-label">{{ $tr('Accuracy', '准确率', 'Genauigkeit') }}</span>
                   <span class="resolve-value accuracy-value"
                     :class="selectedProject.resolution.accuracy_score >= 1.0 ? 'correct' : (selectedProject.resolution.accuracy_score <= 0.0 && selectedProject.resolution.accuracy_score !== null) ? 'wrong' : 'split'">
-                    {{ selectedProject.resolution.accuracy_score >= 1.0 ? $tr('✓ Correct', '✓ 正确') : (selectedProject.resolution.accuracy_score <= 0.0 && selectedProject.resolution.accuracy_score !== null) ? $tr('✗ Incorrect', '✗ 错误') : $tr('~ Split', '~ 分歧') }}
+                    {{ selectedProject.resolution.accuracy_score >= 1.0 ? $tr('✓ Correct', '✓ 正确', '✓ Korrekt') : (selectedProject.resolution.accuracy_score <= 0.0 && selectedProject.resolution.accuracy_score !== null) ? $tr('✗ Incorrect', '✗ 错误', '✗ Falsch') : $tr('~ Split', '~ 分歧', '~ Geteilt') }}
                   </span>
                 </div>
                 <div v-if="selectedProject.resolution.notes" class="resolve-notes">{{ selectedProject.resolution.notes }}</div>
-                <button class="resolve-reopen-btn" @click="openResolvePanel">{{ $tr('Re-resolve', '重新结算') }}</button>
+                <button class="resolve-reopen-btn" @click="openResolvePanel">{{ $tr('Re-resolve', '重新结算', 'Neu auflösen') }}</button>
               </div>
 
               <!-- Not yet resolved or re-resolving -->
               <div v-else-if="!showResolvePanel" class="resolve-intro">
-                <p class="resolve-desc">{{ $tr('Did the simulation correctly predict what happened? Record the real-world outcome to build your accuracy track record.', '模拟是否正确预测了实际发生的事情?记录真实结果以建立你的准确率战绩。') }}</p>
-                <button class="resolve-trigger-btn" @click="openResolvePanel">⌘ {{ $tr('Record Outcome', '记录结果') }}</button>
+                <p class="resolve-desc">{{ $tr('Did the simulation correctly predict what happened? Record the real-world outcome to build your accuracy track record.', '模拟是否正确预测了实际发生的事情?记录真实结果以建立你的准确率战绩。', 'Hat die Simulation das Ergebnis korrekt vorhergesagt? Trage das reale Ergebnis ein, um deine Genauigkeitsbilanz aufzubauen.') }}</p>
+                <button class="resolve-trigger-btn" @click="openResolvePanel">⌘ {{ $tr('Record Outcome', '记录结果', 'Ergebnis eintragen') }}</button>
               </div>
 
               <div v-if="showResolvePanel" class="resolve-form">
-                <p class="resolve-form-label">{{ $tr('What actually happened?', '实际发生了什么?') }}</p>
+                <p class="resolve-form-label">{{ $tr('What actually happened?', '实际发生了什么?', 'Was ist tatsächlich passiert?') }}</p>
                 <div v-if="resolveError" class="resolve-error">{{ resolveError }}</div>
                 <div class="resolve-buttons">
                   <button class="resolve-outcome-btn yes" :disabled="resolving" @click="executeResolve('YES')">
                     <span v-if="resolving" class="loading-spinner-small"></span>
-                    {{ $tr('YES — It happened', 'YES — 发生了') }}
+                    {{ $tr('YES — It happened', 'YES — 发生了', 'JA — Es ist passiert') }}
                   </button>
                   <button class="resolve-outcome-btn no" :disabled="resolving" @click="executeResolve('NO')">
                     <span v-if="resolving" class="loading-spinner-small"></span>
-                    {{ $tr(`NO — It didn't happen`, 'NO — 没有发生') }}
+                    {{ $tr(`NO — It didn't happen`, 'NO — 没有发生', 'NEIN — Es ist nicht passiert') }}
                   </button>
                 </div>
-                <button class="resolve-cancel-btn" @click="closeResolvePanel" :disabled="resolving">{{ $tr('Cancel', '取消') }}</button>
+                <button class="resolve-cancel-btn" @click="closeResolvePanel" :disabled="resolving">{{ $tr('Cancel', '取消', 'Abbrechen') }}</button>
               </div>
             </div>
 
@@ -375,7 +375,7 @@
             <div v-if="selectedQuality" class="modal-quality-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">{{ $tr('Simulation Quality', '模拟质量') }}</span>
+                <span class="divider-text">{{ $tr('Simulation Quality', '模拟质量', 'Simulationsqualität') }}</span>
                 <span class="divider-line"></span>
               </div>
 
@@ -385,35 +385,35 @@
                 </div>
                 <div class="quality-metrics">
                   <div class="quality-metric">
-                    <span class="metric-label">{{ $tr('Participation', '参与度') }}</span>
+                    <span class="metric-label">{{ $tr('Participation', '参与度', 'Beteiligung') }}</span>
                     <div class="metric-bar-wrap">
                       <div class="metric-bar" :class="selectedQuality.participation_rate >= 0.8 ? 'bar-good' : selectedQuality.participation_rate >= 0.6 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.round(selectedQuality.participation_rate * 100) + '%' }"></div>
                     </div>
                     <span class="metric-value">{{ Math.round(selectedQuality.participation_rate * 100) }}%</span>
                   </div>
                   <div class="quality-metric" v-if="selectedQuality.stance_entropy !== null">
-                    <span class="metric-label">{{ $tr('Stance Diversity', '立场多样性') }}</span>
+                    <span class="metric-label">{{ $tr('Stance Diversity', '立场多样性', 'Haltungsvielfalt') }}</span>
                     <div class="metric-bar-wrap">
                       <div class="metric-bar" :class="selectedQuality.stance_entropy >= 0.5 ? 'bar-good' : selectedQuality.stance_entropy >= 0.3 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.round(selectedQuality.stance_entropy * 100) + '%' }"></div>
                     </div>
                     <span class="metric-value">{{ Math.round(selectedQuality.stance_entropy * 100) }}%</span>
                   </div>
                   <div class="quality-metric">
-                    <span class="metric-label">{{ $tr('Cross-Platform', '跨平台') }}</span>
+                    <span class="metric-label">{{ $tr('Cross-Platform', '跨平台', 'Plattformübergreifend') }}</span>
                     <div class="metric-bar-wrap">
                       <div class="metric-bar" :class="selectedQuality.cross_platform_rate >= 0.2 ? 'bar-good' : selectedQuality.cross_platform_rate >= 0.1 ? 'bar-ok' : 'bar-low'" :style="{ width: Math.min(Math.round(selectedQuality.cross_platform_rate * 100), 100) + '%' }"></div>
                     </div>
                     <span class="metric-value">{{ Math.round(selectedQuality.cross_platform_rate * 100) }}%</span>
                   </div>
                   <div class="quality-metric" v-if="selectedQuality.convergence_round !== null">
-                    <span class="metric-label">{{ $tr('Consensus', '共识') }}</span>
+                    <span class="metric-label">{{ $tr('Consensus', '共识', 'Konsens') }}</span>
                     <span class="metric-value convergence-tag">{{ $isZh() ? `第 ${selectedQuality.convergence_round} 轮` : `Round ${selectedQuality.convergence_round}` }}</span>
                   </div>
                 </div>
               </div>
 
               <div v-if="selectedQuality.suggestions && selectedQuality.suggestions.length" class="quality-suggestions">
-                <div class="suggestions-label">{{ $tr('Try for next run:', '下次运行可尝试:') }}</div>
+                <div class="suggestions-label">{{ $tr('Try for next run:', '下次运行可尝试:', 'Für den nächsten Lauf versuchen:') }}</div>
                 <div v-for="(s, i) in selectedQuality.suggestions" :key="i" class="suggestion-chip">{{ s }}</div>
               </div>
             </div>
@@ -422,13 +422,13 @@
             <div class="modal-embed-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">{{ $tr('Embed', '嵌入') }}</span>
+                <span class="divider-text">{{ $tr('Embed', '嵌入', 'Einbetten') }}</span>
                 <span class="divider-line"></span>
               </div>
 
               <div class="embed-intro">
-                <p class="embed-desc">{{ $tr('Drop this simulation into a Notion page, blog post, or README as a live widget — updates automatically as the simulation progresses.', '将此模拟作为实时组件嵌入 Notion 页面、博客文章或 README — 模拟进展时会自动更新。') }}</p>
-                <button class="embed-trigger-btn" @click="openEmbedDialog">⌘ {{ $tr('Get Embed Code', '获取嵌入代码') }}</button>
+                <p class="embed-desc">{{ $tr('Drop this simulation into a Notion page, blog post, or README as a live widget — updates automatically as the simulation progresses.', '将此模拟作为实时组件嵌入 Notion 页面、博客文章或 README — 模拟进展时会自动更新。', 'Diese Simulation als Live-Widget in eine Notion-Seite, einen Blogbeitrag oder README einbetten — wird automatisch aktualisiert.') }}</p>
+                <button class="embed-trigger-btn" @click="openEmbedDialog">⌘ {{ $tr('Get Embed Code', '获取嵌入代码', 'Einbettungscode erhalten') }}</button>
               </div>
             </div>
 
@@ -436,32 +436,32 @@
             <div class="modal-fork-section">
               <div class="modal-divider">
                 <span class="divider-line"></span>
-                <span class="divider-text">{{ $tr('Fork', '派生') }}</span>
+                <span class="divider-text">{{ $tr('Fork', '派生', 'Forken') }}</span>
                 <span class="divider-line"></span>
               </div>
 
               <div v-if="!showForkPanel" class="fork-intro">
-                <p class="fork-desc">{{ $tr('Clone this simulation with a new scenario — agent profiles are reused instantly.', '使用新情景克隆此模拟 — 智能体画像将立即复用。') }}</p>
-                <button class="fork-trigger-btn" @click="openForkPanel">⑂ {{ $tr('Fork Simulation', '派生模拟') }}</button>
+                <p class="fork-desc">{{ $tr('Clone this simulation with a new scenario — agent profiles are reused instantly.', '使用新情景克隆此模拟 — 智能体画像将立即复用。', 'Diese Simulation mit einem neuen Szenario klonen — Agentenprofile werden sofort wiederverwendet.') }}</p>
+                <button class="fork-trigger-btn" @click="openForkPanel">⑂ {{ $tr('Fork Simulation', '派生模拟', 'Simulation forken') }}</button>
                 <div v-if="selectedProject.parent_simulation_id" class="fork-lineage-badge">
-                  ⑂ {{ $tr('Forked from', '派生自') }} <span class="fork-parent-id">{{ formatSimulationId(selectedProject.parent_simulation_id) }}</span>
+                  ⑂ {{ $tr('Forked from', '派生自', 'Geforkt von') }} <span class="fork-parent-id">{{ formatSimulationId(selectedProject.parent_simulation_id) }}</span>
                 </div>
               </div>
 
               <div v-else class="fork-form">
-                <label class="fork-label">{{ $tr('Scenario (edit to explore a variant)', '情景(编辑以探索变体)') }}</label>
+                <label class="fork-label">{{ $tr('Scenario (edit to explore a variant)', '情景(编辑以探索变体)', 'Szenario (bearbeiten, um eine Variante zu erkunden)') }}</label>
                 <textarea
                   v-model="forkRequirement"
                   class="fork-textarea"
-                  :placeholder="$tr('Describe the scenario you want to simulate...', '描述你想要模拟的情景...')"
+                  :placeholder="$tr('Describe the scenario you want to simulate...', '描述你想要模拟的情景...', 'Szenario beschreiben, das simuliert werden soll...')"
                   rows="3"
                 ></textarea>
-                <p class="fork-note">{{ $tr('Agent profiles will be copied from the parent simulation — no re-preparation needed.', '智能体画像将从父级模拟复制 — 无需重新准备。') }}</p>
+                <p class="fork-note">{{ $tr('Agent profiles will be copied from the parent simulation — no re-preparation needed.', '智能体画像将从父级模拟复制 — 无需重新准备。', 'Agentenprofile werden von der übergeordneten Simulation kopiert — keine erneute Vorbereitung nötig.') }}</p>
                 <div v-if="forkError" class="fork-error">{{ forkError }}</div>
                 <div class="fork-actions">
-                  <button class="fork-cancel-btn" @click="closeForkPanel" :disabled="forking">{{ $tr('Cancel', '取消') }}</button>
+                  <button class="fork-cancel-btn" @click="closeForkPanel" :disabled="forking">{{ $tr('Cancel', '取消', 'Abbrechen') }}</button>
                   <button class="fork-submit-btn" @click="executeFork" :disabled="forking">
-                    {{ forking ? $tr('Forking...', '派生中...') : $tr('⑂ Fork & Open', '⑂ 派生并打开') }}
+                    {{ forking ? $tr('Forking...', '派生中...', 'Wird geforkt...') : $tr('⑂ Fork & Open', '⑂ 派生并打开', '⑂ Forken & Öffnen') }}
                   </button>
                 </div>
               </div>
@@ -491,10 +491,10 @@ import { tr } from '../i18n'
 const translateHealth = (health) => {
   if (!health) return ''
   const map = {
-    'Excellent': tr('Excellent', '优秀'),
-    'Good': tr('Good', '良好'),
-    'Fair': tr('Fair', '一般'),
-    'Poor': tr('Poor', '差'),
+    'Excellent': tr('Excellent', '优秀', 'Ausgezeichnet'),
+    'Good': tr('Good', '良好', 'Gut'),
+    'Fair': tr('Fair', '一般', 'Akzeptabel'),
+    'Poor': tr('Poor', '差', 'Schlecht'),
   }
   return map[health] || health
 }
@@ -772,7 +772,7 @@ const formatTime = (dateStr) => {
 
 // Generate title from simulation requirement (first 20 chars)
 const getSimulationTitle = (requirement) => {
-  if (!requirement) return tr('Untitled Simulation', '未命名模拟')
+  if (!requirement) return tr('Untitled Simulation', '未命名模拟', 'Unbenannte Simulation')
   const title = requirement.slice(0, 20)
   return requirement.length > 20 ? title + '...' : title
 }
@@ -788,8 +788,8 @@ const formatSimulationId = (simulationId) => {
 const formatRounds = (simulation) => {
   const current = simulation.current_round || 0
   const total = simulation.total_rounds || 0
-  if (total === 0) return tr('Not Started', '未开始')
-  return `${current}/${total} ${tr('rounds', '轮次')}`
+  if (total === 0) return tr('Not Started', '未开始', 'Nicht gestartet')
+  return `${current}/${total} ${tr('rounds', '轮次', 'Runden')}`
 }
 
 // Get file type (for styling)
@@ -810,9 +810,9 @@ const getFileType = (filename) => {
 
 // Get file type label text
 const getFileTypeLabel = (filename) => {
-  if (!filename) return tr('FILE', '文件')
+  if (!filename) return tr('FILE', '文件', 'DATEI')
   const ext = filename.split('.').pop()?.toUpperCase()
-  return ext || tr('FILE', '文件')
+  return ext || tr('FILE', '文件', 'DATEI')
 }
 
 // Build a clickable URL for an associated file:
@@ -830,7 +830,7 @@ const fileLinkFor = (file, project) => {
 
 // Truncate filename (preserve extension)
 const truncateFilename = (filename, maxLength) => {
-  if (!filename) return tr('Unknown file', '未知文件')
+  if (!filename) return tr('Unknown file', '未知文件', 'Unbekannte Datei')
   if (filename.length <= maxLength) return filename
 
   const ext = filename.includes('.') ? '.' + filename.split('.').pop() : ''
@@ -961,10 +961,10 @@ const executeFork = async () => {
       await loadHistory()
       router.push({ name: 'SimulationRun', params: { simulationId: newSimId } })
     } else {
-      forkError.value = response.error || tr('Fork failed', '派生失败')
+      forkError.value = response.error || tr('Fork failed', '派生失败', 'Forken fehlgeschlagen')
     }
   } catch (err) {
-    forkError.value = err?.response?.data?.error || err.message || tr('Fork failed', '派生失败')
+    forkError.value = err?.response?.data?.error || err.message || tr('Fork failed', '派生失败', 'Forken fehlgeschlagen')
   } finally {
     forking.value = false
   }
@@ -990,29 +990,29 @@ const getResolutionLabel = (project) => {
   const r = project.resolution
   if (!r) return null
   if (r.accuracy_score === null || r.accuracy_score === undefined) {
-    return { text: `${tr('Resolved:', '已结算:')} ${r.actual_outcome}`, cls: 'resolved-no-score' }
+    return { text: `${tr('Resolved:', '已结算:', 'Abgeschlossen:')} ${r.actual_outcome}`, cls: 'resolved-no-score' }
   }
   if (r.accuracy_score >= 1.0) {
     const pct = r.predicted_confidence ? Math.round(r.predicted_confidence * 100) : null
-    return { text: `${tr('✓ Correct', '✓ 正确')}${pct ? ` — ${pct}% ${tr('confident', '置信度')}` : ''}`, cls: 'resolved-correct' }
+    return { text: `${tr('✓ Correct', '✓ 正确', '✓ Korrekt')}${pct ? ` — ${pct}% ${tr('confident', '置信度', 'Konfidenz')}` : ''}`, cls: 'resolved-correct' }
   }
   if (r.accuracy_score <= 0.0) {
     const pct = r.predicted_confidence ? Math.round(r.predicted_confidence * 100) : null
-    return { text: `${tr('✗ Incorrect', '✗ 错误')}${pct ? ` — ${pct}% ${tr('confident', '置信度')}` : ''}`, cls: 'resolved-wrong' }
+    return { text: `${tr('✗ Incorrect', '✗ 错误', '✗ Falsch')}${pct ? ` — ${pct}% ${tr('confident', '置信度', 'Konfidenz')}` : ''}`, cls: 'resolved-wrong' }
   }
-  return { text: tr('~ Split', '~ 分歧'), cls: 'resolved-split' }
+  return { text: tr('~ Split', '~ 分歧', '~ Geteilt'), cls: 'resolved-split' }
 }
 
 const getQualityTooltip = (q) => {
   if (!q) return ''
-  const parts = [`${tr('Simulation Health:', '模拟健康度:')} ${translateHealth(q.health)}`]
-  parts.push(`${tr('Participation', '参与度')} ${Math.round(q.participation_rate * 100)}%`)
+  const parts = [`${tr('Simulation Health:', '模拟健康度:', 'Simulationsgesundheit:')} ${translateHealth(q.health)}`]
+  parts.push(`${tr('Participation', '参与度', 'Beteiligung')} ${Math.round(q.participation_rate * 100)}%`)
   if (q.stance_entropy !== null && q.stance_entropy !== undefined) {
-    const level = q.stance_entropy >= 0.7 ? tr('high', '高') : q.stance_entropy >= 0.4 ? tr('medium', '中') : tr('low', '低')
-    parts.push(`${tr('Stance diversity:', '立场多样性:')} ${level}`)
+    const level = q.stance_entropy >= 0.7 ? tr('high', '高', 'hoch') : q.stance_entropy >= 0.4 ? tr('medium', '中', 'mittel') : tr('low', '低', 'niedrig')
+    parts.push(`${tr('Stance diversity:', '立场多样性:', 'Haltungsvielfalt:')} ${level}`)
   }
   if (q.convergence_round !== null && q.convergence_round !== undefined) {
-    parts.push(tr(`Consensus at round ${q.convergence_round}`, `共识于第 ${q.convergence_round} 轮`))
+    parts.push(tr(`Consensus at round ${q.convergence_round}`, `共识于第 ${q.convergence_round} 轮`, `Konsens in Runde ${q.convergence_round}`))
   }
   return parts.join(' · ')
 }
@@ -1042,10 +1042,10 @@ const executeResolve = async (outcome) => {
       if (idx >= 0) projects.value[idx].resolution = response.data
       showResolvePanel.value = false
     } else {
-      resolveError.value = response.error || tr('Resolve failed', '结算失败')
+      resolveError.value = response.error || tr('Resolve failed', '结算失败', 'Auflösung fehlgeschlagen')
     }
   } catch (err) {
-    resolveError.value = err?.response?.data?.error || err.message || tr('Resolve failed', '结算失败')
+    resolveError.value = err?.response?.data?.error || err.message || tr('Resolve failed', '结算失败', 'Auflösung fehlgeschlagen')
   } finally {
     resolving.value = false
   }
