@@ -512,7 +512,7 @@ def suggest_scenarios():
                 })
 
         try:
-            llm = create_llm_client(timeout=20.0)
+            llm = create_llm_client(timeout=40.0)
         except Exception as exc:
             logger.warning(f"suggest-scenarios: LLM client unavailable: {exc}")
             return jsonify({
@@ -540,7 +540,7 @@ def suggest_scenarios():
         ]
 
         try:
-            parsed = llm.chat_json(messages, temperature=0.4, max_tokens=700)
+            parsed = llm.chat_json(messages, temperature=0.4, max_tokens=1500)
         except Exception as exc:
             # Don't 500 — scenario auto-suggest is best-effort; the form still works.
             logger.warning(f"suggest-scenarios: LLM call failed: {exc}")
