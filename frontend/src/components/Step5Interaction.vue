@@ -8,7 +8,7 @@
           <!-- Report Header -->
           <div class="report-header-block">
             <div class="report-meta">
-              <span class="report-tag">{{ $tr('Prediction Report', '预测报告', 'Vorhersagebericht') }}</span>
+              <span class="report-tag">{{ $tr('Prediction Report', '预测报告', { de: 'Vorhersagebericht' }) }}</span>
               <span class="report-id">ID: {{ reportId || 'REF-2024-X92' }}</span>
             </div>
             <h1 class="main-title">{{ reportOutline.title }}</h1>
@@ -58,7 +58,7 @@
                       <path d="M12 2a10 10 0 0 1 10 10" stroke-width="4" stroke="#4B5563" stroke-linecap="round"></path>
                     </svg>
                   </div>
-                  <span class="loading-text">{{ $tr('Generating', '正在生成', 'Generiere') }} {{ section.title }}...</span>
+                  <span class="loading-text">{{ $tr('Generating', '正在生成', { de: 'Generiere' }) }} {{ section.title }}...</span>
                 </div>
               </div>
             </div>
@@ -72,7 +72,7 @@
             <div class="waiting-ring"></div>
             <div class="waiting-ring"></div>
           </div>
-          <span class="waiting-text">{{ $tr('Waiting for Report Agent...', '等待报告智能体...', 'Warte auf Report Agent...') }}</span>
+          <span class="waiting-text">{{ $tr('Waiting for Report Agent...', '等待报告智能体...', { de: 'Warte auf Report Agent...' }) }}</span>
         </div>
       </div>
 
@@ -85,8 +85,8 @@
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
           <div class="action-bar-text">
-            <span class="action-bar-title">{{ $tr('Interactive Tools', '交互工具', 'Interaktive Tools') }}</span>
-            <span class="action-bar-subtitle mono">{{ profiles.length }} {{ $tr('personas available', '个可用人设', 'Agenten verfügbar') }}</span>
+            <span class="action-bar-title">{{ $tr('Interactive Tools', '交互工具', { de: 'Interaktive Tools' }) }}</span>
+            <span class="action-bar-subtitle mono">{{ profiles.length }} {{ $tr('personas available', '个可用人设', { de: 'Agenten verfügbar' }) }}</span>
           </div>
         </div>
           <div class="action-bar-tabs">
@@ -98,7 +98,7 @@
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
               </svg>
-              <span>{{ $tr('Chat with Report Agent', '与报告智能体对话', 'Mit Report Agent chatten') }}</span>
+              <span>{{ $tr('Chat with Report Agent', '与报告智能体对话', { de: 'Mit Report Agent chatten' }) }}</span>
             </button>
             <div class="agent-dropdown" v-if="profiles.length > 0">
               <button 
@@ -110,13 +110,13 @@
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                   <circle cx="12" cy="7" r="4"></circle>
                 </svg>
-                <span>{{ selectedAgent ? selectedAgent.username : $tr('Persona Chat', '人设对话', 'Mit beliebigem Individuum chatten') }}</span>
+                <span>{{ selectedAgent ? selectedAgent.username : $tr('Persona Chat', '人设对话', { de: 'Mit beliebigem Individuum chatten' }) }}</span>
                 <svg class="dropdown-arrow" :class="{ open: showAgentDropdown }" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
               </button>
               <div v-if="showAgentDropdown" class="dropdown-menu">
-                <div class="dropdown-header">{{ $tr('Select Chat Target', '选择对话对象', 'Gesprächsziel auswählen') }}</div>
+                <div class="dropdown-header">{{ $tr('Select Chat Target', '选择对话对象', { de: 'Gesprächsziel auswählen' }) }}</div>
                 <div 
                   v-for="(agent, idx) in profiles" 
                   :key="idx"
@@ -126,7 +126,7 @@
                   <div class="agent-avatar">{{ (agent.username || 'A')[0] }}</div>
                   <div class="agent-info">
                     <span class="agent-name">{{ agent.username }}</span>
-                    <span class="agent-role">{{ agent.profession || $tr('Unknown Profession', '未知职业', 'Unbekannter Beruf') }}</span>
+                    <span class="agent-role">{{ agent.profession || $tr('Unknown Profession', '未知职业', { de: 'Unbekannter Beruf' }) }}</span>
                   </div>
                 </div>
               </div>
@@ -141,7 +141,7 @@
                 <path d="M9 11l3 3L22 4"></path>
                 <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
               </svg>
-              <span>{{ $tr('Group Questions', '群组提问', 'Umfrage an die Welt senden') }}</span>
+              <span>{{ $tr('Group Questions', '群组提问', { de: 'Umfrage an die Welt senden' }) }}</span>
             </button>
           </div>
         </div>
@@ -154,8 +154,8 @@
             <div class="tools-card-header">
               <div class="tools-card-avatar">R</div>
               <div class="tools-card-info">
-                <div class="tools-card-name">{{ $tr('Report Agent - Chat', '报告智能体 - 对话', 'Report Agent - Chat') }}</div>
-                <div class="tools-card-subtitle">{{ $tr('Quick chat version of the report generation agent. Can call 4 professional tools. Has complete MiroShark memory', '报告生成智能体的快速对话版本。可调用 4 个专业工具,具备完整的 MiroShark 记忆', 'Schnelle Chat-Version des Berichtserstellungs-Agenten. Kann 4 professionelle Tools aufrufen. Hat vollständiges MiroShark-Gedächtnis') }}</div>
+                <div class="tools-card-name">{{ $tr('Report Agent - Chat', '报告智能体 - 对话', { de: 'Report Agent - Chat' }) }}</div>
+                <div class="tools-card-subtitle">{{ $tr('Quick chat version of the report generation agent. Can call 4 professional tools. Has complete MiroShark memory', '报告生成智能体的快速对话版本。可调用 4 个专业工具,具备完整的 MiroShark 记忆', { de: 'Schnelle Chat-Version des Berichtserstellungs-Agenten. Kann 4 professionelle Tools aufrufen. Hat vollständiges MiroShark-Gedächtnis' }) }}</div>
               </div>
               <button class="tools-card-toggle" @click="showToolsDetail = !showToolsDetail">
                 <svg :class="{ 'is-expanded': showToolsDetail }" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
@@ -172,8 +172,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">{{ $tr('InsightForge Deep Attribution', 'InsightForge 深度归因', 'InsightForge Tiefenanalyse') }}</div>
-                    <div class="tool-desc">{{ $tr('Aligns real-world seed data with simulation environment state, combining Global/Local Memory mechanisms to provide cross-temporal deep attribution analysis', '将真实世界种子数据与模拟环境状态对齐,结合全局/局部记忆机制提供跨时序深度归因分析', 'Gleicht reale Seed-Daten mit dem Simulationsumgebungszustand ab und kombiniert globale/lokale Gedächtnismechanismen für zeitübergreifende Tiefenattributionsanalysen') }}</div>
+                    <div class="tool-name">{{ $tr('InsightForge Deep Attribution', 'InsightForge 深度归因', { de: 'InsightForge Tiefenanalyse' }) }}</div>
+                    <div class="tool-desc">{{ $tr('Aligns real-world seed data with simulation environment state, combining Global/Local Memory mechanisms to provide cross-temporal deep attribution analysis', '将真实世界种子数据与模拟环境状态对齐,结合全局/局部记忆机制提供跨时序深度归因分析', { de: 'Gleicht reale Seed-Daten mit dem Simulationsumgebungszustand ab und kombiniert globale/lokale Gedächtnismechanismen für zeitübergreifende Tiefenattributionsanalysen' }) }}</div>
                   </div>
                 </div>
                 <div class="tool-item tool-blue">
@@ -184,8 +184,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">{{ $tr('PanoramaSearch Panoramic Tracking', 'PanoramaSearch 全景追踪', 'PanoramaSearch Panorama-Tracking') }}</div>
-                    <div class="tool-desc">{{ $tr('Graph-based breadth traversal algorithm that reconstructs event propagation paths and captures the full topology of information flow', '基于图的广度遍历算法,重建事件传播路径并捕捉信息流的完整拓扑结构', 'Graphbasierter Breitensuchalgorithmus, der Ereignisausbreitungspfade rekonstruiert und die vollständige Topologie des Informationsflusses erfasst') }}</div>
+                    <div class="tool-name">{{ $tr('PanoramaSearch Panoramic Tracking', 'PanoramaSearch 全景追踪', { de: 'PanoramaSearch Panorama-Tracking' }) }}</div>
+                    <div class="tool-desc">{{ $tr('Graph-based breadth traversal algorithm that reconstructs event propagation paths and captures the full topology of information flow', '基于图的广度遍历算法,重建事件传播路径并捕捉信息流的完整拓扑结构', { de: 'Graphbasierter Breitensuchalgorithmus, der Ereignisausbreitungspfade rekonstruiert und die vollständige Topologie des Informationsflusses erfasst' }) }}</div>
                   </div>
                 </div>
                 <div class="tool-item tool-orange">
@@ -195,8 +195,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">{{ $tr('QuickSearch Quick Retrieval', 'QuickSearch 快速检索', 'QuickSearch Schnellabfrage') }}</div>
-                    <div class="tool-desc">{{ $tr('GraphRAG-based instant query interface with optimized indexing efficiency for quickly extracting specific node attributes and discrete facts', '基于 GraphRAG 的即时查询接口,优化索引效率,快速提取特定节点属性和离散事实', 'GraphRAG-basierte Sofortabfrageschnittstelle mit optimierter Indizierungseffizienz zur schnellen Extraktion spezifischer Knotenattribute und diskreter Fakten') }}</div>
+                    <div class="tool-name">{{ $tr('QuickSearch Quick Retrieval', 'QuickSearch 快速检索', { de: 'QuickSearch Schnellabfrage' }) }}</div>
+                    <div class="tool-desc">{{ $tr('GraphRAG-based instant query interface with optimized indexing efficiency for quickly extracting specific node attributes and discrete facts', '基于 GraphRAG 的即时查询接口,优化索引效率,快速提取特定节点属性和离散事实', { de: 'GraphRAG-basierte Sofortabfrageschnittstelle mit optimierter Indizierungseffizienz zur schnellen Extraktion spezifischer Knotenattribute und diskreter Fakten' }) }}</div>
                   </div>
                 </div>
                 <div class="tool-item tool-green">
@@ -208,8 +208,8 @@
                     </svg>
                   </div>
                   <div class="tool-content">
-                    <div class="tool-name">{{ $tr('InterviewSubAgent Virtual Interview', 'InterviewSubAgent 虚拟访谈', 'InterviewSubAgent Virtuelles Interview') }}</div>
-                    <div class="tool-desc">{{ $tr('Autonomous interviews that conduct parallel multi-round dialogues with individuals in the simulated world, collecting unstructured opinion data and psychological states', '自主访谈,与模拟世界中的个体进行并行多轮对话,采集非结构化的观点数据与心理状态', 'Autonome Interviews, die parallele Mehrrunddialoge mit Individuen in der simulierten Welt führen und unstrukturierte Meinungsdaten sowie psychologische Zustände erfassen') }}</div>
+                    <div class="tool-name">{{ $tr('InterviewSubAgent Virtual Interview', 'InterviewSubAgent 虚拟访谈', { de: 'InterviewSubAgent Virtuelles Interview' }) }}</div>
+                    <div class="tool-desc">{{ $tr('Autonomous interviews that conduct parallel multi-round dialogues with individuals in the simulated world, collecting unstructured opinion data and psychological states', '自主访谈,与模拟世界中的个体进行并行多轮对话,采集非结构化的观点数据与心理状态', { de: 'Autonome Interviews, die parallele Mehrrunddialoge mit Individuen in der simulierten Welt führen und unstrukturierte Meinungsdaten sowie psychologische Zustände erfassen' }) }}</div>
                   </div>
                 </div>
               </div>
@@ -224,7 +224,7 @@
                 <div class="profile-card-name">{{ selectedAgent.username }}</div>
                 <div class="profile-card-meta">
                   <span v-if="selectedAgent.name" class="profile-card-handle">@{{ selectedAgent.name }}</span>
-                  <span class="profile-card-profession">{{ selectedAgent.profession || $tr('Unknown Profession', '未知职业', 'Unbekannter Beruf') }}</span>
+                  <span class="profile-card-profession">{{ selectedAgent.profession || $tr('Unknown Profession', '未知职业', { de: 'Unbekannter Beruf' }) }}</span>
                 </div>
               </div>
               <button class="profile-card-toggle" @click="showFullProfile = !showFullProfile">
@@ -235,7 +235,7 @@
             </div>
             <div v-if="showFullProfile && selectedAgent.bio" class="profile-card-body">
               <div class="profile-card-bio">
-                <div class="profile-card-label">{{ $tr('Bio', '简介', 'Biografie') }}</div>
+                <div class="profile-card-label">{{ $tr('Bio', '简介', { de: 'Biografie' }) }}</div>
                 <p>{{ selectedAgent.bio }}</p>
               </div>
             </div>
@@ -250,7 +250,7 @@
                 </svg>
               </div>
               <p class="empty-text">
-                {{ chatTarget === 'report_agent' ? $tr('Chat with Report Agent to explore report details', '与报告智能体对话,探索报告详情', 'Mit Report Agent chatten, um Berichtsdetails zu erkunden') : $tr('Chat with simulated individuals to understand their perspectives', '与模拟个体对话,了解他们的观点', 'Mit simulierten Individuen chatten, um ihre Perspektiven zu verstehen') }}
+                {{ chatTarget === 'report_agent' ? $tr('Chat with Report Agent to explore report details', '与报告智能体对话,探索报告详情', { de: 'Mit Report Agent chatten, um Berichtsdetails zu erkunden' }) : $tr('Chat with simulated individuals to understand their perspectives', '与模拟个体对话,了解他们的观点', { de: 'Mit simulierten Individuen chatten, um ihre Perspektiven zu verstehen' }) }}
               </p>
             </div>
             <div 
@@ -266,7 +266,7 @@
               <div class="message-content">
                 <div class="message-header">
                   <span class="sender-name">
-                    {{ msg.role === 'user' ? $tr('You', '你', 'Sie') : (chatTarget === 'report_agent' ? $tr('Report Agent', '报告智能体', 'Report Agent') : (selectedAgent?.username || $tr('Agent', '智能体', 'Agent'))) }}
+                    {{ msg.role === 'user' ? $tr('You', '你', { de: 'Sie' }) : (chatTarget === 'report_agent' ? $tr('Report Agent', '报告智能体', { de: 'Report Agent' }) : (selectedAgent?.username || $tr('Agent', '智能体', { de: 'Agent' }))) }}
                   </span>
                   <span class="message-time">{{ formatTime(msg.timestamp) }}</span>
                 </div>
@@ -292,7 +292,7 @@
             <textarea 
               v-model="chatInput"
               class="chat-input"
-              :placeholder="$tr('Enter your question...', '请输入你的问题...', 'Frage eingeben...')"
+              :placeholder="$tr('Enter your question...', '请输入你的问题...', { de: 'Frage eingeben...' })"
               @keydown.enter.exact.prevent="sendMessage"
               :disabled="isSending || (!selectedAgent && chatTarget === 'agent')"
               rows="1"
@@ -321,9 +321,9 @@
                   <svg :class="['toggle-chevron', { expanded: showPersonaSection }]" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="9 18 15 12 9 6"></polyline>
                   </svg>
-                  <span class="section-title">{{ $tr('Select Persona', '选择人设', 'Persona auswählen') }}</span>
+                  <span class="section-title">{{ $tr('Select Persona', '选择人设', { de: 'Persona auswählen' }) }}</span>
                 </div>
-                <span class="selection-count">{{ $tr('Selected', '已选', 'Ausgewählt') }} {{ selectedAgents.size }} / {{ profiles.length }}</span>
+                <span class="selection-count">{{ $tr('Selected', '已选', { de: 'Ausgewählt' }) }} {{ selectedAgents.size }} / {{ profiles.length }}</span>
               </div>
               <div v-show="showPersonaSection" class="agents-grid">
                 <label
@@ -340,7 +340,7 @@
                   <div class="checkbox-avatar">{{ (agent.username || 'A')[0] }}</div>
                   <div class="checkbox-info">
                     <span class="checkbox-name">{{ agent.username }}</span>
-                    <span class="checkbox-role">{{ agent.profession || $tr('Unknown Profession', '未知职业', 'Unbekannter Beruf') }}</span>
+                    <span class="checkbox-role">{{ agent.profession || $tr('Unknown Profession', '未知职业', { de: 'Unbekannter Beruf' }) }}</span>
                   </div>
                   <div class="checkbox-indicator">
                     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3">
@@ -350,20 +350,20 @@
                 </label>
               </div>
               <div v-show="showPersonaSection" class="selection-actions">
-                <button class="action-link" @click="selectAllAgents">{{ $tr('Select All', '全选', 'Alle auswählen') }}</button>
+                <button class="action-link" @click="selectAllAgents">{{ $tr('Select All', '全选', { de: 'Alle auswählen' }) }}</button>
                 <span class="action-divider">|</span>
-                <button class="action-link" @click="clearAgentSelection">{{ $tr('Clear', '清空', 'Auswahl aufheben') }}</button>
+                <button class="action-link" @click="clearAgentSelection">{{ $tr('Clear', '清空', { de: 'Auswahl aufheben' }) }}</button>
               </div>
             </div>
 
             <div class="setup-section">
               <div class="section-header">
-                <span class="section-title">{{ $tr('Persona Question', '人设问题', 'Persona-Frage') }}</span>
+                <span class="section-title">{{ $tr('Persona Question', '人设问题', { de: 'Persona-Frage' }) }}</span>
               </div>
               <textarea
                 v-model="surveyQuestion"
                 class="survey-input"
-                :placeholder="$tr('Enter the question you want to ask all selected targets...', '输入你想向所有选中对象提出的问题...', 'Frage eingeben, die Sie an alle ausgewählten Ziele stellen möchten...')"
+                :placeholder="$tr('Enter the question you want to ask all selected targets...', '输入你想向所有选中对象提出的问题...', { de: 'Frage eingeben, die Sie an alle ausgewählten Ziele stellen möchten...' })"
                 rows="3"
               ></textarea>
             </div>
@@ -374,15 +374,15 @@
               @click="submitSurvey"
             >
               <span v-if="isSurveying" class="loading-spinner"></span>
-              <span v-else>{{ $tr('Send Question', '发送问题', 'Umfrage senden') }}</span>
+              <span v-else>{{ $tr('Send Question', '发送问题', { de: 'Umfrage senden' }) }}</span>
             </button>
           </div>
 
           <!-- Results -->
           <div v-if="surveyResults.length > 0" class="survey-results">
             <div class="results-header">
-              <span class="results-title">{{ $tr('Results', '结果', 'Ergebnisse') }}</span>
-              <span class="results-count">{{ surveyResults.length }} {{ $tr('responses', '条回复', 'Antworten') }}</span>
+              <span class="results-title">{{ $tr('Results', '结果', { de: 'Ergebnisse' }) }}</span>
+              <span class="results-count">{{ surveyResults.length }} {{ $tr('responses', '条回复', { de: 'Antworten' }) }}</span>
             </div>
             <div class="results-list">
               <div 
@@ -394,7 +394,7 @@
                   <div class="result-avatar">{{ (result.agent_name || 'A')[0] }}</div>
                   <div class="result-info">
                     <span class="result-name">{{ result.agent_name }}</span>
-                    <span class="result-role">{{ result.profession || $tr('Unknown Profession', '未知职业', 'Unbekannter Beruf') }}</span>
+                    <span class="result-role">{{ result.profession || $tr('Unknown Profession', '未知职业', { de: 'Unbekannter Beruf' }) }}</span>
                   </div>
                 </div>
                 <div class="result-question">
@@ -430,25 +430,25 @@
 
           <div class="profile-popup-details">
             <div class="profile-popup-row" v-if="profilePopupAgent.bio">
-              <span class="popup-label">{{ $tr('Bio', '简介', 'Biografie') }}</span>
+              <span class="popup-label">{{ $tr('Bio', '简介', { de: 'Biografie' }) }}</span>
               <span class="popup-value">{{ profilePopupAgent.bio }}</span>
             </div>
             <div class="profile-popup-stats">
-              <span v-if="profilePopupAgent.age" class="popup-stat">{{ profilePopupAgent.age }}{{ $tr('y', '岁', 'J') }}</span>
+              <span v-if="profilePopupAgent.age" class="popup-stat">{{ profilePopupAgent.age }}{{ $tr('y', '岁', { de: 'J' }) }}</span>
               <span v-if="profilePopupAgent.gender" class="popup-stat">{{ profilePopupAgent.gender }}</span>
               <span v-if="profilePopupAgent.mbti" class="popup-stat">{{ profilePopupAgent.mbti }}</span>
               <span v-if="profilePopupAgent.country" class="popup-stat">{{ profilePopupAgent.country }}</span>
             </div>
             <div class="profile-popup-row" v-if="profilePopupAgent.persona">
-              <span class="popup-label" @click="showFullPersona = !showFullPersona" style="cursor:pointer">{{ $tr('Persona', '人设', 'Persona') }} {{ showFullPersona ? '▼' : '▶' }}</span>
+              <span class="popup-label" @click="showFullPersona = !showFullPersona" style="cursor:pointer">{{ $tr('Persona', '人设', { de: 'Persona' }) }} {{ showFullPersona ? '▼' : '▶' }}</span>
               <span class="popup-value popup-persona" :class="{ clamped: !showFullPersona }">{{ profilePopupAgent.persona }}</span>
             </div>
           </div>
 
           <div class="profile-popup-activity">
-            <div class="popup-section-title">{{ $tr('Simulation Activity', '模拟活动', 'Simulationsaktivität') }} ({{ profilePopupActions.length }})</div>
-            <div v-if="profilePopupLoading" class="popup-loading">{{ $tr('Loading...', '加载中...', 'Laden...') }}</div>
-            <div v-else-if="profilePopupActions.length === 0" class="popup-empty">{{ $tr('No activity recorded', '没有活动记录', 'Keine Aktivität aufgezeichnet') }}</div>
+            <div class="popup-section-title">{{ $tr('Simulation Activity', '模拟活动', { de: 'Simulationsaktivität' }) }} ({{ profilePopupActions.length }})</div>
+            <div v-if="profilePopupLoading" class="popup-loading">{{ $tr('Loading...', '加载中...', { de: 'Laden...' }) }}</div>
+            <div v-else-if="profilePopupActions.length === 0" class="popup-empty">{{ $tr('No activity recorded', '没有活动记录', { de: 'Keine Aktivität aufgezeichnet' }) }}</div>
             <div v-else class="popup-actions-list">
               <div
                 v-for="(action, i) in profilePopupActions"
@@ -467,11 +467,11 @@
                 </div>
                 <div v-if="expandedActions.has(i)" class="popup-action-full">
                   <p v-if="action.action_args?.content">{{ action.action_args.content }}</p>
-                  <p v-if="action.action_args?.quote_content"><strong>{{ $tr('Quote:', '引用:', 'Zitat:') }}</strong> {{ action.action_args.quote_content }}</p>
-                  <p v-if="action.action_args?.post_content"><strong>{{ $tr('Original:', '原文:', 'Original:') }}</strong> {{ action.action_args.post_content }}</p>
-                  <p v-if="action.action_args?.original_content"><strong>{{ $tr('Ref:', '引用:', 'Referenz:') }}</strong> {{ action.action_args.original_content }}</p>
-                  <p v-if="action.action_args?.target_user_name"><strong>{{ $tr('Target:', '对象:', 'Ziel:') }}</strong> @{{ action.action_args.target_user_name }}</p>
-                  <p v-if="action.action_args?.query"><strong>{{ $tr('Query:', '查询:', 'Abfrage:') }}</strong> {{ action.action_args.query }}</p>
+                  <p v-if="action.action_args?.quote_content"><strong>{{ $tr('Quote:', '引用:', { de: 'Zitat:' }) }}</strong> {{ action.action_args.quote_content }}</p>
+                  <p v-if="action.action_args?.post_content"><strong>{{ $tr('Original:', '原文:', { de: 'Original:' }) }}</strong> {{ action.action_args.post_content }}</p>
+                  <p v-if="action.action_args?.original_content"><strong>{{ $tr('Ref:', '引用:', { de: 'Referenz:' }) }}</strong> {{ action.action_args.original_content }}</p>
+                  <p v-if="action.action_args?.target_user_name"><strong>{{ $tr('Target:', '对象:', { de: 'Ziel:' }) }}</strong> @{{ action.action_args.target_user_name }}</p>
+                  <p v-if="action.action_args?.query"><strong>{{ $tr('Query:', '查询:', { de: 'Abfrage:' }) }}</strong> {{ action.action_args.query }}</p>
                 </div>
               </div>
             </div>
@@ -659,7 +659,7 @@ const selectAgent = (agent, idx) => {
 
   // Restore this Agent's chat records
   chatHistory.value = chatHistoryCache.value[`agent_${idx}`] || []
-  addLog(`${tr('Select chat target', '选择对话对象', 'Gesprächsziel auswählen')}: ${agent.username}`)
+  addLog(`${tr('Select chat target', '选择对话对象', { de: 'Gesprächsziel auswählen' })}: ${agent.username}`)
 }
 
 const formatTime = (timestamp) => {
@@ -699,10 +699,10 @@ const sendMessage = async () => {
       await sendToAgent(message)
     }
   } catch (err) {
-    addLog(`${tr('Send failed', '发送失败', 'Senden fehlgeschlagen')}: ${err.message}`)
+    addLog(`${tr('Send failed', '发送失败', { de: 'Senden fehlgeschlagen' })}: ${err.message}`)
     chatHistory.value.push({
       role: 'assistant',
-      content: `${tr('Sorry, an error occurred', '抱歉,发生了错误', 'Es ist ein Fehler aufgetreten')}: ${err.message}`,
+      content: `${tr('Sorry, an error occurred', '抱歉,发生了错误', { de: 'Es ist ein Fehler aufgetreten' })}: ${err.message}`,
       timestamp: new Date().toISOString()
     })
   } finally {
@@ -714,7 +714,7 @@ const sendMessage = async () => {
 }
 
 const sendToReportAgent = async (message) => {
-  addLog(`${tr('Sending to Report Agent', '发送至报告智能体', 'Sende an Report Agent')}: ${message.substring(0, 50)}...`)
+  addLog(`${tr('Sending to Report Agent', '发送至报告智能体', { de: 'Sende an Report Agent' })}: ${message.substring(0, 50)}...`)
   
   // Build chat history for API
   const historyForApi = chatHistory.value
@@ -734,21 +734,21 @@ const sendToReportAgent = async (message) => {
   if (res.success && res.data) {
     chatHistory.value.push({
       role: 'assistant',
-      content: res.data.response || res.data.answer || tr('No response', '无响应', 'Keine Antwort'),
+      content: res.data.response || res.data.answer || tr('No response', '无响应', { de: 'Keine Antwort' }),
       timestamp: new Date().toISOString()
     })
-    addLog(tr('Report Agent has replied', '报告智能体已回复', 'Report Agent hat geantwortet'))
+    addLog(tr('Report Agent has replied', '报告智能体已回复', { de: 'Report Agent hat geantwortet' }))
   } else {
-    throw new Error(res.error || tr('Request failed', '请求失败', 'Anfrage fehlgeschlagen'))
+    throw new Error(res.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen' }))
   }
 }
 
 const sendToAgent = async (message) => {
   if (!selectedAgent.value || selectedAgentIndex.value === null) {
-    throw new Error(tr('Please select a simulated individual first', '请先选择一个模拟个体', 'Bitte wählen Sie zuerst ein simuliertes Individuum aus'))
+    throw new Error(tr('Please select a simulated individual first', '请先选择一个模拟个体', { de: 'Bitte wählen Sie zuerst ein simuliertes Individuum aus' }))
   }
   
-  addLog(`${tr('Sending to', '发送至', 'Sende an')} ${selectedAgent.value.username}: ${message.substring(0, 50)}...`)
+  addLog(`${tr('Sending to', '发送至', { de: 'Sende an' })} ${selectedAgent.value.username}: ${message.substring(0, 50)}...`)
   
   // Build prompt with chat history
   let prompt = message
@@ -798,12 +798,12 @@ const sendToAgent = async (message) => {
         content: responseContent,
         timestamp: new Date().toISOString()
       })
-      addLog(`${selectedAgent.value.username} ${tr('has replied', '已回复', 'hat geantwortet')}`)
+      addLog(`${selectedAgent.value.username} ${tr('has replied', '已回复', { de: 'hat geantwortet' })}`)
     } else {
-      throw new Error(tr('No response data', '没有响应数据', 'Keine Antwortdaten'))
+      throw new Error(tr('No response data', '没有响应数据', { de: 'Keine Antwortdaten' }))
     }
   } else {
-    throw new Error(res.error || tr('Request failed', '请求失败', 'Anfrage fehlgeschlagen'))
+    throw new Error(res.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen' }))
   }
 }
 
@@ -840,7 +840,7 @@ const submitSurvey = async () => {
   if (selectedAgents.value.size === 0 || !surveyQuestion.value.trim()) return
   
   isSurveying.value = true
-  addLog(`${tr('Sending survey to', '正在向', 'Sende Umfrage an')} ${selectedAgents.value.size} ${tr('targets...', '个对象发送问卷...', 'Ziele...')}`)
+  addLog(`${tr('Sending survey to', '正在向', { de: 'Sende Umfrage an' })} ${selectedAgents.value.size} ${tr('targets...', '个对象发送问卷...', { de: 'Ziele...' })}`)
   
   try {
     const interviews = Array.from(selectedAgents.value).map(idx => ({
@@ -867,20 +867,20 @@ const submitSurvey = async () => {
         const agent = profiles.value[agentIdx]
 
         // Prefer reddit platform reply, then twitter
-        let responseContent = tr('No response', '无响应', 'Keine Antwort')
+        let responseContent = tr('No response', '无响应', { de: 'Keine Antwort' })
 
         if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
           const redditKey = `reddit_${agentIdx}`
           const twitterKey = `twitter_${agentIdx}`
           const agentResult = resultsDict[redditKey] || resultsDict[twitterKey]
           if (agentResult) {
-            responseContent = agentResult.response || agentResult.answer || tr('No response', '无响应', 'Keine Antwort')
+            responseContent = agentResult.response || agentResult.answer || tr('No response', '无响应', { de: 'Keine Antwort' })
           }
         } else if (Array.isArray(resultsDict)) {
           // Compatible with array format
           const matchedResult = resultsDict.find(r => r.agent_id === agentIdx)
           if (matchedResult) {
-            responseContent = matchedResult.response || matchedResult.answer || tr('No response', '无响应', 'Keine Antwort')
+            responseContent = matchedResult.response || matchedResult.answer || tr('No response', '无响应', { de: 'Keine Antwort' })
           }
         }
 
@@ -894,12 +894,12 @@ const submitSurvey = async () => {
       }
 
       surveyResults.value = surveyResultsList
-      addLog(`${tr('Received', '已收到', 'Erhalten')} ${surveyResults.value.length} ${tr('replies', '条回复', 'Antworten')}`)
+      addLog(`${tr('Received', '已收到', { de: 'Erhalten' })} ${surveyResults.value.length} ${tr('replies', '条回复', { de: 'Antworten' })}`)
     } else {
-      throw new Error(res.error || tr('Request failed', '请求失败', 'Anfrage fehlgeschlagen'))
+      throw new Error(res.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen' }))
     }
   } catch (err) {
-    addLog(`${tr('Survey send failed', '问卷发送失败', 'Umfrage konnte nicht gesendet werden')}: ${err.message}`)
+    addLog(`${tr('Survey send failed', '问卷发送失败', { de: 'Umfrage konnte nicht gesendet werden' })}: ${err.message}`)
   } finally {
     isSurveying.value = false
   }
@@ -910,7 +910,7 @@ const loadReportData = async () => {
   if (!props.reportId) return
   
   try {
-    addLog(`${tr('Loading report data', '加载报告数据', 'Lade Berichtsdaten')}: ${props.reportId}`)
+    addLog(`${tr('Loading report data', '加载报告数据', { de: 'Lade Berichtsdaten' })}: ${props.reportId}`)
     
     // Get report info
     const reportRes = await getReport(props.reportId)
@@ -919,7 +919,7 @@ const loadReportData = async () => {
       await loadAgentLogs()
     }
   } catch (err) {
-    addLog(`${tr('Failed to load report', '加载报告失败', 'Bericht konnte nicht geladen werden')}: ${err.message}`)
+    addLog(`${tr('Failed to load report', '加载报告失败', { de: 'Bericht konnte nicht geladen werden' })}: ${err.message}`)
   }
 }
 
@@ -941,10 +941,10 @@ const loadAgentLogs = async () => {
         }
       })
       
-      addLog(tr('Report data loaded', '报告数据已加载', 'Berichtsdaten geladen'))
+      addLog(tr('Report data loaded', '报告数据已加载', { de: 'Berichtsdaten geladen' }))
     }
   } catch (err) {
-    addLog(`${tr('Failed to load report logs', '加载报告日志失败', 'Berichtsprotokolle konnten nicht geladen werden')}: ${err.message}`)
+    addLog(`${tr('Failed to load report logs', '加载报告日志失败', { de: 'Berichtsprotokolle konnten nicht geladen werden' })}: ${err.message}`)
   }
 }
 
@@ -955,10 +955,10 @@ const loadProfiles = async () => {
     const res = await getSimulationProfilesRealtime(props.simulationId, 'reddit')
     if (res.success && res.data) {
       profiles.value = res.data.profiles || []
-      addLog(`${tr('Loaded', '已加载', 'Geladen')} ${profiles.value.length} ${tr('simulated individuals', '个模拟个体', 'simulierte Individuen')}`)
+      addLog(`${tr('Loaded', '已加载', { de: 'Geladen' })} ${profiles.value.length} ${tr('simulated individuals', '个模拟个体', { de: 'simulierte Individuen' })}`)
     }
   } catch (err) {
-    addLog(`${tr('Failed to load simulated individuals', '加载模拟个体失败', 'Simulierte Individuen konnten nicht geladen werden')}: ${err.message}`)
+    addLog(`${tr('Failed to load simulated individuals', '加载模拟个体失败', { de: 'Simulierte Individuen konnten nicht geladen werden' })}: ${err.message}`)
   }
 }
 
@@ -972,7 +972,7 @@ const handleClickOutside = (e) => {
 
 // Lifecycle
 onMounted(() => {
-  addLog(tr('Step 5 Deep Interaction initializing', '步骤 5 深度交互初始化中', 'Schritt 5 Tiefe Interaktion wird initialisiert'))
+  addLog(tr('Step 5 Deep Interaction initializing', '步骤 5 深度交互初始化中', { de: 'Schritt 5 Tiefe Interaktion wird initialisiert' }))
   loadReportData()
   loadProfiles()
   document.addEventListener('click', handleClickOutside)

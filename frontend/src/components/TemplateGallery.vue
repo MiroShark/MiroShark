@@ -3,17 +3,17 @@
     <div class="gallery-header">
       <div class="header-left">
         <span class="header-icon">◈</span>
-        <span class="header-label">{{ $tr('Quick Start Templates', '快速启动模板', 'Schnellstart-Vorlagen') }}</span>
+        <span class="header-label">{{ $tr('Quick Start Templates', '快速启动模板', { de: 'Schnellstart-Vorlagen' }) }}</span>
       </div>
-      <span class="header-meta">{{ templates.length }} {{ $tr('scenarios ready to launch', '个可用情景', 'Szenarien startbereit') }}</span>
+      <span class="header-meta">{{ templates.length }} {{ $tr('scenarios ready to launch', '个可用情景', { de: 'Szenarien startbereit' }) }}</span>
     </div>
 
     <div v-if="loading" class="gallery-loading">
-      {{ $tr('Loading templates...', '加载模板中...', 'Vorlagen werden geladen...') }}
+      {{ $tr('Loading templates...', '加载模板中...', { de: 'Vorlagen werden geladen...' }) }}
     </div>
 
     <div v-else-if="templates.length === 0" class="gallery-empty">
-      {{ $tr('No templates available.', '暂无可用模板。', 'Keine Vorlagen verfügbar.') }}
+      {{ $tr('No templates available.', '暂无可用模板。', { de: 'Keine Vorlagen verfügbar.' }) }}
     </div>
 
     <div v-else class="template-grid">
@@ -35,16 +35,16 @@
         <p class="card-desc">{{ template.description }}</p>
 
         <div class="card-meta">
-          <span class="meta-item" :title="`~${template.estimated_agents} ` + $tr('agents', '个智能体', 'Agenten')">
-            {{ template.estimated_agents }} {{ $tr('agents', '智能体', 'Agenten') }}
+          <span class="meta-item" :title="`~${template.estimated_agents} ` + $tr('agents', '个智能体', { de: 'Agenten' })">
+            {{ template.estimated_agents }} {{ $tr('agents', '智能体', { de: 'Agenten' }) }}
           </span>
           <span class="meta-dot">·</span>
-          <span class="meta-item" :title="`~${template.estimated_rounds} ` + $tr('rounds', '轮次', 'Runden')">
-            {{ template.estimated_rounds }} {{ $tr('rounds', '轮次', 'Runden') }}
+          <span class="meta-item" :title="`~${template.estimated_rounds} ` + $tr('rounds', '轮次', { de: 'Runden' })">
+            {{ template.estimated_rounds }} {{ $tr('rounds', '轮次', { de: 'Runden' }) }}
           </span>
           <span class="meta-dot">·</span>
           <span class="meta-item difficulty" :class="template.difficulty">
-            {{ template.difficulty === 'easy' ? $tr('easy', '简单', 'Einfach') : template.difficulty === 'medium' ? $tr('medium', '中等', 'Mittel') : template.difficulty === 'hard' ? $tr('hard', '困难', 'Schwer') : template.difficulty }}
+            {{ template.difficulty === 'easy' ? $tr('easy', '简单', { de: 'Einfach' }) : template.difficulty === 'medium' ? $tr('medium', '中等', { de: 'Mittel' }) : template.difficulty === 'hard' ? $tr('hard', '困难', { de: 'Schwer' }) : template.difficulty }}
           </span>
         </div>
 
@@ -53,16 +53,16 @@
           <span
             v-if="template.has_counterfactuals"
             class="platform-badge platform-badge--cf"
-            :title="`${template.counterfactual_count} ` + $tr('preset counterfactual branches', '个预设反事实分支', 'voreingestellte kontrafaktische Zweige')"
+            :title="`${template.counterfactual_count} ` + $tr('preset counterfactual branches', '个预设反事实分支', { de: 'voreingestellte kontrafaktische Zweige' })"
           >
-            ⤷ {{ template.counterfactual_count }} {{ $tr('branches', '分支', 'Zweige') }}
+            ⤷ {{ template.counterfactual_count }} {{ $tr('branches', '分支', { de: 'Zweige' }) }}
           </span>
           <span
             v-if="template.has_oracle_tools"
             class="platform-badge platform-badge--oracle"
-            :title="`${template.oracle_tool_count} ` + $tr('FeedOracle tools declared', '个 FeedOracle 工具已声明', 'FeedOracle-Tools deklariert')"
+            :title="`${template.oracle_tool_count} ` + $tr('FeedOracle tools declared', '个 FeedOracle 工具已声明', { de: 'FeedOracle-Tools deklariert' })"
           >
-            ◎ {{ $tr('live data', '实时数据', 'Live-Daten') }}
+            ◎ {{ $tr('live data', '实时数据', { de: 'Live-Daten' }) }}
           </span>
         </div>
 
@@ -71,8 +71,8 @@
           class="oracle-toggle"
           :class="{ disabled: !capabilities.oracle_seed_enabled }"
           :title="capabilities.oracle_seed_enabled
-            ? $tr(`Dispatch this template's oracle_tools against FeedOracle MCP before ingest.`, '在注入前调度此模板的 oracle_tools 对接 FeedOracle MCP。', 'Die oracle_tools dieser Vorlage vor der Einspeisung gegen FeedOracle MCP ausführen.')
-            : $tr('Oracle seeds disabled server-side. Set ORACLE_SEED_ENABLED=true in .env to enable.', '服务器已禁用 Oracle 种子。请在 .env 中设置 ORACLE_SEED_ENABLED=true 启用。', 'Oracle-Seeds serverseitig deaktiviert. Setzen Sie ORACLE_SEED_ENABLED=true in .env zum Aktivieren.')"
+            ? $tr(`Dispatch this template's oracle_tools against FeedOracle MCP before ingest.`, '在注入前调度此模板的 oracle_tools 对接 FeedOracle MCP。', { de: 'Die oracle_tools dieser Vorlage vor der Einspeisung gegen FeedOracle MCP ausführen.' })
+            : $tr('Oracle seeds disabled server-side. Set ORACLE_SEED_ENABLED=true in .env to enable.', '服务器已禁用 Oracle 种子。请在 .env 中设置 ORACLE_SEED_ENABLED=true 启用。', { de: 'Oracle-Seeds serverseitig deaktiviert. Setzen Sie ORACLE_SEED_ENABLED=true in .env zum Aktivieren.' })"
           @click.stop
         >
           <input
@@ -81,7 +81,7 @@
             :disabled="!capabilities.oracle_seed_enabled"
             @change="toggleOracleOpt(template.id, $event.target.checked)"
           />
-          <span>{{ $tr('Use live oracle data', '使用实时 oracle 数据', 'Live-Oracle-Daten verwenden') }}</span>
+          <span>{{ $tr('Use live oracle data', '使用实时 oracle 数据', { de: 'Live-Oracle-Daten verwenden' }) }}</span>
         </label>
 
         <div class="card-actions">
@@ -90,14 +90,14 @@
             :disabled="launchingId === template.id"
             @click.stop="launchTemplate(template)"
           >
-            <span v-if="launchingId === template.id">{{ $tr('Loading...', '加载中...', 'Laden...') }}</span>
-            <span v-else-if="oracleOptIn[template.id] && capabilities.oracle_seed_enabled">{{ $tr('Launch (live) →', '启动(实时)→', 'Starten (live) →') }}</span>
-            <span v-else>{{ $tr('Launch →', '启动 →', 'Starten →') }}</span>
+            <span v-if="launchingId === template.id">{{ $tr('Loading...', '加载中...', { de: 'Laden...' }) }}</span>
+            <span v-else-if="oracleOptIn[template.id] && capabilities.oracle_seed_enabled">{{ $tr('Launch (live) →', '启动(实时)→', { de: 'Starten (live) →' }) }}</span>
+            <span v-else>{{ $tr('Launch →', '启动 →', { de: 'Starten →' }) }}</span>
           </button>
           <button
             class="copy-link-btn"
             :class="{ copied: copiedLinkId === template.id }"
-            :title="$tr('Copy a shareable link that auto-launches this template', '复制可自动启动此模板的分享链接', 'Teilbaren Link kopieren, der diese Vorlage automatisch startet')"
+            :title="$tr('Copy a shareable link that auto-launches this template', '复制可自动启动此模板的分享链接', { de: 'Teilbaren Link kopieren, der diese Vorlage automatisch startet' })"
             @click.stop="copyTemplateLink(template)"
           >
             <svg v-if="copiedLinkId === template.id" viewBox="0 0 24 24" class="cl-icon" fill="currentColor" aria-hidden="true">

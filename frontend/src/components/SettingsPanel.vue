@@ -5,7 +5,7 @@
         <!-- Header -->
         <div class="modal-header">
           <div class="modal-title">
-            <span class="title-label">⚙ {{ $tr('Settings', '设置', 'Einstellungen') }}</span>
+            <span class="title-label">⚙ {{ $tr('Settings', '设置', { de: 'Einstellungen' }) }}</span>
           </div>
           <button class="close-btn" @click="$emit('close')">✕</button>
         </div>
@@ -15,10 +15,10 @@
         <!-- Language Toggle -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">{{ $tr('Language / 语言', '语言 / Language', 'Sprache / Language') }}</span>
+            <span class="section-label">{{ $tr('Language / 语言', '语言 / Language', { de: 'Sprache / Language' }) }}</span>
           </div>
           <div class="field-row" style="display:flex;align-items:center;gap:12px;">
-            <label class="field-label">{{ $tr('Interface language', '界面语言', 'Oberflächensprache') }}</label>
+            <label class="field-label">{{ $tr('Interface language', '界面语言', { de: 'Oberflächensprache' }) }}</label>
             <LocaleToggle />
           </div>
         </section>
@@ -26,7 +26,7 @@
         <!-- Current Setup Summary -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">{{ $tr('Current Setup', '当前配置', 'Aktuelle Konfiguration') }}</span>
+            <span class="section-label">{{ $tr('Current Setup', '当前配置', { de: 'Aktuelle Konfiguration' }) }}</span>
             <div class="status-badge" :class="testStatus">
               <span class="badge-dot"></span>
               {{ testStatusText }}
@@ -35,46 +35,46 @@
 
           <div class="setup-grid">
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('Default model', '默认模型', 'Standardmodell') }}</span>
+              <span class="setup-key">{{ $tr('Default model', '默认模型', { de: 'Standardmodell' }) }}</span>
               <span class="setup-val">{{ currentSettings.llm?.model_name || '—' }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('Smart (reports)', '智能(报告)', 'Smart (Berichte)') }}</span>
+              <span class="setup-key">{{ $tr('Smart (reports)', '智能(报告)', { de: 'Smart (Berichte)' }) }}</span>
               <span class="setup-val">{{ currentSettings.smart?.model_name || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('NER (extraction)', 'NER(实体抽取)', 'NER (Extraktion)') }}</span>
+              <span class="setup-key">{{ $tr('NER (extraction)', 'NER(实体抽取)', { de: 'NER (Extraktion)' }) }}</span>
               <span class="setup-val">{{ currentSettings.ner?.model_name || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('Wonderwall (sim loop)', 'Wonderwall(模拟循环)', 'Wonderwall (Simulations-Loop)') }}</span>
+              <span class="setup-key">{{ $tr('Wonderwall (sim loop)', 'Wonderwall(模拟循环)', { de: 'Wonderwall (Simulations-Loop)' }) }}</span>
               <span class="setup-val">{{ currentSettings.wonderwall?.model_name || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('Embeddings', '嵌入', 'Embeddings') }}</span>
+              <span class="setup-key">{{ $tr('Embeddings', '嵌入', { de: 'Embeddings' }) }}</span>
               <span class="setup-val">
                 {{ currentSettings.embedding?.model_name || '—' }}
               </span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('Web search', '网页搜索', 'Websuche') }}</span>
+              <span class="setup-key">{{ $tr('Web search', '网页搜索', { de: 'Websuche' }) }}</span>
               <span class="setup-val">{{ currentSettings.web_search_model || inheritMarker }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('SearXNG', 'SearXNG', 'SearXNG') }}</span>
-              <span class="setup-val">{{ currentSettings.searxng_base_url || $tr('— not set —', '— 未设置 —', '— nicht gesetzt —') }}</span>
+              <span class="setup-key">{{ $tr('SearXNG', 'SearXNG', { de: 'SearXNG' }) }}</span>
+              <span class="setup-val">{{ currentSettings.searxng_base_url || $tr('— not set —', '— 未设置 —', { de: '— nicht gesetzt —' }) }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('Firecrawl', 'Firecrawl', 'Firecrawl') }}</span>
-              <span class="setup-val">{{ currentSettings.firecrawl?.base_url || $tr('— not set —', '— 未设置 —', '— nicht gesetzt —') }}</span>
+              <span class="setup-key">{{ $tr('Firecrawl', 'Firecrawl', { de: 'Firecrawl' }) }}</span>
+              <span class="setup-val">{{ currentSettings.firecrawl?.base_url || $tr('— not set —', '— 未设置 —', { de: '— nicht gesetzt —' }) }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('API key', 'API 密钥', 'API-Schlüssel') }}</span>
+              <span class="setup-key">{{ $tr('API key', 'API 密钥', { de: 'API-Schlüssel' }) }}</span>
               <span class="setup-val">
                 <span v-if="currentSettings.llm?.has_api_key">
                   {{ currentSettings.llm.api_key_masked }}
                 </span>
-                <span v-else class="setup-missing">{{ $tr('not set', '未设置', 'nicht gesetzt') }}</span>
+                <span v-else class="setup-missing">{{ $tr('not set', '未设置', { de: 'nicht gesetzt' }) }}</span>
               </span>
             </div>
           </div>
@@ -83,14 +83,14 @@
         <!-- Preset Picker -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">{{ $tr('Preset', '预设', 'Voreinstellung') }}</span>
+            <span class="section-label">{{ $tr('Preset', '预设', { de: 'Voreinstellung' }) }}</span>
           </div>
 
           <div class="field-row">
-            <label class="field-label">{{ $tr('Config template', '配置模板', 'Konfigurationsvorlage') }}</label>
+            <label class="field-label">{{ $tr('Config template', '配置模板', { de: 'Konfigurationsvorlage' }) }}</label>
             <div class="select-wrapper">
               <select v-model="form.preset" class="field-select">
-                <option value="">{{ $tr('Custom — leave fields as they are', '自定义 — 保留当前字段', 'Benutzerdefiniert — Felder beibehalten') }}</option>
+                <option value="">{{ $tr('Custom — leave fields as they are', '自定义 — 保留当前字段', { de: 'Benutzerdefiniert — Felder beibehalten' }) }}</option>
                 <option
                   v-for="p in presetOptions"
                   :key="p.id"
@@ -99,15 +99,15 @@
               </select>
             </div>
             <div class="field-hint">
-              {{ $tr('Applies the full set of model slots on save. See', '保存时将应用完整的模型槽配置。请参考', 'Wendet beim Speichern alle Modell-Slots an. Siehe') }}
+              {{ $tr('Applies the full set of model slots on save. See', '保存时将应用完整的模型槽配置。请参考', { de: 'Wendet beim Speichern alle Modell-Slots an. Siehe' }) }}
               <a href="https://github.com/aaronjmars/MiroShark/blob/main/.env.example"
                  target="_blank" rel="noopener">.env.example</a>
-              {{ $tr('for the exact values each preset uses.', '了解各预设使用的精确值。', 'für die genauen Werte der jeweiligen Voreinstellung.') }}
+              {{ $tr('for the exact values each preset uses.', '了解各预设使用的精确值。', { de: 'für die genauen Werte der jeweiligen Voreinstellung.' }) }}
             </div>
           </div>
 
           <div v-if="presetNeedsKey" class="field-row">
-            <label class="field-label">{{ $tr('OpenRouter API key', 'OpenRouter API 密钥', 'OpenRouter API-Schlüssel') }}</label>
+            <label class="field-label">{{ $tr('OpenRouter API key', 'OpenRouter API 密钥', { de: 'OpenRouter API-Schlüssel' }) }}</label>
             <div class="key-input-group">
               <input
                 v-model="form.presetApiKey"
@@ -120,7 +120,7 @@
               </button>
             </div>
             <div class="field-hint">
-              {{ $tr('Filled into every slot the preset needs (default, smart, NER, embedding). Leave blank to keep your existing keys.', '将填入预设所需的每个槽(default、smart、NER、embedding)。留空则保留现有密钥。', 'Wird in alle vom Preset benötigten Slots eingetragen (default, smart, NER, embedding). Leer lassen, um vorhandene Schlüssel zu behalten.') }}
+              {{ $tr('Filled into every slot the preset needs (default, smart, NER, embedding). Leave blank to keep your existing keys.', '将填入预设所需的每个槽(default、smart、NER、embedding)。留空则保留现有密钥。', { de: 'Wird in alle vom Preset benötigten Slots eingetragen (default, smart, NER, embedding). Leer lassen, um vorhandene Schlüssel zu behalten.' }) }}
             </div>
           </div>
         </section>
@@ -128,23 +128,23 @@
         <!-- LLM Configuration -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">{{ $tr('LLM Configuration', 'LLM 配置', 'LLM-Konfiguration') }}</span>
+            <span class="section-label">{{ $tr('LLM Configuration', 'LLM 配置', { de: 'LLM-Konfiguration' }) }}</span>
           </div>
 
           <!-- Provider -->
           <div class="field-row">
-            <label class="field-label">{{ $tr('Provider', '提供商', 'Anbieter') }}</label>
+            <label class="field-label">{{ $tr('Provider', '提供商', { de: 'Anbieter' }) }}</label>
             <div class="select-wrapper">
               <select v-model="form.llm.provider" class="field-select">
-                <option value="openai">{{ $tr('OpenAI-compatible (OpenRouter, Ollama, etc.)', 'OpenAI 兼容(OpenRouter、Ollama 等)', 'OpenAI-kompatibel (OpenRouter, Ollama, etc.)') }}</option>
-                <option value="claude-code">{{ $tr('Claude Code (local CLI)', 'Claude Code(本地 CLI)', 'Claude Code (lokale CLI)') }}</option>
+                <option value="openai">{{ $tr('OpenAI-compatible (OpenRouter, Ollama, etc.)', 'OpenAI 兼容(OpenRouter、Ollama 等)', { de: 'OpenAI-kompatibel (OpenRouter, Ollama, etc.)' }) }}</option>
+                <option value="claude-code">{{ $tr('Claude Code (local CLI)', 'Claude Code(本地 CLI)', { de: 'Claude Code (lokale CLI)' }) }}</option>
               </select>
             </div>
           </div>
 
           <!-- Base URL -->
           <div v-if="form.llm.provider !== 'claude-code'" class="field-row">
-            <label class="field-label">{{ $tr('Base URL', '基础 URL', 'Basis-URL') }}</label>
+            <label class="field-label">{{ $tr('Base URL', '基础 URL', { de: 'Basis-URL' }) }}</label>
             <input
               v-model="form.llm.base_url"
               class="field-input"
@@ -155,7 +155,7 @@
 
           <!-- Model -->
           <div v-if="form.llm.provider !== 'claude-code'" class="field-row">
-            <label class="field-label">{{ $tr('Model', '模型', 'Modell') }}</label>
+            <label class="field-label">{{ $tr('Model', '模型', { de: 'Modell' }) }}</label>
             <div class="model-input-group">
               <div class="select-wrapper model-select-wrapper">
                 <select
@@ -180,14 +180,14 @@
                   v-model="form.llm.model_name"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('e.g. openai/gpt-4o-mini', '例如 openai/gpt-4o-mini', 'z. B. openai/gpt-4o-mini')"
+                  :placeholder="$tr('e.g. openai/gpt-4o-mini', '例如 openai/gpt-4o-mini', { de: 'z. B. openai/gpt-4o-mini' })"
                 />
               </div>
               <button
                 class="load-models-btn"
                 :disabled="loadingModels || !isOpenRouter"
                 @click="loadOpenRouterModels"
-                :title="isOpenRouter ? $tr('Load available models from OpenRouter', '从 OpenRouter 加载可用模型', 'Verfügbare Modelle von OpenRouter laden') : $tr('Only available for OpenRouter base URL', '仅在 OpenRouter 基础 URL 下可用', 'Nur für OpenRouter-Basis-URL verfügbar')"
+                :title="isOpenRouter ? $tr('Load available models from OpenRouter', '从 OpenRouter 加载可用模型', { de: 'Verfügbare Modelle von OpenRouter laden' }) : $tr('Only available for OpenRouter base URL', '仅在 OpenRouter 基础 URL 下可用', { de: 'Nur für OpenRouter-Basis-URL verfügbar' })"
               >
                 <span v-if="loadingModels">...</span>
                 <span v-else>↻</span>
@@ -198,7 +198,7 @@
 
           <!-- API Key -->
           <div v-if="form.llm.provider !== 'claude-code'" class="field-row">
-            <label class="field-label">{{ $tr('API Key', 'API 密钥', 'API-Schlüssel') }}</label>
+            <label class="field-label">{{ $tr('API Key', 'API 密钥', { de: 'API-Schlüssel' }) }}</label>
             <div class="key-input-group">
               <input
                 v-model="form.llm.api_key"
@@ -211,7 +211,7 @@
               </button>
             </div>
             <div v-if="currentSettings.llm?.has_api_key && !form.llm.api_key" class="field-hint">
-              {{ $tr('Current key:', '当前密钥:', 'Aktueller Schlüssel:') }} {{ currentSettings.llm.api_key_masked }} {{ $tr('— leave blank to keep unchanged', ' — 留空则保持不变', '— leer lassen, um unverändert zu behalten') }}
+              {{ $tr('Current key:', '当前密钥:', { de: 'Aktueller Schlüssel:' }) }} {{ currentSettings.llm.api_key_masked }} {{ $tr('— leave blank to keep unchanged', ' — 留空则保持不变', { de: '— leer lassen, um unverändert zu behalten' }) }}
             </div>
           </div>
 
@@ -222,8 +222,8 @@
               :disabled="testing"
               @click="testConnection"
             >
-              <span v-if="testing">{{ $tr('Testing...', '测试中...', 'Wird getestet...') }}</span>
-              <span v-else>{{ $tr('Test Connection', '测试连接', 'Verbindung testen') }}</span>
+              <span v-if="testing">{{ $tr('Testing...', '测试中...', { de: 'Wird getestet...' }) }}</span>
+              <span v-else>{{ $tr('Test Connection', '测试连接', { de: 'Verbindung testen' }) }}</span>
             </button>
             <div v-if="testResult" class="test-result" :class="testResult.success ? 'ok' : 'fail'">
               <span v-if="testResult.success">
@@ -238,118 +238,118 @@
         <section class="settings-section">
           <button class="advanced-toggle" @click="advancedOpen = !advancedOpen">
             <span class="section-label">
-              {{ $tr('Advanced slot overrides', '高级槽位覆盖', 'Erweiterte Slot-Überschreibungen') }}
+              {{ $tr('Advanced slot overrides', '高级槽位覆盖', { de: 'Erweiterte Slot-Überschreibungen' }) }}
             </span>
             <span class="chevron">{{ advancedOpen ? '−' : '+' }}</span>
           </button>
 
           <div v-if="advancedOpen" class="advanced-body">
             <div class="advanced-hint">
-              {{ $tr('Each slot falls back to the default LLM config when left empty.', '每个槽位为空时将回退到默认 LLM 配置。', 'Jeder Slot fällt auf die Standard-LLM-Konfiguration zurück, wenn er leer ist.') }}
+              {{ $tr('Each slot falls back to the default LLM config when left empty.', '每个槽位为空时将回退到默认 LLM 配置。', { de: 'Jeder Slot fällt auf die Standard-LLM-Konfiguration zurück, wenn er leer ist.' }) }}
             </div>
 
             <!-- Smart -->
             <div class="advanced-group">
-              <div class="advanced-group-title">{{ $tr('Smart — report generation', '智能 — 报告生成', 'Smart — Berichtsgenerierung') }}</div>
+              <div class="advanced-group-title">{{ $tr('Smart — report generation', '智能 — 报告生成', { de: 'Smart — Berichtsgenerierung' }) }}</div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Model', '模型', 'Modell') }}</label>
+                <label class="field-label">{{ $tr('Model', '模型', { de: 'Modell' }) }}</label>
                 <input
                   v-model="form.smart.model_name"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('e.g. x-ai/grok-4.1-fast', '例如 x-ai/grok-4.1-fast', 'z. B. x-ai/grok-4.1-fast')"
+                  :placeholder="$tr('e.g. x-ai/grok-4.1-fast', '例如 x-ai/grok-4.1-fast', { de: 'z. B. x-ai/grok-4.1-fast' })"
                 />
               </div>
             </div>
 
             <!-- NER -->
             <div class="advanced-group">
-              <div class="advanced-group-title">{{ $tr('NER — entity extraction', 'NER — 实体抽取', 'NER — Entitätsextraktion') }}</div>
+              <div class="advanced-group-title">{{ $tr('NER — entity extraction', 'NER — 实体抽取', { de: 'NER — Entitätsextraktion' }) }}</div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Model', '模型', 'Modell') }}</label>
+                <label class="field-label">{{ $tr('Model', '模型', { de: 'Modell' }) }}</label>
                 <input
                   v-model="form.ner.model_name"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('e.g. x-ai/grok-4.1-fast', '例如 x-ai/grok-4.1-fast', 'z. B. x-ai/grok-4.1-fast')"
+                  :placeholder="$tr('e.g. x-ai/grok-4.1-fast', '例如 x-ai/grok-4.1-fast', { de: 'z. B. x-ai/grok-4.1-fast' })"
                 />
               </div>
             </div>
 
             <!-- Wonderwall -->
             <div class="advanced-group">
-              <div class="advanced-group-title">{{ $tr('Wonderwall — simulation loop', 'Wonderwall — 模拟循环', 'Wonderwall — Simulations-Loop') }}</div>
+              <div class="advanced-group-title">{{ $tr('Wonderwall — simulation loop', 'Wonderwall — 模拟循环', { de: 'Wonderwall — Simulations-Loop' }) }}</div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Model', '模型', 'Modell') }}</label>
+                <label class="field-label">{{ $tr('Model', '模型', { de: 'Modell' }) }}</label>
                 <input
                   v-model="form.wonderwall.model_name"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('e.g. xiaomi/mimo-v2-flash', '例如 xiaomi/mimo-v2-flash', 'z. B. xiaomi/mimo-v2-flash')"
+                  :placeholder="$tr('e.g. xiaomi/mimo-v2-flash', '例如 xiaomi/mimo-v2-flash', { de: 'z. B. xiaomi/mimo-v2-flash' })"
                 />
               </div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Base URL', '基础 URL', 'Basis-URL') }}</label>
+                <label class="field-label">{{ $tr('Base URL', '基础 URL', { de: 'Basis-URL' }) }}</label>
                 <input
                   v-model="form.wonderwall.base_url"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('Inherits LLM base URL when blank', '留空时继承 LLM 基础 URL', 'Übernimmt LLM-Basis-URL, wenn leer')"
+                  :placeholder="$tr('Inherits LLM base URL when blank', '留空时继承 LLM 基础 URL', { de: 'Übernimmt LLM-Basis-URL, wenn leer' })"
                 />
               </div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('API Key', 'API 密钥', 'API-Schlüssel') }}</label>
+                <label class="field-label">{{ $tr('API Key', 'API 密钥', { de: 'API-Schlüssel' }) }}</label>
                 <input
                   v-model="form.wonderwall.api_key"
                   class="field-input"
                   type="password"
-                  :placeholder="currentSettings.wonderwall?.has_api_key ? `${$tr('Saved:', '已保存:', 'Gespeichert:')} ${currentSettings.wonderwall.api_key_masked}` : $tr('Inherits LLM key when blank', '留空时继承 LLM 密钥', 'Übernimmt LLM-Schlüssel, wenn leer')"
+                  :placeholder="currentSettings.wonderwall?.has_api_key ? `${$tr('Saved:', '已保存:', { de: 'Gespeichert:' })} ${currentSettings.wonderwall.api_key_masked}` : $tr('Inherits LLM key when blank', '留空时继承 LLM 密钥', { de: 'Übernimmt LLM-Schlüssel, wenn leer' })"
                 />
               </div>
             </div>
 
             <!-- Embedding -->
             <div class="advanced-group">
-              <div class="advanced-group-title">{{ $tr('Embeddings', '嵌入', 'Embeddings') }}</div>
+              <div class="advanced-group-title">{{ $tr('Embeddings', '嵌入', { de: 'Embeddings' }) }}</div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Provider', '提供商', 'Anbieter') }}</label>
+                <label class="field-label">{{ $tr('Provider', '提供商', { de: 'Anbieter' }) }}</label>
                 <div class="select-wrapper">
                   <select v-model="form.embedding.provider" class="field-select">
-                    <option value="ollama">{{ $tr('Ollama (local)', 'Ollama(本地)', 'Ollama (lokal)') }}</option>
-                    <option value="openai">{{ $tr('OpenAI-compatible', 'OpenAI 兼容', 'OpenAI-kompatibel') }}</option>
+                    <option value="ollama">{{ $tr('Ollama (local)', 'Ollama(本地)', { de: 'Ollama (lokal)' }) }}</option>
+                    <option value="openai">{{ $tr('OpenAI-compatible', 'OpenAI 兼容', { de: 'OpenAI-kompatibel' }) }}</option>
                   </select>
                 </div>
               </div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Model', '模型', 'Modell') }}</label>
+                <label class="field-label">{{ $tr('Model', '模型', { de: 'Modell' }) }}</label>
                 <input
                   v-model="form.embedding.model_name"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('e.g. openai/text-embedding-3-small', '例如 openai/text-embedding-3-small', 'z. B. openai/text-embedding-3-small')"
+                  :placeholder="$tr('e.g. openai/text-embedding-3-small', '例如 openai/text-embedding-3-small', { de: 'z. B. openai/text-embedding-3-small' })"
                 />
               </div>
             </div>
 
             <!-- Web Search -->
             <div class="advanced-group">
-              <div class="advanced-group-title">{{ $tr('Web search (URL import + enrichment)', '网页搜索(URL 导入 + 丰富)', 'Websuche (URL-Import + Anreicherung)') }}</div>
+              <div class="advanced-group-title">{{ $tr('Web search (URL import + enrichment)', '网页搜索(URL 导入 + 丰富)', { de: 'Websuche (URL-Import + Anreicherung)' }) }}</div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Model', '模型', 'Modell') }}</label>
+                <label class="field-label">{{ $tr('Model', '模型', { de: 'Modell' }) }}</label>
                 <input
                   v-model="form.web_search_model"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('e.g. google/gemini-2.0-flash-001:online', '例如 google/gemini-2.0-flash-001:online', 'z. B. google/gemini-2.0-flash-001:online')"
+                  :placeholder="$tr('e.g. google/gemini-2.0-flash-001:online', '例如 google/gemini-2.0-flash-001:online', { de: 'z. B. google/gemini-2.0-flash-001:online' })"
                 />
               </div>
             </div>
 
             <!-- SearXNG -->
             <div class="advanced-group">
-              <div class="advanced-group-title">{{ $tr('SearXNG (real web search — works with any model)', 'SearXNG(真实网页搜索——适用于任何模型)', 'SearXNG (echte Websuche — funktioniert mit jedem Modell)') }}</div>
+              <div class="advanced-group-title">{{ $tr('SearXNG (real web search — works with any model)', 'SearXNG(真实网页搜索——适用于任何模型)', { de: 'SearXNG (echte Websuche — funktioniert mit jedem Modell)' }) }}</div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Instance URL', '实例地址', 'Instanz-URL') }}</label>
+                <label class="field-label">{{ $tr('Instance URL', '实例地址', { de: 'Instanz-URL' }) }}</label>
                 <input
                   v-model="form.searxng_base_url"
                   class="field-input"
@@ -363,14 +363,14 @@
                   :disabled="searxngTesting || !form.searxng_base_url"
                   @click="testSearxngFire"
                 >
-                  {{ searxngTesting ? $tr('Searching…', '搜索中…', 'Wird gesucht…') : $tr('Test search', '测试搜索', 'Suche testen') }}
+                  {{ searxngTesting ? $tr('Searching…', '搜索中…', { de: 'Wird gesucht…' }) : $tr('Test search', '测试搜索', { de: 'Suche testen' }) }}
                 </button>
                 <span v-if="searxngTestResult" class="webhook-test-result" :class="searxngTestResult.success ? 'ok' : 'fail'">
                   <template v-if="searxngTestResult.success">
-                    ✓ {{ $tr('OK', '正常', 'OK') }} ({{ searxngTestResult.latency_ms }}ms)
+                    ✓ {{ $tr('OK', '正常', { de: 'OK' }) }} ({{ searxngTestResult.latency_ms }}ms)
                   </template>
                   <template v-else>
-                    ✗ {{ searxngTestResult.error || $tr('Failed', '失败', 'Fehlgeschlagen') }}
+                    ✗ {{ searxngTestResult.error || $tr('Failed', '失败', { de: 'Fehlgeschlagen' }) }}
                   </template>
                 </span>
               </div>
@@ -378,9 +378,9 @@
 
             <!-- Firecrawl -->
             <div class="advanced-group">
-              <div class="advanced-group-title">{{ $tr('Firecrawl (URL import scraping)', 'Firecrawl(URL 导入抓取)', 'Firecrawl (URL-Import-Scraping)') }}</div>
+              <div class="advanced-group-title">{{ $tr('Firecrawl (URL import scraping)', 'Firecrawl(URL 导入抓取)', { de: 'Firecrawl (URL-Import-Scraping)' }) }}</div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('Instance URL', '实例地址', 'Instanz-URL') }}</label>
+                <label class="field-label">{{ $tr('Instance URL', '实例地址', { de: 'Instanz-URL' }) }}</label>
                 <input
                   v-model="form.firecrawl.base_url"
                   class="field-input"
@@ -389,12 +389,12 @@
                 />
               </div>
               <div class="field-row">
-                <label class="field-label">{{ $tr('API key', 'API 密钥', 'API-Schlüssel') }}</label>
+                <label class="field-label">{{ $tr('API key', 'API 密钥', { de: 'API-Schlüssel' }) }}</label>
                 <input
                   v-model="form.firecrawl.api_key"
                   class="field-input"
                   type="password"
-                  :placeholder="currentSettings.firecrawl?.has_api_key ? currentSettings.firecrawl.api_key_masked : $tr('not set', '未设置', 'nicht gesetzt')"
+                  :placeholder="currentSettings.firecrawl?.has_api_key ? currentSettings.firecrawl.api_key_masked : $tr('not set', '未设置', { de: 'nicht gesetzt' })"
                 />
               </div>
             </div>
@@ -404,11 +404,11 @@
         <!-- Neo4j Configuration -->
         <section class="settings-section">
           <div class="section-header">
-            <span class="section-label">{{ $tr('Graph Database (Neo4j)', '图数据库 (Neo4j)', 'Graph-Datenbank (Neo4j)') }}</span>
+            <span class="section-label">{{ $tr('Graph Database (Neo4j)', '图数据库 (Neo4j)', { de: 'Graph-Datenbank (Neo4j)' }) }}</span>
           </div>
 
           <div class="field-row">
-            <label class="field-label">{{ $tr('URI', '地址', 'URI') }}</label>
+            <label class="field-label">{{ $tr('URI', '地址', { de: 'URI' }) }}</label>
             <input
               v-model="form.neo4j.uri"
               class="field-input"
@@ -418,7 +418,7 @@
           </div>
 
           <div class="field-row">
-            <label class="field-label">{{ $tr('User', '用户', 'Benutzer') }}</label>
+            <label class="field-label">{{ $tr('User', '用户', { de: 'Benutzer' }) }}</label>
             <input
               v-model="form.neo4j.user"
               class="field-input"
@@ -428,12 +428,12 @@
           </div>
 
           <div class="field-row">
-            <label class="field-label">{{ $tr('Password', '密码', 'Passwort') }}</label>
+            <label class="field-label">{{ $tr('Password', '密码', { de: 'Passwort' }) }}</label>
             <input
               v-model="form.neo4j.password"
               class="field-input"
               type="password"
-              :placeholder="$tr('Leave blank to keep unchanged', '留空保持不变', 'Leer lassen, um unverändert zu behalten')"
+              :placeholder="$tr('Leave blank to keep unchanged', '留空保持不变', { de: 'Leer lassen, um unverändert zu behalten' })"
             />
           </div>
         </section>
@@ -441,7 +441,7 @@
         <!-- Outbound webhook · Slack / Discord / Zapier / n8n / custom -->
         <section class="settings-section ai-section">
           <div class="section-header">
-            <span class="section-label">{{ $tr('Integrations · Webhook', '集成 · Webhook', 'Integrationen · Webhook') }}</span>
+            <span class="section-label">{{ $tr('Integrations · Webhook', '集成 · Webhook', { de: 'Integrationen · Webhook' }) }}</span>
             <div class="status-badge" :class="webhookSavedClass">
               <span class="badge-dot"></span>
               {{ webhookSavedText }}
@@ -449,11 +449,11 @@
           </div>
 
           <div class="ai-intro">
-            {{ $tr('POST a JSON summary to your URL the moment a simulation finishes — wires Slack, Discord, Zapier, Make, n8n, IFTTT, or any custom listener. Empty to disable. Payload includes scenario, final consensus, quality, and the share-card URL so links auto-unfurl.', '模拟结束时立即向你的 URL POST 一份 JSON 摘要 — 可对接 Slack、Discord、Zapier、Make、n8n、IFTTT 或任何自定义监听器。留空以禁用。负载包括情景、最终共识、质量,以及分享卡 URL 以便链接自动展开。', 'Sendet beim Abschluss einer Simulation eine JSON-Zusammenfassung an deine URL — für Slack, Discord, Zapier, Make, n8n, IFTTT oder beliebige Listener. Leer lassen zum Deaktivieren. Enthält Szenario, Konsens, Qualität und Share-URL.') }}
+            {{ $tr('POST a JSON summary to your URL the moment a simulation finishes — wires Slack, Discord, Zapier, Make, n8n, IFTTT, or any custom listener. Empty to disable. Payload includes scenario, final consensus, quality, and the share-card URL so links auto-unfurl.', '模拟结束时立即向你的 URL POST 一份 JSON 摘要 — 可对接 Slack、Discord、Zapier、Make、n8n、IFTTT 或任何自定义监听器。留空以禁用。负载包括情景、最终共识、质量,以及分享卡 URL 以便链接自动展开。', { de: 'Sendet beim Abschluss einer Simulation eine JSON-Zusammenfassung an deine URL — für Slack, Discord, Zapier, Make, n8n, IFTTT oder beliebige Listener. Leer lassen zum Deaktivieren. Enthält Szenario, Konsens, Qualität und Share-URL.' }) }}
           </div>
 
           <div class="field-row">
-            <label class="field-label">{{ $tr('Webhook URL', 'Webhook URL', 'Webhook-URL') }}</label>
+            <label class="field-label">{{ $tr('Webhook URL', 'Webhook URL', { de: 'Webhook-URL' }) }}</label>
             <input
               v-model="form.integrations.webhook.url"
               class="field-input"
@@ -463,17 +463,17 @@
               spellcheck="false"
             />
             <div class="field-hint">
-              {{ $tr('e.g.', '例如', 'z. B.') }}
+              {{ $tr('e.g.', '例如', { de: 'z. B.' }) }}
               <code>https://hooks.slack.com/services/T0…/B0…/abc</code>
-              {{ $tr('or any URL that accepts a POST.', '或任何接受 POST 的 URL。', 'oder jede URL, die POST akzeptiert.') }}
-              {{ $tr('See', '参见', 'Siehe') }} <a href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md"
-                     target="_blank" rel="noopener">{{ $tr('the webhook docs', 'Webhook 文档', 'die Webhook-Dokumentation') }}</a>
-              {{ $tr('for the payload schema.', '了解负载结构。', 'für das Payload-Schema.') }}
+              {{ $tr('or any URL that accepts a POST.', '或任何接受 POST 的 URL。', { de: 'oder jede URL, die POST akzeptiert.' }) }}
+              {{ $tr('See', '参见', { de: 'Siehe' }) }} <a href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md"
+                     target="_blank" rel="noopener">{{ $tr('the webhook docs', 'Webhook 文档', { de: 'die Webhook-Dokumentation' }) }}</a>
+              {{ $tr('for the payload schema.', '了解负载结构。', { de: 'für das Payload-Schema.' }) }}
             </div>
           </div>
 
           <div class="field-row">
-            <label class="field-label">{{ $tr('Public base URL', '公开基础 URL', 'Öffentliche Basis-URL') }} <span class="field-label-optional">{{ $tr('(optional)', '(可选)', '(optional)') }}</span></label>
+            <label class="field-label">{{ $tr('Public base URL', '公开基础 URL', { de: 'Öffentliche Basis-URL' }) }} <span class="field-label-optional">{{ $tr('(optional)', '(可选)', { de: '(optional)' }) }}</span></label>
             <input
               v-model="form.integrations.webhook.public_base_url"
               class="field-input"
@@ -483,8 +483,8 @@
               spellcheck="false"
             />
             <div class="field-hint">
-              {{ $tr('When set, the payload includes absolute', '设置后,负载将包含绝对的', 'Wenn gesetzt, enthält der Payload absolute') }} <code>share_url</code> +
-              <code>share_card_url</code> {{ $tr('so Slack & Discord auto-unfurl with the simulation card. Leave blank for relative paths only.', '以便 Slack 与 Discord 用模拟卡片自动展开。留空则仅使用相对路径。', 'damit Slack & Discord die Simulationskarte automatisch entfalten. Leer lassen für relative Pfade.') }}
+              {{ $tr('When set, the payload includes absolute', '设置后,负载将包含绝对的', { de: 'Wenn gesetzt, enthält der Payload absolute' }) }} <code>share_url</code> +
+              <code>share_card_url</code> {{ $tr('so Slack & Discord auto-unfurl with the simulation card. Leave blank for relative paths only.', '以便 Slack 与 Discord 用模拟卡片自动展开。留空则仅使用相对路径。', { de: 'damit Slack & Discord die Simulationskarte automatisch entfalten. Leer lassen für relative Pfade.' }) }}
             </div>
           </div>
 
@@ -494,14 +494,14 @@
               :disabled="webhookTesting || !webhookCanTest"
               @click="testWebhookFire"
             >
-              {{ webhookTesting ? $tr('Sending…', '发送中…', 'Wird gesendet…') : $tr('Send test event', '发送测试事件', 'Testereignis senden') }}
+              {{ webhookTesting ? $tr('Sending…', '发送中…', { de: 'Wird gesendet…' }) : $tr('Send test event', '发送测试事件', { de: 'Testereignis senden' }) }}
             </button>
             <span v-if="webhookTestResult" class="webhook-test-result" :class="webhookTestResult.success ? 'ok' : 'fail'">
               <template v-if="webhookTestResult.success">
-                ✓ {{ $tr('Delivered', '已送达', 'Zugestellt') }} ({{ webhookTestResult.latency_ms }}ms)
+                ✓ {{ $tr('Delivered', '已送达', { de: 'Zugestellt' }) }} ({{ webhookTestResult.latency_ms }}ms)
               </template>
               <template v-else>
-                ✗ {{ webhookTestResult.error || webhookTestResult.message || $tr('Failed', '失败', 'Fehlgeschlagen') }}
+                ✗ {{ webhookTestResult.error || webhookTestResult.message || $tr('Failed', '失败', { de: 'Fehlgeschlagen' }) }}
               </template>
             </span>
           </div>
@@ -510,7 +510,7 @@
         <!-- AI Integration (MCP) -->
         <section class="settings-section ai-section">
           <div class="section-header">
-            <span class="section-label">{{ $tr('AI Integration · MCP', 'AI 集成 · MCP', 'AI-Integration · MCP') }}</span>
+            <span class="section-label">{{ $tr('AI Integration · MCP', 'AI 集成 · MCP', { de: 'AI-Integration · MCP' }) }}</span>
             <div class="status-badge" :class="mcpHealthClass">
               <span class="badge-dot"></span>
               {{ mcpHealthText }}
@@ -518,45 +518,45 @@
           </div>
 
           <div class="ai-intro">
-            {{ $tr(`Wire MiroShark's knowledge graph into Claude Desktop, Cursor, Windsurf, or Continue. Pick your client, paste the snippet, restart the editor.`, '将 MiroShark 的知识图谱接入 Claude Desktop、Cursor、Windsurf 或 Continue。选择你的客户端,粘贴代码片段,重启编辑器。', 'Verbinde MiroSharks Wissensgraph mit Claude Desktop, Cursor, Windsurf oder Continue. Client auswählen, Snippet einfügen, Editor neustarten.') }}
+            {{ $tr(`Wire MiroShark's knowledge graph into Claude Desktop, Cursor, Windsurf, or Continue. Pick your client, paste the snippet, restart the editor.`, '将 MiroShark 的知识图谱接入 Claude Desktop、Cursor、Windsurf 或 Continue。选择你的客户端,粘贴代码片段,重启编辑器。', { de: 'Verbinde MiroSharks Wissensgraph mit Claude Desktop, Cursor, Windsurf oder Continue. Client auswählen, Snippet einfügen, Editor neustarten.' }) }}
           </div>
 
-          <div v-if="mcpLoading" class="ai-loading">{{ $tr('Loading MCP catalog…', '加载 MCP 目录…', 'MCP-Katalog wird geladen…') }}</div>
+          <div v-if="mcpLoading" class="ai-loading">{{ $tr('Loading MCP catalog…', '加载 MCP 目录…', { de: 'MCP-Katalog wird geladen…' }) }}</div>
           <div v-else-if="mcpLoadError" class="ai-error">
             {{ mcpLoadError }}
-            <button class="ai-retry" @click="loadMcpStatus">{{ $tr('Retry', '重试', 'Erneut versuchen') }}</button>
+            <button class="ai-retry" @click="loadMcpStatus">{{ $tr('Retry', '重试', { de: 'Erneut versuchen' }) }}</button>
           </div>
 
           <div v-else-if="mcpStatus" class="ai-body">
             <!-- Health summary grid -->
             <div class="ai-summary">
               <div class="ai-summary-row">
-                <span class="ai-summary-key">{{ $tr('Server file', '服务文件', 'Server-Datei') }}</span>
+                <span class="ai-summary-key">{{ $tr('Server file', '服务文件', { de: 'Server-Datei' }) }}</span>
                 <span class="ai-summary-val" :class="mcpStatus.paths.mcp_script_exists ? '' : 'setup-missing'">
-                  {{ mcpStatus.paths.mcp_script_exists ? $tr('present', '存在', 'vorhanden') : $tr('missing', '缺失', 'fehlend') }}
+                  {{ mcpStatus.paths.mcp_script_exists ? $tr('present', '存在', { de: 'vorhanden' }) : $tr('missing', '缺失', { de: 'fehlend' }) }}
                 </span>
               </div>
               <div class="ai-summary-row">
-                <span class="ai-summary-key">{{ $tr('Tools exposed', '已暴露工具', 'Verfügbare Tools') }}</span>
+                <span class="ai-summary-key">{{ $tr('Tools exposed', '已暴露工具', { de: 'Verfügbare Tools' }) }}</span>
                 <span class="ai-summary-val">{{ mcpStatus.tool_count }}</span>
               </div>
               <div class="ai-summary-row">
                 <span class="ai-summary-key">Neo4j</span>
                 <span class="ai-summary-val" :class="mcpStatus.neo4j.connected ? '' : 'setup-missing'">
-                  {{ mcpStatus.neo4j.connected ? $tr('connected', '已连接', 'verbunden') : $tr('unreachable', '不可达', 'nicht erreichbar') }}
+                  {{ mcpStatus.neo4j.connected ? $tr('connected', '已连接', { de: 'verbunden' }) : $tr('unreachable', '不可达', { de: 'nicht erreichbar' }) }}
                 </span>
               </div>
               <div class="ai-summary-row" v-if="mcpStatus.neo4j.connected">
-                <span class="ai-summary-key">{{ $tr('Graphs available', '可用图谱', 'Verfügbare Graphen') }}</span>
+                <span class="ai-summary-key">{{ $tr('Graphs available', '可用图谱', { de: 'Verfügbare Graphen' }) }}</span>
                 <span class="ai-summary-val">
                   {{ mcpStatus.neo4j.graph_count ?? 0 }}
                   <span class="setup-aux" v-if="mcpStatus.neo4j.entity_count != null">
-                    ({{ mcpStatus.neo4j.entity_count }} {{ $tr('entities', '个实体', 'Entitäten') }})
+                    ({{ mcpStatus.neo4j.entity_count }} {{ $tr('entities', '个实体', { de: 'Entitäten' }) }})
                   </span>
                 </span>
               </div>
               <div class="ai-summary-row" v-if="mcpStatus.neo4j.error">
-                <span class="ai-summary-key">{{ $tr('Error', '错误', 'Fehler') }}</span>
+                <span class="ai-summary-key">{{ $tr('Error', '错误', { de: 'Fehler' }) }}</span>
                 <span class="ai-summary-val ai-error-text">{{ mcpStatus.neo4j.error }}</span>
               </div>
             </div>
@@ -579,7 +579,7 @@
             <!-- Active client snippet -->
             <div v-if="currentClient" class="ai-client">
               <div class="ai-client-file">
-                <span class="ai-client-file-label">{{ $tr('Config file:', '配置文件:', 'Konfigurationsdatei:') }}</span>
+                <span class="ai-client-file-label">{{ $tr('Config file:', '配置文件:', { de: 'Konfigurationsdatei:' }) }}</span>
                 <code class="ai-client-file-path">{{ currentClient.file }}</code>
               </div>
               <div class="ai-snippet-wrap">
@@ -599,7 +599,7 @@
 
             <!-- Tool catalog (collapsed by default) -->
             <button class="ai-tools-toggle" @click="toolsOpen = !toolsOpen">
-              <span>{{ toolsOpen ? '▾' : '▸' }} {{ mcpStatus.tool_count }} {{ $tr('tools available', '个可用工具', 'Tools verfügbar') }}</span>
+              <span>{{ toolsOpen ? '▾' : '▸' }} {{ mcpStatus.tool_count }} {{ $tr('tools available', '个可用工具', { de: 'Tools verfügbar' }) }}</span>
             </button>
             <ul v-if="toolsOpen" class="ai-tools-list">
               <li v-for="t in mcpStatus.tools" :key="t.name" class="ai-tool">
@@ -609,8 +609,8 @@
             </ul>
 
             <div class="ai-docs-link">
-              {{ $tr('Need a deeper walkthrough?', '需要更深入的指南?', 'Brauchst du eine ausführlichere Anleitung?') }}
-              <a :href="mcpStatus.docs_url" target="_blank" rel="noopener">{{ $tr('Read the full MCP guide →', '阅读完整的 MCP 指南 →', 'Vollständigen MCP-Leitfaden lesen →') }}</a>
+              {{ $tr('Need a deeper walkthrough?', '需要更深入的指南?', { de: 'Brauchst du eine ausführlichere Anleitung?' }) }}
+              <a :href="mcpStatus.docs_url" target="_blank" rel="noopener">{{ $tr('Read the full MCP guide →', '阅读完整的 MCP 指南 →', { de: 'Vollständigen MCP-Leitfaden lesen →' }) }}</a>
             </div>
           </div>
         </section>
@@ -618,12 +618,12 @@
         <!-- Footer -->
         <div class="modal-footer">
           <div v-if="saveError" class="save-error">{{ saveError }}</div>
-          <div v-if="saveSuccess" class="save-success">✓ {{ $tr('Settings saved (runtime — edit .env to persist across restarts)', '设置已保存(运行时 — 编辑 .env 以在重启后保留)', 'Einstellungen gespeichert (Laufzeit — .env bearbeiten, um nach Neustart zu erhalten)') }}</div>
+          <div v-if="saveSuccess" class="save-success">✓ {{ $tr('Settings saved (runtime — edit .env to persist across restarts)', '设置已保存(运行时 — 编辑 .env 以在重启后保留)', { de: 'Einstellungen gespeichert (Laufzeit — .env bearbeiten, um nach Neustart zu erhalten)' }) }}</div>
           <div class="footer-actions">
-            <button class="cancel-btn" @click="$emit('close')">{{ $tr('Cancel', '取消', 'Abbrechen') }}</button>
+            <button class="cancel-btn" @click="$emit('close')">{{ $tr('Cancel', '取消', { de: 'Abbrechen' }) }}</button>
             <button class="save-btn" :disabled="saving" @click="saveSettings">
-              <span v-if="saving">{{ $tr('Saving...', '保存中...', 'Wird gespeichert...') }}</span>
-              <span v-else>{{ $tr('Save Settings →', '保存设置 →', 'Einstellungen speichern →') }}</span>
+              <span v-if="saving">{{ $tr('Saving...', '保存中...', { de: 'Wird gespeichert...' }) }}</span>
+              <span v-else>{{ $tr('Save Settings →', '保存设置 →', { de: 'Einstellungen speichern →' }) }}</span>
             </button>
           </div>
         </div>
@@ -689,7 +689,7 @@ const modelList = ref([])
 const loadingModels = ref(false)
 const modelLoadError = ref('')
 const advancedOpen = ref(false)
-const inheritMarker = tr('— inherits default —', '— 继承默认值 —', '— übernimmt Standard —')
+const inheritMarker = tr('— inherits default —', '— 继承默认值 —', { de: '— übernimmt Standard —' })
 
 // Webhook integration state
 const webhookTesting = ref(false)
@@ -806,7 +806,7 @@ const loadOpenRouterModels = async () => {
         })
     }
   } catch (_) {
-    modelLoadError.value = tr('Could not load model list — check your network connection.', '无法加载模型列表 — 请检查网络连接。', 'Modellliste konnte nicht geladen werden — bitte Netzwerkverbindung prüfen.')
+    modelLoadError.value = tr('Could not load model list — check your network connection.', '无法加载模型列表 — 请检查网络连接。', { de: 'Modellliste konnte nicht geladen werden — bitte Netzwerkverbindung prüfen.' })
   } finally {
     loadingModels.value = false
   }
@@ -835,10 +835,10 @@ const loadMcpStatus = async () => {
     if (res?.success && res.data) {
       mcpStatus.value = res.data
     } else {
-      mcpLoadError.value = res?.error || tr('MCP status unavailable', 'MCP 状态不可用', 'MCP-Status nicht verfügbar')
+      mcpLoadError.value = res?.error || tr('MCP status unavailable', 'MCP 状态不可用', { de: 'MCP-Status nicht verfügbar' })
     }
   } catch (e) {
-    mcpLoadError.value = e?.message || tr('MCP status request failed', 'MCP 状态请求失败', 'MCP-Status-Anfrage fehlgeschlagen')
+    mcpLoadError.value = e?.message || tr('MCP status request failed', 'MCP 状态请求失败', { de: 'MCP-Status-Anfrage fehlgeschlagen' })
   } finally {
     mcpLoading.value = false
   }
@@ -856,17 +856,17 @@ const mcpHealthClass = computed(() => {
 })
 
 const mcpHealthText = computed(() => {
-  if (!mcpStatus.value) return tr('Loading', '加载中', 'Wird geladen')
-  if (!mcpStatus.value.paths.mcp_script_exists) return tr('Server file missing', '服务文件缺失', 'Server-Datei fehlt')
-  return mcpStatus.value.neo4j.connected ? tr('Ready', '就绪', 'Bereit') : tr('Neo4j down', 'Neo4j 不可用', 'Neo4j nicht erreichbar')
+  if (!mcpStatus.value) return tr('Loading', '加载中', { de: 'Wird geladen' })
+  if (!mcpStatus.value.paths.mcp_script_exists) return tr('Server file missing', '服务文件缺失', { de: 'Server-Datei fehlt' })
+  return mcpStatus.value.neo4j.connected ? tr('Ready', '就绪', { de: 'Bereit' }) : tr('Neo4j down', 'Neo4j 不可用', { de: 'Neo4j nicht erreichbar' })
 })
 
 const formatJson = (obj) => JSON.stringify(obj, null, 2)
 
 const copyButtonLabel = computed(() => {
-  if (copyState.value === 'ok') return '✓ ' + tr('Copied', '已复制', 'Kopiert')
-  if (copyState.value === 'fail') return '✗ ' + tr('Copy failed', '复制失败', 'Kopieren fehlgeschlagen')
-  return tr('Copy snippet', '复制代码片段', 'Snippet kopieren')
+  if (copyState.value === 'ok') return '✓ ' + tr('Copied', '已复制', { de: 'Kopiert' })
+  if (copyState.value === 'fail') return '✗ ' + tr('Copy failed', '复制失败', { de: 'Kopieren fehlgeschlagen' })
+  return tr('Copy snippet', '复制代码片段', { de: 'Snippet kopieren' })
 })
 
 const copySnippet = async () => {
@@ -901,8 +901,8 @@ const testStatus = computed(() => {
 })
 
 const testStatusText = computed(() => {
-  if (!testResult.value) return tr('Not tested', '未测试', 'Nicht getestet')
-  return testResult.value.success ? tr('Connected', '已连接', 'Verbunden') : tr('Failed', '失败', 'Fehlgeschlagen')
+  if (!testResult.value) return tr('Not tested', '未测试', { de: 'Nicht getestet' })
+  return testResult.value.success ? tr('Connected', '已连接', { de: 'Verbunden' }) : tr('Failed', '失败', { de: 'Fehlgeschlagen' })
 })
 
 const webhookConfigured = computed(() =>
@@ -911,15 +911,15 @@ const webhookConfigured = computed(() =>
 
 const webhookSavedClass = computed(() => (webhookConfigured.value ? 'ok' : 'idle'))
 const webhookSavedText = computed(() =>
-  webhookConfigured.value ? tr('Configured', '已配置', 'Konfiguriert') : tr('Not configured', '未配置', 'Nicht konfiguriert')
+  webhookConfigured.value ? tr('Configured', '已配置', { de: 'Konfiguriert' }) : tr('Not configured', '未配置', { de: 'Nicht konfiguriert' })
 )
 
 const webhookPlaceholder = computed(() => {
   if (webhookConfigured.value) {
     const masked = currentSettings.value.integrations?.webhook?.url_masked
     return masked
-      ? `${masked}${tr(' — leave blank to keep, type to replace', ' — 留空保留,输入以替换', ' — leer lassen zum Behalten, eingeben zum Ersetzen')}`
-      : tr('Leave blank to keep saved URL, type to replace', '留空保留已保存的 URL,输入以替换', 'Leer lassen, um gespeicherte URL zu behalten, eingeben zum Ersetzen')
+      ? `${masked}${tr(' — leave blank to keep, type to replace', ' — 留空保留,输入以替换', { de: ' — leer lassen zum Behalten, eingeben zum Ersetzen' })}`
+      : tr('Leave blank to keep saved URL, type to replace', '留空保留已保存的 URL,输入以替换', { de: 'Leer lassen, um gespeicherte URL zu behalten, eingeben zum Ersetzen' })
   }
   return 'https://hooks.slack.com/services/T0…/B0…/abc'
 })
@@ -936,7 +936,7 @@ const testSearxngFire = async () => {
     const res = await testSearxng(form.searxng_base_url?.trim() || '')
     searxngTestResult.value = res
   } catch (e) {
-    searxngTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误', 'Netzwerkfehler') }
+    searxngTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误', { de: 'Netzwerkfehler' }) }
   } finally {
     searxngTesting.value = false
   }
@@ -951,7 +951,7 @@ const testWebhookFire = async () => {
     const res = await testWebhook(url, baseUrl)
     webhookTestResult.value = res
   } catch (e) {
-    webhookTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误', 'Netzwerkfehler') }
+    webhookTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误', { de: 'Netzwerkfehler' }) }
   } finally {
     webhookTesting.value = false
   }
@@ -1023,7 +1023,7 @@ const saveSettings = async () => {
       form.integrations.webhook.url = ''
       setTimeout(() => { saveSuccess.value = false }, 4000)
     } else {
-      saveError.value = res?.error || tr('Save failed', '保存失败', 'Speichern fehlgeschlagen')
+      saveError.value = res?.error || tr('Save failed', '保存失败', { de: 'Speichern fehlgeschlagen' })
     }
   } catch (e) {
     saveError.value = e.message

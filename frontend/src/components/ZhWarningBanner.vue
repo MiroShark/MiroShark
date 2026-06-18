@@ -6,7 +6,7 @@
         class="zh-warning-overlay"
         role="dialog"
         aria-modal="true"
-        :aria-label="tr('Chinese mode notice', '中文模式提示', 'Hinweis zum chinesischen Modus')"
+        :aria-label="tr('Chinese mode notice', '中文模式提示', { de: 'Hinweis zum chinesischen Modus' })"
         @click.self="dismissZhWarning"
       >
         <div class="zh-warning-modal">
@@ -19,7 +19,7 @@
               class="zh-warning-close"
               type="button"
               aria-label="关闭"
-              :title="tr('Dismiss', '关闭', 'Schließen')"
+              :title="tr('Dismiss', '关闭', { de: 'Schließen' })"
               @click="dismissZhWarning"
             >
               ✕

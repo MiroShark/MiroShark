@@ -18,15 +18,15 @@
             :class="{ active: viewMode === mode }"
             @click="viewMode = mode"
           >
-            {{ { graph: $tr('Graph', '图谱', 'Graph'), split: $tr('Split View', '分屏视图', 'Geteilte Ansicht'), workbench: $tr('Workbench', '工作台', 'Arbeitsbereich') }[mode] }}
+            {{ { graph: $tr('Graph', '图谱', { de: 'Graph' }), split: $tr('Split View', '分屏视图', { de: 'Geteilte Ansicht' }), workbench: $tr('Workbench', '工作台', { de: 'Arbeitsbereich' }) }[mode] }}
           </button>
         </div>
       </div>
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">{{ $tr('Step 2/4', '第 2/4 步', 'Schritt 2/4') }}</span>
-          <span class="step-name">{{ $tr('Agent Setup', '智能体设置', 'Agenten-Einrichtung') }}</span>
+          <span class="step-num">{{ $tr('Step 2/4', '第 2/4 步', { de: 'Schritt 2/4' }) }}</span>
+          <span class="step-name">{{ $tr('Agent Setup', '智能体设置', { de: 'Agenten-Einrichtung' }) }}</span>
         </div>
         <div class="step-divider"></div>
         <span class="status-indicator" :class="statusClass">
@@ -118,15 +118,15 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return tr('Error', '错误', 'Fehler')
-  if (currentStatus.value === 'completed') return tr('Ready', '就绪', 'Bereit')
+  if (currentStatus.value === 'error') return tr('Error', '错误', { de: 'Fehler' })
+  if (currentStatus.value === 'completed') return tr('Ready', '就绪', { de: 'Bereit' })
   switch (currentPhase.value) {
-    case 0: return tr('Initializing', '初始化中', 'Wird initialisiert')
-    case 1: return tr('Generating Profiles', '生成画像中', 'Profile werden generiert')
-    case 2: return tr('Generating Config', '生成配置中', 'Konfiguration wird generiert')
-    case 3: return tr('Orchestrating', '编排中', 'Wird orchestriert')
-    case 4: return tr('Ready', '就绪', 'Bereit')
-    default: return tr('Preparing', '准备中', 'Vorbereitung')
+    case 0: return tr('Initializing', '初始化中', { de: 'Wird initialisiert' })
+    case 1: return tr('Generating Profiles', '生成画像中', { de: 'Profile werden generiert' })
+    case 2: return tr('Generating Config', '生成配置中', { de: 'Konfiguration wird generiert' })
+    case 3: return tr('Orchestrating', '编排中', { de: 'Wird orchestriert' })
+    case 4: return tr('Ready', '就绪', { de: 'Bereit' })
+    default: return tr('Preparing', '准备中', { de: 'Vorbereitung' })
   }
 })
 

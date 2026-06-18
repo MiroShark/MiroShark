@@ -4,16 +4,16 @@
     <div class="debug-header" @click="isCollapsed = !isCollapsed">
       <div class="debug-header__left">
         <span class="debug-header__icon">&#9881;</span>
-        <span class="debug-header__title">{{ $tr('OBSERVABILITY', '可观测性', 'OBSERVIERBARKEIT') }}</span>
-        <span v-if="connected" class="debug-header__status debug-header__status--live">{{ $tr('LIVE', '实时', 'LIVE') }}</span>
-        <span v-else class="debug-header__status debug-header__status--off">{{ $tr('OFF', '离线', 'AUS') }}</span>
-        <span v-if="stats.llm_calls" class="debug-header__stat">{{ stats.llm_calls }} {{ $tr('calls', '次调用', 'Aufrufe') }}</span>
-        <span v-if="stats.tokens_total" class="debug-header__stat">{{ formatTokens(stats.tokens_total) }} {{ $tr('tok', 'token', 'Tok') }}</span>
+        <span class="debug-header__title">{{ $tr('OBSERVABILITY', '可观测性', { de: 'OBSERVIERBARKEIT' }) }}</span>
+        <span v-if="connected" class="debug-header__status debug-header__status--live">{{ $tr('LIVE', '实时', { de: 'LIVE' }) }}</span>
+        <span v-else class="debug-header__status debug-header__status--off">{{ $tr('OFF', '离线', { de: 'AUS' }) }}</span>
+        <span v-if="stats.llm_calls" class="debug-header__stat">{{ stats.llm_calls }} {{ $tr('calls', '次调用', { de: 'Aufrufe' }) }}</span>
+        <span v-if="stats.tokens_total" class="debug-header__stat">{{ formatTokens(stats.tokens_total) }} {{ $tr('tok', 'token', { de: 'Tok' }) }}</span>
       </div>
       <div class="debug-header__right">
-        <button class="debug-btn debug-btn--icon" :class="{ 'debug-btn--copied': justCopied }" @click.stop="copyAll" :title="justCopied ? $tr('Copied!', '已复制!', 'Kopiert!') : $tr('Copy all events', '复制所有事件', 'Alle Ereignisse kopieren')">{{ justCopied ? '&#10003;' : '&#9112;' }}</button>
-        <button class="debug-btn debug-btn--icon" @click.stop="clearEvents" :title="$tr('Clear', '清除', 'Löschen')">&#10005;</button>
-        <button class="debug-btn debug-btn--icon" @click.stop="isVisible = false" :title="$tr('Close (Ctrl+Shift+D)', '关闭 (Ctrl+Shift+D)', 'Schließen (Strg+Umschalt+D)')">&#9866;</button>
+        <button class="debug-btn debug-btn--icon" :class="{ 'debug-btn--copied': justCopied }" @click.stop="copyAll" :title="justCopied ? $tr('Copied!', '已复制!', { de: 'Kopiert!' }) : $tr('Copy all events', '复制所有事件', { de: 'Alle Ereignisse kopieren' })">{{ justCopied ? '&#10003;' : '&#9112;' }}</button>
+        <button class="debug-btn debug-btn--icon" @click.stop="clearEvents" :title="$tr('Clear', '清除', { de: 'Löschen' })">&#10005;</button>
+        <button class="debug-btn debug-btn--icon" @click.stop="isVisible = false" :title="$tr('Close (Ctrl+Shift+D)', '关闭 (Ctrl+Shift+D)', { de: 'Schließen (Strg+Umschalt+D)' })">&#9866;</button>
       </div>
     </div>
 
@@ -36,7 +36,7 @@
       <!-- Filters -->
       <div class="debug-filters">
         <select v-model="filterPlatform" class="debug-select">
-          <option value="">{{ $tr('All platforms', '所有平台', 'Alle Plattformen') }}</option>
+          <option value="">{{ $tr('All platforms', '所有平台', { de: 'Alle Plattformen' }) }}</option>
           <option value="twitter">Twitter</option>
           <option value="reddit">Reddit</option>
           <option value="polymarket">Polymarket</option>
@@ -44,11 +44,11 @@
         <input
           v-model="filterText"
           class="debug-input"
-          :placeholder="$tr('Filter...', '筛选...', 'Filtern...')"
+          :placeholder="$tr('Filter...', '筛选...', { de: 'Filtern...' })"
         />
         <label class="debug-checkbox">
           <input type="checkbox" v-model="autoScroll" />
-          {{ $tr('Auto-scroll', '自动滚动', 'Automatisches Scrollen') }}
+          {{ $tr('Auto-scroll', '自动滚动', { de: 'Automatisches Scrollen' }) }}
         </label>
       </div>
 
@@ -58,7 +58,7 @@
         <!-- Live Feed -->
         <div v-if="activeTab === 'feed'" class="debug-feed">
           <div v-if="filteredEvents.length === 0" class="debug-empty">
-            {{ $tr('No events yet. Waiting for activity...', '暂无事件。等待活动中...', 'Noch keine Ereignisse. Warte auf Aktivität...') }}
+            {{ $tr('No events yet. Waiting for activity...', '暂无事件。等待活动中...', { de: 'Noch keine Ereignisse. Warte auf Aktivität...' }) }}
           </div>
           <div
             v-for="event in filteredEvents"
@@ -87,28 +87,28 @@
           <div class="debug-llm__summary">
             <div class="debug-stat-card">
               <div class="debug-stat-card__value">{{ stats.llm_calls }}</div>
-              <div class="debug-stat-card__label">{{ $tr('Total Calls', '调用总数', 'Aufrufe gesamt') }}</div>
+              <div class="debug-stat-card__label">{{ $tr('Total Calls', '调用总数', { de: 'Aufrufe gesamt' }) }}</div>
             </div>
             <div class="debug-stat-card">
               <div class="debug-stat-card__value">{{ formatTokens(stats.tokens_total) }}</div>
-              <div class="debug-stat-card__label">{{ $tr('Total Tokens', '总 Token', 'Token gesamt') }}</div>
+              <div class="debug-stat-card__label">{{ $tr('Total Tokens', '总 Token', { de: 'Token gesamt' }) }}</div>
             </div>
             <div class="debug-stat-card">
               <div class="debug-stat-card__value">{{ stats.avg_latency_ms }}ms</div>
-              <div class="debug-stat-card__label">{{ $tr('Avg Latency', '平均延迟', 'Ø Latenz') }}</div>
+              <div class="debug-stat-card__label">{{ $tr('Avg Latency', '平均延迟', { de: 'Ø Latenz' }) }}</div>
             </div>
             <div class="debug-stat-card">
               <div class="debug-stat-card__value">{{ stats.errors }}</div>
-              <div class="debug-stat-card__label">{{ $tr('Errors', '错误', 'Fehler') }}</div>
+              <div class="debug-stat-card__label">{{ $tr('Errors', '错误', { de: 'Fehler' }) }}</div>
             </div>
           </div>
           <div class="debug-llm__table">
             <div class="debug-table-header">
-              <span class="debug-col--time">{{ $tr('Time', '时间', 'Zeit') }}</span>
-              <span class="debug-col--caller">{{ $tr('Caller', '调用方', 'Aufrufer') }}</span>
-              <span class="debug-col--model">{{ $tr('Model', '模型', 'Modell') }}</span>
-              <span class="debug-col--tokens">{{ $tr('In/Out', '输入/输出', 'Ein/Aus') }}</span>
-              <span class="debug-col--latency">{{ $tr('Latency', '延迟', 'Latenz') }}</span>
+              <span class="debug-col--time">{{ $tr('Time', '时间', { de: 'Zeit' }) }}</span>
+              <span class="debug-col--caller">{{ $tr('Caller', '调用方', { de: 'Aufrufer' }) }}</span>
+              <span class="debug-col--model">{{ $tr('Model', '模型', { de: 'Modell' }) }}</span>
+              <span class="debug-col--tokens">{{ $tr('In/Out', '输入/输出', { de: 'Ein/Aus' }) }}</span>
+              <span class="debug-col--latency">{{ $tr('Latency', '延迟', { de: 'Latenz' }) }}</span>
             </div>
             <div
               v-for="event in llmEvents"
@@ -127,19 +127,19 @@
               </span>
               <div v-if="expandedIds.has(event.event_id)" class="debug-table-row__detail">
                 <div v-if="event.data?.response_preview" class="debug-detail-section">
-                  <strong>{{ $tr('Response preview:', '响应预览:', 'Antwortvorschau:') }}</strong>
+                  <strong>{{ $tr('Response preview:', '响应预览:', { de: 'Antwortvorschau:' }) }}</strong>
                   <pre>{{ event.data.response_preview }}</pre>
                 </div>
                 <div v-if="event.data?.messages" class="debug-detail-section">
-                  <strong>{{ $tr('Messages:', '消息:', 'Nachrichten:') }}</strong>
+                  <strong>{{ $tr('Messages:', '消息:', { de: 'Nachrichten:' }) }}</strong>
                   <pre>{{ JSON.stringify(event.data.messages, null, 2) }}</pre>
                 </div>
                 <div v-if="event.data?.response" class="debug-detail-section">
-                  <strong>{{ $tr('Full response:', '完整响应:', 'Vollständige Antwort:') }}</strong>
+                  <strong>{{ $tr('Full response:', '完整响应:', { de: 'Vollständige Antwort:' }) }}</strong>
                   <pre>{{ event.data.response }}</pre>
                 </div>
                 <div v-if="event.data?.error" class="debug-detail-section debug-detail-section--error">
-                  <strong>{{ $tr('Error:', '错误:', 'Fehler:') }}</strong> {{ event.data.error }}
+                  <strong>{{ $tr('Error:', '错误:', { de: 'Fehler:' }) }}</strong> {{ event.data.error }}
                 </div>
               </div>
             </div>
@@ -149,7 +149,7 @@
         <!-- Agent Trace -->
         <div v-if="activeTab === 'agents'" class="debug-agents">
           <div v-if="agentDecisions.length === 0" class="debug-empty">
-            {{ $tr('No agent decisions recorded yet.', '尚未记录智能体决策。', 'Noch keine Agent-Entscheidungen aufgezeichnet.') }}
+            {{ $tr('No agent decisions recorded yet.', '尚未记录智能体决策。', { de: 'Noch keine Agent-Entscheidungen aufgezeichnet.' }) }}
           </div>
           <div
             v-for="event in agentDecisions"
@@ -160,29 +160,29 @@
             <div class="debug-agent-card__header">
               <span class="debug-event__time">{{ formatTime(event.timestamp) }}</span>
               <span v-if="event.round_num" class="debug-agent-card__round">R{{ event.round_num }}</span>
-              <span class="debug-agent-card__name">{{ event.agent_name || `${$tr('Agent', '智能体', 'Agent')} #${event.agent_id}` }}</span>
+              <span class="debug-agent-card__name">{{ event.agent_name || `${$tr('Agent', '智能体', { de: 'Agent' })} #${event.agent_id}` }}</span>
               <span
                 class="debug-agent-card__action"
                 :class="event.data?.success ? 'debug-agent-card__action--ok' : 'debug-agent-card__action--fail'"
               >
-                {{ event.data?.parsed_action?.action_type || $tr('unknown', '未知', 'unbekannt') }}
+                {{ event.data?.parsed_action?.action_type || $tr('unknown', '未知', { de: 'unbekannt' }) }}
               </span>
             </div>
             <div v-if="expandedIds.has(event.event_id)" class="debug-agent-card__detail">
               <div v-if="event.data?.env_prompt_preview" class="debug-detail-section">
-                <strong>{{ $tr('Environment observation:', '环境观察:', 'Umgebungsbeobachtung:') }}</strong>
+                <strong>{{ $tr('Environment observation:', '环境观察:', { de: 'Umgebungsbeobachtung:' }) }}</strong>
                 <pre>{{ event.data.env_prompt || event.data.env_prompt_preview }}</pre>
               </div>
               <div v-if="event.data?.llm_response_preview" class="debug-detail-section">
-                <strong>{{ $tr('LLM response:', 'LLM 响应:', 'LLM-Antwort:') }}</strong>
+                <strong>{{ $tr('LLM response:', 'LLM 响应:', { de: 'LLM-Antwort:' }) }}</strong>
                 <pre>{{ event.data.llm_response || event.data.llm_response_preview }}</pre>
               </div>
               <div v-if="event.data?.tool_calls?.length" class="debug-detail-section">
-                <strong>{{ $tr('Tool calls:', '工具调用:', 'Tool-Aufrufe:') }}</strong>
+                <strong>{{ $tr('Tool calls:', '工具调用:', { de: 'Tool-Aufrufe:' }) }}</strong>
                 <pre>{{ JSON.stringify(event.data.tool_calls, null, 2) }}</pre>
               </div>
               <div v-if="event.data?.error" class="debug-detail-section debug-detail-section--error">
-                <strong>{{ $tr('Error:', '错误:', 'Fehler:') }}</strong> {{ event.data.error }}
+                <strong>{{ $tr('Error:', '错误:', { de: 'Fehler:' }) }}</strong> {{ event.data.error }}
               </div>
             </div>
           </div>
@@ -191,7 +191,7 @@
         <!-- Errors -->
         <div v-if="activeTab === 'errors'" class="debug-errors">
           <div v-if="errorEvents.length === 0" class="debug-empty">
-            {{ $tr('No errors recorded.', '未记录错误。', 'Keine Fehler aufgezeichnet.') }}
+            {{ $tr('No errors recorded.', '未记录错误。', { de: 'Keine Fehler aufgezeichnet.' }) }}
           </div>
           <div
             v-for="event in errorEvents"
@@ -202,11 +202,11 @@
             <div class="debug-error-card__header">
               <span class="debug-event__time">{{ formatTime(event.timestamp) }}</span>
               <span class="debug-error-card__class">{{ event.data?.error_class || event.event_type }}</span>
-              <span class="debug-error-card__msg">{{ event.data?.message || event.data?.error || $tr('Unknown error', '未知错误', 'Unbekannter Fehler') }}</span>
+              <span class="debug-error-card__msg">{{ event.data?.message || event.data?.error || $tr('Unknown error', '未知错误', { de: 'Unbekannter Fehler' }) }}</span>
             </div>
             <div v-if="expandedIds.has(event.event_id)" class="debug-error-card__detail">
               <div v-if="event.data?.context" class="debug-detail-section">
-                <strong>{{ $tr('Context:', '上下文:', 'Kontext:') }}</strong> {{ event.data.context }}
+                <strong>{{ $tr('Context:', '上下文:', { de: 'Kontext:' }) }}</strong> {{ event.data.context }}
               </div>
               <pre v-if="event.data?.traceback" class="debug-traceback">{{ event.data.traceback }}</pre>
             </div>
@@ -225,10 +225,10 @@ import { tr } from '../i18n'
 
 const translateTabLabel = (label) => {
   const map = {
-    'Live Feed': tr('Live Feed', '实时事件', 'Live-Feed'),
-    'LLM Calls': tr('LLM Calls', 'LLM 调用', 'LLM-Aufrufe'),
-    'Agent Trace': tr('Agent Trace', '智能体追踪', 'Agent-Trace'),
-    'Errors': tr('Errors', '错误', 'Fehler'),
+    'Live Feed': tr('Live Feed', '实时事件', { de: 'Live-Feed' }),
+    'LLM Calls': tr('LLM Calls', 'LLM 调用', { de: 'LLM-Aufrufe' }),
+    'Agent Trace': tr('Agent Trace', '智能体追踪', { de: 'Agent-Trace' }),
+    'Errors': tr('Errors', '错误', { de: 'Fehler' }),
   }
   return map[label] || label
 }

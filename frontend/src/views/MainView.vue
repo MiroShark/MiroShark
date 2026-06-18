@@ -25,7 +25,7 @@
 
       <div class="header-right">
         <div class="workflow-step">
-          <span class="step-num">{{ $tr('Step', '步骤', 'Schritt') }} {{ currentStep }}/4</span>
+          <span class="step-num">{{ $tr('Step', '步骤', { de: 'Schritt' }) }} {{ currentStep }}/4</span>
           <span class="step-name">{{ stepName(currentStep - 1) }}</span>
         </div>
         <div class="step-divider"></div>
@@ -147,11 +147,11 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (error.value) return tr('Error', '错误', 'Fehler')
-  if (currentPhase.value >= 2) return tr('Ready', '就绪', 'Bereit')
-  if (currentPhase.value === 1) return tr('Building Graph', '构建图谱中', 'Graph wird aufgebaut')
-  if (currentPhase.value === 0) return tr('Generating Ontology', '生成本体中', 'Ontologie wird generiert')
-  return tr('Idle', '空闲', 'Leerlauf')
+  if (error.value) return tr('Error', '错误', { de: 'Fehler' })
+  if (currentPhase.value >= 2) return tr('Ready', '就绪', { de: 'Bereit' })
+  if (currentPhase.value === 1) return tr('Building Graph', '构建图谱中', { de: 'Graph wird aufgebaut' })
+  if (currentPhase.value === 0) return tr('Generating Ontology', '生成本体中', { de: 'Ontologie wird generiert' })
+  return tr('Idle', '空闲', { de: 'Leerlauf' })
 })
 
 // --- Helpers ---
@@ -209,7 +209,7 @@ const handleNewProject = async () => {
   const hasTemplate = !!pending.templateSeedText
   const hasUrlDocs = pending.urlDocs && pending.urlDocs.length > 0
   if (!pending.isPending || (!hasFiles && !hasTemplate && !hasUrlDocs)) {
-    error.value = tr('No pending files found.', '没有待处理的文件。', 'Keine ausstehenden Dateien gefunden.')
+    error.value = tr('No pending files found.', '没有待处理的文件。', { de: 'Keine ausstehenden Dateien gefunden.' })
     addLog('Error: No pending files found for new project.')
     return
   }
@@ -248,7 +248,7 @@ const handleNewProject = async () => {
       addLog(`Ontology generated successfully for project ${res.data.project_id}`)
       await startBuildGraph()
     } else {
-      error.value = res.error || tr('Ontology generation failed', '本体生成失败', 'Ontologie-Generierung fehlgeschlagen')
+      error.value = res.error || tr('Ontology generation failed', '本体生成失败', { de: 'Ontologie-Generierung fehlgeschlagen' })
       addLog(`Error generating ontology: ${error.value}`)
     }
   } catch (err) {
@@ -297,7 +297,7 @@ const updatePhaseByStatus = (status) => {
     case 'ontology_generated': currentPhase.value = 0; break;
     case 'graph_building': currentPhase.value = 1; break;
     case 'graph_completed': currentPhase.value = 2; break;
-    case 'failed': error.value = tr('Project failed', '项目失败', 'Projekt fehlgeschlagen'); break;
+    case 'failed': error.value = tr('Project failed', '项目失败', { de: 'Projekt fehlgeschlagen' }); break;
   }
 }
 

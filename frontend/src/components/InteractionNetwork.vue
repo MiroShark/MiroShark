@@ -4,37 +4,37 @@
     <div class="net-header">
       <div class="net-title">
         <span class="net-icon">⬡</span>
-        <span class="net-label">{{ $tr('INTERACTION NETWORK', '互动网络', 'INTERAKTIONSNETZWERK') }}</span>
+        <span class="net-label">{{ $tr('INTERACTION NETWORK', '互动网络', { de: 'INTERAKTIONSNETZWERK' }) }}</span>
       </div>
       <div class="net-header-actions">
         <button
           class="net-export-btn"
           :disabled="!hasData || exporting || !copySupported"
-          :title="copySupported ? $tr('Copy graph as PNG (with MiroShark watermark)', '复制图为 PNG(含 MiroShark 水印)', 'Graph als PNG kopieren (mit MiroShark-Wasserzeichen)') : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', 'Bildkopie wird in diesem Browser nicht unterstützt')"
+          :title="copySupported ? $tr('Copy graph as PNG (with MiroShark watermark)', '复制图为 PNG(含 MiroShark 水印)', { de: 'Graph als PNG kopieren (mit MiroShark-Wasserzeichen)' }) : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', { de: 'Bildkopie wird in diesem Browser nicht unterstützt' })"
           @click="copyChart"
         >
-          {{ copiedFlash ? $tr('Copied', '已复制', 'Kopiert') : $tr('Copy', '复制', 'Kopieren') }}
+          {{ copiedFlash ? $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
         </button>
         <button
           class="net-export-btn"
           :disabled="!hasData || exporting"
           @click="downloadChart"
-          :title="$tr('Download graph as PNG (with MiroShark watermark)', '下载图为 PNG(含 MiroShark 水印)', 'Graph als PNG herunterladen (mit MiroShark-Wasserzeichen)')"
+          :title="$tr('Download graph as PNG (with MiroShark watermark)', '下载图为 PNG(含 MiroShark 水印)', { de: 'Graph als PNG herunterladen (mit MiroShark-Wasserzeichen)' })"
         >
-          {{ $tr('Download ↓', '下载 ↓', 'Herunterladen ↓') }}
+          {{ $tr('Download ↓', '下载 ↓', { de: 'Herunterladen ↓' }) }}
         </button>
       </div>
     </div>
 
     <!-- Legend -->
     <div class="net-legend">
-      <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨', 'Optimistisch') }}</span>
-      <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立', 'Neutral') }}</span>
-      <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌', 'Pessimistisch') }}</span>
+      <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨', { de: 'Optimistisch' }) }}</span>
+      <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立', { de: 'Neutral' }) }}</span>
+      <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌', { de: 'Pessimistisch' }) }}</span>
       <span class="legend-sep">|</span>
       <span class="legend-item"><span class="legend-line twitter-line"></span>Twitter</span>
       <span class="legend-item"><span class="legend-line reddit-line"></span>Reddit</span>
-      <span class="legend-item"><span class="legend-line cross-line"></span>{{ $tr('Cross-platform', '跨平台', 'Plattformübergreifend') }}</span>
+      <span class="legend-item"><span class="legend-line cross-line"></span>{{ $tr('Cross-platform', '跨平台', { de: 'Plattformübergreifend' }) }}</span>
     </div>
 
     <!-- Platform filter -->
@@ -48,7 +48,7 @@
     <!-- Loading -->
     <div v-if="loading" class="net-state">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Computing interaction network...', '正在计算互动网络...', 'Interaktionsnetzwerk wird berechnet...') }}</span>
+      <span>{{ $tr('Computing interaction network...', '正在计算互动网络...', { de: 'Interaktionsnetzwerk wird berechnet...' }) }}</span>
     </div>
 
     <!-- Error -->
@@ -56,8 +56,8 @@
 
     <!-- No data -->
     <div v-else-if="!hasData" class="net-state">
-      <span>{{ $tr('No interaction data available.', '暂无互动数据。', 'Keine Interaktionsdaten verfügbar.') }}</span>
-      <span class="net-hint">{{ $tr('Run a simulation to generate agent interactions.', '运行一次模拟以生成智能体互动。', 'Führen Sie eine Simulation aus, um Agenteninteraktionen zu generieren.') }}</span>
+      <span>{{ $tr('No interaction data available.', '暂无互动数据。', { de: 'Keine Interaktionsdaten verfügbar.' }) }}</span>
+      <span class="net-hint">{{ $tr('Run a simulation to generate agent interactions.', '运行一次模拟以生成智能体互动。', { de: 'Führen Sie eine Simulation aus, um Agenteninteraktionen zu generieren.' }) }}</span>
     </div>
 
     <!-- Graph -->
@@ -139,17 +139,17 @@
             {{ translateStance(hoveredNodeData?.stance) }} · {{ hoveredNodeData?.platforms?.join(', ') }}
           </text>
           <text x="0" y="26" font-size="9" font-family="monospace" fill="rgba(10,10,10,0.5)">
-            {{ $tr('In:', '入度:', 'Ein:') }} {{ hoveredNodeData?.in_degree }} · {{ $tr('Out:', '出度:', 'Aus:') }} {{ hoveredNodeData?.out_degree }} · {{ $tr('Rank', '排名', 'Rang') }} #{{ hoveredNodeData?.rank }}
+            {{ $tr('In:', '入度:', { de: 'Ein:' }) }} {{ hoveredNodeData?.in_degree }} · {{ $tr('Out:', '出度:', { de: 'Aus:' }) }} {{ hoveredNodeData?.out_degree }} · {{ $tr('Rank', '排名', { de: 'Rang' }) }} #{{ hoveredNodeData?.rank }}
           </text>
           <text x="0" y="34" font-size="0" fill="transparent">pad</text>
         </g>
       </svg>
 
       <!-- Zoom controls -->
-      <div class="net-zoom-controls" :aria-label="$tr('Zoom controls', '缩放控制', 'Zoom-Steuerung')">
-        <button class="zoom-btn" @click="zoomBy(1.25)" :title="$tr('Zoom in', '放大', 'Vergrößern')">+</button>
-        <button class="zoom-btn" @click="zoomBy(0.8)" :title="$tr('Zoom out', '缩小', 'Verkleinern')">−</button>
-        <button class="zoom-btn zoom-reset" @click="resetView" :title="$tr('Reset view (double-click graph)', '重置视图(双击图)', 'Ansicht zurücksetzen (Doppelklick auf Graph)')">⤢</button>
+      <div class="net-zoom-controls" :aria-label="$tr('Zoom controls', '缩放控制', { de: 'Zoom-Steuerung' })">
+        <button class="zoom-btn" @click="zoomBy(1.25)" :title="$tr('Zoom in', '放大', { de: 'Vergrößern' })">+</button>
+        <button class="zoom-btn" @click="zoomBy(0.8)" :title="$tr('Zoom out', '缩小', { de: 'Verkleinern' })">−</button>
+        <button class="zoom-btn zoom-reset" @click="resetView" :title="$tr('Reset view (double-click graph)', '重置视图(双击图)', { de: 'Ansicht zurücksetzen (Doppelklick auf Graph)' })">⤢</button>
         <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       </div>
     </div>
@@ -157,20 +157,20 @@
     <!-- Insights Panel -->
     <div v-if="hasData && networkData?.insights" class="net-insights">
       <div v-if="networkData.insights.top_hub" class="insight-card">
-        <span class="insight-label">{{ $tr('Top Hub', '顶级中心', 'Wichtigster Hub') }}</span>
+        <span class="insight-label">{{ $tr('Top Hub', '顶级中心', { de: 'Wichtigster Hub' }) }}</span>
         <span class="insight-text">{{ networkData.insights.top_hub.description }}</span>
       </div>
       <div v-if="networkData.insights.top_bridge" class="insight-card">
-        <span class="insight-label">{{ $tr('Top Bridge', '顶级桥梁', 'Wichtigste Brücke') }}</span>
+        <span class="insight-label">{{ $tr('Top Bridge', '顶级桥梁', { de: 'Wichtigste Brücke' }) }}</span>
         <span class="insight-text">{{ networkData.insights.top_bridge.description }}</span>
       </div>
       <div v-if="networkData.insights.echo_chamber" class="insight-card">
-        <span class="insight-label">{{ $tr('Echo Chamber', '回音室', 'Echokammer') }}</span>
+        <span class="insight-label">{{ $tr('Echo Chamber', '回音室', { de: 'Echokammer' }) }}</span>
         <span class="insight-text">{{ networkData.insights.echo_chamber.description }}</span>
       </div>
       <div class="insight-card stats-row">
-        <span class="insight-stat">{{ networkData.insights.total_nodes }} {{ $tr('agents', '智能体', 'Agenten') }}</span>
-        <span class="insight-stat">{{ networkData.insights.total_edges }} {{ $tr('interactions', '互动', 'Interaktionen') }}</span>
+        <span class="insight-stat">{{ networkData.insights.total_nodes }} {{ $tr('agents', '智能体', { de: 'Agenten' }) }}</span>
+        <span class="insight-stat">{{ networkData.insights.total_edges }} {{ $tr('interactions', '互动', { de: 'Interaktionen' }) }}</span>
       </div>
     </div>
   </div>
@@ -189,9 +189,9 @@ import {
 import { tr } from '../i18n'
 
 const translateStance = (stance) => {
-  if (stance === 'bullish') return tr('bullish', '看涨', 'optimistisch')
-  if (stance === 'bearish') return tr('bearish', '看跌', 'pessimistisch')
-  if (stance === 'neutral') return tr('neutral', '中立', 'neutral')
+  if (stance === 'bullish') return tr('bullish', '看涨', { de: 'optimistisch' })
+  if (stance === 'bearish') return tr('bearish', '看跌', { de: 'pessimistisch' })
+  if (stance === 'neutral') return tr('neutral', '中立', { de: 'neutral' })
   return stance
 }
 
@@ -530,10 +530,10 @@ const load = async () => {
     } else if (res.success && !res.data) {
       networkData.value = null
     } else {
-      error.value = res.error || tr('Failed to load interaction network.', '加载互动网络失败。', 'Interaktionsnetzwerk konnte nicht geladen werden.')
+      error.value = res.error || tr('Failed to load interaction network.', '加载互动网络失败。', { de: 'Interaktionsnetzwerk konnte nicht geladen werden.' })
     }
   } catch (err) {
-    error.value = err.message || tr('Failed to load interaction network.', '加载互动网络失败。', 'Interaktionsnetzwerk konnte nicht geladen werden.')
+    error.value = err.message || tr('Failed to load interaction network.', '加载互动网络失败。', { de: 'Interaktionsnetzwerk konnte nicht geladen werden.' })
   } finally {
     loading.value = false
   }
@@ -546,8 +546,8 @@ const _buildExportCanvas = () => {
   const nodeCount = (networkData.value?.nodes || []).length
   const edgeCount = (networkData.value?.edges || []).length
   const { drawHeader, headerHeight } = buildTitledHeader({
-    title: tr('Interaction Network', '互动网络', 'Interaktionsnetzwerk'),
-    subtitle: `${nodeCount} ${tr('agents', '智能体', 'Agenten')} · ${edgeCount} ${tr('edges', '条边', 'Kanten')}`,
+    title: tr('Interaction Network', '互动网络', { de: 'Interaktionsnetzwerk' }),
+    subtitle: `${nodeCount} ${tr('agents', '智能体', { de: 'Agenten' })} · ${edgeCount} ${tr('edges', '条边', { de: 'Kanten' })}`,
     width: W,
   })
   return renderSvgToCanvas(svgRef.value, {
