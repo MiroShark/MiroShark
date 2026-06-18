@@ -524,12 +524,20 @@ def suggest_scenarios():
             f"User's simulation prompt:\n{sim_prompt}\n\n"
             if sim_prompt else ""
         )
+        _lang_instruction = {
+            "en":    "Write all question, label, and rationale fields in English.",
+            "de":    "Write all question, label, and rationale fields in German.",
+            "fr":    "Write all question, label, and rationale fields in French.",
+            "zh-CN": "Write all question, label, and rationale fields in Chinese (Simplified).",
+        }.get(locale, "")
+        lang_block = f"{_lang_instruction}\n\n" if _lang_instruction else ""
         messages = [
             {"role": "system", "content": _SCENARIO_SUGGEST_SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": (
                     f"{_today_context()}\n\n"
+                    f"{lang_block}"
                     f"{sim_prompt_block}"
                     "Document excerpt (truncated):\n\n"
                     f"{normalized}\n\n"

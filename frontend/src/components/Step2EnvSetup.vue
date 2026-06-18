@@ -59,7 +59,7 @@
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr('Combines context to automatically invoke tools, organize entities and relationships from the knowledge graph, initialize simulated individuals, and assign them unique behaviors and memories based on reality seeds', '结合上下文自动调用工具,从知识图谱整理实体与关系,初始化模拟个体,并基于现实种子赋予其独特的行为与记忆', { de: 'Kombiniert Kontext, um automatisch Werkzeuge aufzurufen, Entitäten und Beziehungen aus dem Wissensgraphen zu organisieren, simulierte Individuen zu initialisieren und ihnen einzigartige Verhaltensweisen und Erinnerungen auf Basis von Realitätskeimen zuzuweisen' }) }}
+            {{ $tr('Combines context to automatically invoke tools, organize entities and relationships from the knowledge graph, initialize simulated individuals, and assign them unique behaviors and memories based on reality seeds', '结合上下文自动调用工具,从知识图谱整理实体与关系,初始化模拟个体,并基于现实种子赋予其独特的行为与记忆', { de: 'Kombiniert Kontext, um automatisch Werkzeuge aufzurufen, Entitäten und Beziehungen aus dem Wissensgraphen zu organisieren, simulierte Individuen zu initialisieren und ihnen einzigartige Verhaltensweisen und Erinnerungen auf Basis von Faktenbasis (Seeds) zuzuweisen' }) }}
           </p>
 
           <!-- Profiles Stats -->
@@ -74,7 +74,7 @@
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ totalTopicsCount }}</span>
-              <span class="stat-label">{{ $tr('Reality Seed Topics', '现实种子话题', { de: 'Realitätskeim-Themen' }) }}</span>
+              <span class="stat-label">{{ $tr('Reality Seed Topics', '现实种子话题', { de: 'Faktenbasis-Themen' }) }}</span>
             </div>
           </div>
 
@@ -139,7 +139,7 @@
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr(`LLM intelligently configures world time flow, recommendation algorithms, each individual's active time periods, posting frequency, event triggers, and other parameters based on simulation requirements and reality seeds`, 'LLM 根据模拟需求与现实种子,智能配置世界时间流速、推荐算法、每个个体的活跃时段、发帖频率、事件触发等参数', { de: 'LLM konfiguriert intelligent Weltzeitfluss, Empfehlungsalgorithmen, aktive Zeiträume jedes Einzelnen, Beitragshäufigkeit, Ereignisauslöser und weitere Parameter basierend auf Simulationsanforderungen und Realitätskeimen' }) }}
+            {{ $tr(`LLM intelligently configures world time flow, recommendation algorithms, each individual's active time periods, posting frequency, event triggers, and other parameters based on simulation requirements and reality seeds`, 'LLM 根据模拟需求与现实种子,智能配置世界时间流速、推荐算法、每个个体的活跃时段、发帖频率、事件触发等参数', { de: 'LLM konfiguriert intelligent Weltzeitfluss, Empfehlungsalgorithmen, aktive Zeiträume jedes Einzelnen, Beitragshäufigkeit, Ereignisauslöser und weitere Parameter basierend auf Simulationsanforderungen und Faktenbasis (Seeds)' }) }}
           </p>
 
           <!-- Config Error Panel -->
@@ -586,7 +586,7 @@
               :disabled="phase < 4"
               @click="handleStartSimulation"
             >
-              {{ hasRunBefore ? $tr('Resume Simulation ➝', '继续模拟 ➝', { de: 'Simulation fortsetzen ➝' }) : $tr('Start Simulation ➝', '开始模拟 ➝', { de: 'Dual-Welt-Parallelsimulation starten ➝' }) }}
+              {{ hasRunBefore ? $tr('Resume Simulation ➝', '继续模拟 ➝', { de: 'Simulation fortsetzen ➝' }) : $tr('Start Simulation ➝', '开始模拟 ➝', { de: 'Weltsimulation starten ➝' }) }}
             </button>
           </div>
         </div>
@@ -637,7 +637,7 @@
 
           <!-- Related Topics -->
           <div class="modal-section" v-if="selectedProfile.interested_topics?.length">
-            <span class="section-label">{{ $tr('Real-World Seed Related Topics', '现实种子相关话题', { de: 'Realitätskeim-bezogene Themen' }) }}</span>
+            <span class="section-label">{{ $tr('Real-World Seed Related Topics', '现实种子相关话题', { de: 'Faktenbasis-bezogene Themen' }) }}</span>
             <div class="topics-grid">
               <span
                 v-for="topic in selectedProfile.interested_topics"
@@ -663,7 +663,7 @@
               </div>
               <div class="dimension-card">
                 <span class="dim-title">{{ $tr('Unique Memory Imprint', '独特记忆烙印', { de: 'Einzigartige Erinnerungsprägungen' }) }}</span>
-                <span class="dim-desc">{{ $tr('Memories formed from real-world seeds', '由现实种子形成的记忆', { de: 'Aus Realitätskeimen geformte Erinnerungen' }) }}</span>
+                <span class="dim-desc">{{ $tr('Memories formed from real-world seeds', '由现实种子形成的记忆', { de: 'Aus Faktenbasis (Seeds) geformte Erinnerungen' }) }}</span>
               </div>
               <div class="dimension-card">
                 <span class="dim-title">{{ $tr('Social Relationship Network', '社交关系网络', { de: 'Soziales Beziehungsnetzwerk' }) }}</span>

@@ -217,7 +217,7 @@ const handleNewProject = async () => {
   try {
     loading.value = true
     currentPhase.value = 0
-    ontologyProgress.value = { message: 'Uploading and analyzing docs...' }
+    ontologyProgress.value = { message: tr('Uploading and analyzing docs...', '正在上传并分析文档...', { de: 'Dokumente werden hochgeladen und analysiert...' }) }
     addLog(hasTemplate
       ? `Starting from template "${pending.templateName}"...`
       : hasUrlDocs && !hasFiles

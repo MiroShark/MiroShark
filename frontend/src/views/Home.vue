@@ -153,7 +153,7 @@
             <!-- 01 — Files -->
             <section class="ms-block">
               <header class="ms-block-head">
-                <span class="ms-block-label">{{ $tr('01 · Reality Seeds', '01 · 现实种子', { de: '01 · Realitätskeime' }) }}</span>
+                <span class="ms-block-label">{{ $tr('01 · Reality Seeds', '01 · 现实种子', { de: '01 · Faktenbasis (Seeds)' }) }}</span>
                 <span class="ms-block-meta">{{ $tr('PDF · MD · TXT', 'PDF · MD · TXT', { de: 'PDF · MD · TXT' }) }}</span>
               </header>
 

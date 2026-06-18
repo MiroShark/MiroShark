@@ -818,6 +818,14 @@ class WonderwallProfileGenerator:
         demographic_seed: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Build detailed persona prompt for individual entities"""
+        from ..utils.i18n import get_active_locale
+        locale = get_active_locale()
+        _lang_instruction = {
+            "de":    "WICHTIG: Schreibe die Felder 'bio', 'persona' und alle anderen Textfelder ausschließlich auf Deutsch.",
+            "fr":    "IMPORTANT : Écris les champs 'bio', 'persona' et tous les autres textes uniquement en français.",
+            "zh-CN": "重要：请用中文编写所有 'bio'、'persona' 及其他文本字段。",
+        }.get(locale, "")
+        lang_block = f"{_lang_instruction}\n\n" if _lang_instruction else ""
 
         attrs_str = json.dumps(entity_attributes, ensure_ascii=False) if entity_attributes else "None"
         context_str = context[:3000] if context else "No additional context"
@@ -832,7 +840,7 @@ class WonderwallProfileGenerator:
                     f"{anchor}\n"
                 )
 
-        return f"""Create a persona for this person to use in a social media simulation.
+        return f"""{lang_block}Create a persona for this person to use in a social media simulation.
 
 ENTITY: {entity_name} ({entity_type})
 SUMMARY: {entity_summary}
@@ -873,6 +881,14 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
         demographic_seed: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Build detailed persona prompt for group/institutional entities"""
+        from ..utils.i18n import get_active_locale
+        locale = get_active_locale()
+        _lang_instruction = {
+            "de":    "WICHTIG: Schreibe die Felder 'bio', 'persona' und alle anderen Textfelder ausschließlich auf Deutsch.",
+            "fr":    "IMPORTANT : Écris les champs 'bio', 'persona' et tous les autres textes uniquement en français.",
+            "zh-CN": "重要：请用中文编写所有 'bio'、'persona' 及其他文本字段。",
+        }.get(locale, "")
+        lang_block = f"{_lang_instruction}\n\n" if _lang_instruction else ""
 
         attrs_str = json.dumps(entity_attributes, ensure_ascii=False) if entity_attributes else "None"
         context_str = context[:3000] if context else "No additional context"
@@ -890,7 +906,7 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
                     f"{anchor}\n"
                 )
 
-        return f"""Create an official social media account persona for this organization.
+        return f"""{lang_block}Create an official social media account persona for this organization.
 
 ENTITY: {entity_name} ({entity_type})
 SUMMARY: {entity_summary}
@@ -1148,6 +1164,9 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
                 except Exception as e:
                     logger.warning(f"Failed to save profiles in real time: {e}")
         
+        from ..utils.i18n import get_active_locale, use_locale as _use_locale
+        _generation_locale = get_active_locale()  # capture once from the calling thread
+
         def generate_single_profile(
             idx: int, entity: EntityNode
         ) -> tuple[int, WonderwallAgentProfile, str | None]:
@@ -1155,11 +1174,12 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
             entity_type = entity.get_entity_type() or "Entity"
 
             try:
-                profile = self.generate_profile_from_entity(
-                    entity=entity,
-                    user_id=idx,
-                    use_llm=use_llm
-                )
+                with _use_locale(_generation_locale):
+                    profile = self.generate_profile_from_entity(
+                        entity=entity,
+                        user_id=idx,
+                        use_llm=use_llm
+                    )
 
                 # Output generated persona to console and log in real time
                 self._print_generated_profile(entity.name, entity_type, profile)

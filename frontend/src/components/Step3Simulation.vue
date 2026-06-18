@@ -1088,7 +1088,7 @@ const doStartSimulation = async () => {
 
   isStarting.value = true
   startError.value = null
-  addLog(tr('Starting dual-platform parallel simulation...', '正在启动双平台并行模拟…', { de: 'Dual-Plattform-Parallelsimulation wird gestartet…' }))
+  addLog(tr('Starting dual-platform parallel simulation...', '正在启动双平台并行模拟…', { de: 'Weltsimulation wird gestartet…' }))
   emit('update-status', 'processing')
   
   try {
