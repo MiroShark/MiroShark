@@ -44,11 +44,39 @@ def test_zh_cn_has_no_missing_keys_relative_to_en():
     )
 
 
+def test_fr_has_no_missing_keys_relative_to_en():
+    """Coverage gate: every English prompt must have a French sibling.
+
+    If this fails, a new EN prompt was added without translating it.
+    Either translate it in ``locales/fr/`` or accept the EN fallback
+    by deleting this assertion (only do that if the prompt genuinely
+    can't be translated).
+    """
+    missing = missing_keys("fr")
+    assert missing == [], (
+        f"French (fr) is missing translations for: {missing}. "
+        "Add them to backend/app/prompts/locales/fr/ or document why "
+        "they should fall back to English."
+    )
+
+
 def test_get_prompt_falls_back_to_english_for_unknown_locale():
-    """Unknown locales should fall back to English silently."""
+    """Unknown locales should fall back to English silently.
+
+    Note ``fr-FR`` is deliberately *not* a registered locale directory
+    (the registry keys on the exact code ``fr``), so it must still fall
+    back to English even though ``locales/fr/`` is fully translated.
+    """
     out = get_prompt("social_simulations.twitter_system", "fr-FR",
                      description_block="...")
     assert "WHO YOU ARE" in out  # English content
+
+
+def test_get_prompt_returns_french_for_fr():
+    out = get_prompt("social_simulations.twitter_system", "fr",
+                     description_block="Tu t'appelles Camille.")
+    # French header confirms we got the French variant, not the EN fallback.
+    assert "QUI TU ES" in out, out[:200]
 
 
 def test_get_prompt_returns_chinese_for_zh_cn():
