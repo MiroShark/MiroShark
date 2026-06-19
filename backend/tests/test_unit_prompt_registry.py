@@ -60,6 +60,22 @@ def test_fr_has_no_missing_keys_relative_to_en():
     )
 
 
+def test_de_has_no_missing_keys_relative_to_en():
+    """Coverage gate: every English prompt must have a German sibling.
+
+    If this fails, a new EN prompt was added without translating it.
+    Either translate it in ``locales/de/`` or accept the EN fallback
+    by deleting this assertion (only do that if the prompt genuinely
+    can't be translated).
+    """
+    missing = missing_keys("de")
+    assert missing == [], (
+        f"German (de) is missing translations for: {missing}. "
+        "Add them to backend/app/prompts/locales/de/ or document why "
+        "they should fall back to English."
+    )
+
+
 def test_get_prompt_falls_back_to_english_for_unknown_locale():
     """Unknown locales should fall back to English silently.
 
