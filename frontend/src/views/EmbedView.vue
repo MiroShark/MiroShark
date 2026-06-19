@@ -24,6 +24,13 @@
             {{ $tr('Round', '轮次') }} {{ summary.current_round }}/{{ summary.total_rounds || summary.current_round }}
           </span>
           <span class="embed-pill">{{ summary.profiles_count || 0 }} {{ $tr('agents', '智能体') }}</span>
+          <span
+            v-if="costLabel"
+            class="embed-pill cost"
+            :title="$tr('Estimated cost to run this simulation (lower bound, from logged LLM calls)', '运行此模拟的预估成本(基于已记录的 LLM 调用,为下限)')"
+          >
+            {{ costLabel }}
+          </span>
           <span v-if="summary.quality && summary.quality.health" class="embed-pill quality" :class="qualityClass">
             {{ summary.quality.health }}
           </span>
@@ -90,7 +97,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getEmbedSummary } from '../api/simulation'
+import { getEmbedSummary, getSimulationCost } from '../api/simulation'
 import { tr } from '../i18n'
 
 const props = defineProps({
@@ -113,6 +120,7 @@ const CHART_H = 180
 const loading = ref(true)
 const error = ref('')
 const summary = ref(null)
+const cost = ref(null)
 
 const scenarioTitle = computed(() => {
   const raw = (summary.value?.scenario || '').trim()
@@ -137,6 +145,24 @@ const statusLabel = computed(() => {
 const statusClass = computed(() => {
   const s = statusLabel.value.toLowerCase()
   return `status-${s}`
+})
+
+const isCompleted = computed(() => {
+  const s = (summary.value?.runner_status || summary.value?.status || '').toLowerCase()
+  return s === 'completed' || s === 'finished' || s === 'stopped'
+})
+
+// Human-friendly headline cost from cost.json — the "$1 to simulate
+// anything" claim, made visible on every public embed. Empty string when
+// there is no cost to show (endpoint 403/404'd, or the run priced to $0),
+// which drops the pill entirely. `~` marks the lower-bound estimate;
+// sub-cent runs collapse to `<$0.01` rather than a misleading `$0.00`.
+const costLabel = computed(() => {
+  const usd = cost.value?.estimated_cost_usd
+  if (typeof usd !== 'number' || usd <= 0) return ''
+  if (usd < 0.01) return '<$0.01'
+  const prefix = cost.value?.is_estimate ? '~' : ''
+  return `${prefix}$${usd.toFixed(2)}`
 })
 
 const hasRounds = computed(() => {
@@ -267,6 +293,18 @@ const fetchData = async () => {
     error.value = err?.response?.data?.error || err?.message || tr('Failed to load simulation', '加载模拟失败')
   } finally {
     loading.value = false
+  }
+
+  // Cost is a credibility extra, not a load dependency: fetch it only for
+  // finished runs (a live run's cost is partial) and swallow any failure —
+  // the publish gate already passed for this embed, but 404/$0 runs simply
+  // won't have a figure to show.
+  if (summary.value && isCompleted.value) {
+    try {
+      cost.value = await getSimulationCost(simulationId.value)
+    } catch {
+      cost.value = null
+    }
   }
 }
 
@@ -411,6 +449,13 @@ onMounted(() => {
 .embed-pill.status.status-failed {
   background: rgba(240, 120, 103, 0.15);
   color: var(--bearish);
+}
+
+.embed-pill.cost {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--link-color);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .embed-pill.quality.quality-excellent {

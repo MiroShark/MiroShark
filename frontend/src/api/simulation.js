@@ -1524,6 +1524,28 @@ export const getReproduction = (simulationId) => {
 }
 
 /**
+ * Fetch the estimated cost breakdown (`cost.json`) for a published
+ * simulation — the "$1 to simulate anything" claim, made queryable per
+ * run. Reuses the same OpenRouter price table that writes
+ * `run_summary.md`, so the dollar figure here and on disk can never
+ * disagree.
+ *
+ * Like the other share-surface blobs (`reproduce.json`), the Flask
+ * handler returns the payload directly (not wrapped in `{success,
+ * data}`), so the resolved value IS the cost envelope:
+ * `{ estimated_cost_usd, is_estimate, totals, ... }`. Rejects with the
+ * standard error envelope on 403 (simulation not published) or 404 (no
+ * LLM calls logged yet), so callers should treat a rejection as "no cost
+ * to show" rather than a hard failure.
+ *
+ * @param {string} simulationId
+ * @returns {Promise<object>} the v1-schema cost payload
+ */
+export const getSimulationCost = (simulationId) => {
+  return service.get(`/api/simulation/${simulationId}/cost.json`)
+}
+
+/**
  * Build the absolute URL of the pre-populated Jupyter notebook for a
  * published simulation.
  *
