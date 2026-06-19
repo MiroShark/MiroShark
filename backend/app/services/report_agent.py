@@ -21,7 +21,7 @@ from enum import Enum
 
 from ..config import Config
 from ..prompts import get_prompt
-from ..utils.i18n import get_active_locale
+from ..utils.i18n import get_active_locale, use_locale
 from ..utils.llm_client import LLMClient, create_smart_llm_client
 from ..utils.logger import get_logger
 from ..utils.validation import validate_simulation_id
@@ -2653,18 +2653,20 @@ class ReportAgent:
             generated_sections: list = [None] * total_sections  # positional slots
             completed_count = 0
             lock = threading.Lock()
+            _active_report_locale = get_active_locale()  # ThreadPoolExecutor doesn't inherit ContextVar
 
             def _generate_one(idx: int, section: ReportSection) -> tuple[int, str, str]:
                 """Runs in a worker thread. Returns (idx, title, content)."""
                 section_num = idx + 1
                 try:
-                    content = self._generate_section_react(
-                        section=section,
-                        outline=outline,
-                        previous_sections=[],  # parallel: sections don't see each other
-                        progress_callback=None,  # per-section granular progress lost in parallel; overall reported below
-                        section_index=section_num,
-                    )
+                    with use_locale(_active_report_locale):
+                        content = self._generate_section_react(
+                            section=section,
+                            outline=outline,
+                            previous_sections=[],  # parallel: sections don't see each other
+                            progress_callback=None,  # per-section granular progress lost in parallel; overall reported below
+                            section_index=section_num,
+                        )
                 except Exception as e:
                     logger.error(f"Section {section_num} ({section.title}) failed: {e}")
                     content = (
