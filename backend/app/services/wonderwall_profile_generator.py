@@ -15,6 +15,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 from ..config import Config
+from ..utils.json_repair import repair_json
 from ..utils.llm_client import create_llm_client
 from ..utils.logger import get_logger
 from ..utils.trace_context import TraceContext
@@ -712,78 +713,34 @@ class WonderwallProfileGenerator:
             entity_name, entity_type, entity_summary, entity_attributes
         )
     
-    def _fix_truncated_json(self, content: str) -> str:
-        """Fix truncated JSON (output truncated by max_tokens limit)"""
-        
-        # If JSON is truncated, try to close it
-        content = content.strip()
-
-        # Count unclosed brackets
-        open_braces = content.count('{') - content.count('}')
-        open_brackets = content.count('[') - content.count(']')
-        
-        # Check for unclosed strings
-        # Simple check: if there's no comma or closing bracket after the last quote, the string may be truncated
-        if content and content[-1] not in '",}]':
-            # Try to close the string
-            content += '"'
-        
-        # Close brackets
-        content += ']' * open_brackets
-        content += '}' * open_braces
-        
-        return content
-    
     def _try_fix_json(self, content: str, entity_name: str, entity_type: str, entity_summary: str = "") -> Dict[str, Any]:
-        """Try to fix corrupted JSON"""
+        """Try to recover a profile from corrupted/truncated LLM JSON.
+
+        First runs the shared best-effort salvage; if that can't produce a
+        parseable object, falls back to scraping whatever ``bio``/``persona``
+        text survives, and finally to a basic entity-derived structure.
+        """
         import re
-        
-        # 1. First try to fix truncation
-        content = self._fix_truncated_json(content)
-        
-        # 2. Try to extract JSON portion
-        json_match = re.search(r'\{[\s\S]*\}', content)
-        if json_match:
-            json_str = json_match.group()
-            
-            # 3. Handle newline issues in strings
-            # Find all string values and replace newlines within them
-            def fix_string_newlines(match):
-                s = match.group(0)
-                # Replace actual newlines within strings with spaces
-                s = s.replace('\n', ' ').replace('\r', ' ')
-                # Replace excess spaces
-                s = re.sub(r'\s+', ' ', s)
-                return s
-            
-            # Match JSON string values
-            json_str = re.sub(r'"[^"\\]*(?:\\.[^"\\]*)*"', fix_string_newlines, json_str)
-            
-            # 4. Try to parse
-            try:
-                result = json.loads(json_str)
+
+        # 1. Shared salvage: close truncation, isolate the object, parse.
+        try:
+            result = repair_json(content)
+            if isinstance(result, dict):
                 result["_fixed"] = True
                 return result
-            except json.JSONDecodeError:
-                # 5. If still failing, try more aggressive fix
-                try:
-                    # Remove all control characters
-                    json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', json_str)
-                    # Replace all consecutive whitespace
-                    json_str = re.sub(r'\s+', ' ', json_str)
-                    result = json.loads(json_str)
-                    result["_fixed"] = True
-                    return result
-                except json.JSONDecodeError:
-                    pass
-        
-        # 6. Try to extract partial information from content
-        bio_match = re.search(r'"bio"\s*:\s*"([^"]*)"', content)
-        persona_match = re.search(r'"persona"\s*:\s*"([^"]*)', content)  # May be truncated
-        
+        except ValueError:
+            pass
+
+        # 2. Couldn't recover a full object — scrape partial fields from the
+        #    truncation-closed content before giving up.
+        from ..utils.json_repair import close_truncated_json
+        scraped = close_truncated_json(content)
+        bio_match = re.search(r'"bio"\s*:\s*"([^"]*)"', scraped)
+        persona_match = re.search(r'"persona"\s*:\s*"([^"]*)', scraped)  # May be truncated
+
         bio = bio_match.group(1) if bio_match else (entity_summary[:200] if entity_summary else f"{entity_type}: {entity_name}")
         persona = persona_match.group(1) if persona_match else (entity_summary or f"{entity_name} is a {entity_type}.")
-        
+
         # If meaningful content was extracted, mark as fixed
         if bio_match or persona_match:
             logger.info(f"Extracted partial information from corrupted JSON")
@@ -792,8 +749,8 @@ class WonderwallProfileGenerator:
                 "persona": persona,
                 "_fixed": True
             }
-        
-        # 7. Complete failure, return basic structure
+
+        # 3. Complete failure, return basic structure
         logger.warning(f"JSON fix failed, returning basic structure")
         return {
             "bio": entity_summary[:200] if entity_summary else f"{entity_type}: {entity_name}",

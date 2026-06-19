@@ -19,6 +19,7 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime
 
 from ..config import Config
+from ..utils.json_repair import repair_json
 from ..utils.llm_client import create_llm_client, create_smart_llm_client
 from ..utils.logger import get_logger
 from .entity_reader import EntityNode
@@ -523,57 +524,17 @@ class SimulationConfigGenerator:
 
         raise last_error or Exception("LLM call failed")
 
-    def _fix_truncated_json(self, content: str) -> str:
-        """Fix truncated JSON"""
-        content = content.strip()
-
-        # Count unclosed brackets
-        open_braces = content.count('{') - content.count('}')
-        open_brackets = content.count('[') - content.count(']')
-
-        # Check for unclosed strings
-        if content and content[-1] not in '",}]':
-            content += '"'
-
-        # Close brackets
-        content += ']' * open_brackets
-        content += '}' * open_braces
-
-        return content
-
     def _try_fix_config_json(self, content: str) -> Optional[Dict[str, Any]]:
-        """Try to fix configuration JSON"""
-        import re
+        """Try to recover a config object from corrupted/truncated LLM JSON.
 
-        # Fix truncated case
-        content = self._fix_truncated_json(content)
-
-        # Extract JSON portion
-        json_match = re.search(r'\{[\s\S]*\}', content)
-        if json_match:
-            json_str = json_match.group()
-
-            # Remove newlines in strings
-            def fix_string(match):
-                s = match.group(0)
-                s = s.replace('\n', ' ').replace('\r', ' ')
-                s = re.sub(r'\s+', ' ', s)
-                return s
-
-            json_str = re.sub(r'"[^"\\]*(?:\\.[^"\\]*)*"', fix_string, json_str)
-
-            try:
-                return json.loads(json_str)
-            except json.JSONDecodeError:
-                # Try removing all control characters
-                json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', json_str)
-                json_str = re.sub(r'\s+', ' ', json_str)
-                try:
-                    return json.loads(json_str)
-                except json.JSONDecodeError:
-                    pass
-
-        return None
+        Delegates to the shared salvage pipeline, returning ``None`` (rather
+        than raising) so callers keep their existing fall-through behavior.
+        """
+        try:
+            recovered = repair_json(content)
+        except ValueError:
+            return None
+        return recovered if isinstance(recovered, dict) else None
 
     def _generate_time_config(self, context: str, num_entities: int) -> Dict[str, Any]:
         """Generate time configuration"""

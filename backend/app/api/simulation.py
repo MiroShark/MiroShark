@@ -542,7 +542,13 @@ def suggest_scenarios():
         ]
 
         try:
-            parsed = llm.chat_json(messages, temperature=0.4, max_tokens=1500)
+            # repair_truncated: a verbose model can blow past max_tokens and
+            # truncate the JSON mid-array; salvage the complete suggestions
+            # rather than returning none. _clean_suggestions drops any partial
+            # trailing entry the cut-off left behind.
+            parsed = llm.chat_json(
+                messages, temperature=0.4, max_tokens=1500, repair_truncated=True
+            )
         except Exception as exc:
             # Don't 500 — scenario auto-suggest is best-effort; the form still works.
             logger.warning(f"suggest-scenarios: LLM call failed: {exc}")

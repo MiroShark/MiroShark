@@ -396,7 +396,8 @@ class LLMClient:
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.3,
-        max_tokens: int = 4096
+        max_tokens: int = 4096,
+        repair_truncated: bool = False
     ) -> Dict[str, Any]:
         """
         Send a chat request and return JSON
@@ -405,6 +406,10 @@ class LLMClient:
             messages: List of messages
             temperature: Temperature parameter
             max_tokens: Maximum number of tokens
+            repair_truncated: When True, attempt a best-effort salvage of a
+                malformed/truncated response (e.g. JSON cut off by max_tokens)
+                before giving up. Off by default so normal call paths keep
+                their strict parse.
 
         Returns:
             Parsed JSON object
@@ -428,4 +433,13 @@ class LLMClient:
         try:
             return json.loads(cleaned_response)
         except json.JSONDecodeError:
+            if repair_truncated:
+                # Common failure mode: a verbose response gets clipped at the
+                # max_tokens boundary, leaving the JSON unterminated. Try to
+                # recover the complete portion rather than dropping everything.
+                from .json_repair import repair_json
+                try:
+                    return repair_json(cleaned_response)
+                except ValueError:
+                    pass
             raise ValueError(f"Invalid JSON format returned by LLM: {cleaned_response}")
