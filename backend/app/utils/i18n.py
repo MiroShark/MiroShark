@@ -136,6 +136,37 @@ def t(en: str, zh: str = "", locale: str = DEFAULT, *, de: str = "", fr: str = "
     return overrides.get(locale) or en
 
 
+def lang_block(locale: str, fields: list) -> str:
+    """Return a locale-specific language directive ready to prepend to an LLM prompt.
+
+    Non-empty output ends with "\\n\\n". Returns "" for unknown locales or empty fields.
+    """
+    if not fields:
+        return ""
+
+    def _join(items, sep, conj, quote=True):
+        parts = [f"'{f}'" if quote else f for f in items]
+        if len(parts) == 1:
+            return parts[0]
+        return sep.join(parts[:-1]) + f" {conj} " + parts[-1]
+
+    plural = len(fields) > 1
+    instructions = {
+        "en": f"Write all {_join(fields, ', ', 'and', quote=False)} fields in English.",
+        "de": (
+            f"WICHTIG: Schreibe {'die Felder' if plural else 'das Feld'} "
+            f"{_join(fields, ', ', 'und')} ausschließlich auf Deutsch."
+        ),
+        "fr": (
+            f"IMPORTANT : Écris {'les champs' if plural else 'le champ'} "
+            f"{_join(fields, ', ', 'et')} uniquement en français."
+        ),
+        "zh-CN": f"重要：请用中文编写 {_join(fields, '、', '和')} 字段。",
+    }
+    instruction = instructions.get(locale, "")
+    return f"{instruction}\n\n" if instruction else ""
+
+
 def apply_i18n(payload: Any, locale: str) -> Any:
     """Recursively merge embedded ``i18n[locale]`` blocks into a JSON payload.
 

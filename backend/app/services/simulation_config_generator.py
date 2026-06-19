@@ -341,16 +341,20 @@ class SimulationConfigGenerator:
         # Cap concurrency to avoid rate limits — 3 parallel LLM calls
         max_parallel_batches = min(3, num_batches)
 
+        from ..utils.i18n import get_active_locale, use_locale as _use_locale
+        _generation_locale = get_active_locale()  # capture before ThreadPoolExecutor; ContextVars don't cross threads
+
         def _gen_batch(batch_idx):
             start_idx = batch_idx * self.AGENTS_PER_BATCH
             end_idx = min(start_idx + self.AGENTS_PER_BATCH, len(entities))
             batch_entities = entities[start_idx:end_idx]
-            return batch_idx, self._generate_agent_configs_batch(
-                context=context,
-                entities=batch_entities,
-                start_idx=start_idx,
-                simulation_requirement=simulation_requirement,
-            )
+            with _use_locale(_generation_locale):
+                return batch_idx, self._generate_agent_configs_batch(
+                    context=context,
+                    entities=batch_entities,
+                    start_idx=start_idx,
+                    simulation_requirement=simulation_requirement,
+                )
 
         report_progress(3, f"Generating Agent configs ({num_batches} batches, {max_parallel_batches} parallel)...")
 
@@ -573,14 +577,9 @@ class SimulationConfigGenerator:
 
     def _generate_time_config(self, context: str, num_entities: int) -> Dict[str, Any]:
         """Generate time configuration"""
-        from ..utils.i18n import get_active_locale
+        from ..utils.i18n import get_active_locale, lang_block
         _locale = get_active_locale()
-        _lang_instruction = {
-            "de":    "WICHTIG: Schreibe das Feld 'reasoning' ausschließlich auf Deutsch.",
-            "fr":    "IMPORTANT : Écris le champ 'reasoning' uniquement en français.",
-            "zh-CN": "重要：请用中文编写 'reasoning' 字段。",
-        }.get(_locale, "")
-        _lang_block = f"{_lang_instruction}\n\n" if _lang_instruction else ""
+        _lang_block = lang_block(_locale, ["reasoning"])
 
         # Use configured context truncation length
         context_truncated = context[:self.TIME_CONFIG_CONTEXT_LENGTH]
@@ -707,14 +706,9 @@ Field descriptions:
         entities: List[EntityNode]
     ) -> Dict[str, Any]:
         """Generate event configuration"""
-        from ..utils.i18n import get_active_locale
+        from ..utils.i18n import get_active_locale, lang_block
         _locale = get_active_locale()
-        _lang_instruction = {
-            "de":    "WICHTIG: Schreibe die Felder 'hot_topics', 'narrative_direction', 'content' der initial_posts und 'reasoning' ausschließlich auf Deutsch.",
-            "fr":    "IMPORTANT : Écris les champs 'hot_topics', 'narrative_direction', le 'content' des initial_posts et 'reasoning' uniquement en français.",
-            "zh-CN": "重要：请用中文编写 'hot_topics'、'narrative_direction'、initial_posts 的 'content' 及 'reasoning' 字段。",
-        }.get(_locale, "")
-        _lang_block = f"{_lang_instruction}\n\n" if _lang_instruction else ""
+        _lang_block = lang_block(_locale, ["hot_topics", "narrative_direction", "content", "reasoning"])
 
         # List representative entity names for each type
         type_examples = {}
@@ -892,7 +886,7 @@ Return JSON format (no markdown):
         count_word = {1: "ONE", 2: "TWO", 3: "THREE", 4: "FOUR", 5: "FIVE"}[num_markets]
 
         from ..prompts import get_prompt
-        from ..utils.i18n import get_active_locale
+        from ..utils.i18n import get_active_locale, lang_block
         locale = get_active_locale()
         if singular:
             count_rule = get_prompt(
@@ -912,13 +906,7 @@ Return JSON format (no markdown):
             + get_prompt("simulation_config.market_system_outro", locale)
         )
 
-        from ..utils.i18n import get_active_locale
-        _lang_instruction = {
-            "de":    "WICHTIG: Schreibe die Felder 'question', 'outcome_a', 'outcome_b' und 'reasoning' ausschließlich auf Deutsch.",
-            "fr":    "IMPORTANT : Écris les champs 'question', 'outcome_a', 'outcome_b' et 'reasoning' uniquement en français.",
-            "zh-CN": "重要：请用中文编写 'question'、'outcome_a'、'outcome_b' 和 'reasoning' 字段。",
-        }.get(get_active_locale(), "")
-        _lang_block = f"{_lang_instruction}\n\n" if _lang_instruction else ""
+        _lang_block = lang_block(locale, ["question", "outcome_a", "outcome_b", "reasoning"])
 
         intent_line = (
             "Generate ONE prediction market that best captures the central question of this simulation:"
