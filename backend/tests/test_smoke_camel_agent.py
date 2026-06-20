@@ -76,3 +76,24 @@ def test_socialagent_step_drives_aget_model_response_without_signature_error():
     assert response is not None
     # A wrong override signature would have raised TypeError above before
     # returning a response.
+
+    # Guard the *silent-empty-output* failure mode. #181 swallowed per-agent
+    # exceptions and let simulations "complete" with zero actions; the signature
+    # check above stops that exact reintroduction, but a future camel-ai change
+    # could break the loop in a quieter way — returning a structurally valid
+    # response that carries no actual model output (an empty ``msgs`` list, or a
+    # message whose content is empty/whitespace). The simulation loop reads that
+    # as a healthy step (see agent.py: ``response.msgs[0].content`` is what gets
+    # logged), so a dead agent looks alive. Asserting real content makes that
+    # class of regression fail loudly here instead of shipping zero-action runs.
+    assert response.msgs, (
+        "astep() returned no messages — the model-response path produced an "
+        "empty result, which the simulation loop would mis-read as a healthy "
+        "zero-action step (the silent-failure class behind #181)"
+    )
+    content = response.msgs[0].content
+    assert isinstance(content, str) and content.strip(), (
+        "astep() returned a message with empty content — a silently broken "
+        "agent step. Real model output (the STUB model included) is always a "
+        "non-empty string"
+    )
