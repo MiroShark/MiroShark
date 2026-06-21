@@ -26,7 +26,7 @@ backend/                 Python 3.11+ Flask backend (uv-managed)
   openapi.yaml           Source of truth for the HTTP surface (drift-tested against routes)
   tests/                 pytest suite (test_unit_*, test_integration_*, test_smoke_*)
 frontend/                Vue 3 + Vite SPA (axios, vue-router, d3)
-docs/                    Deep-dive docs (+ *.zh-CN.md / *.ja.md / *.fr.md translations)
+docs/                    Deep-dive docs (+ *.zh-CN.md translations)
 miroshark                Bash launcher: checks deps, starts Neo4j, installs + serves both apps
 ```
 
@@ -63,7 +63,7 @@ A PR to `main` must pass three jobs:
 - **Adding an HTTP endpoint is contract-first.** `backend/tests/test_unit_openapi.py` fails CI if `openapi.yaml` and the real Flask routes disagree. To add one: register the route on the right blueprint in `app/api/`, document the path in `openapi.yaml` under a declared tag, and add an offline `test_unit_<feature>.py`. A brand-new blueprint must also be registered in `app/__init__.py` and added to the drift test's prefix map. Internal/debug routes go on the test's undocumented allowlist instead. Full recipe: [`CONTRIBUTING.md`](CONTRIBUTING.md#adding-an-api-endpoint).
 - **The internal-key auth guard fails closed.** `app/__init__.py:internal_auth_guard` protects `/api/*` with `MIROSHARK_INTERNAL_KEY`. A short, deliberate exempt list (`/health`, OpenAPI docs, and keyless polling probes like `/api/status.json`, `/api/activity.json`, `/api/simulation/batch-status`) is public by design; their handlers gate output to public+completed sims. When unset, the guard returns 503 on any managed deploy (Railway/Cloud Run env vars) or non-debug run — `FLASK_DEBUG` defaults to `"True"`, so never rely on `Config.DEBUG` alone as a "safe" signal. Don't widen the exempt list or weaken this posture without understanding the gate.
 - **stdout is reserved for MCP traffic.** `mcp_server.py` speaks over stdio — log to stderr / the logger (`app/utils/logger.py`), never `print()` to stdout in code that runs under the MCP server.
-- **Keep translations in sync.** If you touch a doc that has a `*.zh-CN.md` / `*.ja.md` / `*.fr.md` counterpart (README, CONTRIBUTING, most of `docs/`), update it too or flag it as needing translation in the PR. Prompt locales have their own CI coverage gate (see commit history around `i18n`).
+- **Keep translations in sync.** If you touch a doc that has a translation counterpart, update it too or flag it as needing translation in the PR. The root `README` has `*.zh-CN.md` / `*.ja.md` / `*.fr.md`; `CONTRIBUTING` and most of `docs/` have `*.zh-CN.md` only. Prompt locales have their own CI coverage gate (see commit history around `i18n`).
 - **Neo4j is a singleton via DI.** `create_app()` stores `Neo4jStorage` on `app.extensions['neo4j_storage']` (or `None` so endpoints return 503 gracefully) — read it from there, don't construct a new connection per request.
 - **Feature flags default on.** The 11 graph-memory features are individually disable-able via `.env` flags ([`docs/CONFIGURATION.md#feature-flags-summary`](docs/CONFIGURATION.md)). New behavior that adds cost or external calls should be flag-guarded.
 
