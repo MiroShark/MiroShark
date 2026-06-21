@@ -1427,12 +1427,14 @@ class GraphToolsService:
         if agent_persona:
             profile_desc += f"\nPersona: {agent_persona[:500]}"
 
-        prompt = (
-            f"You are role-playing as the following character in a simulation:\n\n"
-            f"{profile_desc}\n\n"
-            f"Stay fully in character. Answer the following interview questions based on "
-            f"your profile, beliefs, and perspective. Be specific and substantive.\n\n"
-            f"{combined_prompt}"
+        from ..prompts import get_prompt
+        from ..utils.i18n import get_active_locale
+
+        prompt = get_prompt(
+            "graph_tools.interview_single_agent_roleplay",
+            get_active_locale(),
+            profile_desc=profile_desc,
+            combined_prompt=combined_prompt,
         )
 
         try:
@@ -1483,13 +1485,20 @@ class GraphToolsService:
         """
         logger.info(f"Running LLM-based fallback interview for {len(selected_agents)} agents (parallel)")
 
+        from ..utils.i18n import get_active_locale, use_locale
+        _active_locale = get_active_locale()  # ThreadPoolExecutor doesn't inherit ContextVar
+
+        def _interview_with_locale(**kwargs) -> 'AgentInterview':
+            with use_locale(_active_locale):
+                return self._interview_single_agent_llm(**kwargs)
+
         # Run all agent interviews concurrently via thread pool
         max_workers = min(len(selected_agents), 4)  # Cap concurrency to avoid API rate limits
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_idx = {}
             for i, agent_idx in enumerate(selected_indices):
                 future = executor.submit(
-                    self._interview_single_agent_llm,
+                    _interview_with_locale,
                     agent=selected_agents[i],
                     agent_idx=agent_idx,
                     combined_prompt=combined_prompt,

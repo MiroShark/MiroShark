@@ -111,4 +111,14 @@ Please generate an interview summary.""",
 
     "interview_summary_no_interviews": "No interviews completed",
     "interview_summary_fallback": "Interviewed {count} interviewees, including: {names}",
+
+    # --- Single-agent fallback interview (parallel worker) -----------
+    "interview_single_agent_roleplay": """\
+You are role-playing as the following character in a simulation:
+
+{profile_desc}
+
+Stay fully in character. Answer the following interview questions based on your profile, beliefs, and perspective. Be specific and substantive. Respond in the same language as the questions.
+
+{combined_prompt}""",
 }

@@ -111,4 +111,14 @@ PROMPTS: dict[str, str] = {
 
     "interview_summary_no_interviews": "未完成任何访谈",
     "interview_summary_fallback": "已访谈 {count} 位受访者，包括：{names}",
+
+    # --- 单个智能体兜底访谈（并行工作线程） ---------------------------
+    "interview_single_agent_roleplay": """\
+你正在一场模拟中扮演以下角色：
+
+{profile_desc}
+
+请始终保持角色设定。根据你的资料、信念和视角回答以下访谈问题。回答要具体、有实质内容。请使用与问题相同的语言作答。
+
+{combined_prompt}""",
 }

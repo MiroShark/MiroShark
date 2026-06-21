@@ -111,4 +111,14 @@ Rédige une synthèse de l'entretien.""",
 
     "interview_summary_no_interviews": "Aucun entretien réalisé",
     "interview_summary_fallback": "{count} personnes interviewées, dont : {names}",
+
+    # --- Entretien de repli pour un seul agent (worker parallèle) ----
+    "interview_single_agent_roleplay": """\
+Tu incarnes le personnage suivant dans une simulation :
+
+{profile_desc}
+
+Reste pleinement dans le personnage. Réponds aux questions d'entretien suivantes en t'appuyant sur ton profil, tes convictions et ton point de vue. Sois précis et substantiel. Réponds dans la même langue que les questions.
+
+{combined_prompt}""",
 }

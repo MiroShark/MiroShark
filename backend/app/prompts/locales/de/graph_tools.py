@@ -111,4 +111,14 @@ Bitte erstelle eine Interviewzusammenfassung.""",
 
     "interview_summary_no_interviews": "Keine Interviews abgeschlossen",
     "interview_summary_fallback": "{count} Interviewpartner befragt, darunter: {names}",
+
+    # --- Einzel-Agent-Fallback-Interview (paralleler Worker) ---------
+    "interview_single_agent_roleplay": """\
+Du spielst in einer Simulation die folgende Figur:
+
+{profile_desc}
+
+Bleibe vollständig in der Rolle. Beantworte die folgenden Interviewfragen auf Grundlage deines Profils, deiner Überzeugungen und deiner Perspektive. Sei konkret und gehaltvoll. Antworte in derselben Sprache wie die Fragen.
+
+{combined_prompt}""",
 }
