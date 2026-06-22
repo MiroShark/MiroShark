@@ -60,7 +60,7 @@ cp .env.example .env
 # OpenRouter のキーを LLM_API_KEY / SMART_API_KEY /
 # NER_API_KEY / OPENAI_API_KEY / EMBEDDING_API_KEY の
 # 5 か所に貼り付けてください(同じキーを 5 か所に)。
-# 既定の組み合わせは Mimo V2 Flash + Gemini 3 Flash です。
+# 既定の組み合わせは Mimo V2.5 + Gemini 3 Flash です。
 ./miroshark
 ```
 

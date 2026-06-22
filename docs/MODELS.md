@@ -12,21 +12,21 @@ Each slot controls a different quality axis:
 
 | Slot | Controls | Key finding |
 |---|---|---|
-| **Default** | Persona richness, sim density | Mimo V2 Flash gives distinct voices at flash-tier price |
+| **Default** | Persona richness, sim density | Mimo V2.5 gives distinct voices at flash-tier price |
 | **Smart** | Report quality (#1 lever) | Gemini 3 Flash holds up on ReACT report loops with reasoning disabled |
 | **NER** | Extraction reliability | Needs deterministic JSON — pick a model that doesn't silently emit CoT |
 | **Wonderwall** | Cost (biggest consumer) | 850+ calls, 7M+ tokens. Verbosity matters more than $/M |
 
 ### Cloud mode — ~$1/run, ~10 min
 
-Mimo V2 Flash personas + Gemini 3 Flash smart/NER. Reasoning is disabled on every slot (`LLM_DISABLE_REASONING=true` sends `reasoning: {enabled: false}` in `extra_body`), which is the difference between a ~45s scenario-suggest call and a ~3s one.
+Mimo V2.5 personas + Gemini 3 Flash smart/NER. Reasoning is disabled on every slot (`LLM_DISABLE_REASONING=true` sends `reasoning: {enabled: false}` in `extra_body`), which is the difference between a ~45s scenario-suggest call and a ~3s one.
 
 | Slot | Model | Notes |
 |---|---|---|
-| Default | `xiaomi/mimo-v2-flash` | Persona generation, sim config, memory compaction |
+| Default | `xiaomi/mimo-v2.5` | Persona generation, sim config, memory compaction |
 | Smart | `google/gemini-3-flash-preview` | Report ReACT loop — only ~19 calls/run |
 | NER | `google/gemini-3-flash-preview` | Stable JSON with reasoning off |
-| Wonderwall | `xiaomi/mimo-v2-flash` | 850+ agent-action calls/run; keep verbosity low |
+| Wonderwall | `xiaomi/mimo-v2.5` | 850+ agent-action calls/run; keep verbosity low |
 
 Embeddings use `openai/text-embedding-3-large` (truncated to 768 dims via Matryoshka). Web enrichment uses `google/gemini-3-flash-preview:online`.
 

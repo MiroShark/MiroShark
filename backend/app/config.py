@@ -30,11 +30,11 @@ class Config:
     # LLM configuration (unified OpenAI format)
     # LLM_PROVIDER: "openai" (default, any OpenAI-compatible API) or "claude-code" (local CLI)
     # Default model is used for profile generation, sim config, memory compaction.
-    # Cloud preset: xiaomi/mimo-v2-flash (cheap personas + sim configs)
+    # Cloud preset: xiaomi/mimo-v2.5 (cheap personas + sim configs)
     LLM_PROVIDER = os.environ.get('LLM_PROVIDER', 'openai')
     LLM_API_KEY = os.environ.get('LLM_API_KEY')
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
-    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'xiaomi/mimo-v2-flash')
+    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'xiaomi/mimo-v2.5')
 
     # Smart model — stronger model for intelligence-sensitive workflows
     # (report generation, ontology extraction, graph reasoning).
@@ -162,7 +162,7 @@ class Config:
 
     # Wonderwall model — model for Wonderwall/CAMEL agent simulation loop.
     # When not set, uses LLM_MODEL_NAME.
-    # Cloud preset: xiaomi/mimo-v2-flash (same as default to reuse quota)
+    # Cloud preset: xiaomi/mimo-v2.5 (same as default to reuse quota)
     # Wonderwall is the #1 cost driver — 850+ calls per run. Keep it cheap.
     WONDERWALL_MODEL_NAME = os.environ.get('WONDERWALL_MODEL_NAME', '')
     # Optional per-slot endpoint override — point Wonderwall at a different

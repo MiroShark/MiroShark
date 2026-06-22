@@ -285,7 +285,7 @@
                   v-model="form.wonderwall.model_name"
                   class="field-input"
                   type="text"
-                  :placeholder="$tr('e.g. xiaomi/mimo-v2-flash', '例如 xiaomi/mimo-v2-flash', { de: 'z. B. xiaomi/mimo-v2-flash' })"
+                  :placeholder="$tr('e.g. xiaomi/mimo-v2.5', '例如 xiaomi/mimo-v2.5', { de: 'z. B. xiaomi/mimo-v2.5' })"
                 />
               </div>
               <div class="field-row">

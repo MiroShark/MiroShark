@@ -60,6 +60,7 @@ backend/pipeline_test_output/
 # Log files
 backend/logs/
 *.log
+backend/events.jsonl
 
 # Uploaded files
 backend/uploads/

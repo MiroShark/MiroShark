@@ -25,7 +25,7 @@ logger = get_logger('miroshark.run_summary')
 # ---------------------------------------------------------------------------
 MODEL_PRICING = {
     # Current Cloud preset (update as OpenRouter prices drift)
-    "xiaomi/mimo-v2-flash":              {"input": 0.10, "output": 0.40},
+    "xiaomi/mimo-v2.5":              {"input": 0.14, "output": 0.28},
     "google/gemini-3-flash-preview":     {"input": 0.50, "output": 3.00},
     # Tracked for mixed / legacy setups
     "qwen/qwen3.5-flash-02-23":          {"input": 0.065, "output": 0.26},

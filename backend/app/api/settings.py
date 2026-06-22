@@ -34,17 +34,17 @@ def _mask_key(key: str) -> str:
 # copied into when the caller supplies `preset_api_key`.
 _PRESETS = {
     'cheap': {
-        'label': 'Cloud — ~$1/run (Mimo V2 Flash + Gemini 3 Flash)',
+        'label': 'Cloud — ~$1/run (Mimo V2.5 + Gemini 3 Flash)',
         'fields': {
             'LLM_PROVIDER': 'openai',
             'LLM_BASE_URL': 'https://openrouter.ai/api/v1',
-            'LLM_MODEL_NAME': 'xiaomi/mimo-v2-flash',
+            'LLM_MODEL_NAME': 'xiaomi/mimo-v2.5',
             'SMART_PROVIDER': 'openai',
             'SMART_BASE_URL': 'https://openrouter.ai/api/v1',
             'SMART_MODEL_NAME': 'google/gemini-3-flash-preview',
             'NER_BASE_URL': 'https://openrouter.ai/api/v1',
             'NER_MODEL_NAME': 'google/gemini-3-flash-preview',
-            'WONDERWALL_MODEL_NAME': 'xiaomi/mimo-v2-flash',
+            'WONDERWALL_MODEL_NAME': 'xiaomi/mimo-v2.5',
             'EMBEDDING_PROVIDER': 'openai',
             'EMBEDDING_BASE_URL': 'https://openrouter.ai/api',
             'EMBEDDING_MODEL': 'openai/text-embedding-3-large',
