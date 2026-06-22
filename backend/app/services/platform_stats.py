@@ -70,6 +70,7 @@ from typing import Any, Dict, Iterable, Optional, Tuple
 from . import signal_service
 from .surface_stats import SURFACE_STATS_FILENAME, SURFACE_KEYS
 from ..utils.json_io import safe_load_json as _safe_load_json
+from ..utils.belief import bucket_snapshots
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -133,31 +134,7 @@ def _final_belief_from_trajectory(sim_dir: str) -> Optional[Tuple[float, float, 
     if not isinstance(snapshots, list):
         return None
 
-    final: Optional[Tuple[float, float, float]] = None
-    for snap in snapshots:
-        if not isinstance(snap, dict):
-            continue
-        positions = snap.get("belief_positions") or {}
-        if not isinstance(positions, dict) or not positions:
-            continue
-        stances = []
-        for p in positions.values():
-            if isinstance(p, dict) and p:
-                try:
-                    stances.append(sum(p.values()) / len(p))
-                except (TypeError, ZeroDivisionError):
-                    continue
-        if not stances:
-            continue
-        total = len(stances)
-        nb = sum(1 for s in stances if s > 0.2)
-        nbe = sum(1 for s in stances if s < -0.2)
-        nn = total - nb - nbe
-        final = (
-            round(nb / total * 100, 1),
-            round(nn / total * 100, 1),
-            round(nbe / total * 100, 1),
-        )
+    final, _ = bucket_snapshots(snapshots)
     return final
 
 

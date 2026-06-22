@@ -9,14 +9,6 @@ export const generateReport = (data) => {
 }
 
 /**
- * Get report generation status
- * @param {string} reportId
- */
-export const getReportStatus = (reportId) => {
-  return service.get(`/api/report/generate/status`, { params: { report_id: reportId } })
-}
-
-/**
  * Get Agent log (incremental)
  * @param {string} reportId
  * @param {number} fromLine - Starting line number to fetch from

@@ -283,7 +283,7 @@ def test_post_json_swallows_url_error():
     def boom(*_a, **_kw):
         raise urllib.error.URLError("dns failed")
 
-    with patch.object(slack_notify.urllib.request, "urlopen", side_effect=boom):
+    with patch("urllib.request.urlopen", side_effect=boom):
         ok, msg = slack_notify._post_json(
             "https://hooks.slack.com/services/T0/B0/abc",
             {"blocks": []},

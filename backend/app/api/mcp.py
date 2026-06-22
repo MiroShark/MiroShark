@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypedDict
 
 from flask import current_app, jsonify
 
@@ -92,7 +92,15 @@ _TOOLS: List[Dict[str, str]] = [
 # snippets shown to the user.
 # ──────────────────────────────────────────────────────────────────────────
 
-def _resolve_paths() -> Dict[str, str]:
+class ResolvedPaths(TypedDict):
+    """Filesystem paths + interpreter stamped into the MCP client config snippets."""
+    backend_dir: str
+    mcp_script: str
+    mcp_script_exists: bool
+    python_executable: str
+
+
+def _resolve_paths() -> ResolvedPaths:
     """Locate the bundled mcp_server.py and the interpreter that should run it.
 
     The user copies these values into their MCP client config, so they must
@@ -109,7 +117,7 @@ def _resolve_paths() -> Dict[str, str]:
     }
 
 
-def _build_config_snippets(paths: Dict[str, str]) -> Dict[str, Dict[str, Any]]:
+def _build_config_snippets(paths: ResolvedPaths) -> Dict[str, Dict[str, Any]]:
     """Pre-render copy-pasteable config blocks for each supported MCP client.
 
     Each entry has:

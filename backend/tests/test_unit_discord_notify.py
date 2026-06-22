@@ -315,7 +315,7 @@ def test_post_json_never_raises_on_url_error():
     def boom(*_args, **_kwargs):
         raise urllib.error.URLError("connection refused")
 
-    with patch.object(discord_notify.urllib.request, "urlopen", side_effect=boom):
+    with patch("urllib.request.urlopen", side_effect=boom):
         ok, msg = discord_notify._post_json(
             "https://discord.example/webhook",
             {"embeds": []},

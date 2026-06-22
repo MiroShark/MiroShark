@@ -91,10 +91,6 @@ logger = get_logger("miroshark.dkg")
 
 DKG_USER_AGENT = "MiroShark-DKG/1.0"
 
-# The fast probes (status, citation read). Slow enough to detect a hung
-# daemon, fast enough not to block the EmbedDialog mount.
-DKG_PROBE_TIMEOUT_SECONDS = 4.0
-
 # Sub-step timeouts for the publish pipeline. The assertion writes are
 # essentially local disk + RocksDB writes; the final publish waits for
 # blockchain finality on the chosen chain and can be slow on testnet
@@ -266,36 +262,6 @@ def _parse_body(raw: bytes) -> Any:
             return raw.decode("utf-8", errors="replace")
         except Exception:
             return None
-
-
-# ---- Health probe ---------------------------------------------------------
-
-
-def health_check() -> Dict[str, Any]:
-    """Probe the daemon via ``GET /api/status``.
-
-    Used by the EmbedDialog mount (via ``/api/config/notifications``)
-    to render the "DKG daemon: reachable" badge before the user clicks
-    publish. Always returns a structured dict — never raises.
-    """
-    cfg = _resolve_config()
-    if not is_configured():
-        return {"ok": False, "configured": False, "reason": "not configured"}
-    ok, status, payload = _request(
-        "GET",
-        "/api/status",
-        timeout=DKG_PROBE_TIMEOUT_SECONDS,
-        auth_token=cfg["auth_token"],
-        api_url=cfg["api_url"],
-    )
-    return {
-        "ok": ok,
-        "configured": True,
-        "status_code": status,
-        "response": payload if ok else None,
-        "error": None if ok else (payload if isinstance(payload, str) else json.dumps(payload) if payload else "unreachable"),
-        "network": cfg["network"],
-    }
 
 
 # ---- Turtle generation ----------------------------------------------------

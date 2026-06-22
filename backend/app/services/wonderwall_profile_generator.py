@@ -10,7 +10,7 @@ Optimization improvements:
 
 import json
 import random
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -1025,7 +1025,7 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
         self,
         entities: List[EntityNode],
         use_llm: bool = True,
-        progress_callback: Optional[callable] = None,
+        progress_callback: Optional[Callable[[int, int, str], None]] = None,
         graph_id: Optional[str] = None,
         parallel_count: int = 15,
         realtime_output_path: Optional[str] = None,

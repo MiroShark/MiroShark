@@ -59,15 +59,10 @@ import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Optional, Tuple, TypedDict
 
 from ..utils.logger import get_logger
-
-if TYPE_CHECKING:
-    # Type-only: avoids a runtime import cycle (simulation_runner imports this
-    # module to fire webhooks). The runner's live state is the sole non-None
-    # value ever passed as ``state``.
-    from .simulation_runner import SimulationRunState
+from .simulation_run_state import SimulationRunState
 
 logger = get_logger('miroshark.webhook')
 

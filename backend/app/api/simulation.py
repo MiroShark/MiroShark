@@ -2513,7 +2513,7 @@ def get_simulation_profiles_realtime(simulation_id: str):
                     with open(profiles_file, 'r', encoding='utf-8') as f:
                         reader = csv.DictReader(f)
                         profiles = list(reader)
-            except (json.JSONDecodeError, Exception) as e:
+            except (json.JSONDecodeError, OSError, csv.Error) as e:
                 logger.warning(f"Failed to read profiles file (may be in the process of writing): {e}")
                 profiles = []
         
@@ -2609,7 +2609,7 @@ def get_simulation_config_realtime(simulation_id: str):
             try:
                 with open(config_file, 'r', encoding='utf-8') as f:
                     config = json.load(f)
-            except (json.JSONDecodeError, Exception) as e:
+            except (json.JSONDecodeError, OSError) as e:
                 logger.warning(f"Failed to read config file (may be in the process of writing): {e}")
                 config = None
         
@@ -8294,7 +8294,7 @@ def list_public_simulations():
                 try:
                     stats = _surface_stats.read_surface_stats(sim_dir)
                     card[gallery_filters.TRENDING_FIELD] = int(stats.get("total", 0) or 0)
-                except Exception:
+                except (KeyError, TypeError, ValueError):
                     card[gallery_filters.TRENDING_FIELD] = 0
 
         page_items, total = gallery_filters.select_filtered_cards(
@@ -9737,7 +9737,7 @@ def generate_simulation_article(simulation_id: str):
                             continue
                         try:
                             rec = json.loads(line)
-                        except Exception:
+                        except json.JSONDecodeError:
                             continue
                         atype = (rec.get('action_type') or '').upper()
                         args = rec.get('action_args') or {}

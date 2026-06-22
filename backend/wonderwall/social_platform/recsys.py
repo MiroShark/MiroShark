@@ -557,12 +557,8 @@ def rec_sys_personalized_twh(
                     like_posts_vectors += [
                         user_vector[user_idx] for _ in range(5)
                     ]
-            try:
-                like_posts_vectors = torch.stack(like_posts_vectors).view(
-                    len(user_table), 5, posts_vector.shape[1])
-            except Exception:
-                import pdb  # noqa: F811
-                pdb.set_trace()
+            like_posts_vectors = torch.stack(like_posts_vectors).view(
+                len(user_table), 5, posts_vector.shape[1])
         get_similar_start_t = time.time()
         cosine_similarities = cosine_similarity(user_vector, posts_vector)
         get_similar_end_t = time.time()
@@ -573,11 +569,7 @@ def rec_sys_personalized_twh(
                 user_like_posts_vector = like_posts_vectors[user_index]
                 like_scores = calculate_like_similarity(
                     user_like_posts_vector, posts_vector)
-                try:
-                    scores = scores + like_scores
-                except Exception:
-                    import pdb
-                    pdb.set_trace()
+                scores = scores + like_scores
 
         filter_posts_index = filtered_posts_tuple[1]
         cosine_similarities = cosine_similarities * scores[filter_posts_index]

@@ -17,14 +17,6 @@ export const streamEvents = (simulationId, eventTypes) => {
 }
 
 /**
- * Get paginated events
- * @param {Object} params - { simulation_id, event_types, from_line, limit, agent_id, round_num, platform }
- */
-export const getEvents = (params) => {
-  return service.get('/api/observability/events', { params })
-}
-
-/**
  * Get aggregated observability stats
  * @param {string} simulationId
  */
@@ -32,12 +24,4 @@ export const getObservabilityStats = (simulationId) => {
   return service.get('/api/observability/stats', {
     params: simulationId ? { simulation_id: simulationId } : {}
   })
-}
-
-/**
- * Get LLM call history with filtering
- * @param {Object} params - { simulation_id, caller, model, min_latency_ms, from_line, limit }
- */
-export const getLlmCalls = (params) => {
-  return service.get('/api/observability/llm-calls', { params })
 }

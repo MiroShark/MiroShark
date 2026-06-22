@@ -7,7 +7,7 @@ Uses preset scripts + LLM-powered configuration parameter generation
 import os
 import json
 import shutil
-from typing import TYPE_CHECKING, Dict, Any, List, Optional
+from typing import TYPE_CHECKING, Dict, Any, List, Optional, Callable, TypedDict
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -23,6 +23,15 @@ from .wonderwall_profile_generator import WonderwallProfileGenerator
 from .simulation_config_generator import SimulationConfigGenerator
 
 logger = get_logger('miroshark.simulation')
+
+
+class RunInstructions(TypedDict):
+    """Shell commands + paths for manually launching a prepared simulation."""
+    simulation_dir: str
+    scripts_dir: str
+    config_file: str
+    commands: Dict[str, str]
+    instructions: str
 
 
 class SimulationStatus(str, Enum):
@@ -292,9 +301,9 @@ class SimulationManager:
         document_text: str,
         defined_entity_types: Optional[List[str]] = None,
         use_llm_for_profiles: bool = True,
-        progress_callback: Optional[callable] = None,
+        progress_callback: Optional[Callable[..., None]] = None,
         parallel_profile_count: int = 3,
-        storage: 'GraphStorage' = None,
+        storage: Optional['GraphStorage'] = None,
     ) -> SimulationState:
         """
         Prepare simulation environment (fully automated)
@@ -764,7 +773,7 @@ class SimulationManager:
         )
         return state
 
-    def get_run_instructions(self, simulation_id: str) -> Dict[str, str]:
+    def get_run_instructions(self, simulation_id: str) -> RunInstructions:
         """Get run instructions"""
         sim_dir = self._get_simulation_dir(simulation_id)
         config_path = os.path.join(sim_dir, "simulation_config.json")

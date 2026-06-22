@@ -60,13 +60,6 @@ export function dismissZhWarning() {
   try { localStorage.setItem(ZH_WARNING_KEY, 'true') } catch (_) {}
 }
 
-export function toggleLocale() {
-  // Cycle through the supported locales (kept for callers that used the old
-  // binary toggle; the nav now renders a full selector via setLocale).
-  const i = SUPPORTED.indexOf(locale.value)
-  setLocale(SUPPORTED[(i + 1) % SUPPORTED.length])
-}
-
 export function tr(en, zh, extra) {
   const loc = locale.value
   if (loc === 'zh-CN') return (zh != null && zh !== '') ? zh : en
@@ -87,7 +80,6 @@ export function useI18n() {
     isZh,
     isDe,
     setLocale,
-    toggleLocale,
     tr,
     showZhWarning,
     dismissZhWarning,
@@ -100,7 +92,6 @@ export const i18nPlugin = {
     app.config.globalProperties.$isZh = () => locale.value === 'zh-CN'
     app.config.globalProperties.$isDe = () => locale.value === 'de'
     app.config.globalProperties.$setLocale = setLocale
-    app.config.globalProperties.$toggleLocale = toggleLocale
     app.config.globalProperties.$showZhWarning = showZhWarning
     app.config.globalProperties.$dismissZhWarning = dismissZhWarning
   },

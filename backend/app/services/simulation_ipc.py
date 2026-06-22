@@ -12,7 +12,7 @@ import os
 import json
 import time
 import uuid
-from typing import Dict, Any, Literal, Optional, List
+from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -284,108 +284,3 @@ class SimulationIPCClient:
             return True
         except (json.JSONDecodeError, OSError):
             return False
-
-
-class SimulationIPCServer:
-    """
-    Simulation IPC Server (used by the simulation script side)
-
-    Polls the command directory, executes commands, and returns responses
-    """
-
-    def __init__(self, simulation_dir: str):
-        """
-        Initialize IPC server
-
-        Args:
-            simulation_dir: Simulation data directory
-        """
-        self.simulation_dir = simulation_dir
-        self.commands_dir = os.path.join(simulation_dir, "ipc_commands")
-        self.responses_dir = os.path.join(simulation_dir, "ipc_responses")
-
-        os.makedirs(self.commands_dir, exist_ok=True)
-        os.makedirs(self.responses_dir, exist_ok=True)
-
-        self._running = False
-
-    def start(self) -> None:
-        """Mark server as running"""
-        self._running = True
-        self._update_env_status("alive")
-
-    def stop(self) -> None:
-        """Mark server as stopped"""
-        self._running = False
-        self._update_env_status("stopped")
-
-    def _update_env_status(self, status: Literal["alive", "stopped"]) -> None:
-        """Update environment status file"""
-        status_file = os.path.join(self.simulation_dir, "env_status.json")
-        with open(status_file, 'w', encoding='utf-8') as f:
-            json.dump({
-                "status": status,
-                "timestamp": datetime.now().isoformat()
-            }, f, ensure_ascii=False, indent=2)
-    
-    def poll_commands(self) -> Optional[IPCCommand]:
-        """
-        Poll the command directory and return the first pending command
-
-        Returns:
-            IPCCommand or None
-        """
-        if not os.path.exists(self.commands_dir):
-            return None
-
-        command_files = []
-        for filename in os.listdir(self.commands_dir):
-            if filename.endswith('.json'):
-                filepath = os.path.join(self.commands_dir, filename)
-                command_files.append((filepath, os.path.getmtime(filepath)))
-        
-        command_files.sort(key=lambda x: x[1])
-        
-        for filepath, _ in command_files:
-            try:
-                with open(filepath, 'r', encoding='utf-8') as f:
-                    data = json.load(f)
-                return IPCCommand.from_dict(data)
-            except (json.JSONDecodeError, KeyError, OSError) as e:
-                logger.warning(f"Failed to read command file: {filepath}, {e}")
-                continue
-        
-        return None
-    
-    def send_response(self, response: IPCResponse) -> None:
-        """
-        Send a response
-
-        Args:
-            response: IPC response
-        """
-        response_file = os.path.join(self.responses_dir, f"{response.command_id}.json")
-        with open(response_file, 'w', encoding='utf-8') as f:
-            json.dump(response.to_dict(), f, ensure_ascii=False, indent=2)
-
-        command_file = os.path.join(self.commands_dir, f"{response.command_id}.json")
-        try:
-            os.remove(command_file)
-        except OSError:
-            pass
-    
-    def send_success(self, command_id: str, result: Dict[str, Any]) -> None:
-        """Send a success response"""
-        self.send_response(IPCResponse(
-            command_id=command_id,
-            status=CommandStatus.COMPLETED,
-            result=result
-        ))
-    
-    def send_error(self, command_id: str, error: str) -> None:
-        """Send an error response"""
-        self.send_response(IPCResponse(
-            command_id=command_id,
-            status=CommandStatus.FAILED,
-            error=error
-        ))

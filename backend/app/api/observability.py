@@ -225,7 +225,7 @@ def get_stats():
 
                 elif et == 'error':
                     stats['errors'] += 1
-    except Exception:
+    except OSError:
         pass
 
     if stats['llm_calls'] > 0:
@@ -282,7 +282,7 @@ def get_llm_calls():
                     calls.append(event)
                     if len(calls) >= limit:
                         break
-        except Exception:
+        except OSError:
             pass
 
     return {
@@ -340,7 +340,7 @@ def _read_jsonl_paginated(
                     continue
 
                 events.append(event)
-    except Exception:
+    except OSError:
         pass
 
     return events, total_lines

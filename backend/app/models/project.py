@@ -9,7 +9,7 @@ import json
 import uuid
 import shutil
 from datetime import datetime
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, TypedDict
 from enum import Enum
 from dataclasses import dataclass, field
 from ..config import Config
@@ -21,6 +21,14 @@ def _validate_project_id(project_id: str) -> None:
     """Reject project_id values that could escape PROJECTS_DIR."""
     if not _SAFE_PROJECT_ID.match(project_id):
         raise ValueError(f"Invalid project_id: {project_id!r}")
+
+
+class SavedFileInfo(TypedDict):
+    """One uploaded file as stored on a project (returned by save_file_to_project)."""
+    original_filename: str
+    saved_filename: str
+    path: str
+    size: int
 
 
 class ProjectStatus(str, Enum):
@@ -248,7 +256,7 @@ class ProjectManager:
         return True
 
     @classmethod
-    def save_file_to_project(cls, project_id: str, file_storage, original_filename: str) -> Dict[str, str]:
+    def save_file_to_project(cls, project_id: str, file_storage, original_filename: str) -> SavedFileInfo:
         """
         Save uploaded file to project directory
 

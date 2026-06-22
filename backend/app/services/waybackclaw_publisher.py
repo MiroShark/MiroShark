@@ -96,11 +96,6 @@ logger = get_logger("miroshark.waybackclaw")
 
 WAYBACKCLAW_USER_AGENT = "MiroShark-WaybackClaw/1.0"
 
-# Fast probe for the public ``GET /health`` check. The health endpoint
-# is always free + auth-free; we use it for the notifications-config
-# reachability probe.
-WAYBACKCLAW_PROBE_TIMEOUT_SECONDS = 4.0
-
 # Snapshot submissions land on the SQLite write path immediately, but
 # the API spawns async daemon threads for IPFS pinning + Nostr
 # publishing before returning the envelope with ``ipfsCid`` /
@@ -269,35 +264,6 @@ def _parse_body(raw: bytes) -> Any:
             return raw.decode("utf-8", errors="replace")
         except Exception:
             return None
-
-
-# ---- Health probe ---------------------------------------------------------
-
-
-def health_check() -> Dict[str, Any]:
-    """Probe the API via ``GET /health``. Always returns a dict.
-
-    Used by the notifications-config probe to render a "reachable"
-    badge in the EmbedDialog before the user clicks publish. The
-    health endpoint is auth-free so we send it without a token to
-    keep the probe useful even on a deployment that hasn't pasted
-    the agent token in yet.
-    """
-    cfg = _resolve_config()
-    ok, status, payload = _request(
-        "GET",
-        "/health",
-        timeout=WAYBACKCLAW_PROBE_TIMEOUT_SECONDS,
-        agent_token="",
-        api_url=cfg["api_url"],
-    )
-    return {
-        "ok": ok,
-        "configured": is_configured(),
-        "status_code": status,
-        "response": payload if ok else None,
-        "error": None if ok else (payload if isinstance(payload, str) else "unreachable"),
-    }
 
 
 # ---- Record file ----------------------------------------------------------

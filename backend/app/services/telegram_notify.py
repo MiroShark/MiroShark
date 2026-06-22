@@ -53,13 +53,11 @@ import os
 import threading
 import urllib.error
 import urllib.request
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from ..utils.logger import get_logger
-
-if TYPE_CHECKING:
-    from .simulation_runner import SimulationRunState
-
+from .simulation_run_state import SimulationRunState
+from ._notify_base import Dedup
 
 logger = get_logger("miroshark.telegram_notify")
 
@@ -88,26 +86,12 @@ BAR_EMPTY = "░"
 BAR_WIDTH = 10
 
 
-_FIRED: set[Tuple[str, str]] = set()
-_FIRED_LOCK = threading.Lock()
-_FIRED_MAX = 4096
-
-
-def _mark_fired(sim_id: str, status: str) -> bool:
-    key = (sim_id, status)
-    with _FIRED_LOCK:
-        if key in _FIRED:
-            return False
-        if len(_FIRED) >= _FIRED_MAX:
-            _FIRED.pop()
-        _FIRED.add(key)
-        return True
+_dedup = Dedup()
 
 
 def reset_dedup_for_tests() -> None:
     """Clear the in-process dedup set. Test-only convenience."""
-    with _FIRED_LOCK:
-        _FIRED.clear()
+    _dedup.reset()
 
 
 # ── env-var resolution ────────────────────────────────────────────────
@@ -471,7 +455,7 @@ def notify_if_configured(
     if not token or not chat_id:
         return
 
-    if not _mark_fired(simulation_id, status):
+    if not _dedup.mark(simulation_id, status):
         return
 
     # Defer the import so the package-level wiring stays cycle-free

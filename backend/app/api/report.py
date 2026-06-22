@@ -589,8 +589,6 @@ def chat_with_report_agent():
         }), 500
 
 
-# ============== Report Progress and Section Endpoints ==============
-
 # ============== Report Status Check Endpoints ==============
 
 @report_bp.route('/check/<simulation_id>', methods=['GET'])

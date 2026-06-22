@@ -4545,47 +4545,6 @@ watch(() => props.reportId, (newId) => {
   margin-left: 2px;
 }
 
-/* Legacy entity card styles for backwards compatibility */
-:deep(.insight-display .entity-card) {
-  padding: 11px;
-  background: var(--color-gray, #1a0f3a);
-  border: 2px solid rgba(244,241,255,0.13);
-}
-
-:deep(.insight-display .entity-header) {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-}
-
-:deep(.insight-display .entity-info) {
-  flex: 1;
-}
-
-:deep(.insight-display .entity-card .entity-name) {
-  font-size: 13px;
-  font-weight: 600;
-  color: #f4f1ff;
-}
-
-:deep(.insight-display .entity-card .entity-type) {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: #a78bfa;
-  background: rgba(139, 92, 246, 0.1);
-  padding: 2px 6px;
-  display: inline-block;
-  margin-top: 2px;
-}
-
-:deep(.insight-display .entity-card .entity-fact-count) {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: rgba(244, 241, 255,0.4);
-  background: var(--color-gray, #1a0f3a);
-  padding: 2px 6px;
-}
-
 :deep(.insight-display .entity-summary) {
   margin-top: 6px;
   padding-top: 6px;

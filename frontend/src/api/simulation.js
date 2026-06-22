@@ -1288,51 +1288,6 @@ export const getPlatformStatus = async () => {
 }
 
 /**
- * Build the absolute URL of the multi-sim batch-status lookup.
- * One round-trip to poll up to 20 sims; the per-sim equivalent is
- * `/api/simulation/<id>/run-status` (one sim per call).
- *
- * @param {string} [origin]
- * @returns {string}
- */
-export const getBatchStatusUrl = (origin) => {
-  const base = origin || (typeof window !== 'undefined' ? window.location.origin : '')
-  return `${base}/api/simulation/batch-status`
-}
-
-/**
- * Poll the status of up to 20 simulations in one call. Returns the
- * parsed envelope (`schema_version` + `count` + `results`) on 200.
- *
- * `results` is ordered to match the input `simIds` so the caller can
- * correlate by index; a duplicate id in `simIds` emits a duplicate
- * entry in the response. Private and unknown ids both return
- * `{found: false}` with every other field `null` — the surface is
- * unauthenticated, so the existence-of-a-private-sim signal is hidden
- * by design.
- *
- * @param {string[]} simIds 1–20 simulation IDs.
- * @returns {Promise<{schema_version: string, count: number, results: Array<object>}>}
- */
-export const batchSimulationStatus = async (simIds) => {
-  if (!Array.isArray(simIds) || simIds.length === 0) {
-    throw new Error('batchSimulationStatus: simIds must be a non-empty array')
-  }
-  const res = await fetch(getBatchStatusUrl(), {
-    method: 'POST',
-    credentials: 'omit',
-    cache: 'no-store',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sim_ids: simIds }),
-  })
-  if (!res.ok) {
-    throw new Error(`batch-status fetch failed: ${res.status}`)
-  }
-  const body = await res.json()
-  return body?.data ?? body
-}
-
-/**
  * Build the absolute URL of the per-project stats endpoint.
  * Platform-level surface — describes one project's worth of
  * published simulations, not the platform aggregate.
@@ -1882,22 +1837,6 @@ export const branchCounterfactual = (parentSimulationId, opts) => {
     label: opts.label,
     branch_id: opts.branchId,
   })
-}
-
-/**
- * Get a single round's snapshot — actions in the round, market prices at
- * that round, and belief state. Lightweight alternative to
- * getRunStatusDetail for scrubbing UIs on large simulations.
- * @param {string} simulationId
- * @param {number} roundNum
- * @param {{ platforms?: string[], includeBelief?: boolean, includeMarket?: boolean }} opts
- */
-export const getSimulationFrame = (simulationId, roundNum, opts = {}) => {
-  const params = {}
-  if (opts.platforms && opts.platforms.length) params.platforms = opts.platforms.join(',')
-  if (opts.includeBelief === false) params.include_belief = 'false'
-  if (opts.includeMarket === false) params.include_market = 'false'
-  return service.get(`/api/simulation/${simulationId}/frame/${roundNum}`, { params })
 }
 
 /**

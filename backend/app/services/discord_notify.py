@@ -55,17 +55,13 @@ Embed shape (Discord ``embeds[0]``)::
 
 from __future__ import annotations
 
-import json
 import os
 import threading
-import urllib.error
-import urllib.request
-from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from ..utils.logger import get_logger
-
-if TYPE_CHECKING:
-    from .simulation_runner import SimulationRunState
+from .simulation_run_state import SimulationRunState
+from ._notify_base import Dedup, post_json
 
 logger = get_logger('miroshark.discord_notify')
 
@@ -90,27 +86,12 @@ COLOR_FAILED  = 0xF59E0B   # amber-500   — sim failed (no consensus)
 # the runner has two terminal code paths (exit-code monitor + the
 # `simulation_end` event in the action log) and both call into the
 # notifier — keep only the first per (sim_id, status).
-_FIRED: set[Tuple[str, str]] = set()
-_FIRED_LOCK = threading.Lock()
-_FIRED_MAX = 4096
-
-
-def _mark_fired(sim_id: str, status: str) -> bool:
-    """Record (sim_id, status); return ``True`` only on the first call."""
-    key = (sim_id, status)
-    with _FIRED_LOCK:
-        if key in _FIRED:
-            return False
-        if len(_FIRED) >= _FIRED_MAX:
-            _FIRED.pop()
-        _FIRED.add(key)
-        return True
+_dedup = Dedup()
 
 
 def reset_dedup_for_tests() -> None:
     """Clear the in-process dedup set. Test-only convenience."""
-    with _FIRED_LOCK:
-        _FIRED.clear()
+    _dedup.reset()
 
 
 def _resolve_webhook_url() -> str:
@@ -293,29 +274,7 @@ def build_discord_embed(payload: Dict[str, Any]) -> Dict[str, Any]:
 
 def _post_json(url: str, body: Dict[str, Any], timeout: float) -> Tuple[bool, str]:
     """Issue the POST. Returns ``(ok, message)`` — never raises."""
-    try:
-        encoded = json.dumps(body).encode("utf-8")
-    except Exception as exc:
-        return False, f"Could not serialize Discord payload: {exc}"
-
-    headers = {
-        "Content-Type": "application/json; charset=utf-8",
-        "User-Agent": DISCORD_USER_AGENT,
-    }
-    req = urllib.request.Request(url, data=encoded, method="POST", headers=headers)
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
-            code = resp.getcode()
-            if 200 <= code < 300:
-                return True, f"HTTP {code}"
-            return False, f"HTTP {code}"
-    except urllib.error.HTTPError as exc:
-        return False, f"HTTP {exc.code}"
-    except urllib.error.URLError as exc:
-        reason = getattr(exc, "reason", exc)
-        return False, f"URL error: {reason}"
-    except Exception as exc:
-        return False, f"{type(exc).__name__}: {exc}"
+    return post_json(url, body, timeout, user_agent=DISCORD_USER_AGENT, label="Discord")
 
 
 def send_discord_payload(url: str, embed: Dict[str, Any]) -> Tuple[bool, str]:
@@ -367,7 +326,7 @@ def notify_if_configured(
     if not url:
         return
 
-    if not _mark_fired(simulation_id, status):
+    if not _dedup.mark(simulation_id, status):
         return
 
     # Defer the import so the package-level wiring stays cycle-free

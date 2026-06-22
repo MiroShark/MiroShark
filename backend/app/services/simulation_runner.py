@@ -12,9 +12,7 @@ import subprocess
 import signal
 import atexit
 from typing import TYPE_CHECKING, Dict, Any, List, Optional, TextIO
-from dataclasses import dataclass, field
 from datetime import datetime
-from enum import Enum
 from queue import Queue
 
 if TYPE_CHECKING:
@@ -24,6 +22,9 @@ from ..utils.logger import get_logger
 from ..utils.validation import validate_simulation_id
 from .graph_memory_updater import GraphMemoryManager
 from .simulation_ipc import SimulationIPCClient
+# Run-state types live in a leaf module (breaks the notify/runner import cycle).
+# RunnerStatus is also imported from here by app.api.simulation.
+from .simulation_run_state import RunnerStatus, AgentAction, SimulationRunState
 
 logger = get_logger('miroshark.simulation_runner')
 
@@ -34,176 +35,46 @@ _cleanup_registered = False
 IS_WINDOWS = sys.platform == 'win32'
 
 
-class RunnerStatus(str, Enum):
-    """Runner status"""
-    IDLE = "idle"
-    STARTING = "starting"
-    RUNNING = "running"
-    PAUSED = "paused"
-    STOPPING = "stopping"
-    STOPPED = "stopped"
-    COMPLETED = "completed"
-    FAILED = "failed"
+def _fan_out_notifications(
+    simulation_id: str,
+    status: str,
+    *,
+    state: SimulationRunState,
+    completed_at: Optional[str],
+    sim_dir: Optional[str] = None,
+    error: Optional[str] = None,
+) -> None:
+    """Fire the outbound webhook + each channel-native notifier for a terminal sim.
 
+    Each dispatcher is opt-in (no-op when unconfigured), per-channel deduped, and
+    isolated: a slow or broken channel logs a warning and never blocks the others
+    or the runner. Imports are deferred so unused channels cost nothing at import.
+    """
+    from .webhook_service import fire_webhook_for_simulation
+    from .discord_notify import notify_if_configured as notify_discord
+    from .slack_notify import notify_if_configured as notify_slack
+    from .email_notify import notify_if_configured as notify_email
+    from .telegram_notify import notify_if_configured as notify_telegram
 
-@dataclass
-class AgentAction:
-    """Agent action record"""
-    round_num: int
-    timestamp: str
-    platform: str  # twitter / reddit
-    agent_id: int
-    agent_name: str
-    action_type: str  # CREATE_POST, LIKE_POST, etc.
-    action_args: Dict[str, Any] = field(default_factory=dict)
-    result: Optional[str] = None
-    success: bool = True
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "round_num": self.round_num,
-            "timestamp": self.timestamp,
-            "platform": self.platform,
-            "agent_id": self.agent_id,
-            "agent_name": self.agent_name,
-            "action_type": self.action_type,
-            "action_args": self.action_args,
-            "result": self.result,
-            "success": self.success,
-        }
-
-
-@dataclass
-class RoundSummary:
-    """Per-round summary"""
-    round_num: int
-    start_time: str
-    end_time: Optional[str] = None
-    simulated_hour: int = 0
-    twitter_actions: int = 0
-    reddit_actions: int = 0
-    active_agents: List[int] = field(default_factory=list)
-    actions: List[AgentAction] = field(default_factory=list)
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "round_num": self.round_num,
-            "start_time": self.start_time,
-            "end_time": self.end_time,
-            "simulated_hour": self.simulated_hour,
-            "twitter_actions": self.twitter_actions,
-            "reddit_actions": self.reddit_actions,
-            "active_agents": self.active_agents,
-            "actions_count": len(self.actions),
-            "actions": [a.to_dict() for a in self.actions],
-        }
-
-
-@dataclass
-class SimulationRunState:
-    """Simulation run state (real-time)"""
-    simulation_id: str
-    runner_status: RunnerStatus = RunnerStatus.IDLE
-
-    # Progress info
-    current_round: int = 0
-    total_rounds: int = 0
-    simulated_hours: int = 0
-    total_simulation_hours: int = 0
-
-    # Per-platform independent rounds and simulated time (for multi-platform parallel display)
-    twitter_current_round: int = 0
-    reddit_current_round: int = 0
-    polymarket_current_round: int = 0
-    twitter_simulated_hours: int = 0
-    reddit_simulated_hours: int = 0
-    polymarket_simulated_hours: int = 0
-
-    # Platform status
-    twitter_running: bool = False
-    reddit_running: bool = False
-    polymarket_running: bool = False
-    twitter_actions_count: int = 0
-    reddit_actions_count: int = 0
-    polymarket_actions_count: int = 0
-
-    # Platform completion status (detected via simulation_end events in actions.jsonl)
-    twitter_completed: bool = False
-    reddit_completed: bool = False
-    polymarket_completed: bool = False
-
-    # Per-round summaries
-    rounds: List[RoundSummary] = field(default_factory=list)
-
-    # Recent actions (for frontend real-time display)
-    recent_actions: List[AgentAction] = field(default_factory=list)
-    max_recent_actions: int = 50
-
-    # Timestamps
-    started_at: Optional[str] = None
-    updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
-    completed_at: Optional[str] = None
-
-    # Error info
-    error: Optional[str] = None
-
-    # Process ID (for stopping)
-    process_pid: Optional[int] = None
-    
-    def add_action(self, action: AgentAction):
-        """Add action to recent actions list"""
-        self.recent_actions.insert(0, action)
-        if len(self.recent_actions) > self.max_recent_actions:
-            self.recent_actions = self.recent_actions[:self.max_recent_actions]
-        
-        if action.platform == "twitter":
-            self.twitter_actions_count += 1
-        elif action.platform == "reddit":
-            self.reddit_actions_count += 1
-        elif action.platform == "polymarket":
-            self.polymarket_actions_count += 1
-        
-        self.updated_at = datetime.now().isoformat()
-    
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "simulation_id": self.simulation_id,
-            "runner_status": self.runner_status.value,
-            "current_round": self.current_round,
-            "total_rounds": self.total_rounds,
-            "simulated_hours": self.simulated_hours,
-            "total_simulation_hours": self.total_simulation_hours,
-            "progress_percent": round(self.current_round / max(self.total_rounds, 1) * 100, 1),
-            # Per-platform independent rounds and time
-            "twitter_current_round": self.twitter_current_round,
-            "reddit_current_round": self.reddit_current_round,
-            "polymarket_current_round": self.polymarket_current_round,
-            "twitter_simulated_hours": self.twitter_simulated_hours,
-            "reddit_simulated_hours": self.reddit_simulated_hours,
-            "polymarket_simulated_hours": self.polymarket_simulated_hours,
-            "twitter_running": self.twitter_running,
-            "reddit_running": self.reddit_running,
-            "polymarket_running": self.polymarket_running,
-            "twitter_completed": self.twitter_completed,
-            "reddit_completed": self.reddit_completed,
-            "polymarket_completed": self.polymarket_completed,
-            "twitter_actions_count": self.twitter_actions_count,
-            "reddit_actions_count": self.reddit_actions_count,
-            "polymarket_actions_count": self.polymarket_actions_count,
-            "total_actions_count": self.twitter_actions_count + self.reddit_actions_count + self.polymarket_actions_count,
-            "started_at": self.started_at,
-            "updated_at": self.updated_at,
-            "completed_at": self.completed_at,
-            "error": self.error,
-            "process_pid": self.process_pid,
-        }
-    
-    def to_detail_dict(self) -> Dict[str, Any]:
-        """Detailed info including recent actions"""
-        result = self.to_dict()
-        result["recent_actions"] = [a.to_dict() for a in self.recent_actions]
-        result["rounds_count"] = len(self.rounds)
-        return result
+    dispatchers = (
+        ("Webhook", fire_webhook_for_simulation),
+        ("Discord notify", notify_discord),
+        ("Slack notify", notify_slack),
+        ("Email notify", notify_email),
+        ("Telegram notify", notify_telegram),
+    )
+    for label, dispatch in dispatchers:
+        try:
+            dispatch(
+                simulation_id,
+                status,
+                sim_dir=sim_dir,
+                state=state,
+                completed_at=completed_at,
+                error=error,
+            )
+        except Exception as exc:
+            logger.warning(f"{label} dispatch failed: {exc}")
 
 
 class SimulationRunner:
@@ -656,68 +527,15 @@ class SimulationRunner:
                 except Exception as _push_err:
                     logger.warning(f"Push notification dispatch failed: {_push_err}")
 
-                # Fire outbound webhook (Zapier / n8n / Slack / Discord / …)
-                try:
-                    from .webhook_service import fire_webhook_for_simulation
-                    fire_webhook_for_simulation(
-                        simulation_id,
-                        "completed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=state.completed_at,
-                    )
-                except Exception as _wh_err:
-                    logger.warning(f"Webhook dispatch failed: {_wh_err}")
-
-                # Channel-native notifications — Discord rich embed +
-                # Slack Block Kit. Each is opt-in via its own env var;
-                # unconfigured channels no-op. Dedup is per-channel so
-                # an operator running only Discord doesn't lose Slack
-                # delivery to a fall-through.
-                try:
-                    from .discord_notify import notify_if_configured as _notify_discord
-                    _notify_discord(
-                        simulation_id,
-                        "completed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=state.completed_at,
-                    )
-                except Exception as _dn_err:
-                    logger.warning(f"Discord notify dispatch failed: {_dn_err}")
-                try:
-                    from .slack_notify import notify_if_configured as _notify_slack
-                    _notify_slack(
-                        simulation_id,
-                        "completed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=state.completed_at,
-                    )
-                except Exception as _sn_err:
-                    logger.warning(f"Slack notify dispatch failed: {_sn_err}")
-                try:
-                    from .email_notify import notify_if_configured as _notify_email
-                    _notify_email(
-                        simulation_id,
-                        "completed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=state.completed_at,
-                    )
-                except Exception as _en_err:
-                    logger.warning(f"Email notify dispatch failed: {_en_err}")
-                try:
-                    from .telegram_notify import notify_if_configured as _notify_telegram
-                    _notify_telegram(
-                        simulation_id,
-                        "completed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=state.completed_at,
-                    )
-                except Exception as _tn_err:
-                    logger.warning(f"Telegram notify dispatch failed: {_tn_err}")
+                # Fire-and-forget terminal-state notifications: outbound webhook
+                # + each opt-in channel (Discord / Slack / email / Telegram).
+                _fan_out_notifications(
+                    simulation_id,
+                    "completed",
+                    sim_dir=sim_dir,
+                    state=state,
+                    completed_at=state.completed_at,
+                )
             else:
                 state.runner_status = RunnerStatus.FAILED
                 # Read error info from main log file
@@ -732,73 +550,15 @@ class SimulationRunner:
                 state.error = f"Process exit code: {exit_code}, error: {error_info}"
                 logger.error(f"Simulation failed: {simulation_id}, error={state.error}")
 
-                # Fire outbound webhook for the failure path too — operators
-                # who hooked Slack/Discord want to know either way.
-                try:
-                    from .webhook_service import fire_webhook_for_simulation
-                    fire_webhook_for_simulation(
-                        simulation_id,
-                        "failed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=datetime.now().isoformat(),
-                        error=state.error,
-                    )
-                except Exception as _wh_err:
-                    logger.warning(f"Webhook dispatch failed: {_wh_err}")
-
-                # Channel-native failure cards — amber-bordered Discord
-                # embed + red-tagged Slack message. Operators wiring a
-                # channel for ops-visibility need to know about the
-                # failure path too.
-                try:
-                    from .discord_notify import notify_if_configured as _notify_discord
-                    _notify_discord(
-                        simulation_id,
-                        "failed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=datetime.now().isoformat(),
-                        error=state.error,
-                    )
-                except Exception as _dn_err:
-                    logger.warning(f"Discord notify dispatch failed: {_dn_err}")
-                try:
-                    from .slack_notify import notify_if_configured as _notify_slack
-                    _notify_slack(
-                        simulation_id,
-                        "failed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=datetime.now().isoformat(),
-                        error=state.error,
-                    )
-                except Exception as _sn_err:
-                    logger.warning(f"Slack notify dispatch failed: {_sn_err}")
-                try:
-                    from .email_notify import notify_if_configured as _notify_email
-                    _notify_email(
-                        simulation_id,
-                        "failed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=datetime.now().isoformat(),
-                        error=state.error,
-                    )
-                except Exception as _en_err:
-                    logger.warning(f"Email notify dispatch failed: {_en_err}")
-                try:
-                    from .telegram_notify import notify_if_configured as _notify_telegram
-                    _notify_telegram(
-                        simulation_id,
-                        "failed",
-                        sim_dir=sim_dir,
-                        state=state,
-                        completed_at=datetime.now().isoformat(),
-                        error=state.error,
-                    )
-                except Exception as _tn_err:
-                    logger.warning(f"Telegram notify dispatch failed: {_tn_err}")
+                # Same fan-out for the failure path — operators want to know either way.
+                _fan_out_notifications(
+                    simulation_id,
+                    "failed",
+                    sim_dir=sim_dir,
+                    state=state,
+                    completed_at=datetime.now().isoformat(),
+                    error=state.error,
+                )
             
             state.twitter_running = False
             state.reddit_running = False
@@ -922,64 +682,14 @@ class SimulationRunner:
                                         except Exception as e:
                                             logger.warning(f"Failed to generate run summary: {e}")
 
-                                        # Outbound webhook notification — deduped against
-                                        # the exit-code path in the monitor loop, so it's
-                                        # safe to fire from both.
-                                        try:
-                                            from .webhook_service import fire_webhook_for_simulation
-                                            fire_webhook_for_simulation(
-                                                state.simulation_id,
-                                                "completed",
-                                                state=state,
-                                                completed_at=state.completed_at,
-                                            )
-                                        except Exception as _wh_err:
-                                            logger.warning(f"Webhook dispatch failed: {_wh_err}")
-
-                                        # Channel-native notifications — same dedup posture
-                                        # as the webhook above; the per-module ``_FIRED``
-                                        # set blocks the second dispatch when the
-                                        # exit-code path also fires.
-                                        try:
-                                            from .discord_notify import notify_if_configured as _notify_discord
-                                            _notify_discord(
-                                                state.simulation_id,
-                                                "completed",
-                                                state=state,
-                                                completed_at=state.completed_at,
-                                            )
-                                        except Exception as _dn_err:
-                                            logger.warning(f"Discord notify dispatch failed: {_dn_err}")
-                                        try:
-                                            from .slack_notify import notify_if_configured as _notify_slack
-                                            _notify_slack(
-                                                state.simulation_id,
-                                                "completed",
-                                                state=state,
-                                                completed_at=state.completed_at,
-                                            )
-                                        except Exception as _sn_err:
-                                            logger.warning(f"Slack notify dispatch failed: {_sn_err}")
-                                        try:
-                                            from .email_notify import notify_if_configured as _notify_email
-                                            _notify_email(
-                                                state.simulation_id,
-                                                "completed",
-                                                state=state,
-                                                completed_at=state.completed_at,
-                                            )
-                                        except Exception as _en_err:
-                                            logger.warning(f"Email notify dispatch failed: {_en_err}")
-                                        try:
-                                            from .telegram_notify import notify_if_configured as _notify_telegram
-                                            _notify_telegram(
-                                                state.simulation_id,
-                                                "completed",
-                                                state=state,
-                                                completed_at=state.completed_at,
-                                            )
-                                        except Exception as _tn_err:
-                                            logger.warning(f"Telegram notify dispatch failed: {_tn_err}")
+                                        # Fan out terminal-state notifications (deduped
+                                        # against the exit-code path, so safe from both).
+                                        _fan_out_notifications(
+                                            state.simulation_id,
+                                            "completed",
+                                            state=state,
+                                            completed_at=state.completed_at,
+                                        )
                                 
                                 # Update round info (from round_end event)
                                 elif event_type == "round_end":

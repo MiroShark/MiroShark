@@ -474,11 +474,3 @@ class GraphMemoryManager:
                         logger.error(f"Failed to stop updater: simulation_id={simulation_id}, error={e}")
                 cls._updaters.clear()
             logger.info("Stopped all graph memory updaters")
-
-    @classmethod
-    def get_all_stats(cls) -> Dict[str, Dict[str, Any]]:
-        """Get statistics for all updaters"""
-        return {
-            sim_id: updater.get_stats()
-            for sim_id, updater in cls._updaters.items()
-        }

@@ -1358,8 +1358,12 @@ class GraphToolsService:
 
             result.interviewed_count = len(result.interviews)
 
-        except (ValueError, Exception) as e:
-            logger.info(f"Simulation process not running, using LLM-based interview (reason: {e})")
+        except (ValueError, TimeoutError, ConnectionError, OSError) as e:
+            # The sim-completed sentinel, interview_agents_batch's run-state guards,
+            # and IPC transport failures all legitimately degrade to an LLM-based
+            # interview. Parsing/logic bugs are deliberately NOT caught here so they
+            # surface instead of being silently mislabeled as "process not running".
+            logger.info(f"Live interview IPC unavailable, using LLM-based interview (reason: {e})")
             return self._fallback_interview(
                 result=result,
                 selected_agents=selected_agents,

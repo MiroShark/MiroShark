@@ -86,6 +86,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from . import signal_service
 from ..utils.json_io import safe_load_json as _safe_load_json
+from ..utils.belief import bucket_snapshots
 
 
 # ── Configuration ────────────────────────────────────────────────────────
@@ -134,34 +135,7 @@ def _final_belief_from_trajectory(
     if not isinstance(snapshots, list):
         return None
 
-    final: Optional[Tuple[float, float, float]] = None
-    counted_rounds = 0
-    for snap in snapshots:
-        if not isinstance(snap, dict):
-            continue
-        positions = snap.get("belief_positions") or {}
-        if not isinstance(positions, dict) or not positions:
-            continue
-        stances: List[float] = []
-        for p in positions.values():
-            if isinstance(p, dict) and p:
-                try:
-                    stances.append(sum(p.values()) / len(p))
-                except (TypeError, ZeroDivisionError):
-                    continue
-        if not stances:
-            continue
-        total = len(stances)
-        nb = sum(1 for s in stances if s > 0.2)
-        nbe = sum(1 for s in stances if s < -0.2)
-        nn = total - nb - nbe
-        final = (
-            round(nb / total * 100, 1),
-            round(nn / total * 100, 1),
-            round(nbe / total * 100, 1),
-        )
-        counted_rounds += 1
-
+    final, counted_rounds = bucket_snapshots(snapshots)
     if final is None:
         return None
     return (final[0], final[1], final[2], counted_rounds)

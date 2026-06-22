@@ -76,6 +76,7 @@ from typing import Any, Dict, Iterable, Optional, Tuple
 
 from . import signal_service
 from ..utils.json_io import safe_load_json as _safe_load_json
+from ..utils.belief import bucket_snapshots
 from ..utils.timeutils import utc_iso8601 as _iso_utc_now
 
 
@@ -152,31 +153,7 @@ def _final_belief_from_snapshots(snapshots: list) -> Optional[Tuple[float, float
     same ±0.2 stance threshold, same one-decimal rounding — so a sim's
     direction here matches its per-sim signal.json byte-for-byte.
     """
-    final: Optional[Tuple[float, float, float]] = None
-    for snap in snapshots:
-        if not isinstance(snap, dict):
-            continue
-        positions = snap.get("belief_positions") or {}
-        if not isinstance(positions, dict) or not positions:
-            continue
-        stances = []
-        for p in positions.values():
-            if isinstance(p, dict) and p:
-                try:
-                    stances.append(sum(p.values()) / len(p))
-                except (TypeError, ZeroDivisionError):
-                    continue
-        if not stances:
-            continue
-        total = len(stances)
-        nb = sum(1 for s in stances if s > 0.2)
-        nbe = sum(1 for s in stances if s < -0.2)
-        nn = total - nb - nbe
-        final = (
-            round(nb / total * 100, 1),
-            round(nn / total * 100, 1),
-            round(nbe / total * 100, 1),
-        )
+    final, _ = bucket_snapshots(snapshots)
     return final
 
 

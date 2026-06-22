@@ -84,6 +84,7 @@ from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from . import signal_service
 from ..utils.json_io import safe_load_json as _safe_load_json
+from ..utils.belief import bucket_snapshots
 
 
 # ── Configuration ────────────────────────────────────────────────────────
@@ -156,39 +157,10 @@ def _final_belief_and_rounds(
     if not isinstance(snapshots, list):
         return None, 0
 
-    final: Optional[Tuple[float, float, float]] = None
-    counted_rounds = 0
-    for snap in snapshots:
-        if not isinstance(snap, dict):
-            continue
-        positions = snap.get("belief_positions") or {}
-        if not isinstance(positions, dict) or not positions:
-            continue
-        stances: List[float] = []
-        for p in positions.values():
-            if isinstance(p, dict) and p:
-                try:
-                    stances.append(sum(p.values()) / len(p))
-                except (TypeError, ZeroDivisionError):
-                    continue
-        if not stances:
-            continue
-        total = len(stances)
-        nb = sum(1 for s in stances if s > 0.2)
-        nbe = sum(1 for s in stances if s < -0.2)
-        nn = total - nb - nbe
-        final = (
-            round(nb / total * 100, 1),
-            round(nn / total * 100, 1),
-            round(nbe / total * 100, 1),
-        )
-        # Only count rounds where stance extraction succeeded — same
-        # definition ``batch_status._final_belief_from_trajectory`` uses,
-        # so ``activity_feed.total_rounds`` matches
-        # ``BatchStatusEntry.total_rounds`` byte-for-byte for the same
-        # sim. A dict snapshot with no parseable beliefs would otherwise
-        # inflate the count without contributing to the signal.
-        counted_rounds += 1
+    # counted_rounds = snapshots with a parseable stance; matches
+    # batch_status so activity_feed.total_rounds equals BatchStatusEntry
+    # .total_rounds byte-for-byte for the same sim.
+    final, counted_rounds = bucket_snapshots(snapshots)
     return final, counted_rounds
 
 
