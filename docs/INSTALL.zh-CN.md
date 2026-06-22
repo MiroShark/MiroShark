@@ -93,7 +93,7 @@ git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
 ```
 
-`.env.example` 出厂自带云端预设(Mimo V2 Flash + Gemini 3 Flash)作为默认配置。打开 `.env`,把你的 OpenRouter 密钥粘贴进五行空白的 `*_API_KEY=`(`LLM_`、`SMART_`、`NER_`、`OPENAI_`、`EMBEDDING_` — 五行用同一把密钥)。除非你想换一套不同的模型组合,否则不需要修改任何模型字段。
+`.env.example` 出厂自带云端预设(Mimo V2.5 + Gemini 3 Flash)作为默认配置。打开 `.env`,把你的 OpenRouter 密钥粘贴进五行空白的 `*_API_KEY=`(`LLM_`、`SMART_`、`NER_`、`OPENAI_`、`EMBEDDING_` — 五行用同一把密钥)。除非你想换一套不同的模型组合,否则不需要修改任何模型字段。
 
 然后启动:
 
@@ -133,7 +133,7 @@ cp .env.example .env
 ```bash
 LLM_API_KEY=sk-or-v1-YOUR_KEY
 LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_MODEL_NAME=xiaomi/mimo-v2-flash
+LLM_MODEL_NAME=xiaomi/mimo-v2.5
 
 SMART_PROVIDER=openai
 SMART_API_KEY=sk-or-v1-YOUR_KEY
@@ -144,7 +144,7 @@ NER_MODEL_NAME=google/gemini-3-flash-preview
 NER_BASE_URL=https://openrouter.ai/api/v1
 NER_API_KEY=sk-or-v1-YOUR_KEY
 
-WONDERWALL_MODEL_NAME=xiaomi/mimo-v2-flash
+WONDERWALL_MODEL_NAME=xiaomi/mimo-v2.5
 WEB_SEARCH_MODEL=google/gemini-3-flash-preview:online
 
 OPENAI_API_KEY=sk-or-v1-YOUR_KEY

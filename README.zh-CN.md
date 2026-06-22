@@ -59,7 +59,7 @@ git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
 # 将你的 OpenRouter 密钥粘贴到 LLM_API_KEY / SMART_API_KEY /
 # NER_API_KEY / OPENAI_API_KEY / EMBEDDING_API_KEY 五个字段
-# (同一个密钥,粘 5 处)。默认组合是 Mimo V2 Flash + Gemini 3 Flash。
+# (同一个密钥,粘 5 处)。默认组合是 Mimo V2.5 + Gemini 3 Flash。
 ./miroshark
 ```
 

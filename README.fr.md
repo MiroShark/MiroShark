@@ -60,7 +60,7 @@ cp .env.example .env
 # Collez votre clé OpenRouter dans les emplacements LLM_API_KEY /
 # SMART_API_KEY / NER_API_KEY / OPENAI_API_KEY / EMBEDDING_API_KEY
 # (la même clé, à 5 endroits). Le duo par défaut est
-# Mimo V2 Flash + Gemini 3 Flash.
+# Mimo V2.5 + Gemini 3 Flash.
 ./miroshark
 ```
 

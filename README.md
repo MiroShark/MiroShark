@@ -59,7 +59,7 @@ git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
 # Paste your OpenRouter key into the LLM_API_KEY / SMART_API_KEY /
 # NER_API_KEY / OPENAI_API_KEY / EMBEDDING_API_KEY slots (same key,
-# 5 places). Default lineup is Mimo V2 Flash + Gemini 3 Flash.
+# 5 places). Default lineup is Mimo V2.5 + Gemini 3 Flash.
 ./miroshark
 ```
 

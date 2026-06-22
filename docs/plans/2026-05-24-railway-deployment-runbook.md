@@ -43,7 +43,7 @@ SECRET_KEY=<generate-secure-key>
 LLM_PROVIDER=openai
 LLM_API_KEY=<your-api-key>
 LLM_BASE_URL=https://api.openai.com/v1
-LLM_MODEL_NAME=xiaomi/mimo-v2-flash
+LLM_MODEL_NAME=xiaomi/mimo-v2.5
 
 # === Neo4j Configuration ===
 NEO4J_URI=<your-neo4j-uri>
