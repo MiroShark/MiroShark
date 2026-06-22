@@ -11,7 +11,7 @@
   "dependencies": {
     "axios": "^1.18.0",
     "d3": "^7.9.0",
-    "dompurify": "^3.4.10",
+    "dompurify": "^3.4.11",
     "marked": "^18.0.5",
     "vue": "^3.5.38",
     "vue-router": "^5.1.0"
