@@ -68,6 +68,14 @@ LLM_MODEL_NAME=qwen2.5:32b
 # per-deployment if a slot needs CoT.
 LLM_DISABLE_REASONING=true
 
+# ─── Thinking budget, sized separately from the response budget ───
+# `max_tokens` is the response budget; these size extended thinking on
+# their own (OpenRouter's unified `reasoning` field). Set EITHER — a token
+# count wins over an effort level. Setting either enables reasoning even
+# with LLM_DISABLE_REASONING=true.
+# LLM_REASONING_MAX_TOKENS=2000      # Anthropic/Gemini style token budget
+# LLM_REASONING_EFFORT=medium        # OpenAI o-series style: low|medium|high
+
 # ─── Claude Code mode (only when LLM_PROVIDER=claude-code) ───
 # CLAUDE_CODE_MODEL=claude-sonnet-4-20250514
 
@@ -202,6 +210,8 @@ All retrieval and memory features are on by default. Disable individually:
 | `WEB_ENRICHMENT_ENABLED` | `true` | Personas grounded only in the document |
 | `LLM_PROMPT_CACHING_ENABLED` | `true` | No Anthropic prompt caching on system messages |
 | `LLM_DISABLE_REASONING` | `true` | OpenRouter reasoning models emit CoT (~3× higher latency on Qwen3/Grok) |
+| `LLM_REASONING_MAX_TOKENS` | `0` | Thinking budget (tokens) sized separately from the `max_tokens` response budget — Anthropic/Gemini style. Maps to OpenRouter's `reasoning.max_tokens`; `> 0` enables reasoning even if `LLM_DISABLE_REASONING=true`. |
+| `LLM_REASONING_EFFORT` | `""` | Thinking effort `low`/`medium`/`high` for OpenAI o-series style models. Maps to OpenRouter's `reasoning.effort`; a `LLM_REASONING_MAX_TOKENS` token count takes precedence when both are set. |
 | `ORACLE_SEED_ENABLED` | `false` | Templates ignore `oracle_tools` |
 | `MCP_AGENT_TOOLS_ENABLED` | `false` | `tools_enabled` personas can't invoke MCP |
 | `DEMOGRAPHICS_COUNTRY` | `""` | Persona generator runs graph-only — no Nemotron demographic seed. Set to a code under `backend/app/countries/` (e.g. `sg`, `us`) to anchor each agent in a census-grounded row. See [DEMOGRAPHICS.md](DEMOGRAPHICS.md). |

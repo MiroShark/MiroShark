@@ -179,6 +179,35 @@ class LLMClient:
         return ("claude" in m) or ("anthropic" in m)
 
     @staticmethod
+    def _resolve_reasoning_directive() -> Optional[Dict[str, Any]]:
+        """Build the OpenRouter ``reasoning`` extra_body directive from config.
+
+        Returns the dict to attach under ``extra_body["reasoning"]``, or
+        ``None`` to leave the key unset (model default). OpenRouter's unified
+        ``reasoning`` field sizes the thinking budget independently of the
+        top-level ``max_tokens`` response budget — see
+        https://openrouter.ai/docs/use-cases/reasoning-tokens.
+
+        Precedence:
+          1. An explicit thinking budget — ``LLM_REASONING_MAX_TOKENS`` > 0 or
+             ``LLM_REASONING_EFFORT`` set — enables reasoning with that budget.
+             A token count wins over an effort level when both are given.
+             Setting a budget overrides ``LLM_DISABLE_REASONING`` (asking for a
+             thinking budget implies wanting the model to think).
+          2. ``LLM_DISABLE_REASONING`` (default) → ``{"enabled": False}``.
+          3. Otherwise ``None`` (model default).
+        """
+        budget = getattr(Config, "LLM_REASONING_MAX_TOKENS", 0) or 0
+        if budget > 0:
+            return {"max_tokens": int(budget)}
+        effort = (getattr(Config, "LLM_REASONING_EFFORT", "") or "").strip().lower()
+        if effort:
+            return {"effort": effort}
+        if getattr(Config, "LLM_DISABLE_REASONING", False):
+            return {"enabled": False}
+        return None
+
+    @staticmethod
     def _maybe_cache_wrap_messages(
         messages: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
@@ -363,12 +392,16 @@ class LLMClient:
             if sim_id:
                 extra["user"] = sim_id
                 extra["session_id"] = sim_id
-            # Disable chain-of-thought on reasoning-capable models by default —
-            # we want short, deterministic outputs, not a 100-token <think>
-            # trace padding every call. Saves 50-80% latency on Qwen3/Gemini-3-Flash
-            # in benchmarks; no-ops on models that don't support the flag.
-            if Config.LLM_DISABLE_REASONING:
-                extra["reasoning"] = {"enabled": False}
+            # Reasoning directive. By default we disable chain-of-thought —
+            # short, deterministic outputs, not a 100-token <think> trace
+            # padding every call (saves 50-80% latency on Qwen3/Gemini-3-Flash;
+            # no-ops on models that don't support the flag). When a deployment
+            # sets a thinking budget (LLM_REASONING_MAX_TOKENS / _EFFORT),
+            # reasoning is enabled with that budget instead, sized separately
+            # from the `max_tokens` response cap above.
+            reasoning_directive = self._resolve_reasoning_directive()
+            if reasoning_directive is not None:
+                extra["reasoning"] = reasoning_directive
             kwargs["extra_body"] = extra
 
         t0 = time.perf_counter()

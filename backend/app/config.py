@@ -198,6 +198,24 @@ class Config:
     # MiroShark's short, structured prompts).
     LLM_DISABLE_REASONING = os.environ.get('LLM_DISABLE_REASONING', 'true').lower() == 'true'
 
+    # Thinking-budget separation for reasoning-capable models.
+    # The top-level `max_tokens` we pass is the *response* budget; on a
+    # reasoning model that single pool silently has to cover extended
+    # thinking too, so a verbose <think> trace eats into the answer (the
+    # same truncation class that bit suggest_scenarios in #187/#188). These
+    # two knobs map to OpenRouter's unified `reasoning` field, which sizes
+    # the thinking budget independently of `max_tokens`:
+    #   * LLM_REASONING_MAX_TOKENS — int token budget for extended thinking
+    #     (Anthropic / Gemini style; maps to Anthropic `thinking.budget_tokens`).
+    #   * LLM_REASONING_EFFORT — "low" | "medium" | "high" for OpenAI o-series
+    #     style models that take an effort level instead of a token count.
+    # Setting either one turns reasoning ON for that budget even if
+    # LLM_DISABLE_REASONING is left at its default — asking for a thinking
+    # budget implies wanting the model to think. Left unset (0 / empty),
+    # reasoning falls back to the LLM_DISABLE_REASONING flag above.
+    LLM_REASONING_MAX_TOKENS = int(os.environ.get('LLM_REASONING_MAX_TOKENS', '0') or '0')
+    LLM_REASONING_EFFORT = os.environ.get('LLM_REASONING_EFFORT', '').strip().lower()
+
     # Report Agent configuration
     REPORT_AGENT_MAX_TOOL_CALLS = int(os.environ.get('REPORT_AGENT_MAX_TOOL_CALLS', '5'))
     REPORT_AGENT_MAX_REFLECTION_ROUNDS = int(os.environ.get('REPORT_AGENT_MAX_REFLECTION_ROUNDS', '2'))
