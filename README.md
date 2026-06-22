@@ -21,7 +21,7 @@
 
 ---
 
-> **Simulate anything, for $1 & less than 10 min — Universal Swarm Intelligence Engine**
+> **Simulate anything, for $1 & less than 10 min.**
 > Drop in anything — a press release, a news headline, a policy draft, a question you can't answer, a historical what-if — and MiroShark spawns hundreds of agents that react to it hour by hour. Posting, arguing, trading, changing their minds.
 
 <p align="center">

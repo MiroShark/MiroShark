@@ -62,7 +62,7 @@
     <main class="ms-main">
       <!-- ── HERO ── -->
       <section class="ms-hero">
-        <span class="ms-chip">{{ $tr('Universal Swarm Intelligence Engine', '通用群体智能引擎', { de: 'Universelle Schwarmintelligenz-Engine' }) }}</span>
+        <span class="ms-chip">{{ $tr('Your first result in under 10 minutes', '10 分钟内得到首个结果', { de: 'Dein erstes Ergebnis in unter 10 Minuten' }) }}</span>
 
         <div class="ms-hero-stage">
           <div class="ms-shark-wrap ms-float">

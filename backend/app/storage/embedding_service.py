@@ -164,8 +164,8 @@ class EmbeddingService:
         """HTTP POST with retry logic."""
         headers = {
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://github.com/aaronjmars/MiroShark",
-            "X-OpenRouter-Title": "MiroShark - Universal Swarm Intelligence Engine",
+            "HTTP-Referer": "https://www.miroshark.xyz/",
+            "X-OpenRouter-Title": "MiroShark - Simulate anything, for $1 & less than 10 min.",
             "X-OpenRouter-Categories": "roleplay,personal-agent",
             "User-Agent": "MiroShark/1.0 (EmbeddingService)",
         }

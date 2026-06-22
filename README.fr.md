@@ -21,7 +21,7 @@
 
 ---
 
-> **Simulez n'importe quoi, pour 1 $ et en moins de 10 min — un moteur d'intelligence en essaim universel**
+> **Simulez n'importe quoi, pour 1 $ et en moins de 10 min.**
 > Donnez-lui n'importe quoi — un communiqué de presse, un titre d'actualité, un projet de loi, une question sans réponse, une uchronie — et MiroShark fait émerger des centaines d'agents qui y réagissent heure par heure. Ils publient, débattent, échangent, changent d'avis.
 
 <p align="center">

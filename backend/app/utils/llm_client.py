@@ -149,8 +149,8 @@ class LLMClient:
             base_url=self.base_url,
             timeout=timeout,
             default_headers={
-                'HTTP-Referer': 'https://github.com/aaronjmars/MiroShark',
-                'X-OpenRouter-Title': 'MiroShark - Universal Swarm Intelligence Engine',
+                'HTTP-Referer': 'https://www.miroshark.xyz/',
+                'X-OpenRouter-Title': 'MiroShark - Simulate anything, for $1 & less than 10 min.',
                 'X-OpenRouter-Categories': 'roleplay,personal-agent',
                 'User-Agent': f'MiroShark/1.0 (LLMClient; model={self.model})',
             },

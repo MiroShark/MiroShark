@@ -1,7 +1,7 @@
 [project]
 name = "miroshark-backend"
 version = "0.1.0"
-description = "MiroShark - A Simple and Universal Swarm Intelligence Engine, Predicting Anything"
+description = "MiroShark - Simulate anything, for $1 & less than 10 min."
 requires-python = ">=3.11"
 license = { text = "AGPL-3.0" }
 authors = [

@@ -4,7 +4,7 @@ Guidance for AI coding agents (Claude Code and similar) working in this repo. Hu
 
 ## What MiroShark is
 
-A **Universal Swarm Intelligence Engine**: drop in a document (or just a question) and it spawns hundreds of grounded agents that post, argue, and trade across Twitter, Reddit, and a prediction market hour-by-hour, then writes a report citing what actually happened. One simulation runs for ~$1 in under 10 minutes. License is **AGPL-3.0** — keep contributions compatible.
+**Simulate anything, for $1 & less than 10 min.** Drop in a document (or just a question) and it spawns hundreds of grounded agents that post, argue, and trade across Twitter, Reddit, and a prediction market hour-by-hour, then writes a report citing what actually happened. One simulation runs for ~$1 in under 10 minutes. License is **AGPL-3.0** — keep contributions compatible.
 
 The simulation pipeline has five phases: **graph build → agent setup → simulation → report → interaction**. See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the engine, the cross-platform data flow, and the graph-memory ingestion/retrieval stack — read it before touching the simulation or memory code.
 

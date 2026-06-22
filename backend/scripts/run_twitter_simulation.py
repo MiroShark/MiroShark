@@ -469,8 +469,8 @@ class TwitterSimulationRunner:
             model_platform=ModelPlatformType.OPENAI,
             model_type=llm_model,
             default_headers={
-                'HTTP-Referer': 'https://github.com/aaronjmars/MiroShark',
-                'X-OpenRouter-Title': 'MiroShark - Universal Swarm Intelligence Engine',
+                'HTTP-Referer': 'https://www.miroshark.xyz/',
+                'X-OpenRouter-Title': 'MiroShark - Simulate anything, for $1 & less than 10 min.',
                 'X-OpenRouter-Categories': 'roleplay,personal-agent',
                 'User-Agent': f'MiroShark/1.0 (Wonderwall-Simulation; model={llm_model})',
             },

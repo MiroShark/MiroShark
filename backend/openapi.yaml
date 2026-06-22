@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: MiroShark HTTP API
   version: "1.0.0"
-  summary: Universal Swarm Intelligence Engine — REST surface for simulations, graphs, reports, sharing, and observability.
+  summary: Simulate anything, for $1 & less than 10 min — REST surface for simulations, graphs, reports, sharing, and observability.
   description: |
     The MiroShark backend is a Flask service that orchestrates large agent
     populations through Wonderwall, builds bi-temporal knowledge graphs in
