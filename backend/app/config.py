@@ -34,7 +34,7 @@ class Config:
     LLM_PROVIDER = os.environ.get('LLM_PROVIDER', 'openai')
     LLM_API_KEY = os.environ.get('LLM_API_KEY')
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
-    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME', 'xiaomi/mimo-v2.5')
+    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME') or 'xiaomi/mimo-v2.5'  # `or` so a blank LLM_MODEL_NAME= falls back instead of sending an empty model
 
     # Smart model — stronger model for intelligence-sensitive workflows
     # (report generation, ontology extraction, graph reasoning).
