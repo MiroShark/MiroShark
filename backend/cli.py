@@ -198,6 +198,36 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_cost(args: argparse.Namespace) -> int:
+    res = _api("GET", f"/api/simulation/{args.simulation_id}/cost.json")
+    # cost.json returns the cost payload directly on success; the error path
+    # (private 403 / not-ready 404 / server error) returns {"success": False}.
+    if res.get("success") is False or "estimated_cost_usd" not in res:
+        if res.get("_http_status") == 404:
+            _die(
+                "cost not available yet — the simulation has logged no LLM "
+                "calls (still running?).",
+                code=2,
+            )
+        _die(res.get("error", "cost lookup failed"))
+    if args.json:
+        _print_json(res)
+        return 0
+    usd = res.get("estimated_cost_usd", 0.0)
+    totals = res.get("totals") or {}
+    # A "~" prefix mirrors the EmbedView cost pill: the figure is a lower-bound
+    # estimate (models absent from the price table count as $0).
+    prefix = "~$" if res.get("is_estimate") else "$"
+    print(
+        f"{prefix}{usd:.4f}  "
+        f"({totals.get('tokens_total', 0):,} tokens, "
+        f"{totals.get('llm_calls', 0)} LLM calls)"
+    )
+    for row in res.get("by_phase") or []:
+        print(f"  {row.get('phase', '?'):<16} {prefix}{row.get('estimated_cost_usd', 0.0):.4f}")
+    return 0
+
+
 def cmd_health(args: argparse.Namespace) -> int:
     try:
         with urlrequest.urlopen(_base_url() + "/health", timeout=5) as resp:
@@ -257,6 +287,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_report = sub.add_parser("report", help="Show rendered analytical report.")
     p_report.add_argument("simulation_id")
     p_report.set_defaults(func=cmd_report)
+
+    p_cost = sub.add_parser("cost", help="Show estimated USD cost for a simulation.")
+    p_cost.add_argument("simulation_id")
+    p_cost.set_defaults(func=cmd_cost)
 
     p_trend = sub.add_parser("trending", help="Pull trending topics from RSS feeds.")
     p_trend.set_defaults(func=cmd_trending)

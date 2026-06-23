@@ -9,7 +9,7 @@ def test_build_parser_known_subcommands():
     p = cli.build_parser()
     # Parsing --help would exit, but we can inspect subparser choices.
     sub = [a for a in p._subparsers._group_actions if a.choices][0]
-    expected = {"ask", "list", "status", "frame", "publish", "report", "trending", "health"}
+    expected = {"ask", "list", "status", "frame", "publish", "report", "cost", "trending", "health"}
     assert expected.issubset(set(sub.choices.keys()))
 
 
@@ -32,3 +32,11 @@ def test_publish_unpublish_flag():
     p = cli.build_parser()
     args = p.parse_args(["publish", "sim_abc123", "--unpublish"])
     assert args.unpublish is True
+
+
+def test_cost_parses_positional():
+    p = cli.build_parser()
+    args = p.parse_args(["cost", "sim_abc123"])
+    assert args.cmd == "cost"
+    assert args.simulation_id == "sim_abc123"
+    assert args.func is cli.cmd_cost
