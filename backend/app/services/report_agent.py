@@ -9,6 +9,7 @@ Features:
 4. Support user conversations with autonomous retrieval tool calls
 """
 
+import contextvars
 import os
 import json
 import re
@@ -2128,7 +2129,8 @@ class ReportAgent:
         outline: ReportOutline,
         previous_sections: List[str],
         progress_callback: Optional[Callable[[str, int, str], None]] = None,
-        section_index: int = 0
+        section_index: int = 0,
+        trace_recorder=None,
     ) -> str:
         """
         Generate single section content using ReACT pattern
@@ -2152,14 +2154,20 @@ class ReportAgent:
         """
         logger.info(f"ReACT generating section: {section.title}")
 
+        # Use caller-supplied per-section recorder (parallel mode) or fall back
+        # to the shared instance (sequential callers). Never share _trace_recorder
+        # across threads — concurrent finalize_section() resets _current_section_uuid
+        # to None, causing every subsequent record_* call to warn and drop.
+        _tr = trace_recorder if trace_recorder is not None else self._trace_recorder
+
         # Record section start log
         if self.report_logger:
             self.report_logger.log_section_start(section.title, section_index)
 
         # Begin a new buffer on the reasoning-trace recorder
-        if self._trace_recorder is not None:
+        if _tr is not None:
             try:
-                self._trace_recorder.start_section(section.title, section_index)
+                _tr.start_section(section.title, section_index)
             except Exception as e:
                 logger.warning(f"reasoning-trace start_section failed: {e}")
         
@@ -2288,9 +2296,9 @@ class ReportAgent:
                 )
 
             # Record the agent's thought in the reasoning trace
-            if self._trace_recorder is not None and not has_final_answer:
+            if _tr is not None and not has_final_answer:
                 try:
-                    self._trace_recorder.record_thought(iteration + 1, response)
+                    _tr.record_thought(iteration + 1, response)
                 except Exception as e:
                     logger.debug(f"reasoning-trace record_thought failed: {e}")
 
@@ -2322,9 +2330,9 @@ class ReportAgent:
                         content=final_answer,
                         tool_calls_count=tool_calls_count
                     )
-                if self._trace_recorder is not None:
+                if _tr is not None:
                     try:
-                        self._trace_recorder.finalize_section(final_answer)
+                        _tr.finalize_section(final_answer)
                     except Exception as e:
                         logger.debug(f"reasoning-trace finalize_section failed: {e}")
                 return final_answer
@@ -2358,9 +2366,9 @@ class ReportAgent:
                     )
 
                 # Persist the tool call into the reasoning trace
-                if self._trace_recorder is not None:
+                if _tr is not None:
                     try:
-                        self._trace_recorder.record_tool_call(
+                        _tr.record_tool_call(
                             iteration + 1,
                             call["name"],
                             call.get("parameters", {}),
@@ -2384,9 +2392,9 @@ class ReportAgent:
                     )
 
                 # Persist the observation (tool output) into the reasoning trace
-                if self._trace_recorder is not None:
+                if _tr is not None:
                     try:
-                        self._trace_recorder.record_observation(iteration + 1, result)
+                        _tr.record_observation(iteration + 1, result)
                     except Exception as e:
                         logger.debug(f"reasoning-trace record_observation failed: {e}")
 
@@ -2443,13 +2451,13 @@ class ReportAgent:
                     content=final_answer,
                     tool_calls_count=tool_calls_count
                 )
-            if self._trace_recorder is not None:
+            if _tr is not None:
                 try:
-                    self._trace_recorder.finalize_section(final_answer)
+                    _tr.finalize_section(final_answer)
                 except Exception as e:
                     logger.debug(f"reasoning-trace finalize_section failed: {e}")
             return final_answer
-        
+
         # Reached maximum iterations, force content generation
         logger.warning(f"Section {section.title} reached maximum iterations, forcing generation")
         messages.append({"role": "user", "content": REACT_FORCE_FINAL_MSG})
@@ -2477,9 +2485,9 @@ class ReportAgent:
                 content=final_answer,
                 tool_calls_count=tool_calls_count
             )
-        if self._trace_recorder is not None:
+        if _tr is not None:
             try:
-                self._trace_recorder.finalize_section(final_answer)
+                _tr.finalize_section(final_answer)
             except Exception as e:
                 logger.debug(f"reasoning-trace finalize_section failed: {e}")
         return final_answer
@@ -2658,6 +2666,21 @@ class ReportAgent:
             def _generate_one(idx: int, section: ReportSection) -> tuple[int, str, str]:
                 """Runs in a worker thread. Returns (idx, title, content)."""
                 section_num = idx + 1
+                # Give each thread its own ReasoningTraceRecorder so concurrent
+                # start_section / finalize_section calls don't race on shared state.
+                per_section_recorder = None
+                if self._trace_recorder is not None:
+                    try:
+                        storage = getattr(self.graph_tools, "storage", None)
+                        if storage and hasattr(storage, "create_reasoning_recorder"):
+                            per_section_recorder = storage.create_reasoning_recorder(
+                                report_id=report_id,
+                                graph_id=self.graph_id,
+                                simulation_id=self.simulation_id,
+                                report_title=f"Simulation {self.simulation_id}",
+                            )
+                    except Exception:
+                        pass
                 try:
                     with use_locale(_active_report_locale):
                         content = self._generate_section_react(
@@ -2666,6 +2689,7 @@ class ReportAgent:
                             previous_sections=[],  # parallel: sections don't see each other
                             progress_callback=None,  # per-section granular progress lost in parallel; overall reported below
                             section_index=section_num,
+                            trace_recorder=per_section_recorder,
                         )
                 except Exception as e:
                     logger.error(f"Section {section_num} ({section.title}) failed: {e}")
@@ -2687,10 +2711,16 @@ class ReportAgent:
                 completed_sections=completed_section_titles,
             )
 
+            # Propagate the current contextvars context (includes _active_locale)
+            # into each worker thread. ThreadPoolExecutor workers do not inherit
+            # contextvars automatically in Python < 3.12.
+            # A fresh copy_context() per submission is required — a single Context
+            # object cannot be entered concurrently from multiple threads and raises
+            # "cannot enter context: … is already entered" if shared.
             workers = min(self.MAX_PARALLEL_SECTIONS, total_sections)
             with ThreadPoolExecutor(max_workers=workers) as ex:
                 futures = {
-                    ex.submit(_generate_one, i, section): (i, section)
+                    ex.submit(contextvars.copy_context().run, _generate_one, i, section): (i, section)
                     for i, section in enumerate(outline.sections)
                 }
                 for fut in as_completed(futures):

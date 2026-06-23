@@ -26,6 +26,7 @@ from camel.prompts import TextPrompt
 from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
 
+from app.utils.i18n import get_active_locale, t as _t
 from wonderwall.social_agent.agent_action import SocialAction
 from wonderwall.social_agent.agent_environment import SocialEnvironment
 from wonderwall.social_platform import Channel
@@ -252,13 +253,23 @@ class SocialAgent(ChatAgent):
     async def perform_action_by_llm(self):
         # Get environment observation:
         env_prompt = await self.env.to_text_prompt()
+        locale = get_active_locale()
+        lang_reminder = _t(
+            "IMPORTANT: Perform all actions in English and write all content exclusively in English.",
+            zh="重要：用中文执行所有操作，并用中文编写所有内容。",
+            locale=locale,
+            de="WICHTIG: Führe alle Aktionen auf Deutsch durch und schreibe alle Inhalte ausschließlich auf Deutsch.",
+            fr="IMPORTANT : Effectue toutes les actions en français et écris tous les contenus uniquement en français.",
+        )
+        lang_suffix = f"\n\n{lang_reminder}"
         user_msg = BaseMessage.make_user_message(
             role_name="User",
             content=(
                 f"Please perform actions after observing the "
                 f"platform environment. Use the available tools to take "
                 f"action. Don't limit yourself to just one type of action. "
-                f"Here is your current environment: {env_prompt}"))
+                f"Here is your current environment: {env_prompt}"
+                f"{lang_suffix}"))
         try:
             agent_log.info(
                 f"Agent {self.social_agent_id} observing environment: "
