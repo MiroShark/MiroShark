@@ -6,12 +6,19 @@ services:
     container_name: miroshark-neo4j
     environment:
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?NEO4J_PASSWORD must be set in .env}
+      - NEO4J_server_jvm_additional=--add-modules jdk.incubator.vector
     ports:
       - "7474:7474"
       - "7687:7687"
     volumes:
       - neo4j_data:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:7474/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   ollama:
     image: ollama/ollama:latest
@@ -42,12 +49,16 @@ services:
       - "3000:3000"
       - "5001:5001"
     depends_on:
-      - neo4j
-      - ollama
+      neo4j:
+        condition: service_healthy
+      ollama:
+        condition: service_started
     restart: unless-stopped
     volumes:
       - ./backend/uploads:/app/backend/uploads
+      - hf_cache:/root/.cache/huggingface
 
 volumes:
   neo4j_data:
   ollama_data:
+  hf_cache:

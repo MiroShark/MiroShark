@@ -234,13 +234,13 @@ class SimulationConfigGenerator:
     # Maximum context character count
     MAX_CONTEXT_LENGTH = 50000
     # Number of Agents per batch — keep small to avoid JSON truncation with local LLMs
-    AGENTS_PER_BATCH = 15
+    AGENTS_PER_BATCH = 7
 
     # Context truncation lengths for each step (characters)
     TIME_CONFIG_CONTEXT_LENGTH = 10000   # Time configuration
     EVENT_CONFIG_CONTEXT_LENGTH = 8000   # Event configuration
-    ENTITY_SUMMARY_LENGTH = 300          # Entity summary
-    AGENT_SUMMARY_LENGTH = 300           # Entity summary in Agent configuration
+    ENTITY_SUMMARY_LENGTH = 500          # Entity summary
+    AGENT_SUMMARY_LENGTH = 500           # Entity summary in Agent configuration
     ENTITIES_PER_TYPE_DISPLAY = 20       # Number of entities displayed per type
 
     def __init__(
@@ -756,13 +756,15 @@ Return JSON format (no markdown):
         if not event_config.initial_posts:
             return event_config
 
-        # Build agent index by entity type
+        # Build agent indices by entity type and by entity name
         agents_by_type: Dict[str, List[AgentActivityConfig]] = {}
+        agents_by_name: Dict[str, AgentActivityConfig] = {}
         for agent in agent_configs:
             etype = agent.entity_type.lower()
             if etype not in agents_by_type:
                 agents_by_type[etype] = []
             agents_by_type[etype].append(agent)
+            agents_by_name[agent.entity_name.lower()] = agent
 
         # Type alias mapping (handle different formats LLM might output)
         type_aliases = {
@@ -787,14 +789,18 @@ Return JSON format (no markdown):
             # Try to find matching agent
             matched_agent_id = None
 
-            # 1. Direct match
+            # 1. Direct type match
             if poster_type in agents_by_type:
                 agents = agents_by_type[poster_type]
                 idx = used_indices.get(poster_type, 0) % len(agents)
                 matched_agent_id = agents[idx].agent_id
                 used_indices[poster_type] = idx + 1
+            # 2. Name match — LLM sometimes outputs the entity name instead of type
+            elif poster_type in agents_by_name:
+                agent = agents_by_name[poster_type]
+                matched_agent_id = agent.agent_id
             else:
-                # 2. Use alias matching
+                # 3. Use alias matching
                 for alias_key, aliases in type_aliases.items():
                     if poster_type in aliases or alias_key == poster_type:
                         for alias in aliases:
@@ -807,7 +813,7 @@ Return JSON format (no markdown):
                     if matched_agent_id is not None:
                         break
 
-            # 3. If still not found, use agent with highest influence
+            # 4. If still not found, use agent with highest influence
             if matched_agent_id is None:
                 logger.warning(f"No matching Agent found for type '{poster_type}', using agent with highest influence")
                 if agent_configs:

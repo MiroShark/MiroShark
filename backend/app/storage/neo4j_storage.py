@@ -70,13 +70,28 @@ class Neo4jStorage(GraphStorage):
         self._driver.close()
 
     def _ensure_schema(self):
-        """Create indexes and constraints if they don't exist."""
-        with self._driver.session() as session:
-            for query in neo4j_schema.get_all_schema_queries():
-                try:
-                    session.run(query)
-                except Exception as e:
-                    logger.warning(f"Schema query warning (may already exist): {e}")
+        """Create indexes and constraints if they don't exist.
+
+        Retries with backoff because Neo4j may accept Bolt connections before its
+        index subsystem is fully ready (common on fresh container start).
+        """
+        max_attempts = 5
+        for attempt in range(max_attempts):
+            failures = []
+            with self._driver.session() as session:
+                for query in neo4j_schema.get_all_schema_queries():
+                    try:
+                        session.run(query).consume()
+                    except Exception as e:
+                        failures.append(e)
+                        logger.warning("Schema query failed (attempt %d): %s", attempt + 1, e)
+            if not failures:
+                return
+            if attempt < max_attempts - 1:
+                delay = 2 ** attempt
+                logger.info("Schema creation had %d failure(s); retrying in %ds…", len(failures), delay)
+                time.sleep(delay)
+        logger.error("Schema creation still failing after %d attempts; indexes may be missing", max_attempts)
 
     # ----------------------------------------------------------------
     # Retry wrapper

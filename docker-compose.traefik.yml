@@ -4,12 +4,19 @@ services:
     container_name: miroshark-neo4j
     environment:
       - NEO4J_AUTH=neo4j/${NEO4J_PASSWORD:?NEO4J_PASSWORD must be set in .env}
+      - NEO4J_server_jvm_additional=--add-modules jdk.incubator.vector
     ports:
       - "7474:7474"
       - "7687:7687"
     volumes:
       - neo4j_data:/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "--quiet", "http://localhost:7474/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - miroshark
 
@@ -23,7 +30,8 @@ services:
       NEO4J_URI: bolt://neo4j:7687
     # Host ports optional — Traefik routes :3000 (UI) and :5001 (API)
     depends_on:
-      - neo4j
+      neo4j:
+        condition: service_healthy
     restart: unless-stopped
     labels:
       - traefik.enable=true
@@ -60,6 +68,7 @@ services:
     volumes:
       - ./backend/uploads:/app/backend/uploads
       - ./backend/logs:/app/backend/logs
+      - hf_cache:/root/.cache/huggingface
     networks:
       - miroshark
       - docker-proxynet
@@ -67,6 +76,7 @@ services:
 
 volumes:
   neo4j_data:
+  hf_cache:
 
 networks:
   miroshark:

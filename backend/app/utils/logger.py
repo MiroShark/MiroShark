@@ -81,11 +81,13 @@ def setup_logger(name: str = 'miroshark', level: int = logging.DEBUG) -> logging
     except OSError as e:
         print(f"[logger] File logging disabled ({e}); console only", file=sys.stderr)
 
-    # 2. Console handler - concise logs (INFO and above)
-    # Ensure UTF-8 encoding on Windows to avoid character encoding issues
+    # 2. Console handler - concise logs (INFO and above by default, or
+    # MIROSHARK_LOG_LEVEL if set — lets docker compose logs show DEBUG output)
     _ensure_utf8_stdout()
+    _env_level = os.environ.get('MIROSHARK_LOG_LEVEL', 'info').upper()
+    _console_level = getattr(logging, _env_level, logging.INFO)
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(_console_level)
     console_handler.setFormatter(simple_formatter)
 
     if file_handler is not None:

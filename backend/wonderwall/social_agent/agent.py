@@ -234,6 +234,11 @@ class SocialAgent(ChatAgent):
             except Exception:
                 pass
 
+        # CAMEL dropped `num_tokens` from _aget_model_response in newer versions
+        # (present in 0.2.x local .venv/py3.12, gone in Docker py3.14 build).
+        # Pop it here so we never pass an unexpected kwarg to super().
+        kwargs.pop("num_tokens", None)
+
         start = _time.time()
         error_msg = None
         result = None

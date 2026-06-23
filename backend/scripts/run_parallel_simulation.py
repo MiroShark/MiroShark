@@ -2368,6 +2368,16 @@ async def run_synchronized_simulation(
         )
         await twitter_result.env.reset()
         log_info("[Twitter] Environment ready")
+        try:
+            from wonderwall.social_platform.recsys import get_twhin_tokenizer, get_twhin_model
+            import torch as _torch
+            _device = 'cuda' if _torch.cuda.is_available() else 'cpu'
+            log_info("[Twitter] Loading twhin-bert-base recommendation model…")
+            get_twhin_tokenizer()
+            get_twhin_model(_device)
+            log_info("[Twitter] twhin-bert-base ready")
+        except Exception as _e:
+            log_info(f"[Twitter] twhin-bert pre-warm failed (non-fatal): {_e}")
 
     if has_reddit:
         reddit_result = PlatformSimulation()
