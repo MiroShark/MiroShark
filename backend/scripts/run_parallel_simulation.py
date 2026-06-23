@@ -1111,11 +1111,21 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
     if llm_base_url:
         os.environ["OPENAI_API_BASE_URL"] = llm_base_url
     
-    print(f"{config_label} model={llm_model}, base_url={llm_base_url[:40] if llm_base_url else 'default'}...")
-    
+    # When a thinking model is configured, the model spends its default token
+    # budget on the <think> block and has nothing left for the tool-call JSON.
+    # Explicitly set max_tokens = base response budget + thinking budget so
+    # CAMEL always has enough headroom for the actual response.
+    thinking_budget = int(os.environ.get("THINKING_BUDGET_TOKENS", "0"))
+    model_config_dict = {}
+    if thinking_budget > 0:
+        model_config_dict["max_tokens"] = 4096 + thinking_budget
+
+    print(f"{config_label} model={llm_model}, base_url={llm_base_url[:40] if llm_base_url else 'default'}, max_tokens={model_config_dict.get('max_tokens', 'default')}...")
+
     return ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
         model_type=llm_model,
+        model_config_dict=model_config_dict or None,
         default_headers={
             'HTTP-Referer': 'https://www.miroshark.xyz/',
             'X-OpenRouter-Title': 'MiroShark - Simulate anything, for $1 & less than 10 min.',

@@ -58,6 +58,7 @@ class NERExtractor:
                     messages=messages,
                     temperature=0.1,  # Low temp for extraction precision
                     max_tokens=4096,
+                    repair_truncated=True,
                 )
                 return self._validate_and_clean(result, ontology)
 

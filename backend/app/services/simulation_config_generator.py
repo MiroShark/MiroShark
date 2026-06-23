@@ -503,6 +503,11 @@ class SimulationConfigGenerator:
                     response_format={"type": "json_object"},
                 )
 
+                if content is None:
+                    logger.warning(f"LLM returned empty response (attempt {attempt+1}), retrying")
+                    last_error = ValueError("LLM returned empty response")
+                    continue
+
                 # Try to parse JSON
                 try:
                     return json.loads(content)

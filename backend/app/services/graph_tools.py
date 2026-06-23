@@ -1049,26 +1049,41 @@ class GraphToolsService:
             query=query,
         )
 
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ]
         try:
             response = self.fast_llm.chat_json(
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.3
+                messages=messages,
+                temperature=0.3,
+                repair_truncated=True,
             )
-
             sub_queries = response.get("sub_queries", [])
-            return [str(sq) for sq in sub_queries[:max_queries]]
-
+            if sub_queries:
+                return [str(sq) for sq in sub_queries[:max_queries]]
         except Exception as e:
-            logger.warning(f"Failed to generate sub-questions: {str(e)}, using default sub-questions")
-            return [
-                query,
-                f"Main participants in {query}",
-                f"Causes and impacts of {query}",
-                f"Development process of {query}"
-            ][:max_queries]
+            logger.debug(f"Sub-question JSON parse failed ({e}), trying plain-text parse")
+
+        # Fallback: the model returned a numbered/bulleted plain-text list
+        # instead of JSON (common with thinking models). Extract lines.
+        try:
+            raw = self.fast_llm.chat(messages=messages, temperature=0.3)
+            if raw:
+                import re as _re
+                lines = [
+                    _re.sub(r'^[\d]+[\.\)]\s*|\*+\s*|-\s*', '', ln).strip()
+                    for ln in raw.splitlines()
+                    if ln.strip() and not ln.strip().startswith('#')
+                ]
+                candidates = [ln for ln in lines if len(ln) > 10]
+                if candidates:
+                    logger.debug(f"Extracted {len(candidates)} sub-questions from plain-text response")
+                    return candidates[:max_queries]
+        except Exception as e2:
+            logger.warning(f"Failed to generate sub-questions: {e2}")
+
+        return [query][:max_queries]
 
     def panorama_search(
         self,
@@ -1793,13 +1808,14 @@ class GraphToolsService:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.5
+                temperature=0.5,
+                repair_truncated=True,
             )
 
             return response.get("questions", [default_q])
 
         except Exception as e:
-            logger.warning(f"Failed to generate interview questions: {e}")
+            logger.debug(f"Failed to generate interview questions (using defaults): {e}")
             return [
                 default_q,
                 get_prompt("graph_tools.interview_questions_default_impact", locale),

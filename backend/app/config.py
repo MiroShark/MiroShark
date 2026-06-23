@@ -191,6 +191,13 @@ class Config:
     # Silently no-ops for non-Anthropic models.
     LLM_PROMPT_CACHING_ENABLED = os.environ.get('LLM_PROMPT_CACHING_ENABLED', 'true').lower() == 'true'
 
+    # Extra token budget added transparently to every API call for thinking/reasoning
+    # models (e.g. deepseek-v4-flash, Qwen3) whose <think> blocks consume tokens
+    # from the same max_tokens pool as the actual response. Callers continue to
+    # specify only their response budget; LLMClient adds this value so both fit.
+    # 0 = safe default for non-thinking models (no change in behaviour).
+    THINKING_BUDGET_TOKENS = int(os.environ.get('THINKING_BUDGET_TOKENS', '0'))
+
     # Disable chain-of-thought on reasoning-capable OpenRouter models by default.
     # Passes `reasoning: {enabled: false}` in extra_body — huge latency win
     # (~3x on Qwen3-Flash, ~3x on Gemini-3-Flash) and zero-op on models that
@@ -305,5 +312,14 @@ class Config:
             errors.append("NEO4J_URI is not configured")
         if not cls.NEO4J_PASSWORD:
             errors.append("NEO4J_PASSWORD is not configured")
+        if cls.THINKING_BUDGET_TOKENS > 0 and cls.LLM_DISABLE_REASONING:
+            import warnings
+            warnings.warn(
+                "THINKING_BUDGET_TOKENS is set but LLM_DISABLE_REASONING=true (default) "
+                "will suppress <think> blocks via reasoning:{enabled:false} — the extra "
+                "token budget is wasted. Set LLM_DISABLE_REASONING=false to use thinking "
+                "models, or remove THINKING_BUDGET_TOKENS for non-thinking models.",
+                stacklevel=2,
+            )
         return errors
 

@@ -169,6 +169,7 @@ class ContradictionDetector:
                 messages=[{"role": "user", "content": prompt}],
                 temperature=0.0,
                 max_tokens=512,
+                repair_truncated=True,
             )
             raw = response.get("results", {}) if isinstance(response, dict) else {}
         except Exception as e:

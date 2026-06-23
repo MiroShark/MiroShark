@@ -75,7 +75,13 @@ def _isolate_and_parse(text: str) -> Any:
     try:
         return json.loads(json_str)
     except json.JSONDecodeError:
+        # Strip remaining control characters (raw newlines not inside strings,
+        # stray NUL bytes, etc.) and fix invalid backslash escapes such as
+        # Windows paths (\U, \n used as path sep) or LaTeX (\f, \p, \.).
+        # Valid JSON escapes after \ are: " \ / b f n r t u — anything else
+        # is replaced with \\ so the parser sees an escaped backslash instead.
         json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', ' ', json_str)
+        json_str = re.sub(r'\\(?!["\\/bfnrtu])', r'\\\\', json_str)
         json_str = re.sub(r'\s+', ' ', json_str)
         return json.loads(json_str)  # raises JSONDecodeError on failure
 

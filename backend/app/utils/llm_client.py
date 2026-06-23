@@ -158,6 +158,8 @@ class LLMClient:
 
         # Ollama context window size — prevents prompt truncation.
         self._num_ctx = int(os.environ.get('OLLAMA_NUM_CTX', '8192'))
+        # Extra tokens reserved for <think> blocks on reasoning-capable models.
+        self._thinking_budget = Config.THINKING_BUDGET_TOKENS
 
     def _is_ollama(self) -> bool:
         """Check if we're talking to an Ollama server."""
@@ -284,11 +286,13 @@ class LLMClient:
             else messages
         )
 
+        effective_max_tokens = max_tokens + self._thinking_budget
+
         kwargs = {
             "model": self.model,
             "messages": effective_messages,
             "temperature": temperature,
-            "max_tokens": max_tokens,
+            "max_tokens": effective_max_tokens,
         }
 
         if response_format:
@@ -387,7 +391,19 @@ class LLMClient:
             self._emit_llm_event(messages, None, t0, response=response, temperature=temperature)
             return None
         # Some models (e.g., MiniMax M2.5) include <think> reasoning content in the content field, which needs to be removed
-        content = re.sub(r'<think>[\s\S]*?</think>', '', content).strip()
+        content = re.sub(r'<think>[\s\S]*?</think>', '', content)
+        # Also strip unclosed <think> blocks: when the response is truncated before
+        # </think> the regex above won't match, leaving raw <think>... as the payload.
+        content = re.sub(r'<think>[\s\S]*$', '', content)
+        content = content.strip()
+        # Thinking models sometimes emit only a <think> block with no actual
+        # response after it (the model "exhausted" its work inside the thinking
+        # block). Treat that as an empty response so callers' retry / fallback
+        # logic engages — an empty string would otherwise reach json.loads and
+        # produce a cryptic "Invalid JSON format returned by LLM: " error.
+        if not content:
+            self._emit_llm_event(messages, None, t0, response=response, temperature=temperature)
+            return None
 
         self._emit_llm_event(messages, content, t0, response=response, temperature=temperature)
         return content

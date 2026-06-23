@@ -679,6 +679,11 @@ class WonderwallProfileGenerator:
                     response_format={"type": "json_object"},
                 )
 
+                if content is None:
+                    logger.warning(f"LLM returned empty response (attempt {attempt+1}), skipping to fallback")
+                    last_error = ValueError("LLM returned empty response")
+                    continue
+
                 # Try to parse JSON
                 try:
                     result = json.loads(content)
