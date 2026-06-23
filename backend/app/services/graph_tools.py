@@ -1083,7 +1083,14 @@ class GraphToolsService:
         except Exception as e2:
             logger.warning(f"Failed to generate sub-questions: {e2}")
 
-        return [query][:max_queries]
+        # Total failure: fall back to the semantic default fan-out rather than a
+        # single bare query, so breadth search still explores participants/causes/process.
+        return [
+            query,
+            f"Main participants in {query}",
+            f"Causes and impacts of {query}",
+            f"Development process of {query}"
+        ][:max_queries]
 
     def panorama_search(
         self,
