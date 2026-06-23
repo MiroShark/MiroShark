@@ -537,18 +537,27 @@ class SimulationRunner:
                     completed_at=state.completed_at,
                 )
             else:
-                state.runner_status = RunnerStatus.FAILED
-                # Read error info from main log file
-                main_log_path = os.path.join(sim_dir, "simulation.log")
-                error_info = ""
-                try:
-                    if os.path.exists(main_log_path):
-                        with open(main_log_path, 'r', encoding='utf-8') as f:
-                            error_info = f.read()[-2000:]  # Take last 2000 characters
-                except (OSError, UnicodeDecodeError) as e:
-                    logger.debug(f"Could not read error info from {main_log_path}: {e}")
-                state.error = f"Process exit code: {exit_code}, error: {error_info}"
-                logger.error(f"Simulation failed: {simulation_id}, error={state.error}")
+                # An intentional stop (via stop_simulation()) already set the
+                # status to STOPPED/STOPPING before sending SIGKILL.  Don't
+                # overwrite that with FAILED just because the exit code is -9.
+                if state.runner_status in (RunnerStatus.STOPPED, RunnerStatus.STOPPING):
+                    logger.info(
+                        f"Simulation process exited with code {exit_code} after "
+                        f"intentional stop: {simulation_id}"
+                    )
+                else:
+                    state.runner_status = RunnerStatus.FAILED
+                    # Read error info from main log file
+                    main_log_path = os.path.join(sim_dir, "simulation.log")
+                    error_info = ""
+                    try:
+                        if os.path.exists(main_log_path):
+                            with open(main_log_path, 'r', encoding='utf-8') as f:
+                                error_info = f.read()[-2000:]  # Take last 2000 characters
+                    except (OSError, UnicodeDecodeError) as e:
+                        logger.debug(f"Could not read error info from {main_log_path}: {e}")
+                    state.error = f"Process exit code: {exit_code}, error: {error_info}"
+                    logger.error(f"Simulation failed: {simulation_id}, error={state.error}")
 
                 # Same fan-out for the failure path — operators want to know either way.
                 _fan_out_notifications(
@@ -792,7 +801,7 @@ class SimulationRunner:
         return twitter_enabled or reddit_enabled or polymarket_enabled
     
     @classmethod
-    def _terminate_process(cls, process: subprocess.Popen, simulation_id: str, timeout: int = 10):
+    def _terminate_process(cls, process: subprocess.Popen, simulation_id: str, timeout: int = 30):
         """
         Cross-platform termination of process and its child processes
         

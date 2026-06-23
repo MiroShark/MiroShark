@@ -130,7 +130,16 @@ class Platform:
             message_id, data = await self.channel.receive_from()
 
             agent_id, message, action = data
-            action = ActionType(action)
+            try:
+                action = ActionType(action)
+            except ValueError:
+                # Unknown action type — reply with an error so the caller's
+                # perform_action doesn't hang forever, then keep the loop alive.
+                import logging as _logging
+                _logging.getLogger(__name__).error(
+                    f"platform.running: unknown action type {action!r}")
+                await self.channel.send_to((message_id, agent_id, None))
+                continue
 
             if action == ActionType.EXIT:
                 # If the database is in-memory, save it to a file before
@@ -146,31 +155,43 @@ class Platform:
 
             # Retrieve the corresponding function using getattr
             action_function = getattr(self, action.value, None)
-            if action_function:
-                # Get the names of the parameters of the function
-                func_code = action_function.__code__
-                param_names = func_code.co_varnames[:func_code.co_argcount]
+            try:
+                if action_function:
+                    # Get the names of the parameters of the function
+                    func_code = action_function.__code__
+                    param_names = func_code.co_varnames[:func_code.co_argcount]
 
-                len_param_names = len(param_names)
-                if len_param_names > 3:
-                    raise ValueError(
-                        f"Functions with {len_param_names} parameters are not "
-                        f"supported.")
-                # Build a dictionary of parameters
-                params = {}
-                if len_param_names >= 2:
-                    params["agent_id"] = agent_id
-                if len_param_names == 3:
-                    # Assuming the second element in param_names is the name
-                    # of the second parameter you want to add
-                    second_param_name = param_names[2]
-                    params[second_param_name] = message
+                    len_param_names = len(param_names)
+                    if len_param_names > 3:
+                        raise ValueError(
+                            f"Functions with {len_param_names} parameters are not "
+                            f"supported.")
+                    # Build a dictionary of parameters
+                    params = {}
+                    if len_param_names >= 2:
+                        params["agent_id"] = agent_id
+                    if len_param_names == 3:
+                        # Assuming the second element in param_names is the name
+                        # of the second parameter you want to add
+                        second_param_name = param_names[2]
+                        params[second_param_name] = message
 
-                # Call the function with the parameters
-                result = await action_function(**params)
-                await self.channel.send_to((message_id, agent_id, result))
-            else:
-                raise ValueError(f"Action {action} is not supported")
+                    # Call the function with the parameters
+                    result = await action_function(**params)
+                    await self.channel.send_to((message_id, agent_id, result))
+                else:
+                    raise ValueError(f"Action {action} is not supported")
+            except Exception as _exc:
+                import logging as _logging
+                _logging.getLogger(__name__).error(
+                    f"platform.running: error handling action {action!r}: {_exc}",
+                    exc_info=True,
+                )
+                # Send None back so perform_action unblocks rather than hanging.
+                try:
+                    await self.channel.send_to((message_id, agent_id, None))
+                except Exception:
+                    pass
 
     def run(self):
         asyncio.run(self.running())

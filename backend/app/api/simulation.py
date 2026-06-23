@@ -190,6 +190,20 @@ def _ensure_env_alive(simulation_id: str) -> bool:
         return False
 
     try:
+        # If a previous process crashed and left a stale RUNNING/STARTING state,
+        # reset it — we already know the env is not alive, so the state is stale.
+        existing_state = SimulationRunner.get_run_state(simulation_id)
+        if existing_state and existing_state.runner_status in [
+            RunnerStatus.RUNNING, RunnerStatus.STARTING, RunnerStatus.STOPPING
+        ]:
+            logger.info(
+                f"Resetting stale run state for {simulation_id} "
+                f"(was {existing_state.runner_status.value}) before env-only restart"
+            )
+            existing_state.runner_status = RunnerStatus.FAILED
+            existing_state.error = "Process died unexpectedly; restarting in env-only mode for interviews"
+            SimulationRunner._save_run_state(existing_state)
+
         SimulationRunner.start_simulation(
             simulation_id=simulation_id,
             platform='parallel',
@@ -8492,8 +8506,8 @@ def interview_agent():
         agent_id = data.get('agent_id')
         prompt = data.get('prompt')
         platform = data.get('platform')  # Optional: twitter/reddit/None
-        timeout = data.get('timeout', 60)
-        
+        timeout = data.get('timeout', 240)
+
         if agent_id is None:
             return jsonify({
                 "success": False,
@@ -8529,6 +8543,7 @@ def interview_agent():
                     "Simulation environment could not be started. Please try again.",
                     "无法启动模拟环境,请重试。",
                     locale,
+                    de="Die Simulationsumgebung konnte nicht gestartet werden. Bitte versuche es erneut.",
                 )
             }), 400
 
@@ -8543,23 +8558,28 @@ def interview_agent():
             timeout=timeout
         )
 
+        if not result.get("success"):
+            return jsonify({
+                "success": False,
+                "error": result.get("error") or _t("Interview failed", "访谈失败", locale, de="Interviewanfrage fehlgeschlagen"),
+            }), 400
         return jsonify({
-            "success": result.get("success", False),
+            "success": True,
             "data": result
         })
-        
+
     except ValueError as e:
         return jsonify({
             "success": False,
             "error": str(e)
         }), 400
-        
+
     except TimeoutError as e:
         return jsonify({
             "success": False,
             "error": f"Timed out waiting for interview response: {str(e)}"
         }), 504
-        
+
     except Exception as e:
         logger.error(f"Interview failed: {str(e)}")
         return jsonify({
@@ -8622,7 +8642,7 @@ def interview_agents_batch():
             return err
         interviews = data.get('interviews')
         platform = data.get('platform')  # Optional: twitter/reddit/None
-        timeout = data.get('timeout', 120)
+        timeout = data.get('timeout', 240)
 
         if not interviews or not isinstance(interviews, list):
             return jsonify({
@@ -8685,6 +8705,7 @@ def interview_agents_batch():
                     "Simulation environment could not be started. Please try again.",
                     "无法启动模拟环境,请重试。",
                     locale,
+                    de="Die Simulationsumgebung konnte nicht gestartet werden. Bitte versuche es erneut.",
                 )
             }), 400
 
@@ -8702,8 +8723,13 @@ def interview_agents_batch():
             timeout=timeout
         )
 
+        if not result.get("success"):
+            return jsonify({
+                "success": False,
+                "error": result.get("error") or _t("Interview failed", "访谈失败", locale, de="Interviewanfrage fehlgeschlagen"),
+            }), 400
         return jsonify({
-            "success": result.get("success", False),
+            "success": True,
             "data": result
         })
 

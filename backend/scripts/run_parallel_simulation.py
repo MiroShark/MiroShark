@@ -522,7 +522,9 @@ class ParallelIPCHandler:
                 reddit_interviews.extend(both_platforms_interviews)
         
         results = {}
-        
+        twitter_error: str | None = None
+        reddit_error: str | None = None
+
         # Process Twitter platform interviews
         if twitter_interviews and self.twitter_env:
             try:
@@ -538,18 +540,27 @@ class ParallelIPCHandler:
                         )
                     except Exception as e:
                         print(f"  Warning: Unable to get Twitter Agent {agent_id}: {e}")
-                
+
                 if twitter_actions:
-                    await self.twitter_env.step(twitter_actions)
-                    
+                    print(f"  Twitter: starting {len(twitter_actions)} interview(s)...")
+                    await asyncio.wait_for(
+                        self.twitter_env.step(twitter_actions),
+                        timeout=220,
+                    )
+                    print(f"  Twitter: env.step() completed")
+
                     for interview in twitter_interviews:
                         agent_id = interview.get("agent_id")
                         result = self._get_interview_result(agent_id, "twitter")
                         result["platform"] = "twitter"
                         results[f"twitter_{agent_id}"] = result
+            except asyncio.TimeoutError:
+                twitter_error = "Twitter interview timed out after 220 s (thinking-model LLM too slow)"
+                print(f"  Twitter batch Interview timed out")
             except Exception as e:
+                twitter_error = str(e)
                 print(f"  Twitter batch Interview failed: {e}")
-        
+
         # Process Reddit platform interviews
         if reddit_interviews and self.reddit_env:
             try:
@@ -565,18 +576,27 @@ class ParallelIPCHandler:
                         )
                     except Exception as e:
                         print(f"  Warning: Unable to get Reddit Agent {agent_id}: {e}")
-                
+
                 if reddit_actions:
-                    await self.reddit_env.step(reddit_actions)
-                    
+                    print(f"  Reddit: starting {len(reddit_actions)} interview(s)...")
+                    await asyncio.wait_for(
+                        self.reddit_env.step(reddit_actions),
+                        timeout=220,
+                    )
+                    print(f"  Reddit: env.step() completed")
+
                     for interview in reddit_interviews:
                         agent_id = interview.get("agent_id")
                         result = self._get_interview_result(agent_id, "reddit")
                         result["platform"] = "reddit"
                         results[f"reddit_{agent_id}"] = result
+            except asyncio.TimeoutError:
+                reddit_error = "Reddit interview timed out after 220 s (thinking-model LLM too slow)"
+                print(f"  Reddit batch Interview timed out")
             except Exception as e:
+                reddit_error = str(e)
                 print(f"  Reddit batch Interview failed: {e}")
-        
+
         if results:
             self.send_response(command_id, "completed", result={
                 "interviews_count": len(results),
@@ -585,7 +605,9 @@ class ParallelIPCHandler:
             print(f"  Batch Interview completed: {len(results)} Agents")
             return True
         else:
-            self.send_response(command_id, "failed", error="No successful interviews")
+            error_parts = [e for e in [twitter_error, reddit_error] if e]
+            combined_error = "; ".join(error_parts) if error_parts else "No successful interviews"
+            self.send_response(command_id, "failed", error=combined_error)
             return False
     
     def _get_interview_result(self, agent_id: int, platform: str) -> Dict[str, Any]:

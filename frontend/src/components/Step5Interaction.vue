@@ -368,7 +368,7 @@
               ></textarea>
             </div>
 
-            <button 
+            <button
               class="survey-submit-btn"
               :disabled="selectedAgents.size === 0 || !surveyQuestion.trim() || isSurveying"
               @click="submitSurvey"
@@ -376,6 +376,7 @@
               <span v-if="isSurveying" class="loading-spinner"></span>
               <span v-else>{{ $tr('Send Question', '发送问题', { de: 'Umfrage senden' }) }}</span>
             </button>
+            <div v-if="surveyError" class="survey-error">{{ surveyError }}</div>
           </div>
 
           <!-- Results -->
@@ -568,6 +569,7 @@ const selectedAgents = ref(new Set())
 const surveyQuestion = ref('')
 const surveyResults = ref([])
 const isSurveying = ref(false)
+const surveyError = ref('')
 
 // Report Data
 const reportOutline = ref(null)
@@ -838,10 +840,11 @@ const clearAgentSelection = () => {
 
 const submitSurvey = async () => {
   if (selectedAgents.value.size === 0 || !surveyQuestion.value.trim()) return
-  
+
   isSurveying.value = true
+  surveyError.value = ''
   addLog(`${tr('Sending survey to', '正在向', { de: 'Sende Umfrage an' })} ${selectedAgents.value.size} ${tr('targets...', '个对象发送问卷...', { de: 'Ziele...' })}`)
-  
+
   try {
     const interviews = Array.from(selectedAgents.value).map(idx => ({
       agent_id: idx,
@@ -899,6 +902,7 @@ const submitSurvey = async () => {
       throw new Error(res.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen' }))
     }
   } catch (err) {
+    surveyError.value = err.message
     addLog(`${tr('Survey send failed', '问卷发送失败', { de: 'Umfrage konnte nicht gesendet werden' })}: ${err.message}`)
   } finally {
     isSurveying.value = false
@@ -2481,6 +2485,18 @@ watch(() => props.simulationId, (newId) => {
   color: rgba(228,222,255,0.35);
   cursor: not-allowed;
   box-shadow: none;
+}
+
+.survey-error {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(255, 68, 68, 0.12);
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff8080;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  line-height: 1.5;
 }
 
 .loading-spinner {

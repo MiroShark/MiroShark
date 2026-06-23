@@ -1691,23 +1691,34 @@ class GraphToolsService:
         Matches against realname and username fields (case-insensitive, substring match).
         Falls back to LLM selection if no names match.
         """
+        import re as _re
         selected_agents = []
         selected_indices = []
-        names_lower = [n.lower() for n in agent_names]
+        # Strip parenthetical qualifiers like "(1.2M)" or "(800K)" that the LLM
+        # appends to archetype labels but never appear verbatim in profile fields.
+        names_lower = [
+            _re.sub(r'\s*\([^)]*\)', '', n).strip().lower()
+            for n in agent_names
+        ]
 
         for i, profile in enumerate(profiles):
             if len(selected_agents) >= max_agents:
                 break
-            realname = (profile.get("realname") or "").lower()
+            # Reddit profiles use 'name'; Twitter CSV mapping uses 'realname'.
+            realname = (profile.get("realname") or profile.get("name") or "").lower()
             username = (profile.get("username") or "").lower()
+            profession = (profile.get("profession") or "").lower()
             for name_query in names_lower:
-                if name_query in realname or name_query in username:
+                if name_query in realname or name_query in username or name_query in profession:
                     selected_agents.append(profile)
                     selected_indices.append(i)
                     break
 
         if selected_agents:
-            matched_names = [a.get("realname", a.get("username", "?")) for a in selected_agents]
+            matched_names = [
+                a.get("realname") or a.get("name") or a.get("username", "?")
+                for a in selected_agents
+            ]
             reasoning = f"Directly selected by name: {', '.join(matched_names)}"
             logger.info(f"Agent name match: {len(selected_agents)} of {len(agent_names)} requested names found")
             return selected_agents, selected_indices, reasoning

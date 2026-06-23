@@ -49,7 +49,9 @@ env_log.addHandler(file_handler)
 
 def _is_interview_action(action) -> bool:
     """Check if an action is an interview, handling both enum and string."""
-    action_type = action.action_type
+    action_type = getattr(action, 'action_type', None)
+    if action_type is None:
+        return False
     if hasattr(action_type, "value"):
         return action_type.value == "interview"
     return action_type == "interview"
@@ -210,8 +212,15 @@ class WonderwallEnv:
             None
         """
         # Update the recommendation system (no-op for platforms that don't
-        # implement it).
-        if hasattr(self.platform, 'update_rec_table'):
+        # implement it). Skip for interview-only rounds: update_rec_table()
+        # runs synchronous PyTorch/twhin-bert embedding code that blocks the
+        # asyncio event loop, preventing asyncio.wait_for from firing its
+        # timeout. Rec-table state is irrelevant for interview responses.
+        all_interview = all(
+            _is_interview_action(a[0] if isinstance(a, list) else a)
+            for a in actions.values()
+        )
+        if not all_interview and hasattr(self.platform, 'update_rec_table'):
             await self.platform.update_rec_table()
             env_log.info("update rec table.")
 

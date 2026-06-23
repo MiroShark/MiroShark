@@ -501,10 +501,16 @@ class SocialAgent(ChatAgent):
         # Camel can not stop updating the agents' memory after stop and astep
         # now.
 
+        agent_log.info(f"Agent {self.social_agent_id}: calling LLM for interview...")
         response = await self._aget_model_response(
             openai_messages=openai_messages, num_tokens=num_tokens)
 
+        if response is None or not response.output_messages:
+            raise RuntimeError(
+                f"Agent {self.social_agent_id}: LLM returned no response during interview"
+            )
         content = response.output_messages[0].content
+        agent_log.info(f"Agent {self.social_agent_id}: LLM response received, writing to platform...")
 
         if self.interview_record:
             # Test memory should not be writed to memory.
@@ -517,6 +523,7 @@ class SocialAgent(ChatAgent):
         interview_data = {"prompt": interview_prompt, "response": content}
         result = await self.env.action.perform_action(
             interview_data, ActionType.INTERVIEW.value)
+        agent_log.info(f"Agent {self.social_agent_id}: platform.perform_action completed")
 
         # Return the combined result
         return {

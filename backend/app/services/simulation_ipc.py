@@ -270,10 +270,10 @@ class SimulationIPCClient:
         try:
             with open(status_file, 'r', encoding='utf-8') as f:
                 status = json.load(f)
+            pid = status.get("pid")
             if status.get("status") != "alive":
                 # Status says not alive — but check if the process is actually
                 # running (handles race where old process overwrites new status)
-                pid = status.get("pid")
                 if pid:
                     try:
                         os.kill(pid, 0)  # signal 0 = check if process exists
@@ -281,6 +281,13 @@ class SimulationIPCClient:
                     except OSError:
                         pass  # PID is dead
                 return False
+            # Status says "alive" — verify the PID is still running to catch
+            # the case where the worker crashed after writing the status file.
+            if pid:
+                try:
+                    os.kill(pid, 0)
+                except OSError:
+                    return False  # PID is gone — stale "alive" status
             return True
         except (json.JSONDecodeError, OSError):
             return False

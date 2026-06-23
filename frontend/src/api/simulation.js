@@ -222,7 +222,7 @@ export const exportSimulationData = (simulationId, format = 'json') => {
  * @param {Object} data - { simulation_id, interviews: [{ agent_id, prompt }] }
  */
 export const interviewAgents = (data) => {
-  return requestWithRetry(() => service.post('/api/simulation/interview/batch', data), 3, 1000)
+  return service.post('/api/simulation/interview/batch', data)
 }
 
 /**
