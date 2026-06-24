@@ -147,33 +147,42 @@ def cmd_wait(args: argparse.Namespace) -> int:
     terminal_ok = {"completed"}
     terminal_fail = {"failed", "stopped"}
     deadline = time.monotonic() + args.timeout
+    status = ""
     while True:
         res = _api(
             "GET",
             f"/api/simulation/{args.simulation_id}/run-status",
             timeout=30.0,
         )
-        if not res.get("success"):
-            _die(res.get("error", "status failed"))
-        d = res.get("data") or {}
-        status = (d.get("runner_status") or d.get("status") or "").lower()
-        # Progress lines go to stderr so stdout stays clean for `--json` piping.
-        print(
-            f"[{status or '?'}] round {d.get('current_round')}/{d.get('total_rounds', '?')}",
-            file=sys.stderr,
-        )
-        if status in terminal_ok:
-            if args.json:
-                _print_json(res)
-            else:
-                print(f"{args.simulation_id} completed")
-            return 0
-        if status in terminal_fail:
-            if args.json:
-                _print_json(res)
-            else:
-                print(f"{args.simulation_id} {status}", file=sys.stderr)
-            return 1
+        if res.get("success"):
+            d = res.get("data") or {}
+            status = (d.get("runner_status") or d.get("status") or "").lower()
+            # Progress lines go to stderr so stdout stays clean for `--json` piping.
+            print(
+                f"[{status or '?'}] round {d.get('current_round')}/{d.get('total_rounds', '?')}",
+                file=sys.stderr,
+            )
+            if status in terminal_ok:
+                if args.json:
+                    _print_json(res)
+                else:
+                    print(f"{args.simulation_id} completed")
+                return 0
+            if status in terminal_fail:
+                if args.json:
+                    _print_json(res)
+                else:
+                    print(f"{args.simulation_id} {status}", file=sys.stderr)
+                return 1
+        else:
+            # A transient poll failure (dropped connection, slow gateway, 5xx) is
+            # not the simulation failing — warn and keep polling so a network blip
+            # can't be mistaken for a `failed`/`stopped` run (exit 1). A persistent
+            # error simply falls through to the timeout below (exit 2).
+            print(
+                f"[poll error] {res.get('error', 'status failed')} — retrying",
+                file=sys.stderr,
+            )
         if time.monotonic() >= deadline:
             print(
                 f"timed out after {args.timeout:.0f}s (last status: {status or '?'})",
