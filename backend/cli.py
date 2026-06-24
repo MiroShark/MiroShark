@@ -138,6 +138,52 @@ def cmd_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_wait(args: argparse.Namespace) -> int:
+    import time
+
+    # Terminal states from RunnerStatus (simulation_run_state.py): a finished run
+    # settles on "completed"; "failed"/"stopped" are terminal failures. Everything
+    # else (idle/starting/running/paused/stopping) means keep polling.
+    terminal_ok = {"completed"}
+    terminal_fail = {"failed", "stopped"}
+    deadline = time.monotonic() + args.timeout
+    while True:
+        res = _api(
+            "GET",
+            f"/api/simulation/{args.simulation_id}/run-status",
+            timeout=30.0,
+        )
+        if not res.get("success"):
+            _die(res.get("error", "status failed"))
+        d = res.get("data") or {}
+        status = (d.get("runner_status") or d.get("status") or "").lower()
+        # Progress lines go to stderr so stdout stays clean for `--json` piping.
+        print(
+            f"[{status or '?'}] round {d.get('current_round')}/{d.get('total_rounds', '?')}",
+            file=sys.stderr,
+        )
+        if status in terminal_ok:
+            if args.json:
+                _print_json(res)
+            else:
+                print(f"{args.simulation_id} completed")
+            return 0
+        if status in terminal_fail:
+            if args.json:
+                _print_json(res)
+            else:
+                print(f"{args.simulation_id} {status}", file=sys.stderr)
+            return 1
+        if time.monotonic() >= deadline:
+            print(
+                f"timed out after {args.timeout:.0f}s (last status: {status or '?'})",
+                file=sys.stderr,
+            )
+            return 2
+        # Cap the sleep so a long interval never overshoots the deadline.
+        time.sleep(min(args.interval, max(0.0, deadline - time.monotonic())))
+
+
 def cmd_frame(args: argparse.Namespace) -> int:
     params = {}
     if args.platforms:
@@ -272,6 +318,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_status = sub.add_parser("status", help="Show simulation run status.")
     p_status.add_argument("simulation_id")
     p_status.set_defaults(func=cmd_status)
+
+    p_wait = sub.add_parser(
+        "wait", help="Block until a simulation finishes (poll run-status)."
+    )
+    p_wait.add_argument("simulation_id")
+    p_wait.add_argument(
+        "--interval", type=float, default=5.0,
+        help="Seconds between status polls (default 5).",
+    )
+    p_wait.add_argument(
+        "--timeout", type=float, default=600.0,
+        help="Max seconds to wait before giving up (default 600).",
+    )
+    p_wait.set_defaults(func=cmd_wait)
 
     p_frame = sub.add_parser("frame", help="Compact snapshot for one round.")
     p_frame.add_argument("simulation_id")

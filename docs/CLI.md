@@ -24,6 +24,7 @@ Set `MIROSHARK_API_URL` to point at a remote deployment.
 | `ask "<question>"` | Synthesize a seed briefing from a question |
 | `list` | List simulations / projects |
 | `status <sim_id>` | Runner status + round/total |
+| `wait <sim_id> [--interval N] [--timeout N]` | Block until the run finishes, then exit 0/1 |
 | `frame <sim_id> <round>` | Compact per-round snapshot |
 | `publish <sim_id> [--unpublish]` | Toggle the embed public flag |
 | `report <sim_id>` | Render the analytical report |
@@ -32,6 +33,24 @@ Set `MIROSHARK_API_URL` to point at a remote deployment.
 | `health` | Ping `/health` |
 
 All commands accept `--json` for scripting.
+
+## Wait
+
+`wait <sim_id>` polls `/api/simulation/<id>/run-status` until the run reaches a
+terminal state, so a script can block on a running simulation and then act on the
+result without hand-rolling a polling loop:
+
+```bash
+# sim_id comes from `list` (or the web UI)
+SIM=$(python backend/cli.py --json list | jq -r '.[0].simulation_id')
+python backend/cli.py wait "$SIM" && python backend/cli.py report "$SIM"
+```
+
+Progress lines (`[running] round 12/144`) print to **stderr**, so stdout stays clean
+for `--json` piping. Exit codes: `0` when the run **completes**, `1` when it **fails**
+or is **stopped**, `2` on **timeout**. Tune the loop with `--interval` (seconds
+between polls, default `5`) and `--timeout` (max seconds to wait, default `600`).
+Add `--json` to print the final run-status payload on exit.
 
 ## Cost
 

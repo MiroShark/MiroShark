@@ -9,7 +9,7 @@ def test_build_parser_known_subcommands():
     p = cli.build_parser()
     # Parsing --help would exit, but we can inspect subparser choices.
     sub = [a for a in p._subparsers._group_actions if a.choices][0]
-    expected = {"ask", "list", "status", "frame", "publish", "report", "cost", "trending", "health"}
+    expected = {"ask", "list", "status", "wait", "frame", "publish", "report", "cost", "trending", "health"}
     assert expected.issubset(set(sub.choices.keys()))
 
 
@@ -40,3 +40,17 @@ def test_cost_parses_positional():
     assert args.cmd == "cost"
     assert args.simulation_id == "sim_abc123"
     assert args.func is cli.cmd_cost
+
+
+def test_wait_defaults_and_overrides():
+    p = cli.build_parser()
+    args = p.parse_args(["wait", "sim_abc123"])
+    assert args.cmd == "wait"
+    assert args.simulation_id == "sim_abc123"
+    assert args.func is cli.cmd_wait
+    # Polling knobs default sensibly and parse as floats.
+    assert args.interval == 5.0
+    assert args.timeout == 600.0
+    overridden = p.parse_args(["wait", "sim_abc123", "--interval", "2", "--timeout", "30"])
+    assert overridden.interval == 2.0
+    assert overridden.timeout == 30.0

@@ -24,6 +24,7 @@ python backend/cli.py --help
 | `ask "<question>"` | 从一个问题合成种子简报 |
 | `list` | 列出模拟 / 项目 |
 | `status <sim_id>` | runner 状态 + 当前轮次/总数 |
+| `wait <sim_id> [--interval N] [--timeout N]` | 阻塞直到运行结束,然后以 0/1 退出 |
 | `frame <sim_id> <round>` | 单轮的紧凑快照 |
 | `publish <sim_id> [--unpublish]` | 切换嵌入公开标志 |
 | `report <sim_id>` | 渲染分析报告 |
@@ -32,6 +33,23 @@ python backend/cli.py --help
 | `health` | Ping `/health` |
 
 所有命令都接受 `--json` 以便脚本化使用。
+
+## 等待(wait)
+
+`wait <sim_id>` 会轮询 `/api/simulation/<id>/run-status`,直到运行进入终止状态,
+这样脚本就能阻塞等待运行中的模拟,然后在结果上继续操作,而无需自己实现轮询循环:
+
+```bash
+# sim_id 来自 `list`(或网页界面)
+SIM=$(python backend/cli.py --json list | jq -r '.[0].simulation_id')
+python backend/cli.py wait "$SIM" && python backend/cli.py report "$SIM"
+```
+
+进度行(`[running] round 12/144`)打印到 **stderr**,因此 stdout 保持干净,便于
+`--json` 管道。退出码:运行**完成**为 `0`,运行**失败**或被**停止**为 `1`,
+**超时**为 `2`。可用 `--interval`(轮询间隔秒数,默认 `5`)和 `--timeout`
+(最长等待秒数,默认 `600`)调节轮询。加上 `--json` 可在退出时打印最终的
+run-status 负载。
 
 ## 成本
 
