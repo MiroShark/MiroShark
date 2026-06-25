@@ -25,6 +25,7 @@ python backend/cli.py --help
 | `list` | 列出模拟 / 项目 |
 | `status <sim_id>` | runner 状态 + 当前轮次/总数 |
 | `wait <sim_id> [--interval N] [--timeout N]` | 阻塞直到运行结束,然后以 0/1 退出 |
+| `stop <sim_id>` | 取消正在运行的模拟 |
 | `frame <sim_id> <round>` | 单轮的紧凑快照 |
 | `publish <sim_id> [--unpublish]` | 切换嵌入公开标志 |
 | `report <sim_id>` | 渲染分析报告 |
@@ -50,6 +51,20 @@ python backend/cli.py wait "$SIM" && python backend/cli.py report "$SIM"
 **超时**为 `2`。可用 `--interval`(轮询间隔秒数,默认 `5`)和 `--timeout`
 (最长等待秒数,默认 `600`)调节轮询。加上 `--json` 可在退出时打印最终的
 run-status 负载。
+
+## 停止(stop)
+
+`stop <sim_id>` 会向 `/api/simulation/stop` 发送 POST 请求,取消正在运行的模拟 ——
+这正是 `wait` 此前缺失的退出口。`wait` 会阻塞直到运行进入终止状态,但无法**结束**
+一个卡住、超时或不再需要的运行。把两者配合使用,即可为运行设定上限并在超时后清理:
+
+```bash
+# 最多等待 10 分钟;若超时(或失败),则停止它。
+python backend/cli.py wait "$SIM" --timeout 600 || python backend/cli.py stop "$SIM"
+```
+
+成功时打印 `<sim_id> stopped` 并以 `0` 退出;出错(未知 id、服务器错误)时以 `1` 退出。
+加上 `--json` 可获取原始的 `/stop` 负载。
 
 ## 成本
 

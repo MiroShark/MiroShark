@@ -25,6 +25,7 @@ Set `MIROSHARK_API_URL` to point at a remote deployment.
 | `list` | List simulations / projects |
 | `status <sim_id>` | Runner status + round/total |
 | `wait <sim_id> [--interval N] [--timeout N]` | Block until the run finishes, then exit 0/1 |
+| `stop <sim_id>` | Cancel a running simulation |
 | `frame <sim_id> <round>` | Compact per-round snapshot |
 | `publish <sim_id> [--unpublish]` | Toggle the embed public flag |
 | `report <sim_id>` | Render the analytical report |
@@ -51,6 +52,21 @@ for `--json` piping. Exit codes: `0` when the run **completes**, `1` when it **f
 or is **stopped**, `2` on **timeout**. Tune the loop with `--interval` (seconds
 between polls, default `5`) and `--timeout` (max seconds to wait, default `600`).
 Add `--json` to print the final run-status payload on exit.
+
+## Stop
+
+`stop <sim_id>` POSTs to `/api/simulation/stop` to cancel a running simulation —
+the escape hatch `wait` was missing. `wait` blocks until a run reaches a terminal
+state, but had no way to *end* one that hangs, overruns its timeout, or is simply no
+longer needed. Pair them to bound a run and clean up on overrun:
+
+```bash
+# Wait up to 10 min; if it times out (or fails), stop it.
+python backend/cli.py wait "$SIM" --timeout 600 || python backend/cli.py stop "$SIM"
+```
+
+On success it prints `<sim_id> stopped` and exits `0`; on error (unknown id, server
+failure) it exits `1`. Add `--json` for the raw `/stop` payload.
 
 ## Cost
 

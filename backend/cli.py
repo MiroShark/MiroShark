@@ -5,6 +5,7 @@ Run the server first (`./miroshark` from the repo root), then drive it with::
     python -m cli ask "Will the EU AI Act survive trilogue?"
     python -m cli list
     python -m cli status sim_abc123
+    python -m cli wait sim_abc123 || python -m cli stop sim_abc123
     python -m cli report sim_abc123
     python -m cli publish sim_abc123 --public
 
@@ -193,6 +194,23 @@ def cmd_wait(args: argparse.Namespace) -> int:
         time.sleep(min(args.interval, max(0.0, deadline - time.monotonic())))
 
 
+def cmd_stop(args: argparse.Namespace) -> int:
+    res = _api(
+        "POST", "/api/simulation/stop", body={"simulation_id": args.simulation_id}
+    )
+    if args.json:
+        _print_json(res)
+        return 0
+    if not res.get("success"):
+        _die(res.get("error", "stop failed"))
+    d = res.get("data") or {}
+    # The /stop endpoint settles the run on "stopped" — echo whatever the runner
+    # reports so a forced/already-terminal run still prints its real state.
+    status = d.get("runner_status") or "stopped"
+    print(f"{args.simulation_id} {status}")
+    return 0
+
+
 def cmd_frame(args: argparse.Namespace) -> int:
     params = {}
     if args.platforms:
@@ -341,6 +359,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Max seconds to wait before giving up (default 600).",
     )
     p_wait.set_defaults(func=cmd_wait)
+
+    p_stop = sub.add_parser(
+        "stop", help="Stop a running simulation (the escape hatch for `wait`)."
+    )
+    p_stop.add_argument("simulation_id")
+    p_stop.set_defaults(func=cmd_stop)
 
     p_frame = sub.add_parser("frame", help="Compact snapshot for one round.")
     p_frame.add_argument("simulation_id")

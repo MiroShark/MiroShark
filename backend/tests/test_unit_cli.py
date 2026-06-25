@@ -9,7 +9,7 @@ def test_build_parser_known_subcommands():
     p = cli.build_parser()
     # Parsing --help would exit, but we can inspect subparser choices.
     sub = [a for a in p._subparsers._group_actions if a.choices][0]
-    expected = {"ask", "list", "status", "wait", "frame", "publish", "report", "cost", "trending", "health"}
+    expected = {"ask", "list", "status", "wait", "stop", "frame", "publish", "report", "cost", "trending", "health"}
     assert expected.issubset(set(sub.choices.keys()))
 
 
@@ -40,6 +40,14 @@ def test_cost_parses_positional():
     assert args.cmd == "cost"
     assert args.simulation_id == "sim_abc123"
     assert args.func is cli.cmd_cost
+
+
+def test_stop_parses_positional():
+    p = cli.build_parser()
+    args = p.parse_args(["stop", "sim_abc123"])
+    assert args.cmd == "stop"
+    assert args.simulation_id == "sim_abc123"
+    assert args.func is cli.cmd_stop
 
 
 def test_wait_defaults_and_overrides():
