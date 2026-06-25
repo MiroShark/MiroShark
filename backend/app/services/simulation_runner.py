@@ -559,15 +559,17 @@ class SimulationRunner:
                     state.error = f"Process exit code: {exit_code}, error: {error_info}"
                     logger.error(f"Simulation failed: {simulation_id}, error={state.error}")
 
-                # Same fan-out for the failure path — operators want to know either way.
-                _fan_out_notifications(
-                    simulation_id,
-                    "failed",
-                    sim_dir=sim_dir,
-                    state=state,
-                    completed_at=datetime.now().isoformat(),
-                    error=state.error,
-                )
+                    # Notify only on a genuine failure. An intentional stop
+                    # (STOPPED/STOPPING, handled in the branch above) is not a
+                    # failure and must not page operators with a "failed" alert.
+                    _fan_out_notifications(
+                        simulation_id,
+                        "failed",
+                        sim_dir=sim_dir,
+                        state=state,
+                        completed_at=datetime.now().isoformat(),
+                        error=state.error,
+                    )
             
             state.twitter_running = False
             state.reddit_running = False
