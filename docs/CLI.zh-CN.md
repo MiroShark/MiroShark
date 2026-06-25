@@ -64,7 +64,7 @@ python backend/cli.py wait "$SIM" --timeout 600 || python backend/cli.py stop "$
 ```
 
 成功时打印 `<sim_id> stopped` 并以 `0` 退出;出错(未知 id、服务器错误)时以 `1` 退出。
-加上 `--json` 可获取原始的 `/stop` 负载。
+`--json` 是全局标志,需置于子命令之前(`python backend/cli.py --json stop "$SIM"`)才能获取原始的 `/stop` 负载。
 
 ## 成本
 

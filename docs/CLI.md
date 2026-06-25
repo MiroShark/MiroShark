@@ -66,7 +66,7 @@ python backend/cli.py wait "$SIM" --timeout 600 || python backend/cli.py stop "$
 ```
 
 On success it prints `<sim_id> stopped` and exits `0`; on error (unknown id, server
-failure) it exits `1`. Add `--json` for the raw `/stop` payload.
+failure) it exits `1`. `--json` is a global flag, so place it before the subcommand (`python backend/cli.py --json stop "$SIM"`) for the raw `/stop` payload.
 
 ## Cost
 
