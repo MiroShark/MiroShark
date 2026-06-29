@@ -9,16 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "axios": "^1.18.0",
+    "axios": "^1.18.1",
     "d3": "^7.9.0",
     "dompurify": "^3.4.11",
     "marked": "^18.0.5",
-    "vue": "^3.5.38",
+    "vue": "^3.5.39",
     "vue-router": "^5.1.0"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.7",
-    "vite": "^8.0.16",
+    "vite": "^8.1.0",
     "vite-plugin-compression2": "^2.5.3"
   }
 }
