@@ -66,6 +66,27 @@ jobs:
       - name: Build
         run: npm run build
 
+  i18n-scan:
+    name: i18n FR scan (no copy-paste bugs)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      # The scanner parses every tr() call in the frontend and flags:
+      #   A. EN empty/short suffix but fr non-empty (clear copy-paste bug)
+      #   B. fr length wildly different from de (potential copy-paste)
+      #   C. Same long fr reused for >1 distinct EN (potential copy-paste)
+      # Only Type A fails CI (it's an unambiguous bug). Type B and C are
+      # reported as warnings because legitimate short translations and shared
+      # phrases trigger them.
+      - name: Run i18n scanner
+        run: python scripts/scan_i18n.py
+
   camel-smoke:
     name: Camel agent smoke test
     runs-on: ubuntu-latest

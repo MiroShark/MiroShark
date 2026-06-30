@@ -20,6 +20,7 @@ export const locale = ref(readInitial())
 
 export const isZh = computed(() => locale.value === 'zh-CN')
 export const isDe = computed(() => locale.value === 'de')
+export const isFr = computed(() => locale.value === 'fr')
 
 export const showZhWarning = ref(false)
 
@@ -79,6 +80,7 @@ export function useI18n() {
     locale,
     isZh,
     isDe,
+    isFr,
     setLocale,
     tr,
     showZhWarning,
@@ -91,6 +93,7 @@ export const i18nPlugin = {
     app.config.globalProperties.$tr = tr
     app.config.globalProperties.$isZh = () => locale.value === 'zh-CN'
     app.config.globalProperties.$isDe = () => locale.value === 'de'
+    app.config.globalProperties.$isFr = () => locale.value === 'fr'
     app.config.globalProperties.$setLocale = setLocale
     app.config.globalProperties.$showZhWarning = showZhWarning
     app.config.globalProperties.$dismissZhWarning = dismissZhWarning

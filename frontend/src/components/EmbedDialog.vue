@@ -7,7 +7,7 @@
           <div class="embed-dialog-header">
             <div class="embed-dialog-title">
               <span class="title-icon">⌘</span>
-              <span>{{ $tr('Embed simulation', '嵌入模拟', { de: 'Simulation einbetten' }) }}</span>
+              <span>{{ $tr('Embed simulation', '嵌入模拟', { de: 'Simulation einbetten', fr: 'Intégrer la simulation' }) }}</span>
               <span class="title-sub">{{ formatSimulationId(simulationId) }}</span>
             </div>
             <button class="embed-dialog-close" @click="$emit('close')">×</button>
@@ -15,7 +15,7 @@
 
           <!-- Description -->
           <p class="embed-dialog-desc">
-            {{ $tr('Paste the iframe below into Notion, Substack, Medium, a GitHub README, or any HTML page. The widget loads live from this MiroShark instance and updates automatically as the simulation changes.', '将下面的 iframe 粘贴到 Notion、Substack、Medium、GitHub README 或任何 HTML 页面中。组件从当前 MiroShark 实例实时加载,并随模拟变化自动更新。', { de: 'Füge den folgenden iframe in Notion, Substack, Medium, ein GitHub-README oder eine beliebige HTML-Seite ein. Das Widget lädt live von dieser MiroShark-Instanz und aktualisiert sich automatisch, wenn sich die Simulation ändert.' }) }}
+            {{ $tr('Paste the iframe below into Notion, Substack, Medium, a GitHub README, or any HTML page. The widget loads live from this MiroShark instance and updates automatically as the simulation changes.', '将下面的 iframe 粘贴到 Notion、Substack、Medium、GitHub README 或任何 HTML 页面中。组件从当前 MiroShark 实例实时加载,并随模拟变化自动更新。', { de: 'Füge den folgenden iframe in Notion, Substack, Medium, ein GitHub-README oder eine beliebige HTML-Seite ein. Das Widget lädt live von dieser MiroShark-Instanz und aktualisiert sich automatisch, wenn sich die Simulation ändert.', fr: `Collez l'iframe ci-dessous dans Notion, Substack, Medium, un README GitHub, ou toute page HTML. Le widget se charge en direct depuis cette instance MiroShark et se met à jour automatiquement au fil de la simulation.` }) }}
           </p>
 
           <!-- Public toggle -->
@@ -23,7 +23,7 @@
             <label class="embed-public-toggle">
               <input type="checkbox" :checked="isPublic" @change="togglePublic" :disabled="publishing" />
               <span class="embed-public-label">
-                {{ isPublic ? $tr('Public — embeddable by anyone with the URL', '公开 — 任何获得 URL 的人都可嵌入', { de: 'Öffentlich — von jedem mit der URL einbettbar' }) : $tr('Private — embed URL returns 403', '私有 — 嵌入 URL 返回 403', { de: 'Privat — Einbettungs-URL gibt 403 zurück' }) }}
+                {{ isPublic ? $tr('Public — embeddable by anyone with the URL', '公开 — 任何获得 URL 的人都可嵌入', { de: 'Öffentlich — von jedem mit der URL einbettbar', fr: `Public — intégrable par toute personne avec l'URL` }) : $tr('Private — embed URL returns 403', '私有 — 嵌入 URL 返回 403', { de: 'Privat — Einbettungs-URL gibt 403 zurück', fr: `Privé — l'URL d'intégration retourne 403` }) }}
               </span>
             </label>
             <span v-if="publishError" class="embed-public-error">{{ publishError }}</span>
@@ -32,14 +32,14 @@
           <!-- Private share links -->
           <div class="share-link-section">
             <div class="share-link-header">
-              <span class="share-link-title">🔗 {{ $tr('Private share links', '私享链接', { de: 'Private Freigabelinks' }) }}</span>
+              <span class="share-link-title">🔗 {{ $tr('Private share links', '私享链接', { de: 'Private Freigabelinks', fr: 'Liens de partage privés' }) }}</span>
               <span class="share-link-sub">
-                {{ $tr('Send a simulation to one person without publishing it. The preview link bypasses the public gate but is `noindex` and revocable.', '将模拟发送给特定人员而无需公开。预览链接绕过公开门控,但禁止索引且可随时撤销。', { de: 'Sende eine Simulation an eine Person, ohne sie zu veröffentlichen. Der Vorschau-Link umgeht die öffentliche Zugangskontrolle, ist aber als `noindex` markiert und kann widerrufen werden.' }) }}
+                {{ $tr('Send a simulation to one person without publishing it. The preview link bypasses the public gate but is `noindex` and revocable.', '将模拟发送给特定人员而无需公开。预览链接绕过公开门控,但禁止索引且可随时撤销。', { de: 'Sende eine Simulation an eine Person, ohne sie zu veröffentlichen. Der Vorschau-Link umgeht die öffentliche Zugangskontrolle, ist aber als `noindex` markiert und kann widerrufen werden.', fr: 'Envoyez une simulation à une personne sans la publier. Le lien d\'aperçu contourne la porte publique mais est `noindex` et révocable.' }) }}
               </span>
             </div>
             <div class="share-link-mint-row">
               <label class="share-link-expiry">
-                <span>{{ $tr('Expires in', '有效期', { de: 'Läuft ab in' }) }}</span>
+                <span>{{ $tr('Expires in', '有效期', { de: 'Läuft ab in', fr: 'Expire dans' }) }}</span>
                 <select v-model.number="shareLinkExpiresInDays" :disabled="shareLinkBusy">
                   <option :value="1">1 {{ $tr('day', '天', { de: 'Tag' }) }}</option>
                   <option :value="7">7 {{ $tr('days', '天', { de: 'Tagen' }) }}</option>
@@ -72,22 +72,22 @@
                 </div>
                 <div class="share-link-actions">
                   <button class="share-link-copy" @click="copyShareLink(entry.preview_url)">
-                    {{ $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                    {{ $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                   </button>
                   <button class="share-link-revoke" @click="revokeShareLinkEntry(entry.token)">
-                    {{ $tr('Revoke', '撤销', { de: 'Widerrufen' }) }}
+                    {{ $tr('Revoke', '撤销', { de: 'Widerrufen', fr: 'Révoquer' }) }}
                   </button>
                 </div>
               </li>
             </ul>
             <p v-else-if="!shareLinkBusy && !shareLinkError" class="share-link-empty">
-              {{ $tr('No private links issued. Generate one to share without publishing.', '尚未生成私享链接。生成一个即可在不公开的情况下分享。', { de: 'Keine privaten Links erstellt. Generiere einen, um ohne Veröffentlichung zu teilen.' }) }}
+              {{ $tr('No private links issued. Generate one to share without publishing.', '尚未生成私享链接。生成一个即可在不公开的情况下分享。', { de: 'Keine privaten Links erstellt. Generiere einen, um ohne Veröffentlichung zu teilen.', fr: 'Aucun lien privé émis. Générez-en un pour partager sans publier.' }) }}
             </p>
           </div>
 
           <!-- Size presets -->
           <div class="embed-size-row">
-            <span class="embed-size-label">{{ $tr('Size', '尺寸', { de: 'Größe' }) }}</span>
+            <span class="embed-size-label">{{ $tr('Size', '尺寸', { de: 'Größe', fr: 'Taille' }) }}</span>
             <div class="embed-size-buttons">
               <button
                 v-for="preset in sizePresets"
@@ -101,10 +101,10 @@
               </button>
             </div>
             <label class="embed-theme-toggle">
-              <span>{{ $tr('Theme', '主题', { de: 'Design' }) }}</span>
+              <span>{{ $tr('Theme', '主题', { de: 'Design', fr: 'Thème' }) }}</span>
               <select v-model="theme" class="embed-theme-select">
-                <option value="light">{{ $tr('Light', '浅色', { de: 'Hell' }) }}</option>
-                <option value="dark">{{ $tr('Dark', '深色', { de: 'Dunkel' }) }}</option>
+                <option value="light">{{ $tr('Light', '浅色', { de: 'Hell', fr: 'Clair' }) }}</option>
+                <option value="dark">{{ $tr('Dark', '深色', { de: 'Dunkel', fr: 'Sombre' }) }}</option>
               </select>
             </label>
           </div>
@@ -127,9 +127,9 @@
           <div class="embed-snippets">
             <div class="snippet-block">
               <div class="snippet-head">
-                <span class="snippet-label">{{ $tr('HTML iframe', 'HTML iframe', { de: 'HTML iframe' }) }}</span>
+                <span class="snippet-label">{{ $tr('HTML iframe', 'HTML iframe', { de: 'HTML iframe', fr: 'iframe HTML' }) }}</span>
                 <button class="snippet-copy-btn" @click="copy('iframe')">
-                  {{ copied === 'iframe' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                  {{ copied === 'iframe' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                 </button>
               </div>
               <pre class="snippet-code"><code>{{ iframeSnippet }}</code></pre>
@@ -137,9 +137,9 @@
 
             <div class="snippet-block">
               <div class="snippet-head">
-                <span class="snippet-label">{{ $tr('Markdown (Notion / Substack auto-embed)', 'Markdown(Notion / Substack 自动嵌入)', { de: 'Markdown (Notion / Substack Auto-Einbettung)' }) }}</span>
+                <span class="snippet-label">{{ $tr('Markdown (Notion / Substack auto-embed)', 'Markdown(Notion / Substack 自动嵌入)', { de: 'Markdown (Notion / Substack Auto-Einbettung)', fr: 'Markdown (Notion / Substack auto-intégration)' }) }}</span>
                 <button class="snippet-copy-btn" @click="copy('markdown')">
-                  {{ copied === 'markdown' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                  {{ copied === 'markdown' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                 </button>
               </div>
               <pre class="snippet-code"><code>{{ markdownSnippet }}</code></pre>
@@ -147,9 +147,9 @@
 
             <div class="snippet-block">
               <div class="snippet-head">
-                <span class="snippet-label">{{ $tr('Direct URL', '直接 URL', { de: 'Direkte URL' }) }}</span>
+                <span class="snippet-label">{{ $tr('Direct URL', '直接 URL', { de: 'Direkte URL', fr: 'URL directe' }) }}</span>
                 <button class="snippet-copy-btn" @click="copy('url')">
-                  {{ copied === 'url' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                  {{ copied === 'url' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                 </button>
               </div>
               <pre class="snippet-code"><code>{{ embedUrl }}</code></pre>
@@ -160,12 +160,12 @@
           <div class="share-card-section">
             <div class="share-card-divider">
               <span class="divider-line"></span>
-              <span class="divider-text">{{ $tr('Social card', '社交卡片', { de: 'Social Card' }) }}</span>
+              <span class="divider-text">{{ $tr('Social card', '社交卡片', { de: 'Social Card', fr: 'Carte sociale' }) }}</span>
               <span class="divider-line"></span>
             </div>
 
             <p class="share-card-desc">
-              {{ $tr('A 1200×630 PNG with the scenario headline, status, quality, and belief split — the same image Twitter/X, Discord, Slack, and LinkedIn unfurl automatically when someone pastes the share link.', '一张 1200×630 的 PNG,包含情景标题、状态、质量和信念分布 — Twitter/X、Discord、Slack 和 LinkedIn 在有人粘贴分享链接时会自动展开此图。', { de: 'Ein 1200×630 PNG mit Szenario-Überschrift, Status, Qualität und Überzeugungsverteilung — dasselbe Bild, das Twitter/X, Discord, Slack und LinkedIn automatisch entfalten, wenn jemand den Freigabelink einfügt.' }) }}
+              {{ $tr('A 1200×630 PNG with the scenario headline, status, quality, and belief split — the same image Twitter/X, Discord, Slack, and LinkedIn unfurl automatically when someone pastes the share link.', '一张 1200×630 的 PNG,包含情景标题、状态、质量和信念分布 — Twitter/X、Discord、Slack 和 LinkedIn 在有人粘贴分享链接时会自动展开此图。', { de: 'Ein 1200×630 PNG mit Szenario-Überschrift, Status, Qualität und Überzeugungsverteilung — dasselbe Bild, das Twitter/X, Discord, Slack und LinkedIn automatisch entfalten, wenn jemand den Freigabelink einfügt.', fr: `Un PNG 1200×630 avec le titre du scénario, le statut, la qualité et la répartition des croyances — la même image que Twitter/X, Discord, Slack et LinkedIn déroulent automatiquement quand quelqu'un colle le lien de partage.` }) }}
             </p>
 
             <div class="share-card-preview-wrap">
@@ -187,7 +187,7 @@
                 <div class="snippet-head">
                   <span class="snippet-label">{{ $tr('Share link (auto-unfurls with card)', '分享链接(随卡片自动展开)', { de: 'Freigabelink (entfaltet sich automatisch mit Card)' }) }}</span>
                   <button class="snippet-copy-btn" @click="copy('share')" :disabled="!isPublic">
-                    {{ copied === 'share' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy link', '复制链接', { de: 'Link kopieren' }) }}
+                    {{ copied === 'share' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy link', '复制链接', { de: 'Link kopieren', fr: 'Copier le lien' }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ shareLandingUrl || '—' }}</code></pre>
@@ -195,9 +195,9 @@
 
               <div class="snippet-block share-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Card image URL (for manual paste)', '卡片图片 URL(供手动粘贴)', { de: 'Card-Bild-URL (zum manuellen Einfügen)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Card image URL (for manual paste)', '卡片图片 URL(供手动粘贴)', { de: 'Card-Bild-URL (zum manuellen Einfügen)', fr: `URL de l'image de la carte (pour collage manuel)` }) }}</span>
                   <button class="snippet-copy-btn" @click="copy('card')" :disabled="!isPublic">
-                    {{ copied === 'card' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'card' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ shareCardUrl || '—' }}</code></pre>
@@ -209,7 +209,7 @@
                 :href="shareCardUrl"
                 :download="`miroshark-${simulationId.slice(0, 12)}.png`"
               >
-                ↓ {{ $tr('Download PNG', '下载 PNG', { de: 'PNG herunterladen' }) }}
+                ↓ {{ $tr('Download PNG', '下载 PNG', { de: 'PNG herunterladen', fr: 'Télécharger PNG' }) }}
               </a>
             </div>
 
@@ -253,7 +253,7 @@
                     @click="copy('watch')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'watch' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'watch' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ watchUrl || '—' }}</code></pre>
@@ -267,9 +267,9 @@
               <div class="replay-head">
                 <span class="replay-icon">▶</span>
                 <div class="replay-head-body">
-                  <div class="replay-title">{{ $tr('Belief replay (animated)', '信念回放(动画)', { de: 'Überzeugungswiedergabe (animiert)' }) }}</div>
+                  <div class="replay-title">{{ $tr('Belief replay (animated)', '信念回放(动画)', { de: 'Überzeugungswiedergabe (animiert)', fr: 'Rejeu des croyances (animé)' }) }}</div>
                   <div class="replay-sub">
-                    {{ $tr('Same canvas as the share card, one frame per round. Discord and Slack auto-play GIFs from the direct URL — drop the link in a channel and it plays inline.', '与分享卡片相同的画布,每轮一帧。Discord 和 Slack 会从直接 URL 自动播放 GIF — 在频道里贴上链接即可内联播放。', { de: 'Gleiche Leinwand wie die Share Card, ein Frame pro Runde. Discord und Slack spielen GIFs von der direkten URL automatisch ab — Link in einen Kanal posten und er spielt direkt inline ab.' }) }}
+                    {{ $tr('Same canvas as the share card, one frame per round. Discord and Slack auto-play GIFs from the direct URL — drop the link in a channel and it plays inline.', '与分享卡片相同的画布,每轮一帧。Discord 和 Slack 会从直接 URL 自动播放 GIF — 在频道里贴上链接即可内联播放。', { de: 'Gleiche Leinwand wie die Share Card, ein Frame pro Runde. Discord und Slack spielen GIFs von der direkten URL automatisch ab — Link in einen Kanal posten und er spielt direkt inline ab.', fr: `Même canvas que la carte de partage, une image par tour. Discord et Slack lisent automatiquement les GIFs depuis l'URL directe — collez le lien dans un canal et il joue en ligne.` }) }}
                   </div>
                 </div>
               </div>
@@ -291,7 +291,7 @@
                 />
                 <div v-if="!replayPlay" class="replay-overlay">
                   <span class="replay-overlay-icon">▶</span>
-                  <span class="replay-overlay-text">{{ $tr('Tap to play', '点击播放', { de: 'Zum Abspielen tippen' }) }}</span>
+                  <span class="replay-overlay-text">{{ $tr('Tap to play', '点击播放', { de: 'Zum Abspielen tippen', fr: 'Toucher pour lire' }) }}</span>
                 </div>
               </div>
               <div v-else class="replay-empty">
@@ -307,7 +307,7 @@
                       @click="copy('replay')"
                       :disabled="!isPublic"
                     >
-                      {{ copied === 'replay' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                      {{ copied === 'replay' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                     </button>
                   </div>
                   <pre class="snippet-code"><code>{{ replayGifUrl || '—' }}</code></pre>
@@ -319,7 +319,7 @@
                   :href="replayGifUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-replay.gif`"
                 >
-                  ↓ {{ $tr('Download GIF', '下载 GIF', { de: 'GIF herunterladen' }) }}
+                  ↓ {{ $tr('Download GIF', '下载 GIF', { de: 'GIF herunterladen', fr: 'Télécharger GIF' }) }}
                 </a>
               </div>
             </div>
@@ -333,9 +333,9 @@
               <div class="transcript-head">
                 <span class="transcript-icon">📄</span>
                 <div class="transcript-head-body">
-                  <div class="transcript-title">{{ $tr('Export transcript', '导出对话记录', { de: 'Protokoll exportieren' }) }}</div>
+                  <div class="transcript-title">{{ $tr('Export transcript', '导出对话记录', { de: 'Protokoll exportieren', fr: 'Exporter le transcript' }) }}</div>
                   <div class="transcript-sub">
-                    {{ $tr('Per-round agent posts + stance labels + final consensus. Cite the simulation in a research paper or a Substack post without screenshotting.', '逐轮智能体帖子 + 立场标签 + 最终共识。在研究论文或 Substack 文章中引用该模拟,无需截屏。', { de: 'Beiträge der Agenten pro Runde + Haltungsbezeichnungen + Endkonsens. Zitiere die Simulation in einem Forschungspapier oder Substack-Beitrag ohne Screenshot.' }) }}
+                    {{ $tr('Per-round agent posts + stance labels + final consensus. Cite the simulation in a research paper or a Substack post without screenshotting.', '逐轮智能体帖子 + 立场标签 + 最终共识。在研究论文或 Substack 文章中引用该模拟,无需截屏。', { de: 'Beiträge der Agenten pro Runde + Haltungsbezeichnungen + Endkonsens. Zitiere die Simulation in einem Forschungspapier oder Substack-Beitrag ohne Screenshot.', fr: `Publications des agents par tour + labels de position + consensus final. Citez la simulation dans un article de recherche ou un post Substack sans capture d'écran.` }) }}
                   </div>
                 </div>
               </div>
@@ -347,7 +347,7 @@
                   :href="transcriptMarkdownUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-transcript.md`"
                 >
-                  ↓ {{ $tr('Download .md', '下载 .md', { de: '.md herunterladen' }) }}
+                  ↓ {{ $tr('Download .md', '下载 .md', { de: '.md herunterladen', fr: 'Télécharger .md' }) }}
                 </a>
                 <a
                   v-if="isPublic && transcriptJsonUrl"
@@ -355,22 +355,22 @@
                   :href="transcriptJsonUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-transcript.json`"
                 >
-                  ↓ {{ $tr('Download .json', '下载 .json', { de: '.json herunterladen' }) }}
+                  ↓ {{ $tr('Download .json', '下载 .json', { de: '.json herunterladen', fr: 'Télécharger .json' }) }}
                 </a>
                 <span v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to enable the transcript export.', '发布模拟以启用对话记录导出。', { de: 'Veröffentliche die Simulation, um den Protokollexport zu aktivieren.' }) }}
+                  {{ $tr('Publish the simulation to enable the transcript export.', '发布模拟以启用对话记录导出。', { de: 'Veröffentliche die Simulation, um den Protokollexport zu aktivieren.', fr: `Publiez la simulation pour activer l'export de la transcription.` }) }}
                 </span>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr(`Markdown URL (Notion / Obsidian "Import from URL")`, 'Markdown URL(Notion / Obsidian「从 URL 导入」)', { de: 'Markdown-URL (Notion / Obsidian „Von URL importieren")' }) }}</span>
+                  <span class="snippet-label">{{ $tr(`Markdown URL (Notion / Obsidian "Import from URL")`, 'Markdown URL(Notion / Obsidian「从 URL 导入」)', { de: 'Markdown-URL (Notion / Obsidian „Von URL importieren")', fr: 'URL Markdown (Notion / Obsidian « Importer depuis une URL »)' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('transcriptMd')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'transcriptMd' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'transcriptMd' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ transcriptMarkdownUrl || '—' }}</code></pre>
@@ -386,9 +386,9 @@
               <div class="transcript-head">
                 <span class="transcript-icon">📊</span>
                 <div class="transcript-head-body">
-                  <div class="transcript-title">{{ $tr('Export trajectory data', '导出轨迹数据', { de: 'Trajektoriendaten exportieren' }) }}</div>
+                  <div class="transcript-title">{{ $tr('Export trajectory data', '导出轨迹数据', { de: 'Trajektoriendaten exportieren', fr: 'Exporter les données de trajectoire' }) }}</div>
                   <div class="transcript-sub">
-                    {{ $tr('One row per round — bullish / neutral / bearish %, participating agents, post + engagement counts. Pandas, Excel, Tableau, R, and Observable consume CSV natively.', '每轮一行 — 看涨 / 中性 / 看跌 %、参与的智能体、帖子和互动数。Pandas、Excel、Tableau、R 和 Observable 原生消费 CSV。', { de: 'Eine Zeile pro Runde — Bullish/Neutral/Bearish %, teilnehmende Agenten, Beiträge und Interaktionszahlen. Pandas, Excel, Tableau, R und Observable konsumieren CSV nativ.' }) }}
+                    {{ $tr('One row per round — bullish / neutral / bearish %, participating agents, post + engagement counts. Pandas, Excel, Tableau, R, and Observable consume CSV natively.', '每轮一行 — 看涨 / 中性 / 看跌 %、参与的智能体、帖子和互动数。Pandas、Excel、Tableau、R 和 Observable 原生消费 CSV。', { de: 'Eine Zeile pro Runde — Bullish/Neutral/Bearish %, teilnehmende Agenten, Beiträge und Interaktionszahlen. Pandas, Excel, Tableau, R und Observable konsumieren CSV nativ.', fr: `Une ligne par tour — % haussier / neutre / baissier, agents participants, publications + compteurs d'engagement. Pandas, Excel, Tableau, R et Observable consomment le CSV nativement.` }) }}
                   </div>
                 </div>
               </div>
@@ -400,7 +400,7 @@
                   :href="trajectoryCsvUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-trajectory.csv`"
                 >
-                  ↓ {{ $tr('Download .csv', '下载 .csv', { de: '.csv herunterladen' }) }}
+                  ↓ {{ $tr('Download .csv', '下载 .csv', { de: '.csv herunterladen', fr: 'Télécharger .csv' }) }}
                 </a>
                 <a
                   v-if="isPublic && trajectoryJsonlUrl"
@@ -423,7 +423,7 @@
                     @click="copy('trajectoryCsv')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'trajectoryCsv' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'trajectoryCsv' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ trajectoryCsvUrl || '—' }}</code></pre>
@@ -444,9 +444,9 @@
               <div class="transcript-head">
                 <span class="transcript-icon">📈</span>
                 <div class="transcript-head-body">
-                  <div class="transcript-title">{{ $tr('Trajectory chart (SVG)', '轨迹图(SVG)', { de: 'Trajektorienchart (SVG)' }) }}</div>
+                  <div class="transcript-title">{{ $tr('Trajectory chart (SVG)', '轨迹图(SVG)', { de: 'Trajektorienchart (SVG)', fr: 'Graphique de trajectoire (SVG)' }) }}</div>
                   <div class="transcript-sub">
-                    {{ $tr('Vector belief chart — bullish / neutral / bearish curves across every round. Same ±0.2 stance threshold as every other surface. Embed as <img> in Notion, Substack, Ghost, GitHub READMEs, and LaTeX — scales to any size with no JavaScript.', '矢量信念图 — 每轮的看涨 / 中性 / 看跌曲线。与其他所有界面使用相同的 ±0.2 立场阈值。作为 <img> 嵌入 Notion、Substack、Ghost、GitHub README 和 LaTeX — 无需 JavaScript 即可缩放到任何尺寸。', { de: 'Vektorielles Überzeugungsdiagramm — Bullish/Neutral/Bearish-Kurven über alle Runden. Gleiche ±0,2 Haltungsschwelle wie alle anderen Ansichten. Als <img> in Notion, Substack, Ghost, GitHub-READMEs und LaTeX einbetten — skaliert auf jede Größe ohne JavaScript.' }) }}
+                    {{ $tr('Vector belief chart — bullish / neutral / bearish curves across every round. Same ±0.2 stance threshold as every other surface. Embed as <img> in Notion, Substack, Ghost, GitHub READMEs, and LaTeX — scales to any size with no JavaScript.', '矢量信念图 — 每轮的看涨 / 中性 / 看跌曲线。与其他所有界面使用相同的 ±0.2 立场阈值。作为 <img> 嵌入 Notion、Substack、Ghost、GitHub README 和 LaTeX — 无需 JavaScript 即可缩放到任何尺寸。', { de: 'Vektorielles Überzeugungsdiagramm — Bullish/Neutral/Bearish-Kurven über alle Runden. Gleiche ±0,2 Haltungsschwelle wie alle anderen Ansichten. Als <img> in Notion, Substack, Ghost, GitHub-READMEs und LaTeX einbetten — skaliert auf jede Größe ohne JavaScript.', fr: `Graphique vectoriel des croyances — courbes haussier / neutre / baissier sur tous les tours. Même seuil de position ±0.2 que toutes les autres surfaces. Intégrez comme <img> dans Notion, Substack, Ghost, READMEs GitHub et LaTeX — s'adapte à toute taille sans JavaScript.` }) }}
                   </div>
                 </div>
               </div>
@@ -467,7 +467,7 @@
                   :href="chartSvgUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-chart.svg`"
                 >
-                  ↓ {{ $tr('Download .svg', '下载 .svg', { de: '.svg herunterladen' }) }}
+                  ↓ {{ $tr('Download .svg', '下载 .svg', { de: '.svg herunterladen', fr: 'Télécharger .svg' }) }}
                 </a>
                 <span v-if="!isPublic" class="transcript-empty">
                   {{ $tr('Publish the simulation to enable the trajectory chart.', '发布模拟以启用轨迹图。', { de: 'Veröffentliche die Simulation, um den Trajektorienchart zu aktivieren.' }) }}
@@ -482,7 +482,7 @@
                     @click="copy('chartSvg')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'chartSvg' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'chartSvg' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ chartSvgUrl || '—' }}</code></pre>
@@ -490,13 +490,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('HTML embed', 'HTML 嵌入', { de: 'HTML-Einbettung' }) }}</span>
+                  <span class="snippet-label">{{ $tr('HTML embed', 'HTML 嵌入', { de: 'HTML-Einbettung', fr: 'Intégration HTML' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('chartSvgEmbed')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'chartSvgEmbed' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'chartSvgEmbed' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ chartSvgEmbedSnippet }}</code></pre>
@@ -517,9 +517,9 @@
               <div class="transcript-head">
                 <span class="transcript-icon">🟣</span>
                 <div class="transcript-head-body">
-                  <div class="transcript-title">{{ $tr('Farcaster Frame', 'Farcaster Frame', { de: 'Farcaster Frame' }) }}</div>
+                  <div class="transcript-title">{{ $tr('Farcaster Frame', 'Farcaster Frame', { de: 'Farcaster Frame', fr: 'Farcaster Frame' }) }}</div>
                   <div class="transcript-sub">
-                    {{ $tr('Paste the share link into any Farcaster client (Warpcast, Supercast, the in-wallet Frame in Coinbase Wallet) and the cast renders as an interactive belief-chart card with a one-tap link to the full simulation. Zero new dependencies — pure Frame v2 meta tags on the share page.', '在任何 Farcaster 客户端(Warpcast、Supercast、Coinbase Wallet 内置 Frame)中粘贴分享链接,Cast 会渲染为带一键链接到完整模拟的交互式信念图卡片。零新依赖 — 仅在分享页面添加 Frame v2 meta 标签。', { de: 'Füge den Freigabelink in einen beliebigen Farcaster-Client (Warpcast, Supercast, den In-Wallet-Frame in Coinbase Wallet) ein und der Cast wird als interaktive Überzeugungsdiagramm-Card mit einem Ein-Tipp-Link zur vollständigen Simulation gerendert. Keine neuen Abhängigkeiten — nur Frame-v2-Meta-Tags auf der Freigabeseite.' }) }}
+                    {{ $tr('Paste the share link into any Farcaster client (Warpcast, Supercast, the in-wallet Frame in Coinbase Wallet) and the cast renders as an interactive belief-chart card with a one-tap link to the full simulation. Zero new dependencies — pure Frame v2 meta tags on the share page.', '在任何 Farcaster 客户端(Warpcast、Supercast、Coinbase Wallet 内置 Frame)中粘贴分享链接,Cast 会渲染为带一键链接到完整模拟的交互式信念图卡片。零新依赖 — 仅在分享页面添加 Frame v2 meta 标签。', { de: 'Füge den Freigabelink in einen beliebigen Farcaster-Client (Warpcast, Supercast, den In-Wallet-Frame in Coinbase Wallet) ein und der Cast wird als interaktive Überzeugungsdiagramm-Card mit einem Ein-Tipp-Link zur vollständigen Simulation gerendert. Keine neuen Abhängigkeiten — nur Frame-v2-Meta-Tags auf der Freigabeseite.', fr: `Collez le lien de partage dans n'importe quel client Farcaster (Warpcast, Supercast, le Frame in-wallet de Coinbase Wallet) et le cast s'affiche comme une carte de graphique de croyances interactive avec un lien en un clic vers la simulation complète. Zéro nouvelle dépendance — pures balises meta Frame v2 sur la page de partage.` }) }}
                   </div>
                 </div>
               </div>
@@ -562,7 +562,7 @@
                     @click="copy('farcasterShare')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'farcasterShare' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'farcasterShare' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ farcasterShareUrl || '—' }}</code></pre>
@@ -584,10 +584,10 @@
                 <span class="transcript-icon">🏷️</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Status badge (SVG)', '状态徽章(SVG)', { de: 'Statusabzeichen (SVG)' }) }}
+                    {{ $tr('Status badge (SVG)', '状态徽章(SVG)', { de: 'Statusabzeichen (SVG)', fr: 'Badge de statut (SVG)' }) }}
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('A flat Shields.io-compatible 20-pixel SVG showing the current belief direction + confidence. Embed in any GitHub README, Notion page, Substack post, or personal site with one line of Markdown — the badge updates as the simulation runs, so the embed never goes stale.', '一个扁平、与 Shields.io 兼容的 20 像素高 SVG,显示当前信念方向与置信度。在任何 GitHub README、Notion 页面、Substack 文章或个人网站中,用一行 Markdown 即可嵌入 — 徽章会随模拟运行而更新,嵌入永不过期。', { de: 'Ein flaches, Shields.io-kompatibles 20-Pixel-SVG, das die aktuelle Überzeugungsrichtung und Konfidenz anzeigt. Mit einer Zeile Markdown in jedes GitHub-README, jede Notion-Seite, jeden Substack-Beitrag oder jede persönliche Website einbetten — das Abzeichen aktualisiert sich mit der laufenden Simulation und wird nie veraltet.' }) }}
+                    {{ $tr('A flat Shields.io-compatible 20-pixel SVG showing the current belief direction + confidence. Embed in any GitHub README, Notion page, Substack post, or personal site with one line of Markdown — the badge updates as the simulation runs, so the embed never goes stale.', '一个扁平、与 Shields.io 兼容的 20 像素高 SVG,显示当前信念方向与置信度。在任何 GitHub README、Notion 页面、Substack 文章或个人网站中,用一行 Markdown 即可嵌入 — 徽章会随模拟运行而更新,嵌入永不过期。', { de: 'Ein flaches, Shields.io-kompatibles 20-Pixel-SVG, das die aktuelle Überzeugungsrichtung und Konfidenz anzeigt. Mit einer Zeile Markdown in jedes GitHub-README, jede Notion-Seite, jeden Substack-Beitrag oder jede persönliche Website einbetten — das Abzeichen aktualisiert sich mit der laufenden Simulation und wird nie veraltet.', fr: `Un SVG plat 20 pixels compatible Shields.io montrant la direction et la confiance actuelles des croyances. Intégrez dans tout README GitHub, page Notion, post Substack ou site personnel avec une ligne de Markdown — le badge se met à jour au fil de la simulation, pour que l'intégration ne devienne jamais obsolète.` }) }}
                   </div>
                 </div>
               </div>
@@ -595,7 +595,7 @@
               <div v-if="isPublic && badgeSvgUrl" class="badge-preview">
                 <img
                   :src="badgeSvgUrl"
-                  :alt="$tr('MiroShark consensus status badge', 'MiroShark 共识状态徽章', { de: 'MiroShark Konsensstatusabzeichen' })"
+                  :alt="$tr('MiroShark consensus status badge', 'MiroShark 共识状态徽章', { de: 'MiroShark Konsensstatusabzeichen', fr: 'Badge de statut du consensus MiroShark' })"
                   class="badge-svg-img"
                 />
               </div>
@@ -611,7 +611,7 @@
                     @click="copy('badgeUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'badgeUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'badgeUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ badgeSvgUrl || '—' }}</code></pre>
@@ -619,13 +619,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Markdown', 'Markdown', { de: 'Markdown' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Markdown', 'Markdown', { de: 'Markdown', fr: 'Markdown' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('badgeMd')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'badgeMd' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'badgeMd' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ badgeMarkdownSnippet }}</code></pre>
@@ -633,13 +633,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('HTML', 'HTML', { de: 'HTML' }) }}</span>
+                  <span class="snippet-label">{{ $tr('HTML', 'HTML', { de: 'HTML', fr: 'HTML' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('badgeHtml')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'badgeHtml' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'badgeHtml' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ badgeHtmlSnippet }}</code></pre>
@@ -657,13 +657,13 @@
                 <span class="transcript-icon">📡</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Trading signal (JSON)', '交易信号(JSON)', { de: 'Handelssignal (JSON)' }) }}
+                    {{ $tr('Trading signal (JSON)', '交易信号(JSON)', { de: 'Handelssignal (JSON)', fr: 'Signal de trading (JSON)' }) }}
                     <span v-if="signalDirection" :class="['signal-direction-badge', `signal-direction-${signalDirection.toLowerCase()}`]">
                       {{ signalDirection }} · {{ signalConfidence }}%
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Machine-readable action primitive — direction (Bullish / Neutral / Bearish) + confidence (0 = pure three-way split, 100 = unanimous) + risk tier (low / medium / high, mapped from quality health). Consumable by quant tools, Zapier / Make / n8n workflows, and alert pipelines.', '机器可读的行动原语 — 方向(看涨 / 中性 / 看跌)+ 置信度(0 = 纯三向分裂,100 = 一致)+ 风险等级(低 / 中 / 高,源自质量健康度)。可被量化工具、Zapier / Make / n8n 工作流以及预警管道直接消费。', { de: 'Maschinenlesbares Handlungselement — Richtung (Bullish/Neutral/Bearish) + Konfidenz (0 = reine Dreiweg-Aufteilung, 100 = einstimmig) + Risikoklasse (niedrig/mittel/hoch, aus Qualitätszustand abgeleitet). Für Quant-Tools, Zapier/Make/n8n-Workflows und Alert-Pipelines nutzbar.' }) }}
+                    {{ $tr('Machine-readable action primitive — direction (Bullish / Neutral / Bearish) + confidence (0 = pure three-way split, 100 = unanimous) + risk tier (low / medium / high, mapped from quality health). Consumable by quant tools, Zapier / Make / n8n workflows, and alert pipelines.', '机器可读的行动原语 — 方向(看涨 / 中性 / 看跌)+ 置信度(0 = 纯三向分裂,100 = 一致)+ 风险等级(低 / 中 / 高,源自质量健康度)。可被量化工具、Zapier / Make / n8n 工作流以及预警管道直接消费。', { de: 'Maschinenlesbares Handlungselement — Richtung (Bullish/Neutral/Bearish) + Konfidenz (0 = reine Dreiweg-Aufteilung, 100 = einstimmig) + Risikoklasse (niedrig/mittel/hoch, aus Qualitätszustand abgeleitet). Für Quant-Tools, Zapier/Make/n8n-Workflows und Alert-Pipelines nutzbar.', fr: `Primitive d'action lisible par machine — direction (Haussier / Neutre / Baissier) + confiance (0 = pur split à trois, 100 = unanime) + niveau de risque (faible / moyen / élevé, mappé depuis la qualité). Consommable par les outils quant, les workflows Zapier / Make / n8n et les pipelines d'alerte.` }) }}
                   </div>
                 </div>
               </div>
@@ -686,20 +686,20 @@
                   </span>
                 </div>
                 <div class="signal-row signal-row-breakdown">
-                  <span class="signal-label">{{ $tr('Breakdown', '分布', { de: 'Aufschlüsselung' }) }}</span>
+                  <span class="signal-label">{{ $tr('Breakdown', '分布', { de: 'Aufschlüsselung', fr: 'Répartition' }) }}</span>
                   <span class="signal-value">
                     🟢 {{ signalPayload.bullish_pct }}% · ⚪ {{ signalPayload.neutral_pct }}% · 🔴 {{ signalPayload.bearish_pct }}%
                   </span>
                 </div>
               </div>
               <div v-else-if="isPublic && signalLoading" class="signal-loading">
-                {{ $tr('Loading signal…', '加载信号中…', { de: 'Signal wird geladen…' }) }}
+                {{ $tr('Loading signal…', '加载信号中…', { de: 'Signal wird geladen…', fr: 'Chargement du signal…' }) }}
               </div>
               <div v-else-if="isPublic && signalError" class="signal-empty">
                 {{ signalError }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable the trading signal.', '发布模拟以启用交易信号。', { de: 'Veröffentliche die Simulation, um das Handelssignal zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the trading signal.', '发布模拟以启用交易信号。', { de: 'Veröffentliche die Simulation, um das Handelssignal zu aktivieren.', fr: 'Publiez la simulation pour activer le signal de trading.' }) }}
               </div>
 
               <div class="transcript-actions">
@@ -709,7 +709,7 @@
                   :href="signalJsonUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-signal.json`"
                 >
-                  ↓ {{ $tr('Download signal.json', '下载 signal.json', { de: 'signal.json herunterladen' }) }}
+                  ↓ {{ $tr('Download signal.json', '下载 signal.json', { de: 'signal.json herunterladen', fr: 'Télécharger signal.json' }) }}
                 </a>
               </div>
 
@@ -721,7 +721,7 @@
                     @click="copy('signalUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'signalUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'signalUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ signalJsonUrl || '—' }}</code></pre>
@@ -729,13 +729,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('signalCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'signalCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'signalCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ signalCurlSnippet }}</code></pre>
@@ -753,9 +753,9 @@
                 <span class="transcript-icon">📊</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Peak beliefs (JSON)', '峰值信念(JSON)', { de: 'Spitzenüberzeugungen (JSON)' }) }}
+                    {{ $tr('Peak beliefs (JSON)', '峰值信念(JSON)', { de: 'Spitzenüberzeugungen (JSON)', fr: 'Pics de croyances (JSON)' }) }}
                     <span v-if="peakPayload" class="signal-direction-badge signal-direction-bullish">
-                      {{ $tr('Most volatile: round', '最波动:回合', { de: 'Volatilste Runde:' }) }} {{ peakPayload.most_volatile_round }}
+                      {{ $tr('Most volatile: round', '最波动:回合', { de: 'Volatilste Runde:', fr: 'Tour le plus volatil :' }) }} {{ peakPayload.most_volatile_round }}
                     </span>
                   </div>
                   <div class="transcript-sub">
@@ -806,7 +806,7 @@
                     @click="copy('peakUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'peakUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'peakUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ peakRoundUrl || '—' }}</code></pre>
@@ -814,13 +814,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('peakCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'peakCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'peakCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ peakCurlSnippet }}</code></pre>
@@ -842,7 +842,7 @@
                 <span class="transcript-icon">📈</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Belief volatility (JSON)', '信念波动率(JSON)', { de: 'Überzeugungsvolatilität (JSON)' }) }}
+                    {{ $tr('Belief volatility (JSON)', '信念波动率(JSON)', { de: 'Überzeugungsvolatilität (JSON)', fr: 'Volatilité des croyances (JSON)' }) }}
                     <span
                       v-if="volatilityPayload"
                       class="signal-direction-badge"
@@ -852,7 +852,7 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('The turbulence layer alongside signal.json (direction) and peak-round (when). Mean + std dev + max of the round-over-round swing, a normalized 0-100 volatility index, and a stable / converging / contested trend label. High-volatility Bullish ≠ low-volatility Bullish for a position-sizing model.', '与 signal.json(方向)和 peak-round(时机)并列的动荡层。回合间摆动的均值 + 标准差 + 最大值,归一化的 0-100 波动指数,以及稳定 / 收敛 / 争议的趋势标签。对仓位模型而言,高波动看涨 ≠ 低波动看涨。', { de: 'Die Turbulenzsicht neben signal.json (Richtung) und peak-round (Zeitpunkt). Mittelwert + Std.-Abw. + Maximum des rundenübergreifenden Schwings, ein normierter 0-100-Volatilitätsindex und ein Stabilitäts-/Konvergenz-/Streit-Trendlabel. Hohe Volatilität Bullish ≠ niedrige Volatilität Bullish für ein Positionsgrößenmodell.' }) }}
+                    {{ $tr('The turbulence layer alongside signal.json (direction) and peak-round (when). Mean + std dev + max of the round-over-round swing, a normalized 0-100 volatility index, and a stable / converging / contested trend label. High-volatility Bullish ≠ low-volatility Bullish for a position-sizing model.', '与 signal.json(方向)和 peak-round(时机)并列的动荡层。回合间摆动的均值 + 标准差 + 最大值,归一化的 0-100 波动指数,以及稳定 / 收敛 / 争议的趋势标签。对仓位模型而言,高波动看涨 ≠ 低波动看涨。', { de: 'Die Turbulenzsicht neben signal.json (Richtung) und peak-round (Zeitpunkt). Mittelwert + Std.-Abw. + Maximum des rundenübergreifenden Schwings, ein normierter 0-100-Volatilitätsindex und ein Stabilitäts-/Konvergenz-/Streit-Trendlabel. Hohe Volatilität Bullish ≠ niedrige Volatilität Bullish für ein Positionsgrößenmodell.', fr: 'La couche de turbulence aux côtés de signal.json (direction) et peak-round (quand). Moyenne + écart-type + max de la variation tour à tour, un indice de volatilité normalisé 0-100, et un label de tendance stable / convergent / contesté. Haussier haute volatilité ≠ Haussier basse volatilité pour un modèle de dimensionnement de position.' }) }}
                   </div>
                 </div>
               </div>
@@ -911,7 +911,7 @@
                     @click="copy('volatilityUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'volatilityUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'volatilityUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ volatilityUrl || '—' }}</code></pre>
@@ -919,13 +919,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('volatilityCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'volatilityCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'volatilityCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ volatilityCurlSnippet }}</code></pre>
@@ -946,9 +946,9 @@
                 <span class="transcript-icon">🤖</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Agent trajectories (JSON)', '智能体轨迹(JSON)', { de: 'Agenten-Trajektorien (JSON)' }) }}
+                    {{ $tr('Agent trajectories (JSON)', '智能体轨迹(JSON)', { de: 'Agenten-Trajektorien (JSON)', fr: 'Trajectoires d\'agents (JSON)' }) }}
                     <span v-if="sparklinesPayload" class="signal-direction-badge signal-direction-bullish">
-                      {{ sparklinesPayload.agent_count }} {{ $tr('agents', '个智能体', { de: 'Agenten' }) }}
+                      {{ sparklinesPayload.agent_count }} {{ $tr('agents', '个智能体', { de: 'Agenten', fr: 'agents' }) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
@@ -991,7 +991,7 @@
                   </span>
                 </div>
                 <div v-if="!sparklinesPayload.has_per_agent_data" class="sparkline-note">
-                  {{ $tr('Only one round of data — sparklines need ≥2 rounds to show a trend.', '只有一个回合的数据 — 迷你趋势图需要 ≥2 个回合才能显示趋势。', { de: 'Nur eine Runde Daten — Sparklines benötigen ≥2 Runden, um einen Trend anzuzeigen.' }) }}
+                  {{ $tr('Only one round of data — sparklines need ≥2 rounds to show a trend.', '只有一个回合的数据 — 迷你趋势图需要 ≥2 个回合才能显示趋势。', { de: 'Nur eine Runde Daten — Sparklines benötigen ≥2 Runden, um einen Trend anzuzeigen.', fr: `Une seule tour de données — les sparklines ont besoin d'au moins 2 tours pour montrer une tendance.` }) }}
                 </div>
               </div>
               <div v-else-if="isPublic && sparklinesLoading" class="signal-loading">
@@ -1012,7 +1012,7 @@
                     @click="copy('sparkUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'sparkUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'sparkUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ agentSparklinesUrl || '—' }}</code></pre>
@@ -1020,13 +1020,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('sparkCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'sparkCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'sparkCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ sparklinesCurlSnippet }}</code></pre>
@@ -1049,9 +1049,9 @@
                 <span class="transcript-icon">🧑‍🤝‍🧑</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Agent roster (JSON)', '智能体名册(JSON)', { de: 'Agentenliste (JSON)' }) }}
+                    {{ $tr('Agent roster (JSON)', '智能体名册(JSON)', { de: 'Agentenliste (JSON)', fr: 'Liste des agents (JSON)' }) }}
                     <span v-if="agentsPayload" class="signal-direction-badge signal-direction-bullish">
-                      {{ agentsPayload.agent_count }} {{ $tr('participants', '位参与者', { de: 'Teilnehmer' }) }}
+                      {{ agentsPayload.agent_count }} {{ $tr('participants', '位参与者', { de: 'Teilnehmer', fr: 'participants' }) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
@@ -1113,7 +1113,7 @@
                     @click="copy('agentsUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'agentsUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'agentsUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ agentsJsonUrl || '—' }}</code></pre>
@@ -1121,13 +1121,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('agentsCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'agentsCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'agentsCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ agentsCurlSnippet }}</code></pre>
@@ -1150,9 +1150,9 @@
                 <span class="transcript-icon">🎯</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Polymarket prediction (JSON)', 'Polymarket 预测(JSON)', { de: 'Polymarket-Prognose (JSON)' }) }}
+                    {{ $tr('Polymarket prediction (JSON)', 'Polymarket 预测(JSON)', { de: 'Polymarket-Prognose (JSON)', fr: `Prédiction Polymarket (JSON)` }) }}
                     <span v-if="polymarketYesPct !== ''" class="signal-direction-badge polymarket-yes-badge">
-                      {{ $tr('YES', 'YES', { de: 'JA' }) }} · {{ polymarketYesPct }}%
+                      {{ $tr('YES', 'YES', { de: 'JA', fr: 'OUI' }) }} · {{ polymarketYesPct }}%
                     </span>
                   </div>
                   <div class="transcript-sub">
@@ -1222,7 +1222,7 @@
                     @click="copy('polymarketUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'polymarketUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'polymarketUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ polymarketJsonUrl || '—' }}</code></pre>
@@ -1230,13 +1230,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('polymarketCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'polymarketCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'polymarketCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ polymarketCurlSnippet }}</code></pre>
@@ -1258,9 +1258,9 @@
                 <span class="transcript-icon">🔁</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Clone configuration (JSON)', '克隆配置(JSON)', { de: 'Klon-Konfiguration (JSON)' }) }}
+                    {{ $tr('Clone configuration (JSON)', '克隆配置(JSON)', { de: 'Klon-Konfiguration (JSON)', fr: 'Configuration du clone (JSON)' }) }}
                     <span v-if="isPublic && clonePayload" class="signal-direction-badge">
-                      {{ $tr('inputs', '输入', { de: 'Eingaben' }) }}
+                      {{ $tr('inputs', '输入', { de: 'Eingaben', fr: 'Entrées' }) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
@@ -1275,11 +1275,11 @@
                   <span class="signal-value">{{ clonePayload.project_id || '—' }}</span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Graph', '图谱', { de: 'Graph' }) }}</span>
+                  <span class="signal-label">{{ $tr('Graph', '图谱', { de: 'Graph', fr: 'Graphe' }) }}</span>
                   <span class="signal-value">{{ clonePayload.graph_id || '—' }}</span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Platforms', '平台', { de: 'Plattformen' }) }}</span>
+                  <span class="signal-label">{{ $tr('Platforms', '平台', { de: 'Plattformen', fr: 'Plateformes' }) }}</span>
                   <span class="signal-value">
                     <span v-if="clonePayload.clone_payload?.enable_twitter">Twitter</span>
                     <span v-if="clonePayload.clone_payload?.enable_reddit">{{ clonePayload.clone_payload?.enable_twitter ? ' · ' : '' }}Reddit</span>
@@ -1324,7 +1324,7 @@
                     @click="copy('cloneUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'cloneUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'cloneUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ cloneJsonUrl || '—' }}</code></pre>
@@ -1332,13 +1332,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('cloneCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'cloneCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'cloneCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ cloneCurlSnippet }}</code></pre>
@@ -1346,12 +1346,12 @@
 
               <div class="snippet-block transcript-snippet" v-if="isPublic && clonePostBody">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('POST body (paste into /api/simulation/create)', 'POST 请求体(粘贴到 /api/simulation/create)', { de: 'POST-Body (in /api/simulation/create einfügen)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('POST body (paste into /api/simulation/create)', 'POST 请求体(粘贴到 /api/simulation/create)', { de: 'POST-Body (in /api/simulation/create einfügen)', fr: 'Corps POST (à coller dans /api/simulation/create)' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('clonePostBody')"
                   >
-                    {{ copied === 'clonePostBody' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy body', '复制请求体', { de: 'Body kopieren' }) }}
+                    {{ copied === 'clonePostBody' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy body', '复制请求体', { de: 'Body kopieren', fr: 'Copier le corps' }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ clonePostBody }}</code></pre>
@@ -1373,20 +1373,20 @@
                 <span class="transcript-icon">📦</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Archive bundle (.zip)', '归档包(.zip)', { de: 'Archiv-Bundle (.zip)' }) }}
+                    {{ $tr('Archive bundle (.zip)', '归档包(.zip)', { de: 'Archiv-Bundle (.zip)', fr: 'Archive (.zip)' }) }}
                     <span v-if="isPublic && archiveFileCount" class="archive-count-badge">
-                      {{ archiveFileCount }} {{ $tr('files', '个文件', { de: 'Dateien' }) }}
+                      {{ archiveFileCount }} {{ $tr('files', '个文件', { de: 'Dateien', fr: 'fichiers' }) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('One ZIP, every published surface inside — share card, chart SVG, trajectory CSV / JSONL, transcript, thread, reproduce.json, notebook, and signal.json. A manifest.json pairs each file with its SHA-256, byte size, and canonical source URL so citation hashes line up across both distribution paths.', '一个 ZIP,包含所有已发布的资源 — 分享卡、图表 SVG、轨迹 CSV / JSONL、转录稿、推文串、reproduce.json、Notebook 以及 signal.json。manifest.json 为每个文件提供 SHA-256、字节数和规范源 URL,使两种分发路径上的引用哈希保持一致。', { de: 'Ein ZIP mit allen veröffentlichten Inhalten — Share Card, Chart SVG, Trajektorien-CSV/JSONL, Protokoll, Thread, reproduce.json, Notebook und signal.json. Eine manifest.json weist jeder Datei ihren SHA-256, die Byte-Größe und die kanonische Quell-URL zu, sodass Zitierhashes über beide Verteilungspfade hinweg übereinstimmen.' }) }}
+                    {{ $tr('One ZIP, every published surface inside — share card, chart SVG, trajectory CSV / JSONL, transcript, thread, reproduce.json, notebook, and signal.json. A manifest.json pairs each file with its SHA-256, byte size, and canonical source URL so citation hashes line up across both distribution paths.', '一个 ZIP,包含所有已发布的资源 — 分享卡、图表 SVG、轨迹 CSV / JSONL、转录稿、推文串、reproduce.json、Notebook 以及 signal.json。manifest.json 为每个文件提供 SHA-256、字节数和规范源 URL,使两种分发路径上的引用哈希保持一致。', { de: 'Ein ZIP mit allen veröffentlichten Inhalten — Share Card, Chart SVG, Trajektorien-CSV/JSONL, Protokoll, Thread, reproduce.json, Notebook und signal.json. Eine manifest.json weist jeder Datei ihren SHA-256, die Byte-Größe und die kanonische Quell-URL zu, sodass Zitierhashes über beide Verteilungspfade hinweg übereinstimmen.', fr: `Un ZIP, toutes les surfaces publiées à l'intérieur — carte de partage, graphique SVG, trajectoire CSV / JSONL, transcription, fil, reproduce.json, notebook, et signal.json. Un manifest.json associe chaque fichier à son SHA-256, sa taille en octets et son URL source canonique pour que les hashes de citation s'alignent sur les deux chemins de distribution.` }) }}
                   </div>
                 </div>
               </div>
 
               <div v-if="isPublic && archiveAvailable" class="archive-summary">
                 <div class="archive-summary-row">
-                  <span class="archive-label">{{ $tr('Files inside', '包含文件', { de: 'Enthaltene Dateien' }) }}</span>
+                  <span class="archive-label">{{ $tr('Files inside', '包含文件', { de: 'Enthaltene Dateien', fr: 'Fichiers inclus' }) }}</span>
                   <span class="archive-value">{{ archiveFileCount }}</span>
                 </div>
                 <div class="archive-summary-row">
@@ -1427,7 +1427,7 @@
                     @click="copy('archiveUrl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'archiveUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'archiveUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ archiveZipUrl || '—' }}</code></pre>
@@ -1435,13 +1435,13 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                  <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('archiveCurl')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'archiveCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                    {{ copied === 'archiveCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ archiveCurlSnippet }}</code></pre>
@@ -1457,11 +1457,11 @@
                 <span class="transcript-icon">🧵</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Tweet thread (X / Twitter)', '推文串(X / Twitter)', { de: 'Tweet-Thread (X / Twitter)' }) }}
+                    {{ $tr('Tweet thread (X / Twitter)', '推文串(X / Twitter)', { de: 'Tweet-Thread (X / Twitter)', fr: 'Fil de tweets (X / Twitter)' }) }}
                     <span v-if="threadTotal" class="thread-count-badge">{{ threadTotal }}</span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Auto-formatted thread — intro tweet, one tweet per belief inflection point (when the dominant stance flips), and a closing tweet with the watch + share URLs. Each tweet ≤280 characters; copy the whole thread or individual tweets.', '自动生成的推文串 — 介绍推文、每个信念转折点一条推文(主导立场翻转时)、末尾推文附带观看 + 分享 URL。每条推文 ≤280 字符;可复制整串或单条推文。', { de: 'Automatisch formatierter Thread — Eröffnungs-Tweet, ein Tweet pro Überzeugungswendepunkt (wenn die dominierende Haltung wechselt) und ein abschließender Tweet mit Watch- und Freigabe-URLs. Jeder Tweet ≤280 Zeichen; kopiere den gesamten Thread oder einzelne Tweets.' }) }}
+                    {{ $tr('Auto-formatted thread — intro tweet, one tweet per belief inflection point (when the dominant stance flips), and a closing tweet with the watch + share URLs. Each tweet ≤280 characters; copy the whole thread or individual tweets.', '自动生成的推文串 — 介绍推文、每个信念转折点一条推文(主导立场翻转时)、末尾推文附带观看 + 分享 URL。每条推文 ≤280 字符;可复制整串或单条推文。', { de: 'Automatisch formatierter Thread — Eröffnungs-Tweet, ein Tweet pro Überzeugungswendepunkt (wenn die dominierende Haltung wechselt) und ein abschließender Tweet mit Watch- und Freigabe-URLs. Jeder Tweet ≤280 Zeichen; kopiere den gesamten Thread oder einzelne Tweets.', fr: `Fil auto-formaté — tweet d'intro, un tweet par point d'inflexion des croyances (quand la position dominante bascule), et un tweet de clôture avec les URLs de watch + share. Chaque tweet ≤280 caractères ; copiez tout le fil ou les tweets individuellement.` }) }}
                   </div>
                 </div>
               </div>
@@ -1472,9 +1472,9 @@
                   :disabled="!isPublic || threadLoading || !threadTweets.length"
                   @click="copy('threadFull')"
                 >
-                  <span v-if="threadLoading">{{ $tr('Loading…', '加载中…', { de: 'Wird geladen…' }) }}</span>
-                  <span v-else-if="copied === 'threadFull'">✓ {{ $tr('Copied', '已复制', { de: 'Kopiert' }) }}</span>
-                  <span v-else>📋 {{ $tr('Copy full thread', '复制整串', { de: 'Gesamten Thread kopieren' }) }}</span>
+                  <span v-if="threadLoading">{{ $tr('Loading…', '加载中…', { de: 'Wird geladen…', fr: 'Chargement…' }) }}</span>
+                  <span v-else-if="copied === 'threadFull'">✓ {{ $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) }}</span>
+                  <span v-else>📋 {{ $tr('Copy full thread', '复制整串', { de: 'Gesamten Thread kopieren', fr: 'Copier le fil complet' }) }}</span>
                 </button>
                 <a
                   v-if="isPublic && threadTxtUrl"
@@ -1482,7 +1482,7 @@
                   :href="threadTxtUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-thread.txt`"
                 >
-                  ↓ {{ $tr('Download .txt', '下载 .txt', { de: '.txt herunterladen' }) }}
+                  ↓ {{ $tr('Download .txt', '下载 .txt', { de: '.txt herunterladen', fr: 'Télécharger .txt' }) }}
                 </a>
                 <a
                   v-if="isPublic && threadJsonUrl"
@@ -1493,7 +1493,7 @@
                   ↓ .json
                 </a>
                 <span v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。', { de: 'Veröffentliche die Simulation, um den Tweet-Thread zu aktivieren.' }) }}
+                  {{ $tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。', { de: 'Veröffentliche die Simulation, um den Tweet-Thread zu aktivieren.', fr: 'Publiez la simulation pour activer le fil de tweets.' }) }}
                 </span>
               </div>
 
@@ -1510,7 +1510,7 @@
                   <button
                     class="thread-tweet-copy"
                     @click="copyOneTweet(idx)"
-                    :title="$tr('Copy this tweet', '复制此推文', { de: 'Diesen Tweet kopieren' })"
+                    :title="$tr('Copy this tweet', '复制此推文', { de: 'Diesen Tweet kopieren', fr: 'Copier ce tweet' })"
                   >
                     {{ copied === `threadOne-${idx}` ? '✓' : '⧉' }}
                   </button>
@@ -1519,7 +1519,7 @@
                   <span class="thread-tweet-len">{{ tweet.length }}/280</span>
                 </div>
                 <p v-if="threadTruncated" class="thread-truncated-note">
-                  {{ $tr('Thread shortened — many inflections were folded into a single bridge tweet to keep the thread under 15 tweets.', '推文串已缩短 — 多个转折点被合并为一条桥接推文,以使整串保持在 15 条以内。', { de: 'Thread gekürzt — viele Wendepunkte wurden in einem Brücken-Tweet zusammengefasst, um den Thread unter 15 Tweets zu halten.' }) }}
+                  {{ $tr('Thread shortened — many inflections were folded into a single bridge tweet to keep the thread under 15 tweets.', '推文串已缩短 — 多个转折点被合并为一条桥接推文,以使整串保持在 15 条以内。', { de: 'Thread gekürzt — viele Wendepunkte wurden in einem Brücken-Tweet zusammengefasst, um den Thread unter 15 Tweets zu halten.', fr: 'Fil raccourci — plusieurs infléchissements ont été fusionnés dans un tweet-pont pour rester sous 15 tweets.' }) }}
                 </p>
               </div>
 
@@ -1531,7 +1531,7 @@
                     @click="copy('threadTxt')"
                     :disabled="!isPublic"
                   >
-                    {{ copied === 'threadTxt' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'threadTxt' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                 </div>
                 <pre class="snippet-code"><code>{{ threadTxtUrl || '—' }}</code></pre>
@@ -1550,13 +1550,13 @@
                 <span class="transcript-icon">📊</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Distribution', '分发统计', { de: 'Verteilung' }) }}
+                    {{ $tr('Distribution', '分发统计', { de: 'Verteilung', fr: 'Distribution' }) }}
                     <span v-if="isPublic && surfaceStatsTotal > 0" class="surface-stats-total-badge">
                       {{ surfaceStatsTotal }}
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('How many times each share surface has been served — the inbound side of the distribution loop the webhook log tracks on the outbound side.', '每个分享面已被服务的次数 — 分发回路的入站侧,webhook 日志跟踪的是出站侧。', { de: 'Wie oft jede Freigabeansicht ausgeliefert wurde — die Eingangsseite der Verteilungsschleife, die das Webhook-Log auf der Ausgangsseite verfolgt.' }) }}
+                    {{ $tr('How many times each share surface has been served — the inbound side of the distribution loop the webhook log tracks on the outbound side.', '每个分享面已被服务的次数 — 分发回路的入站侧,webhook 日志跟踪的是出站侧。', { de: 'Wie oft jede Freigabeansicht ausgeliefert wurde — die Eingangsseite der Verteilungsschleife, die das Webhook-Log auf der Ausgangsseite verfolgt.', fr: 'Combien de fois chaque surface de partage a été servie — le côté entrant de la boucle de distribution que le log webhook suit côté sortant.' }) }}
                   </div>
                 </div>
                 <button
@@ -1571,7 +1571,7 @@
 
               <div v-if="surfaceStatsExpanded" class="surface-stats-body">
                 <div v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to see distribution stats.', '发布模拟以查看分发统计。', { de: 'Veröffentliche die Simulation, um Verteilungsstatistiken anzuzeigen.' }) }}
+                  {{ $tr('Publish the simulation to see distribution stats.', '发布模拟以查看分发统计。', { de: 'Veröffentliche die Simulation, um Verteilungsstatistiken anzuzeigen.', fr: 'Publiez la simulation pour voir les statistiques de distribution.' }) }}
                 </div>
                 <div v-else-if="surfaceStatsLoading" class="surface-stats-loading">
                   {{ $tr('Loading distribution data…', '加载分发数据…', { de: 'Verteilungsdaten werden geladen…' }) }}
@@ -1610,7 +1610,7 @@
                     @click="loadSurfaceStats"
                   >
                     <span v-if="surfaceStatsLoading">{{ $tr('Refreshing…', '刷新中…', { de: 'Wird aktualisiert…' }) }}</span>
-                    <span v-else>↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren' }) }}</span>
+                    <span v-else>↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren', fr: 'Actualiser' }) }}</span>
                   </button>
                 </div>
               </div>
@@ -1630,7 +1630,7 @@
                 <span class="transcript-icon">🔬</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Reproducibility config', '可复现配置', { de: 'Reproduzierbarkeitskonfiguration' }) }}
+                    {{ $tr('Reproducibility config', '可复现配置', { de: 'Reproduzierbarkeitskonfiguration', fr: 'Configuration de reproductibilité' }) }}
                     <span
                       v-if="reproLineageBadge"
                       class="repro-lineage-badge"
@@ -1640,7 +1640,7 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Every parameter another researcher needs to reproduce this exact run — scenario, agents, rounds, platforms, time-config, director events, fork lineage. Citation-friendly JSON.', '另一位研究者复现此运行所需的全部参数 — 情景、智能体、轮次、平台、时序配置、导演事件、派生谱系。便于引用的 JSON。', { de: 'Alle Parameter, die ein anderer Forscher benötigt, um genau diesen Lauf zu reproduzieren — Szenario, Agenten, Runden, Plattformen, Zeitkonfiguration, Direktionsereignisse, Abstammung. Zitierbares JSON.' }) }}
+                    {{ $tr('Every parameter another researcher needs to reproduce this exact run — scenario, agents, rounds, platforms, time-config, director events, fork lineage. Citation-friendly JSON.', '另一位研究者复现此运行所需的全部参数 — 情景、智能体、轮次、平台、时序配置、导演事件、派生谱系。便于引用的 JSON。', { de: 'Alle Parameter, die ein anderer Forscher benötigt, um genau diesen Lauf zu reproduzieren — Szenario, Agenten, Runden, Plattformen, Zeitkonfiguration, Direktionsereignisse, Abstammung. Zitierbares JSON.', fr: 'Chaque paramètre dont un autre chercheur a besoin pour reproduire cette exécution exacte — scénario, agents, tours, plateformes, configuration temporelle, événements directeur, lignée de fork. JSON adapté à la citation.' }) }}
                   </div>
                 </div>
                 <button
@@ -1655,10 +1655,10 @@
 
               <div v-if="reproExpanded" class="repro-body">
                 <div v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to expose the reproducibility config.', '发布模拟以公开可复现配置。', { de: 'Veröffentliche die Simulation, um die Reproduzierbarkeitskonfiguration freizugeben.' }) }}
+                  {{ $tr('Publish the simulation to expose the reproducibility config.', '发布模拟以公开可复现配置。', { de: 'Veröffentliche die Simulation, um die Reproduzierbarkeitskonfiguration freizugeben.', fr: 'Publiez la simulation pour exposer la configuration de reproductibilité.' }) }}
                 </div>
                 <div v-else-if="reproLoading" class="repro-loading">
-                  {{ $tr('Loading reproduction blob…', '加载复现配置…', { de: 'Reproduktions-Blob wird geladen…' }) }}
+                  {{ $tr('Loading reproduction blob…', '加载复现配置…', { de: 'Reproduktions-Blob wird geladen…', fr: 'Chargement du blob de reproduction…' }) }}
                 </div>
                 <div v-else-if="reproError" class="transcript-empty repro-error">
                   {{ reproError }}
@@ -1670,39 +1670,39 @@
                       <span class="repro-summary-value">v{{ reproBlob.schema_version }}</span>
                     </div>
                     <div class="repro-summary-row">
-                      <span class="repro-summary-key">{{ $tr('Agents', '智能体数', { de: 'Agenten' }) }}</span>
+                      <span class="repro-summary-key">{{ $tr('Agents', '智能体数', { de: 'Agenten', fr: 'Agents' }) }}</span>
                       <span class="repro-summary-value">{{ reproBlob.agent_count }}</span>
                     </div>
                     <div class="repro-summary-row">
-                      <span class="repro-summary-key">{{ $tr('Rounds', '轮次', { de: 'Runden' }) }}</span>
+                      <span class="repro-summary-key">{{ $tr('Rounds', '轮次', { de: 'Runden', fr: 'Tours' }) }}</span>
                       <span class="repro-summary-value">{{ reproBlob.total_rounds }}</span>
                     </div>
                     <div class="repro-summary-row">
-                      <span class="repro-summary-key">{{ $tr('Platforms', '平台', { de: 'Plattformen' }) }}</span>
+                      <span class="repro-summary-key">{{ $tr('Platforms', '平台', { de: 'Plattformen', fr: 'Plateformes' }) }}</span>
                       <span class="repro-summary-value">{{ reproPlatformsLabel }}</span>
                     </div>
                     <div v-if="reproDirectorEventCount > 0" class="repro-summary-row">
-                      <span class="repro-summary-key">{{ $tr('Director events', '导演事件', { de: 'Direktionsereignisse' }) }}</span>
+                      <span class="repro-summary-key">{{ $tr('Director events', '导演事件', { de: 'Direktionsereignisse', fr: 'Événements Director' }) }}</span>
                       <span class="repro-summary-value">{{ reproDirectorEventCount }}</span>
                     </div>
                     <div v-if="reproBlob.lineage && reproBlob.lineage.kind !== 'original'" class="repro-summary-row">
-                      <span class="repro-summary-key">{{ $tr('Lineage', '谱系', { de: 'Abstammung' }) }}</span>
+                      <span class="repro-summary-key">{{ $tr('Lineage', '谱系', { de: 'Abstammung', fr: 'Lignée' }) }}</span>
                       <span class="repro-summary-value">{{ reproLineageDescription }}</span>
                     </div>
                   </div>
 
                   <div class="repro-curl-block">
                     <div class="repro-curl-head">
-                      <span class="repro-curl-label">{{ $tr('Reproduce via curl', '使用 curl 复现', { de: 'Per curl reproduzieren' }) }}</span>
+                      <span class="repro-curl-label">{{ $tr('Reproduce via curl', '使用 curl 复现', { de: 'Per curl reproduzieren', fr: 'Reproduire via curl' }) }}</span>
                       <button class="snippet-copy-btn" @click="copy('reproCurl')">
-                        {{ copied === 'reproCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                        {{ copied === 'reproCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                       </button>
                     </div>
                     <pre class="snippet-code"><code>{{ reproCurlSnippet }}</code></pre>
                   </div>
 
                   <div class="repro-note">
-                    {{ $tr('Anyone with this config has every parameter that shapes the run — same scenario, same agent count, same rounds, same platform mix. Identical exports of a finished sim are bytewise-identical, so the file hash is a stable citation key.', '获得此配置的任何人都拥有决定该运行的所有参数 — 相同情景、相同智能体数、相同轮次、相同平台组合。已完成模拟的多次导出在字节级别完全一致,因此文件哈希可作为稳定的引用键。', { de: 'Jeder mit dieser Konfiguration hat alle Parameter, die den Lauf bestimmen — gleiches Szenario, gleiche Agentenanzahl, gleiche Runden, gleicher Plattform-Mix. Identische Exporte einer abgeschlossenen Simulation sind byteweise identisch, sodass der Datei-Hash ein stabiler Zitierschlüssel ist.' }) }}
+                    {{ $tr('Anyone with this config has every parameter that shapes the run — same scenario, same agent count, same rounds, same platform mix. Identical exports of a finished sim are bytewise-identical, so the file hash is a stable citation key.', '获得此配置的任何人都拥有决定该运行的所有参数 — 相同情景、相同智能体数、相同轮次、相同平台组合。已完成模拟的多次导出在字节级别完全一致,因此文件哈希可作为稳定的引用键。', { de: 'Jeder mit dieser Konfiguration hat alle Parameter, die den Lauf bestimmen — gleiches Szenario, gleiche Agentenanzahl, gleiche Runden, gleicher Plattform-Mix. Identische Exporte einer abgeschlossenen Simulation sind byteweise identisch, sodass der Datei-Hash ein stabiler Zitierschlüssel ist.', fr: `Toute personne avec cette configuration a tous les paramètres qui façonnent l'exécution — même scénario, même nombre d'agents, mêmes tours, même mix de plateformes. Les exports identiques d'une simulation terminée sont identiques octet par octet, donc le hash du fichier est une clé de citation stable.` }) }}
                   </div>
                 </div>
 
@@ -1715,7 +1715,7 @@
                     target="_blank"
                     rel="noopener"
                   >
-                    {{ $tr('Download reproduce.json', '下载 reproduce.json', { de: 'reproduce.json herunterladen' }) }}
+                    {{ $tr('Download reproduce.json', '下载 reproduce.json', { de: 'reproduce.json herunterladen', fr: 'Télécharger reproduce.json' }) }}
                   </a>
                   <button
                     class="snippet-copy-btn repro-copy-url"
@@ -1723,7 +1723,7 @@
                     @click="copy('reproUrl')"
                     :disabled="!reproDownloadUrl"
                   >
-                    {{ copied === 'reproUrl' ? '✓ ' + $tr('URL copied', '已复制 URL', { de: 'URL kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                    {{ copied === 'reproUrl' ? '✓ ' + $tr('URL copied', '已复制 URL', { de: 'URL kopiert', fr: 'URL copiée' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                   </button>
                   <button
                     class="surface-stats-refresh repro-refresh"
@@ -1732,7 +1732,7 @@
                     @click="loadRepro"
                   >
                     <span v-if="reproLoading">{{ $tr('Refreshing…', '刷新中…', { de: 'Wird aktualisiert…' }) }}</span>
-                    <span v-else>↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren' }) }}</span>
+                    <span v-else>↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren', fr: 'Actualiser' }) }}</span>
                   </button>
                 </div>
               </div>
@@ -1753,30 +1753,30 @@
                 <span class="transcript-icon">📓</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Jupyter notebook', 'Jupyter 笔记本', { de: 'Jupyter Notebook' }) }}
+                    {{ $tr('Jupyter notebook', 'Jupyter 笔记本', { de: 'Jupyter Notebook', fr: 'Notebook Jupyter' }) }}
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Pre-populated analysis notebook — trajectory data embedded, belief evolution + final consensus charts scaffolded, ready to run in JupyterLab, VS Code, or Colab. No network call back required.', '预填的分析笔记本 — 嵌入轨迹数据,已搭建信念演化与最终共识图表,可在 JupyterLab、VS Code 或 Colab 中直接运行,无需联网。', { de: 'Vorab befülltes Analyse-Notebook — Trajektoriendaten eingebettet, Überzeugungsverlauf und finale Konsensdiagramme vorbereitet, sofort ausführbar in JupyterLab, VS Code oder Colab. Kein Netzwerkabruf erforderlich.' }) }}
+                    {{ $tr('Pre-populated analysis notebook — trajectory data embedded, belief evolution + final consensus charts scaffolded, ready to run in JupyterLab, VS Code, or Colab. No network call back required.', '预填的分析笔记本 — 嵌入轨迹数据,已搭建信念演化与最终共识图表,可在 JupyterLab、VS Code 或 Colab 中直接运行,无需联网。', { de: 'Vorab befülltes Analyse-Notebook — Trajektoriendaten eingebettet, Überzeugungsverlauf und finale Konsensdiagramme vorbereitet, sofort ausführbar in JupyterLab, VS Code oder Colab. Kein Netzwerkabruf erforderlich.', fr: `Notebook d'analyse pré-rempli — données de trajectoire intégrées, graphiques d'évolution des croyances + consensus final pré-écrits, prêt à exécuter dans JupyterLab, VS Code ou Colab. Aucun rappel réseau requis.` }) }}
                   </div>
                 </div>
               </div>
 
               <div class="notebook-body">
                 <div v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to enable the Jupyter notebook export.', '发布模拟以启用 Jupyter 笔记本导出。', { de: 'Veröffentliche die Simulation, um den Jupyter-Notebook-Export zu aktivieren.' }) }}
+                  {{ $tr('Publish the simulation to enable the Jupyter notebook export.', '发布模拟以启用 Jupyter 笔记本导出。', { de: 'Veröffentliche die Simulation, um den Jupyter-Notebook-Export zu aktivieren.', fr: `Publiez la simulation pour activer l'export du notebook Jupyter.` }) }}
                 </div>
                 <template v-else>
                   <div class="repro-curl-block">
                     <div class="repro-curl-head">
-                      <span class="repro-curl-label">{{ $tr('Download via curl', '使用 curl 下载', { de: 'Per curl herunterladen' }) }}</span>
+                      <span class="repro-curl-label">{{ $tr('Download via curl', '使用 curl 下载', { de: 'Per curl herunterladen', fr: 'Télécharger via curl' }) }}</span>
                       <button class="snippet-copy-btn" @click="copy('notebookCurl')">
-                        {{ copied === 'notebookCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                        {{ copied === 'notebookCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                       </button>
                     </div>
                     <pre class="snippet-code"><code>{{ notebookCurlSnippet }}</code></pre>
                   </div>
                   <div class="repro-note">
-                    {{ $tr('Identical exports of a finished simulation produce bytewise-identical notebooks — the file hash is a stable citation key, same property the reproduce.json blob has. Opens directly in JupyterLab, VS Code, and Google Colab.', '已完成模拟的多次导出在字节级别完全一致 — 文件哈希可作为稳定的引用键,与 reproduce.json 一致。可直接在 JupyterLab、VS Code 与 Google Colab 中打开。', { de: 'Identische Exporte einer abgeschlossenen Simulation erzeugen byteweise identische Notebooks — der Datei-Hash ist ein stabiler Zitierschlüssel, dieselbe Eigenschaft wie beim reproduce.json-Blob. Öffnet sich direkt in JupyterLab, VS Code und Google Colab.' }) }}
+                    {{ $tr('Identical exports of a finished simulation produce bytewise-identical notebooks — the file hash is a stable citation key, same property the reproduce.json blob has. Opens directly in JupyterLab, VS Code, and Google Colab.', '已完成模拟的多次导出在字节级别完全一致 — 文件哈希可作为稳定的引用键,与 reproduce.json 一致。可直接在 JupyterLab、VS Code 与 Google Colab 中打开。', { de: 'Identische Exporte einer abgeschlossenen Simulation erzeugen byteweise identische Notebooks — der Datei-Hash ist ein stabiler Zitierschlüssel, dieselbe Eigenschaft wie beim reproduce.json-Blob. Öffnet sich direkt in JupyterLab, VS Code und Google Colab.', fr: `Les exports identiques d'une simulation terminée produisent des notebooks identiques octet par octet — le hash du fichier est une clé de citation stable, même propriété que le blob reproduce.json. S'ouvre directement dans JupyterLab, VS Code et Google Colab.` }) }}
                   </div>
                   <div class="repro-actions">
                     <a
@@ -1787,7 +1787,7 @@
                       target="_blank"
                       rel="noopener"
                     >
-                      {{ $tr('Download notebook.ipynb', '下载 notebook.ipynb', { de: 'notebook.ipynb herunterladen' }) }}
+                      {{ $tr('Download notebook.ipynb', '下载 notebook.ipynb', { de: 'notebook.ipynb herunterladen', fr: 'Télécharger notebook.ipynb' }) }}
                     </a>
                     <button
                       class="snippet-copy-btn repro-copy-url"
@@ -1795,7 +1795,7 @@
                       @click="copy('notebookUrl')"
                       :disabled="!notebookDownloadUrl"
                     >
-                      {{ copied === 'notebookUrl' ? '✓ ' + $tr('URL copied', '已复制 URL', { de: 'URL kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                      {{ copied === 'notebookUrl' ? '✓ ' + $tr('URL copied', '已复制 URL', { de: 'URL kopiert', fr: 'URL copiée' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                     </button>
                   </div>
                 </template>
@@ -1840,7 +1840,7 @@
                       @click="copy('citeBibUrl')"
                       :disabled="!citeBibUrl"
                     >
-                      {{ copied === 'citeBibUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren' }) }}
+                      {{ copied === 'citeBibUrl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy URL', '复制 URL', { de: 'URL kopieren', fr: `Copier l'URL` }) }}
                     </button>
                   </div>
                   <pre class="snippet-code"><code>{{ citeBibUrl || '—' }}</code></pre>
@@ -1848,13 +1848,13 @@
 
                 <div class="snippet-block transcript-snippet">
                   <div class="snippet-head">
-                    <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet' }) }}</span>
+                    <span class="snippet-label">{{ $tr('curl snippet', 'curl 片段', { de: 'curl-Snippet', fr: 'extrait curl' }) }}</span>
                     <button
                       class="snippet-copy-btn"
                       @click="copy('citeBibCurl')"
                       :disabled="!citeBibUrl"
                     >
-                      {{ copied === 'citeBibCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                      {{ copied === 'citeBibCurl' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                     </button>
                   </div>
                   <pre class="snippet-code"><code>{{ citeBibCurlSnippet }}</code></pre>
@@ -1862,13 +1862,13 @@
 
                 <div class="snippet-block transcript-snippet">
                   <div class="snippet-head">
-                    <span class="snippet-label">{{ $tr('LaTeX \\cite', 'LaTeX \\cite', { de: 'LaTeX \\cite' }) }}</span>
+                    <span class="snippet-label">{{ $tr('LaTeX \\cite', 'LaTeX \\cite', { de: 'LaTeX \\cite', fr: 'LaTeX \\cite' }) }}</span>
                     <button
                       class="snippet-copy-btn"
                       @click="copy('citeBibLatex')"
                       :disabled="!citeBibUrl"
                     >
-                      {{ copied === 'citeBibLatex' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren' }) }}
+                      {{ copied === 'citeBibLatex' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy snippet', '复制代码片段', { de: 'Code-Snippet kopieren', fr: `Copier l'extrait` }) }}
                     </button>
                   </div>
                   <pre class="snippet-code"><code>{{ citeBibLatexSnippet }}</code></pre>
@@ -1881,7 +1881,7 @@
                     :href="citeBibUrl"
                     :download="`miroshark-${simulationId.slice(0, 12)}.bib`"
                   >
-                    ↓ {{ $tr('Download .bib', '下载 .bib', { de: '.bib herunterladen' }) }}
+                    ↓ {{ $tr('Download .bib', '下载 .bib', { de: '.bib herunterladen', fr: 'Télécharger .bib' }) }}
                   </a>
                 </div>
               </template>
@@ -1905,7 +1905,7 @@
                 <span class="transcript-icon">⛓️</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('OriginTrail DKG citation', 'OriginTrail DKG 引用', { de: 'OriginTrail DKG-Zitation' }) }}
+                    {{ $tr('OriginTrail DKG citation', 'OriginTrail DKG 引用', { de: 'OriginTrail DKG-Zitation', fr: 'Citation OriginTrail DKG' }) }}
                     <span
                       v-if="notifConfig.dkg_network"
                       class="lineage-count-chip"
@@ -1936,11 +1936,11 @@
                       type="button"
                       @click="copy('dkgUal')"
                     >
-                      {{ copied === 'dkgUal' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                      {{ copied === 'dkgUal' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                     </button>
                   </div>
                   <div v-if="dkgCitation.merkle_root" class="dkg-row">
-                    <span class="dkg-row-label">{{ $tr('Merkle root', 'Merkle 根', { de: 'Merkle-Root' }) }}</span>
+                    <span class="dkg-row-label">{{ $tr('Merkle root', 'Merkle 根', { de: 'Merkle-Root', fr: 'Racine de Merkle' }) }}</span>
                     <code
                       class="dkg-row-value dkg-row-mono"
                       :title="dkgCitation.merkle_root"
@@ -1950,11 +1950,11 @@
                       type="button"
                       @click="copy('dkgMerkle')"
                     >
-                      {{ copied === 'dkgMerkle' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                      {{ copied === 'dkgMerkle' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                     </button>
                   </div>
                   <div v-if="dkgCitation.transaction_hash" class="dkg-row">
-                    <span class="dkg-row-label">{{ $tr('Transaction', '交易', { de: 'Transaktion' }) }}</span>
+                    <span class="dkg-row-label">{{ $tr('Transaction', '交易', { de: 'Transaktion', fr: 'Transaction' }) }}</span>
                     <code
                       class="dkg-row-value dkg-row-mono"
                       :title="dkgCitation.transaction_hash"
@@ -2064,11 +2064,11 @@
                       type="button"
                       @click="copy('wbcId')"
                     >
-                      {{ copied === 'wbcId' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                      {{ copied === 'wbcId' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                     </button>
                   </div>
                   <div v-if="wbcRecord.agent_name" class="dkg-row">
-                    <span class="dkg-row-label">{{ $tr('Agent', '智能体', { de: 'Agent' }) }}</span>
+                    <span class="dkg-row-label">{{ $tr('Agent', '智能体', { de: 'Agent', fr: 'Agent' }) }}</span>
                     <code class="dkg-row-value dkg-row-mono">
                       {{ wbcRecord.agent_name }}<span v-if="wbcRecord.agent_id"> · {{ wbcRecord.agent_id }}</span>
                     </code>
@@ -2084,7 +2084,7 @@
                       type="button"
                       @click="copy('wbcIpfs')"
                     >
-                      {{ copied === 'wbcIpfs' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                      {{ copied === 'wbcIpfs' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                     </button>
                   </div>
                   <div v-if="wbcRecord.nostr_event_id" class="dkg-row">
@@ -2098,11 +2098,11 @@
                       type="button"
                       @click="copy('wbcNostr')"
                     >
-                      {{ copied === 'wbcNostr' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+                      {{ copied === 'wbcNostr' ? '✓' : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
                     </button>
                   </div>
                   <div v-if="wbcRecord.reproduce_config_sha256" class="dkg-row">
-                    <span class="dkg-row-label">{{ $tr('Config hash', '配置哈希', { de: 'Konfigurations-Hash' }) }}</span>
+                    <span class="dkg-row-label">{{ $tr('Config hash', '配置哈希', { de: 'Konfigurations-Hash', fr: 'Hash de config' }) }}</span>
                     <code
                       class="dkg-row-value dkg-row-mono"
                       :title="wbcRecord.reproduce_config_sha256"
@@ -2116,7 +2116,7 @@
                       target="_blank"
                       rel="noopener"
                     >
-                      {{ $tr('Open on IPFS gateway ↗', '在 IPFS 网关中打开 ↗', { de: 'Im IPFS-Gateway öffnen ↗' }) }}
+                      {{ $tr('Open on IPFS gateway ↗', '在 IPFS 网关中打开 ↗', { de: 'Im IPFS-Gateway öffnen ↗', fr: 'Ouvrir sur la passerelle IPFS ↗' }) }}
                     </a>
                     <a
                       v-if="wbcRecord.archive_url"
@@ -2125,11 +2125,11 @@
                       target="_blank"
                       rel="noopener"
                     >
-                      {{ $tr('View agent in archive ↗', '在归档中查看智能体 ↗', { de: 'Agenten im Archiv ansehen ↗' }) }}
+                      {{ $tr('View agent in archive ↗', '在归档中查看智能体 ↗', { de: 'Agenten im Archiv ansehen ↗', fr: `Voir l'agent dans l'archive ↗` }) }}
                     </a>
                   </div>
                   <div class="repro-note">
-                    {{ $tr('A verifier fetches reproduce.json, SHA-256s the bytes, and compares to the config hash stored in the snapshot metadata. The IPFS CID makes the record itself content-addressed, and the Nostr event id gives any relay subscriber an independent witness of the submission.', '验证者获取 reproduce.json,计算 SHA-256 后与快照元数据中的配置哈希比对。IPFS CID 使记录本身可通过内容寻址访问,Nostr 事件 ID 让任意中继订阅者获得对该提交的独立见证。', { de: 'Ein Prüfer lädt reproduce.json herunter, berechnet den SHA-256 der Bytes und vergleicht ihn mit dem Konfigurations-Hash in den Snapshot-Metadaten. Die IPFS-CID macht den Eintrag selbst inhaltsadressierbar, und die Nostr-Ereignis-ID gibt jedem Relay-Abonnenten einen unabhängigen Zeugen der Einreichung.' }) }}
+                    {{ $tr('A verifier fetches reproduce.json, SHA-256s the bytes, and compares to the config hash stored in the snapshot metadata. The IPFS CID makes the record itself content-addressed, and the Nostr event id gives any relay subscriber an independent witness of the submission.', '验证者获取 reproduce.json,计算 SHA-256 后与快照元数据中的配置哈希比对。IPFS CID 使记录本身可通过内容寻址访问,Nostr 事件 ID 让任意中继订阅者获得对该提交的独立见证。', { de: 'Ein Prüfer lädt reproduce.json herunter, berechnet den SHA-256 der Bytes und vergleicht ihn mit dem Konfigurations-Hash in den Snapshot-Metadaten. Die IPFS-CID macht den Eintrag selbst inhaltsadressierbar, und die Nostr-Ereignis-ID gibt jedem Relay-Abonnenten einen unabhängigen Zeugen der Einreichung.', fr: `Un vérificateur récupère reproduce.json, calcule le SHA-256 des octets et compare au hash de configuration stocké dans les métadonnées du snapshot. Le CID IPFS rend l'enregistrement lui-même adressé par son contenu, et l'id d'événement Nostr donne à tout abonné relais un témoin indépendant de la soumission.` }) }}
                   </div>
                 </div>
 
@@ -2187,7 +2187,7 @@
                       {{ lineageTotalChildren }}
                       {{ lineageTotalChildren === 1
                           ? $tr('branch', '分支', { de: 'Verzweigung' })
-                          : $tr('branches', '分支', { de: 'Verzweigungen' }) }}
+                          : $tr('branches', '分支', { de: 'Verzweigungen', fr: 'branches' }) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
@@ -2266,7 +2266,7 @@
                       >
                         {{ $tr('Showing first', '显示前', { de: 'Zeige erste' }) }}
                         {{ lineageChildren.length }}
-                        {{ $tr('of', '/共', { de: 'von' }) }}
+                        {{ $tr('of', '/共', { de: 'von', fr: 'de' }) }}
                         {{ lineageTotalChildren }}
                       </span>
                     </div>
@@ -2309,8 +2309,8 @@
                       :disabled="lineageLoading"
                       @click="loadLineage"
                     >
-                      <span v-if="lineageLoading">{{ $tr('Refreshing…', '刷新中…', { de: 'Wird aktualisiert…' }) }}</span>
-                      <span v-else>↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren' }) }}</span>
+                      <span v-if="lineageLoading">{{ $tr('Refreshing…', '刷新中…', { de: 'Wird aktualisiert…', fr: 'Actualisation…' }) }}</span>
+                      <span v-else>↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren', fr: 'Actualiser' }) }}</span>
                     </button>
                   </div>
                 </div>
@@ -2326,15 +2326,15 @@
                 <span class="outcome-icon">📍</span>
                 <div class="outcome-head-body">
                   <div class="outcome-title">
-                    {{ $tr('Mark outcome', '标记结果', { de: 'Ergebnis markieren' }) }}
+                    {{ $tr('Mark outcome', '标记结果', { de: 'Ergebnis markieren', fr: 'Marquer le résultat' }) }}
                     <span v-if="outcome && outcome.label" class="outcome-saved-tag">
                       ✓ {{ outcomeLabelText(outcome.label) }}
                     </span>
                   </div>
                   <div class="outcome-sub">
-                    {{ $tr('Did this simulation predict a real event? Annotate it and your run lands on', '此模拟预测到了真实事件吗?为它做标注,你的运行将出现在', { de: 'Hat diese Simulation ein reales Ereignis vorhergesagt? Annotiere es und dein Lauf erscheint auf' }) }}
+                    {{ $tr('Did this simulation predict a real event? Annotate it and your run lands on', '此模拟预测到了真实事件吗?为它做标注,你的运行将出现在', { de: 'Hat diese Simulation ein reales Ereignis vorhergesagt? Annotiere es und dein Lauf erscheint auf', fr: 'Cette simulation a-t-elle prédit un événement réel ? Annotez-la et votre exécution apparaît sur' }) }}
                     <a href="/verified" target="_blank" rel="noopener">/verified</a>
-                    {{ $tr('— the public hall of calls that landed.', ' — 已落地预测的公开展示厅。', { de: '— der öffentlichen Galerie der eingetroffenen Prognosen.' }) }}
+                    {{ $tr('— the public hall of calls that landed.', ' — 已落地预测的公开展示厅。', { de: '— der öffentlichen Galerie der eingetroffenen Prognosen.', fr: '— le hall public des prédictions qui se sont vérifiées.' }) }}
                   </div>
                 </div>
               </div>
@@ -2360,7 +2360,7 @@
                 <input
                   v-model="outcomeForm.outcome_url"
                   type="url"
-                  :placeholder="$tr('Outcome URL (article, tweet, dashboard) — optional', '结果 URL(文章、推文、仪表板)— 可选', { de: 'Ergebnis-URL (Artikel, Tweet, Dashboard) — optional' })"
+                  :placeholder="$tr('Outcome URL (article, tweet, dashboard) — optional', '结果 URL(文章、推文、仪表板)— 可选', { de: 'Ergebnis-URL (Artikel, Tweet, Dashboard) — optional', fr: 'URL du résultat (article, tweet, dashboard) — optionnel' })"
                   class="outcome-input"
                   :disabled="!isPublic"
                   maxlength="500"
@@ -2475,16 +2475,16 @@
                     @click="loadWebhookLog"
                     :disabled="webhookLogLoading"
                   >
-                    {{ $tr('Refresh', '刷新', { de: 'Aktualisieren' }) }}
+                    {{ $tr('Refresh', '刷新', { de: 'Aktualisieren', fr: 'Actualiser' }) }}
                   </button>
                   <button
                     class="webhook-log-retry"
                     @click="retryWebhook"
                     :disabled="webhookRetrying || !canRetryWebhook"
-                    :title="canRetryWebhook ? $tr('Re-fire the webhook with the same payload', '使用相同 payload 重发 webhook', { de: 'Webhook mit demselben Payload erneut auslösen' }) : $tr('Retry available after the simulation reaches a terminal state', '模拟到达终止状态后可重试', { de: 'Erneuter Versuch möglich, sobald die Simulation einen Terminalzustand erreicht' })"
+                    :title="canRetryWebhook ? $tr('Re-fire the webhook with the same payload', '使用相同 payload 重发 webhook', { de: 'Webhook mit demselben Payload erneut auslösen', fr: 'Re-déclencher le webhook avec le même payload' }) : $tr('Retry available after the simulation reaches a terminal state', '模拟到达终止状态后可重试', { de: 'Erneuter Versuch möglich, sobald die Simulation einen Terminalzustand erreicht', fr: 'Nouvelle tentative disponible après que la simulation atteigne un état terminal' })"
                   >
-                    <span v-if="webhookRetrying">{{ $tr('Queueing…', '排队中…', { de: 'Wird in die Warteschlange gestellt…' }) }}</span>
-                    <span v-else>{{ $tr('Retry delivery', '重试投递', { de: 'Auslieferung erneut versuchen' }) }}</span>
+                    <span v-if="webhookRetrying">{{ $tr('Queueing…', '排队中…', { de: 'Wird in die Warteschlange gestellt…', fr: 'Mise en file…' }) }}</span>
+                    <span v-else>{{ $tr('Retry delivery', '重试投递', { de: 'Auslieferung erneut versuchen', fr: `Réessayer l'envoi` }) }}</span>
                   </button>
                 </div>
 
@@ -2629,36 +2629,36 @@
                 <div class="feed-filter-builder-controls">
                   <label class="feed-filter-control">
                     <span class="feed-filter-label">
-                      {{ $tr('Consensus', '共识', { de: 'Konsens' }) }}
+                      {{ $tr('Consensus', '共识', { de: 'Konsens', fr: 'Consensus' }) }}
                     </span>
                     <select v-model="feedFilters.consensus" class="feed-filter-select">
                       <option value="">{{ $tr('Any', '全部', { de: 'Alle' }) }}</option>
-                      <option value="bullish">{{ $tr('Bullish', '看涨', { de: 'Bullish' }) }}</option>
-                      <option value="neutral">{{ $tr('Neutral', '中性', { de: 'Neutral' }) }}</option>
-                      <option value="bearish">{{ $tr('Bearish', '看跌', { de: 'Bearish' }) }}</option>
+                      <option value="bullish">{{ $tr('Bullish', '看涨', { de: 'Bullish', fr: 'Haussier' }) }}</option>
+                      <option value="neutral">{{ $tr('Neutral', '中性', { de: 'Neutral', fr: 'Neutre' }) }}</option>
+                      <option value="bearish">{{ $tr('Bearish', '看跌', { de: 'Bearish', fr: 'Baissier' }) }}</option>
                     </select>
                   </label>
                   <label class="feed-filter-control">
                     <span class="feed-filter-label">
-                      {{ $tr('Quality', '质量', { de: 'Qualität' }) }}
+                      {{ $tr('Quality', '质量', { de: 'Qualität', fr: 'Qualité' }) }}
                     </span>
                     <select v-model="feedFilters.quality" class="feed-filter-select">
-                      <option value="">{{ $tr('Any', '全部', { de: 'Alle' }) }}</option>
-                      <option value="excellent">{{ $tr('Excellent', '优', { de: 'Ausgezeichnet' }) }}</option>
-                      <option value="good">{{ $tr('Good', '良', { de: 'Gut' }) }}</option>
-                      <option value="fair">{{ $tr('Fair', '中', { de: 'Befriedigend' }) }}</option>
-                      <option value="poor">{{ $tr('Poor', '差', { de: 'Schlecht' }) }}</option>
+                      <option value="">{{ $tr('Any', '全部', { de: 'Alle', fr: 'Tous' }) }}</option>
+                      <option value="excellent">{{ $tr('Excellent', '优', { de: 'Ausgezeichnet', fr: 'Excellent' }) }}</option>
+                      <option value="good">{{ $tr('Good', '良', { de: 'Gut', fr: 'Bon' }) }}</option>
+                      <option value="fair">{{ $tr('Fair', '中', { de: 'Befriedigend', fr: 'Moyen' }) }}</option>
+                      <option value="poor">{{ $tr('Poor', '差', { de: 'Schlecht', fr: 'Médiocre' }) }}</option>
                     </select>
                   </label>
                   <label class="feed-filter-control">
                     <span class="feed-filter-label">
-                      {{ $tr('Sort', '排序', { de: 'Sortieren' }) }}
+                      {{ $tr('Sort', '排序', { de: 'Sortieren', fr: 'Trier' }) }}
                     </span>
                     <select v-model="feedFilters.sort" class="feed-filter-select">
-                      <option value="date">{{ $tr('Newest', '最新', { de: 'Neueste' }) }}</option>
-                      <option value="trending">{{ $tr('Trending', '热门', { de: 'Trending' }) }}</option>
-                      <option value="rounds">{{ $tr('Most rounds', '轮次最多', { de: 'Meiste Runden' }) }}</option>
-                      <option value="agents">{{ $tr('Most agents', '智能体最多', { de: 'Meiste Agenten' }) }}</option>
+                      <option value="date">{{ $tr('Newest', '最新', { de: 'Neueste', fr: 'Plus récents' }) }}</option>
+                      <option value="trending">{{ $tr('Trending', '热门', { de: 'Trending', fr: 'Tendances' }) }}</option>
+                      <option value="rounds">{{ $tr('Most rounds', '轮次最多', { de: 'Meiste Runden', fr: 'Le plus de tours' }) }}</option>
+                      <option value="agents">{{ $tr('Most agents', '智能体最多', { de: 'Meiste Agenten', fr: `Le plus d'agents` }) }}</option>
                     </select>
                   </label>
                 </div>
@@ -2668,7 +2668,7 @@
                     type="text"
                     readonly
                     :value="filteredFeedUrl"
-                    :title="$tr('Copy and paste into Feedly, n8n, Zapier, or any RSS reader', '复制到 Feedly、n8n、Zapier 或其他任意 RSS 阅读器', { de: 'Kopiere und füge in Feedly, n8n, Zapier oder einen beliebigen RSS-Reader ein' })"
+                    :title="$tr('Copy and paste into Feedly, n8n, Zapier, or any RSS reader', '复制到 Feedly、n8n、Zapier 或其他任意 RSS 阅读器', { de: 'Kopiere und füge in Feedly, n8n, Zapier oder einen beliebigen RSS-Reader ein', fr: 'Copier-coller dans Feedly, n8n, Zapier, ou tout lecteur RSS' })"
                   />
                   <button
                     type="button"
@@ -2677,15 +2677,15 @@
                     @click="copyFilteredFeedUrl"
                   >
                     <span v-if="copiedFilteredFeed">
-                      {{ $tr('Copied ✓', '已复制 ✓', { de: 'Kopiert ✓' }) }}
+                      {{ $tr('Copied ✓', '已复制 ✓', { de: 'Kopiert ✓', fr: 'Copié ✓' }) }}
                     </span>
                     <span v-else>
-                      {{ $tr('Copy filtered feed URL', '复制筛选源链接', { de: 'Gefilterte Feed-URL kopieren' }) }}
+                      {{ $tr('Copy filtered feed URL', '复制筛选源链接', { de: 'Gefilterte Feed-URL kopieren', fr: `Copier l'URL du flux filtré` }) }}
                     </span>
                   </button>
                 </div>
                 <div class="feed-filter-builder-note">
-                  {{ $tr('Subscribe in Feedly, Inoreader, n8n, Zapier, Make — filters match the gallery API exactly. Same ±0.2 stance threshold every other surface uses.', '可在 Feedly、Inoreader、n8n、Zapier、Make 等订阅。筛选条件与画廊 API 完全一致;采用与其他所有面板相同的 ±0.2 立场阈值。', { de: 'In Feedly, Inoreader, n8n, Zapier, Make abonnieren — Filter stimmen exakt mit der Galerie-API überein. Gleiche ±0,2 Haltungsschwelle wie alle anderen Ansichten.' }) }}
+                  {{ $tr('Subscribe in Feedly, Inoreader, n8n, Zapier, Make — filters match the gallery API exactly. Same ±0.2 stance threshold every other surface uses.', '可在 Feedly、Inoreader、n8n、Zapier、Make 等订阅。筛选条件与画廊 API 完全一致;采用与其他所有面板相同的 ±0.2 立场阈值。', { de: 'In Feedly, Inoreader, n8n, Zapier, Make abonnieren — Filter stimmen exakt mit der Galerie-API überein. Gleiche ±0,2 Haltungsschwelle wie alle anderen Ansichten.', fr: `S'abonner dans Feedly, Inoreader, n8n, Zapier, Make — les filtres correspondent exactement à l'API galerie. Même seuil de position ±0.2 que toutes les autres surfaces utilisent.` }) }}
                 </div>
               </div>
             </div>
@@ -3264,7 +3264,7 @@ const volatilityIndexBarWidth = (idx) => {
 const volatilityTrendLabel = (trend) => {
   if (trend === 'converging') return tr('Converging', '收敛', { de: 'Konvergierend' })
   if (trend === 'contested') return tr('Contested', '争议', { de: 'Umstritten' })
-  return tr('Stable', '稳定', { de: 'Stabil' })
+  return $tr('Stable', '稳定', { de: 'Stabil', fr: 'Stable' })
 }
 
 const volatilityTrendBadgeClass = (trend) => {
@@ -3677,8 +3677,8 @@ const loadThread = async () => {
     if (!res.ok) {
       threadError.value =
         res.status === 403
-          ? tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。', { de: 'Veröffentliche die Simulation, um den Tweet-Thread zu aktivieren.' })
-          : `${tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden' })} (HTTP ${res.status})`
+          ? $tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。', { de: 'Veröffentliche die Simulation, um den Tweet-Thread zu aktivieren.', fr: 'Publiez la simulation pour activer le fil de tweets.' })
+          : `${$tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden', fr: 'Impossible de charger le fil' })} (HTTP ${res.status})`
       threadTweets.value = []
       threadTotal.value = 0
       threadTruncated.value = false
@@ -3690,7 +3690,7 @@ const loadThread = async () => {
     threadTruncated.value = !!data?.truncated
   } catch (err) {
     threadError.value =
-      err?.message || tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden' })
+      err?.message || $tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden', fr: 'Impossible de charger le fil' })
     threadTweets.value = []
     threadTotal.value = 0
     threadTruncated.value = false
@@ -3711,10 +3711,10 @@ const surfaceStatsError = ref('')
 const surfaceStats = ref(null)
 
 const SURFACE_STAT_LABELS = [
-  { key: 'share_card', label: tr('Share card · PNG', '分享卡片 · PNG', { de: 'Share Card · PNG' }) },
-  { key: 'replay_gif', label: tr('Replay GIF', '回放 GIF', { de: 'Wiedergabe-GIF' }) },
-  { key: 'transcript_md', label: tr('Transcript · Markdown', '记录 · Markdown', { de: 'Protokoll · Markdown' }) },
-  { key: 'transcript_json', label: tr('Transcript · JSON', '记录 · JSON', { de: 'Protokoll · JSON' }) },
+  { key: 'share_card', label: tr('Share card · PNG', '分享卡片 · PNG', { de: 'Share Card · PNG', fr: 'Carte de partage · PNG' }) },
+  { key: 'replay_gif', label: tr('Replay GIF', '回放 GIF', { de: 'Wiedergabe-GIF', fr: 'GIF de rejeu' }) },
+  { key: 'transcript_md', label: tr('Transcript · Markdown', '记录 · Markdown', { de: 'Protokoll · Markdown', fr: 'Transcription · Markdown' }) },
+  { key: 'transcript_json', label: tr('Transcript · JSON', '记录 · JSON', { de: 'Protokoll · JSON', fr: 'Transcription · JSON' }) },
   { key: 'trajectory_csv', label: tr('Trajectory · CSV', '轨迹 · CSV', { de: 'Trajektorie · CSV' }) },
   { key: 'trajectory_jsonl', label: tr('Trajectory · JSONL', '轨迹 · JSONL', { de: 'Trajektorie · JSONL' }) },
   { key: 'thread_txt', label: tr('Tweet thread · TXT', '推文串 · TXT', { de: 'Tweet-Thread · TXT' }) },
@@ -4367,8 +4367,8 @@ const copy = async (which) => {
 // ── Verified-prediction outcome submission ─────────────────────────────
 const outcomeOptions = [
   { value: 'correct', label: tr('Called it', '命中', { de: 'Richtig gelegen' }), icon: '📍' },
-  { value: 'partial', label: tr('Partial', '部分命中', { de: 'Teilweise richtig' }), icon: '◑' },
-  { value: 'incorrect', label: tr('Called wrong', '判断错误', { de: 'Falsch gelegen' }), icon: '⚠' },
+  { value: 'partial', label: $tr('Partial', '部分命中', { de: 'Teilweise richtig', fr: 'Partielle' }), icon: '◑' },
+  { value: 'incorrect', label: $tr('Called wrong', '判断错误', { de: 'Falsch gelegen', fr: 'Prédiction erronée' }), icon: '⚠' },
 ]
 
 const outcomeForm = reactive({
@@ -4428,15 +4428,15 @@ const submitOutcome = async () => {
     if (res?.success && res.data) {
       _applyOutcomeToForm(res.data)
       outcomeMessage.value =
-        tr('Outcome saved — your simulation is visible in the Verified filter.', '结果已保存 — 你的模拟现在「已验证」筛选中可见。', { de: 'Ergebnis gespeichert — deine Simulation ist im Verifiziert-Filter sichtbar.' })
+        tr('Outcome saved — your simulation is visible in the Verified filter.', '结果已保存 — 你的模拟现在「已验证」筛选中可见。', { de: 'Ergebnis gespeichert — deine Simulation ist im Verifiziert-Filter sichtbar.', fr: 'Résultat enregistré — votre simulation est visible dans le filtre Vérifiées.' })
       outcomeMessageClass.value = 'outcome-message-success'
     } else {
-      outcomeMessage.value = res?.error || tr('Could not save outcome.', '无法保存结果。', { de: 'Ergebnis konnte nicht gespeichert werden.' })
+      outcomeMessage.value = res?.error || tr('Could not save outcome.', '无法保存结果。', { de: 'Ergebnis konnte nicht gespeichert werden.', fr: `Impossible d'enregistrer le résultat.` })
       outcomeMessageClass.value = 'outcome-message-error'
     }
   } catch (err) {
     outcomeMessage.value =
-      err?.response?.data?.error || err?.message || tr('Could not save outcome.', '无法保存结果。', { de: 'Ergebnis konnte nicht gespeichert werden.' })
+      err?.response?.data?.error || err?.message || tr('Could not save outcome.', '无法保存结果。', { de: 'Ergebnis konnte nicht gespeichert werden.', fr: `Impossible d'enregistrer le résultat.` })
     outcomeMessageClass.value = 'outcome-message-error'
   } finally {
     outcomeSubmitting.value = false
@@ -4552,7 +4552,7 @@ const loadWebhookLog = async () => {
       )
     } else {
       webhookLogError.value =
-        err?.response?.data?.error || err?.message || tr('Could not load delivery history.', '无法加载投递历史。', { de: 'Auslieferungsverlauf konnte nicht geladen werden.' })
+        err?.response?.data?.error || err?.message || tr('Could not load delivery history.', '无法加载投递历史。', { de: 'Auslieferungsverlauf konnte nicht geladen werden.', fr: `Impossible de charger l'historique des livraisons.` })
     }
     webhookLogEntries.value = []
     webhookLogTotal.value = 0

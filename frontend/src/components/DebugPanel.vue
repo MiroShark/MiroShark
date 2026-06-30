@@ -4,16 +4,16 @@
     <div class="debug-header" @click="isCollapsed = !isCollapsed">
       <div class="debug-header__left">
         <span class="debug-header__icon">&#9881;</span>
-        <span class="debug-header__title">{{ $tr('OBSERVABILITY', '可观测性', { de: 'OBSERVIERBARKEIT' }) }}</span>
-        <span v-if="connected" class="debug-header__status debug-header__status--live">{{ $tr('LIVE', '实时', { de: 'LIVE' }) }}</span>
-        <span v-else class="debug-header__status debug-header__status--off">{{ $tr('OFF', '离线', { de: 'AUS' }) }}</span>
-        <span v-if="stats.llm_calls" class="debug-header__stat">{{ stats.llm_calls }} {{ $tr('calls', '次调用', { de: 'Aufrufe' }) }}</span>
-        <span v-if="stats.tokens_total" class="debug-header__stat">{{ formatTokens(stats.tokens_total) }} {{ $tr('tok', 'token', { de: 'Tok' }) }}</span>
+        <span class="debug-header__title">{{ $tr('OBSERVABILITY', '可观测性', { de: 'OBSERVIERBARKEIT', fr: 'OBSERVABILITÉ' }) }}</span>
+        <span v-if="connected" class="debug-header__status debug-header__status--live">{{ $tr('LIVE', '实时', { de: 'LIVE', fr: 'EN DIRECT' }) }}</span>
+        <span v-else class="debug-header__status debug-header__status--off">{{ $tr('OFF', '离线', { de: 'AUS', fr: 'ARRÊT' }) }}</span>
+        <span v-if="stats.llm_calls" class="debug-header__stat">{{ stats.llm_calls }} {{ $tr('calls', '次调用', { de: 'Aufrufe', fr: 'appels' }) }}</span>
+        <span v-if="stats.tokens_total" class="debug-header__stat">{{ formatTokens(stats.tokens_total) }} {{ $tr('tok', 'token', { de: 'Tok', fr: 'tok' }) }}</span>
       </div>
       <div class="debug-header__right">
-        <button class="debug-btn debug-btn--icon" :class="{ 'debug-btn--copied': justCopied }" @click.stop="copyAll" :title="justCopied ? $tr('Copied!', '已复制!', { de: 'Kopiert!' }) : $tr('Copy all events', '复制所有事件', { de: 'Alle Ereignisse kopieren' })">{{ justCopied ? '&#10003;' : '&#9112;' }}</button>
-        <button class="debug-btn debug-btn--icon" @click.stop="clearEvents" :title="$tr('Clear', '清除', { de: 'Löschen' })">&#10005;</button>
-        <button class="debug-btn debug-btn--icon" @click.stop="isVisible = false" :title="$tr('Close (Ctrl+Shift+D)', '关闭 (Ctrl+Shift+D)', { de: 'Schließen (Strg+Umschalt+D)' })">&#9866;</button>
+        <button class="debug-btn debug-btn--icon" :class="{ 'debug-btn--copied': justCopied }" @click.stop="copyAll" :title="justCopied ? $tr('Copied!', '已复制!', { de: 'Kopiert!', fr: 'Copié !' }) : $tr('Copy all events', '复制所有事件', { de: 'Alle Ereignisse kopieren', fr: 'Copier tous les événements' })">{{ justCopied ? '&#10003;' : '&#9112;' }}</button>
+        <button class="debug-btn debug-btn--icon" @click.stop="clearEvents" :title="$tr('Clear', '清除', { de: 'Löschen', fr: 'Effacer' })">&#10005;</button>
+        <button class="debug-btn debug-btn--icon" @click.stop="isVisible = false" :title="$tr('Close (Ctrl+Shift+D)', '关闭 (Ctrl+Shift+D)', { de: 'Schließen (Strg+Umschalt+D)', fr: 'Fermer (Ctrl+Maj+D)' })">&#9866;</button>
       </div>
     </div>
 
@@ -36,7 +36,7 @@
       <!-- Filters -->
       <div class="debug-filters">
         <select v-model="filterPlatform" class="debug-select">
-          <option value="">{{ $tr('All platforms', '所有平台', { de: 'Alle Plattformen' }) }}</option>
+          <option value="">{{ $tr('All platforms', '所有平台', { de: 'Alle Plattformen', fr: 'Toutes les plateformes' }) }}</option>
           <option value="twitter">Twitter</option>
           <option value="reddit">Reddit</option>
           <option value="polymarket">Polymarket</option>
@@ -44,11 +44,11 @@
         <input
           v-model="filterText"
           class="debug-input"
-          :placeholder="$tr('Filter...', '筛选...', { de: 'Filtern...' })"
+          :placeholder="$tr('Filter...', '筛选...', { de: 'Filtern...', fr: 'Filtrer…' })"
         />
         <label class="debug-checkbox">
           <input type="checkbox" v-model="autoScroll" />
-          {{ $tr('Auto-scroll', '自动滚动', { de: 'Automatisches Scrollen' }) }}
+          {{ $tr('Auto-scroll', '自动滚动', { de: 'Automatisches Scrollen', fr: 'Défilement auto' }) }}
         </label>
       </div>
 
@@ -58,7 +58,7 @@
         <!-- Live Feed -->
         <div v-if="activeTab === 'feed'" class="debug-feed">
           <div v-if="filteredEvents.length === 0" class="debug-empty">
-            {{ $tr('No events yet. Waiting for activity...', '暂无事件。等待活动中...', { de: 'Noch keine Ereignisse. Warte auf Aktivität...' }) }}
+            {{ $tr('No events yet. Waiting for activity...', '暂无事件。等待活动中...', { de: 'Noch keine Ereignisse. Warte auf Aktivität...', fr: `Aucun événement pour l'instant. En attente d'activité…` }) }}
           </div>
           <div
             v-for="event in filteredEvents"
@@ -87,7 +87,7 @@
           <div class="debug-llm__summary">
             <div class="debug-stat-card">
               <div class="debug-stat-card__value">{{ stats.llm_calls }}</div>
-              <div class="debug-stat-card__label">{{ $tr('Total Calls', '调用总数', { de: 'Aufrufe gesamt' }) }}</div>
+              <div class="debug-stat-card__label">{{ $tr('Total Calls', '调用总数', { de: 'Aufrufe gesamt', fr: 'Total des appels' }) }}</div>
             </div>
             <div class="debug-stat-card">
               <div class="debug-stat-card__value">{{ formatTokens(stats.tokens_total) }}</div>
@@ -104,11 +104,11 @@
           </div>
           <div class="debug-llm__table">
             <div class="debug-table-header">
-              <span class="debug-col--time">{{ $tr('Time', '时间', { de: 'Zeit' }) }}</span>
-              <span class="debug-col--caller">{{ $tr('Caller', '调用方', { de: 'Aufrufer' }) }}</span>
-              <span class="debug-col--model">{{ $tr('Model', '模型', { de: 'Modell' }) }}</span>
-              <span class="debug-col--tokens">{{ $tr('In/Out', '输入/输出', { de: 'Ein/Aus' }) }}</span>
-              <span class="debug-col--latency">{{ $tr('Latency', '延迟', { de: 'Latenz' }) }}</span>
+              <span class="debug-col--time">{{ $tr('Time', '时间', { de: 'Zeit', fr: 'Heure' }) }}</span>
+              <span class="debug-col--caller">{{ $tr('Caller', '调用方', { de: 'Aufrufer', fr: 'Appelant' }) }}</span>
+              <span class="debug-col--model">{{ $tr('Model', '模型', { de: 'Modell', fr: 'Modèle' }) }}</span>
+              <span class="debug-col--tokens">{{ $tr('In/Out', '输入/输出', { de: 'Ein/Aus', fr: 'Entrée/Sortie' }) }}</span>
+              <span class="debug-col--latency">{{ $tr('Latency', '延迟', { de: 'Latenz', fr: 'Latence' }) }}</span>
             </div>
             <div
               v-for="event in llmEvents"
@@ -160,7 +160,7 @@
             <div class="debug-agent-card__header">
               <span class="debug-event__time">{{ formatTime(event.timestamp) }}</span>
               <span v-if="event.round_num" class="debug-agent-card__round">R{{ event.round_num }}</span>
-              <span class="debug-agent-card__name">{{ event.agent_name || `${$tr('Agent', '智能体', { de: 'Agent' })} #${event.agent_id}` }}</span>
+              <span class="debug-agent-card__name">{{ event.agent_name || `${$tr('Agent', '智能体', { de: 'Agent', fr: 'Agent' })} #${event.agent_id}` }}</span>
               <span
                 class="debug-agent-card__action"
                 :class="event.data?.success ? 'debug-agent-card__action--ok' : 'debug-agent-card__action--fail'"
@@ -202,11 +202,11 @@
             <div class="debug-error-card__header">
               <span class="debug-event__time">{{ formatTime(event.timestamp) }}</span>
               <span class="debug-error-card__class">{{ event.data?.error_class || event.event_type }}</span>
-              <span class="debug-error-card__msg">{{ event.data?.message || event.data?.error || $tr('Unknown error', '未知错误', { de: 'Unbekannter Fehler' }) }}</span>
+              <span class="debug-error-card__msg">{{ event.data?.message || event.data?.error || $tr('Unknown error', '未知错误', { de: 'Unbekannter Fehler', fr: 'Erreur inconnue' }) }}</span>
             </div>
             <div v-if="expandedIds.has(event.event_id)" class="debug-error-card__detail">
               <div v-if="event.data?.context" class="debug-detail-section">
-                <strong>{{ $tr('Context:', '上下文:', { de: 'Kontext:' }) }}</strong> {{ event.data.context }}
+                <strong>{{ $tr('Context:', '上下文:', { de: 'Kontext:', fr: 'Contexte :' }) }}</strong> {{ event.data.context }}
               </div>
               <pre v-if="event.data?.traceback" class="debug-traceback">{{ event.data.traceback }}</pre>
             </div>
@@ -225,9 +225,9 @@ import { tr } from '../i18n'
 
 const translateTabLabel = (label) => {
   const map = {
-    'Live Feed': tr('Live Feed', '实时事件', { de: 'Live-Feed' }),
-    'LLM Calls': tr('LLM Calls', 'LLM 调用', { de: 'LLM-Aufrufe' }),
-    'Agent Trace': tr('Agent Trace', '智能体追踪', { de: 'Agent-Trace' }),
+    'Live Feed': tr('Live Feed', '实时事件', { de: 'Live-Feed', fr: 'Flux en direct' }),
+    'LLM Calls': tr('LLM Calls', 'LLM 调用', { de: 'LLM-Aufrufe', fr: 'Appels LLM' }),
+    'Agent Trace': tr('Agent Trace', '智能体追踪', { de: 'Agent-Trace', fr: `Trace d'agent` }),
     'Errors': tr('Errors', '错误', { de: 'Fehler' }),
   }
   return map[label] || label

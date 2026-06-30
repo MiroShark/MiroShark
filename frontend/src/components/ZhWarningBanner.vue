@@ -19,7 +19,7 @@
               class="zh-warning-close"
               type="button"
               aria-label="关闭"
-              :title="tr('Dismiss', '关闭', { de: 'Schließen' })"
+              :title="tr('Dismiss', '关闭', { de: 'Schließen', fr: 'Ignorer' })"
               @click="dismissZhWarning"
             >
               ✕

@@ -2,13 +2,13 @@
   <div class="explore-container">
     <!-- Top Navigation Bar (mirrors Home.vue nav for visual consistency) -->
     <nav class="navbar">
-      <router-link to="/" class="nav-brand" :title="$tr('Back to home', '返回首页', { de: 'Zurück zur Startseite' })">
+      <router-link to="/" class="nav-brand" :title="$tr('Back to home', '返回首页', { de: 'Zurück zur Startseite', fr: `Retour à l'accueil` })">
         <img src="/shark.webp" alt="" class="nav-brand-mark" />
         <span>MiroShark</span>
       </router-link>
       <div class="nav-links">
-        <router-link to="/" class="nav-link" :title="$tr('Back to home', '返回首页', { de: 'Zurück zur Startseite' })">
-          <span class="arrow">←</span> {{ $tr('Home', '首页', { de: 'Startseite' }) }}
+        <router-link to="/" class="nav-link" :title="$tr('Back to home', '返回首页', { de: 'Zurück zur Startseite', fr: `Retour à l'accueil` })">
+          <span class="arrow">←</span> {{ $tr('Home', '首页', { de: 'Startseite', fr: 'Accueil' }) }}
         </router-link>
         <a
           href="https://github.com/aaronjmars/MiroShark"
@@ -26,19 +26,19 @@
       <!-- Header -->
       <header class="explore-header">
         <div class="tag-row">
-          <span class="chrome-chip">{{ verifiedOnly ? $tr('Verified', '已验证', { de: 'Verifiziert' }) : $tr('Explore', '浏览', { de: 'Entdecken' }) }}</span>
+          <span class="chrome-chip">{{ verifiedOnly ? $tr('Verified', '已验证', { de: 'Verifiziert', fr: 'Vérifié' }) : $tr('Explore', '浏览', { de: 'Entdecken', fr: 'Explorer' }) }}</span>
           <span class="meta-sep">·</span>
           <span class="meta-text">
-            {{ verifiedOnly ? $tr('Predictions that called real events', '预言已对应真实事件', { de: 'Vorhersagen, die echte Ereignisse vorwegnahmen' }) : $tr('Public simulation gallery', '公开模拟图库', { de: 'Öffentliche Simulationsgalerie' }) }}
+            {{ verifiedOnly ? $tr('Predictions that called real events', '预言已对应真实事件', { de: 'Vorhersagen, die echte Ereignisse vorwegnahmen', fr: 'Prédictions qui se sont réalisées' }) : $tr('Public simulation gallery', '公开模拟图库', { de: 'Öffentliche Simulationsgalerie', fr: 'Galerie publique des simulations' }) }}
           </span>
         </div>
-        <h1 class="page-title">{{ verifiedOnly ? $tr('Calls that landed.', '命中的预言。', { de: 'Vorhersagen, die zutrafen.' }) : $tr('Simulations the community ran.', '社区运行的模拟。', { de: 'Simulationen der Community.' }) }}</h1>
+        <h1 class="page-title">{{ verifiedOnly ? $tr('Calls that landed.', '命中的预言。', { de: 'Vorhersagen, die zutrafen.', fr: 'Prédictions qui se sont vérifiées.' }) : $tr('Simulations the community ran.', '社区运行的模拟。', { de: 'Simulationen der Community.', fr: 'Simulations lancées par la communauté.' }) }}</h1>
         <p class="page-subtitle">
           <template v-if="verifiedOnly">
-            {{ $tr('Each card is a public MiroShark run whose operator marked the real-world outcome. Hover the badge for the source link, open one to see how the agent consensus formed, or fork it to test the same agent population on a fresh scenario.', '每张卡片都是一次由运营者标注了真实结果的公开 MiroShark 运行。将鼠标悬停在徽章上查看出处链接,点击查看智能体共识如何形成,或派生它以使用同一组智能体测试新的情景。', { de: 'Jede Karte ist ein öffentlicher MiroShark-Lauf, dessen Betreiber das tatsächliche Ergebnis eingetragen hat. Fahren Sie über das Abzeichen für den Quellenlink, öffnen Sie eine Karte, um zu sehen, wie der Agentenkonsens entstand, oder verzweigen Sie sie, um dieselbe Agentenpopulation in einem neuen Szenario zu testen.' }) }}
+            {{ $tr('Each card is a public MiroShark run whose operator marked the real-world outcome. Hover the badge for the source link, open one to see how the agent consensus formed, or fork it to test the same agent population on a fresh scenario.', '每张卡片都是一次由运营者标注了真实结果的公开 MiroShark 运行。将鼠标悬停在徽章上查看出处链接,点击查看智能体共识如何形成,或派生它以使用同一组智能体测试新的情景。', { de: 'Jede Karte ist ein öffentlicher MiroShark-Lauf, dessen Betreiber das tatsächliche Ergebnis eingetragen hat. Fahren Sie über das Abzeichen für den Quellenlink, öffnen Sie eine Karte, um zu sehen, wie der Agentenkonsens entstand, oder verzweigen Sie sie, um dieselbe Agentenpopulation in einem neuen Szenario zu testen.', fr: `Chaque carte est une exécution publique de MiroShark dont l'opérateur a enregistré le résultat réel. Survolez le badge pour le lien source, ouvrez une carte pour voir comment le consensus des agents s'est formé, ou forkez-la pour tester la même population d'agents sur un nouveau scénario.` }) }}
           </template>
           <template v-else>
-            {{ $tr("Every card is a real MiroShark run someone published. Open one to see the full belief drift, agent network, and prediction outcome — or fork it in one click and run your own variant with the same agent population.", '每张卡片都是有人发布的真实 MiroShark 运行。打开任一张可查看完整的信念漂移、智能体网络与预测结果 — 或一键派生,使用同一组智能体运行你自己的变体。', { de: 'Jede Karte ist ein echter MiroShark-Lauf, den jemand veröffentlicht hat. Öffnen Sie eine, um die vollständige Überzeugungsdrift, das Agentennetzwerk und das Vorhersageergebnis zu sehen — oder verzweigen Sie sie mit einem Klick und führen Sie Ihre eigene Variante mit derselben Agentenpopulation aus.' }) }}
+            {{ $tr("Every card is a real MiroShark run someone published. Open one to see the full belief drift, agent network, and prediction outcome — or fork it in one click and run your own variant with the same agent population.", '每张卡片都是有人发布的真实 MiroShark 运行。打开任一张可查看完整的信念漂移、智能体网络与预测结果 — 或一键派生,使用同一组智能体运行你自己的变体。', { de: 'Jede Karte ist ein echter MiroShark-Lauf, den jemand veröffentlicht hat. Öffnen Sie eine, um die vollständige Überzeugungsdrift, das Agentennetzwerk und das Vorhersageergebnis zu sehen — oder verzweigen Sie sie mit einem Klick und führen Sie Ihre eigene Variante mit derselben Agentenpopulation aus.', fr: `Chaque carte est une vraie exécution MiroShark publiée par quelqu'un. Ouvrez-en une pour voir la dérive complète des croyances, le réseau d'agents et le résultat de la prédiction — ou forkez-la en un clic et lancez votre propre variante avec la même population d'agents.` }) }}
           </template>
         </p>
 
@@ -54,8 +54,8 @@
               v-model="searchInput"
               type="search"
               class="search-input"
-              :placeholder="$tr('Search scenarios…', '搜索情景…', { de: 'Szenarien suchen…' })"
-              :aria-label="$tr('Search scenarios', '搜索情景', { de: 'Szenarien suchen' })"
+              :placeholder="$tr('Search scenarios…', '搜索情景…', { de: 'Szenarien suchen…', fr: 'Rechercher des scénarios…' })"
+              :aria-label="$tr('Search scenarios', '搜索情景', { de: 'Szenarien suchen', fr: 'Rechercher des scénarios' })"
               autocomplete="off"
               @input="onSearchInput"
             />
@@ -63,13 +63,13 @@
               v-if="searchInput"
               type="button"
               class="search-clear"
-              :title="$tr('Clear search', '清除搜索', { de: 'Suche löschen' })"
+              :title="$tr('Clear search', '清除搜索', { de: 'Suche löschen', fr: 'Effacer la recherche' })"
               @click="clearSearch"
             >×</button>
           </div>
 
-          <div class="chip-group" role="tablist" :aria-label="$tr('Consensus filter', '共识筛选', { de: 'Konsensfilter' })">
-            <span class="chip-group-label">{{ $tr('Consensus', '共识', { de: 'Konsens' }) }}</span>
+          <div class="chip-group" role="tablist" :aria-label="$tr('Consensus filter', '共识筛选', { de: 'Konsensfilter', fr: 'Filtre consensus' })">
+            <span class="chip-group-label">{{ $tr('Consensus', '共识', { de: 'Konsens', fr: 'Consensus' }) }}</span>
             <button
               v-for="opt in consensusOptions"
               :key="opt.value || 'any'"
@@ -84,8 +84,8 @@
             </button>
           </div>
 
-          <div class="chip-group" role="tablist" :aria-label="$tr('Quality filter', '质量筛选', { de: 'Qualitätsfilter' })">
-            <span class="chip-group-label">{{ $tr('Quality', '质量', { de: 'Qualität' }) }}</span>
+          <div class="chip-group" role="tablist" :aria-label="$tr('Quality filter', '质量筛选', { de: 'Qualitätsfilter', fr: 'Filtre qualité' })">
+            <span class="chip-group-label">{{ $tr('Quality', '质量', { de: 'Qualität', fr: 'Qualité' }) }}</span>
             <button
               v-for="opt in qualityOptions"
               :key="opt.value || 'any'"
@@ -100,7 +100,7 @@
           </div>
 
           <div class="sort-wrap">
-            <label class="sort-label" for="explore-sort">{{ $tr('Sort', '排序', { de: 'Sortierung' }) }}</label>
+            <label class="sort-label" for="explore-sort">{{ $tr('Sort', '排序', { de: 'Sortierung', fr: 'Trier' }) }}</label>
             <select
               id="explore-sort"
               v-model="sortKey"
@@ -108,10 +108,10 @@
               @change="onSortChange"
               :disabled="loading"
             >
-              <option value="date">{{ $tr('Newest first', '最新优先', { de: 'Neueste zuerst' }) }}</option>
-              <option value="trending">{{ $tr('Trending', '热门', { de: 'Trending' }) }}</option>
-              <option value="rounds">{{ $tr('Most rounds', '轮次最多', { de: 'Meiste Runden' }) }}</option>
-              <option value="agents">{{ $tr('Most agents', '智能体最多', { de: 'Meiste Agenten' }) }}</option>
+              <option value="date">{{ $tr('Newest first', '最新优先', { de: 'Neueste zuerst', fr: `Plus récents d'abord` }) }}</option>
+              <option value="trending">{{ $tr('Trending', '热门', { de: 'Trending', fr: 'Tendances' }) }}</option>
+              <option value="rounds">{{ $tr('Most rounds', '轮次最多', { de: 'Meiste Runden', fr: 'Le plus de tours' }) }}</option>
+              <option value="agents">{{ $tr('Most agents', '智能体最多', { de: 'Meiste Agenten', fr: `Le plus d'agents` }) }}</option>
             </select>
           </div>
 
@@ -121,32 +121,32 @@
             class="reset-btn"
             @click="resetFilters"
             :disabled="loading"
-            :title="$tr('Clear all filters', '清除所有筛选', { de: 'Alle Filter löschen' })"
+            :title="$tr('Clear all filters', '清除所有筛选', { de: 'Alle Filter löschen', fr: 'Effacer tous les filtres' })"
           >
-            ↻ {{ $tr('Reset', '重置', { de: 'Zurücksetzen' }) }}
+            ↻ {{ $tr('Reset', '重置', { de: 'Zurücksetzen', fr: 'Réinitialiser' }) }}
           </button>
         </div>
 
         <p v-if="filtersActive && !loading" class="result-count">
           <template v-if="total === 0">
-            {{ $tr('No simulations match the current filters.', '没有模拟符合当前筛选条件。', { de: 'Keine Simulationen entsprechen den aktuellen Filtern.' }) }}
+            {{ $tr('No simulations match the current filters.', '没有模拟符合当前筛选条件。', { de: 'Keine Simulationen entsprechen den aktuellen Filtern.', fr: 'Aucune simulation ne correspond aux filtres actuels.' }) }}
           </template>
           <template v-else>
-            {{ total }} {{ total === 1 ? $tr('result', '个结果', { de: 'Ergebnis' }) : $tr('results', '个结果', { de: 'Ergebnisse' }) }}
+            {{ total }} {{ total === 1 ? $tr('result', '个结果', { de: 'Ergebnis', fr: 'résultat' }) : $tr('results', '个结果', { de: 'Ergebnisse', fr: 'résultats' }) }}
           </template>
         </p>
         <div class="stats-row">
           <span class="stat-chip">
             <span class="stat-num">{{ loading ? '…' : total }}</span>
-            <span class="stat-label">{{ verifiedOnly ? $tr('verified', '已验证', { de: 'verifiziert' }) : $tr('published', '已发布', { de: 'veröffentlicht' }) }}</span>
+            <span class="stat-label">{{ verifiedOnly ? $tr('verified', '已验证', { de: 'verifiziert', fr: 'vérifiée' }) : $tr('published', '已发布', { de: 'veröffentlicht', fr: 'publiée' }) }}</span>
           </span>
           <span v-if="!verifiedOnly && !loading && items.length > 0" class="stat-chip">
             <span class="stat-num">{{ resolvedCount }}</span>
-            <span class="stat-label">{{ $tr('resolved', '已结算', { de: 'abgeschlossen' }) }}</span>
+            <span class="stat-label">{{ $tr('resolved', '已结算', { de: 'abgeschlossen', fr: 'résolue' }) }}</span>
           </span>
           <span v-if="!verifiedOnly && !loading && items.length > 0" class="stat-chip">
             <span class="stat-num">{{ verifiedCount }}</span>
-            <span class="stat-label">{{ $tr('verified', '已验证', { de: 'verifiziert' }) }}</span>
+            <span class="stat-label">{{ $tr('verified', '已验证', { de: 'verifiziert', fr: 'vérifiée' }) }}</span>
           </span>
 
           <!-- Verified filter chip — toggles a `?verified=1` fetch + the
@@ -156,12 +156,12 @@
             :class="{ 'filter-chip-active': verifiedFilter }"
             @click="toggleVerifiedFilter"
             :disabled="loading"
-            :title="verifiedFilter ? $tr('Show all public simulations', '显示全部公开模拟', { de: 'Alle öffentlichen Simulationen anzeigen' }) : $tr('Show only simulations with a recorded outcome', '只显示已记录结果的模拟', { de: 'Nur Simulationen mit erfasstem Ergebnis anzeigen' })"
+            :title="verifiedFilter ? $tr('Show all public simulations', '显示全部公开模拟', { de: 'Alle öffentlichen Simulationen anzeigen', fr: 'Afficher toutes les simulations publiques' }) : $tr('Show only simulations with a recorded outcome', '只显示已记录结果的模拟', { de: 'Nur Simulationen mit erfasstem Ergebnis anzeigen', fr: 'Afficher uniquement les simulations avec un résultat enregistré' })"
           >
             <svg class="filter-chip-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z" />
             </svg>
-            <span>{{ $tr('Verified only', '仅已验证', { de: 'Nur verifizierte' }) }}</span>
+            <span>{{ $tr('Verified only', '仅已验证', { de: 'Nur verifizierte', fr: 'Vérifiées uniquement' }) }}</span>
           </button>
 
           <!-- RSS subscription chip — feed mirrors the active view
@@ -174,24 +174,24 @@
             rel="noopener"
             :title="
               verifiedFilter
-                ? $tr('Subscribe to verified-only Atom feed in Feedly / Readwise / Inoreader / NetNewsWire', '在 Feedly / Readwise / Inoreader / NetNewsWire 中订阅仅含已验证内容的 Atom 源', { de: 'Nur-verifizierte Atom-Feed in Feedly / Readwise / Inoreader / NetNewsWire abonnieren' })
-                : $tr('Subscribe to all public simulations as an Atom feed in Feedly / Readwise / Inoreader / NetNewsWire', '在 Feedly / Readwise / Inoreader / NetNewsWire 中以 Atom 源订阅全部公开模拟', { de: 'Alle öffentlichen Simulationen als Atom-Feed in Feedly / Readwise / Inoreader / NetNewsWire abonnieren' })
+                ? $tr('Subscribe to verified-only Atom feed in Feedly / Readwise / Inoreader / NetNewsWire', '在 Feedly / Readwise / Inoreader / NetNewsWire 中订阅仅含已验证内容的 Atom 源', { de: 'Nur-verifizierte Atom-Feed in Feedly / Readwise / Inoreader / NetNewsWire abonnieren', fr: `S'abonner au flux Atom « vérifiées uniquement » dans Feedly / Readwise / Inoreader / NetNewsWire` })
+                : $tr('Subscribe to all public simulations as an Atom feed in Feedly / Readwise / Inoreader / NetNewsWire', '在 Feedly / Readwise / Inoreader / NetNewsWire 中以 Atom 源订阅全部公开模拟', { de: 'Alle öffentlichen Simulationen als Atom-Feed in Feedly / Readwise / Inoreader / NetNewsWire abonnieren', fr: `S'abonner à toutes les simulations publiques via un flux Atom dans Feedly / Readwise / Inoreader / NetNewsWire` })
             "
           >
             <svg class="filter-chip-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M5 3v2.5c8 0 13.5 5.5 13.5 13.5H21C21 9.6 14.4 3 5 3Zm0 5v2.5c4.7 0 8.5 3.8 8.5 8.5H16C16 12.7 11.3 8 5 8Zm1.5 6.5A2 2 0 1 0 6.5 18.5a2 2 0 0 0 0-4Z" />
             </svg>
-            <span>{{ $tr('Subscribe via RSS', '通过 RSS 订阅', { de: 'Per RSS abonnieren' }) }}</span>
+            <span>{{ $tr('Subscribe via RSS', '通过 RSS 订阅', { de: 'Per RSS abonnieren', fr: `S'abonner via RSS` }) }}</span>
           </a>
 
           <button
             class="refresh-btn"
             @click="refresh"
             :disabled="loading"
-            :title="$tr('Re-fetch the gallery', '重新获取图库', { de: 'Galerie neu laden' })"
+            :title="$tr('Re-fetch the gallery', '重新获取图库', { de: 'Galerie neu laden', fr: 'Recharger la galerie' })"
           >
             <span v-if="loading">…</span>
-            <span v-else>{{ $tr('↻ Refresh', '↻ 刷新', { de: '↻ Aktualisieren' }) }}</span>
+            <span v-else>{{ $tr('↻ Refresh', '↻ 刷新', { de: '↻ Aktualisieren', fr: '↻ Actualiser' }) }}</span>
           </button>
         </div>
       </header>
@@ -206,9 +206,9 @@
       <!-- Error -->
       <div v-else-if="error" class="gallery-error">
         <div class="error-icon">⚠</div>
-        <div class="error-title">{{ $tr("Couldn't load the gallery", '无法加载图库', { de: 'Galerie konnte nicht geladen werden' }) }}</div>
+        <div class="error-title">{{ $tr("Couldn't load the gallery", '无法加载图库', { de: 'Galerie konnte nicht geladen werden', fr: `Impossible de charger la galerie` }) }}</div>
         <div class="error-msg">{{ error }}</div>
-        <button class="error-retry" @click="refresh">{{ $tr('Try again', '重试', { de: 'Erneut versuchen' }) }}</button>
+        <button class="error-retry" @click="refresh">{{ $tr('Try again', '重试', { de: 'Erneut versuchen', fr: 'Réessayer' }) }}</button>
       </div>
 
       <!-- Empty -->
@@ -216,25 +216,25 @@
         <div class="empty-icon">{{ verifiedFilter ? '◈' : '◇' }}</div>
         <div class="empty-title">
           <template v-if="filtersActive">
-            {{ $tr('No simulations match your filters.', '没有模拟符合你的筛选条件。', { de: 'Keine Simulationen entsprechen Ihren Filtern.' }) }}
+            {{ $tr('No simulations match your filters.', '没有模拟符合你的筛选条件。', { de: 'Keine Simulationen entsprechen Ihren Filtern.', fr: 'Aucune simulation ne correspond à vos filtres.' }) }}
           </template>
           <template v-else-if="verifiedFilter">
-            {{ $tr('No verified predictions yet.', '暂无已验证的预言。', { de: 'Noch keine verifizierten Vorhersagen.' }) }}
+            {{ $tr('No verified predictions yet.', '暂无已验证的预言。', { de: 'Noch keine verifizierten Vorhersagen.', fr: `Aucune prédiction vérifiée pour l'instant.` }) }}
           </template>
           <template v-else>
-            {{ $tr('No public simulations yet.', '暂无公开模拟。', { de: 'Noch keine öffentlichen Simulationen.' }) }}
+            {{ $tr('No public simulations yet.', '暂无公开模拟。', { de: 'Noch keine öffentlichen Simulationen.', fr: `Aucune simulation publique pour l'instant.` }) }}
           </template>
         </div>
         <div class="empty-msg">
           <template v-if="filtersActive">
-            {{ $tr('Try widening the search — clear the keyword, switch the consensus chip back to All, or reset every filter at once.', '尝试放宽搜索 — 清空关键词、将共识切回「全部」,或一次性重置所有筛选。', { de: 'Suche erweitern — Stichwort löschen, Konsens-Chip auf „Alle" zurücksetzen oder alle Filter auf einmal zurücksetzen.' }) }}
+            {{ $tr('Try widening the search — clear the keyword, switch the consensus chip back to All, or reset every filter at once.', '尝试放宽搜索 — 清空关键词、将共识切回「全部」,或一次性重置所有筛选。', { de: 'Suche erweitern — Stichwort löschen, Konsens-Chip auf „Alle" zurücksetzen oder alle Filter auf einmal zurücksetzen.', fr: `Essayez d'élargir la recherche — videz le mot-clé, replacez le filtre consensus sur « Tous », ou réinitialisez tous les filtres d'un coup.` }) }}
           </template>
           <template v-else-if="verifiedFilter">
-            {{ $tr("Once an operator marks a public simulation's real-world outcome from the Embed dialog, it shows up here. In the meantime, browse every published run on", '当运营者从嵌入对话框中标记公开模拟的真实结果后,它会出现在这里。在此期间,可在以下位置浏览所有已发布的运行', { de: 'Sobald ein Betreiber das tatsächliche Ergebnis einer öffentlichen Simulation im Einbettungs-Dialog einträgt, erscheint es hier. In der Zwischenzeit können Sie alle veröffentlichten Läufe unter' }) }}
+            {{ $tr("Once an operator marks a public simulation's real-world outcome from the Embed dialog, it shows up here. In the meantime, browse every published run on", '当运营者从嵌入对话框中标记公开模拟的真实结果后,它会出现在这里。在此期间,可在以下位置浏览所有已发布的运行', { de: 'Sobald ein Betreiber das tatsächliche Ergebnis einer öffentlichen Simulation im Einbettungs-Dialog einträgt, erscheint es hier. In der Zwischenzeit können Sie alle veröffentlichten Läufe unter', fr: `Lorsqu'un opérateur enregistre le résultat réel d'une simulation publique depuis la boîte de dialogue d'intégration, elle apparaît ici. En attendant, parcourez toutes les exécutions publiées sur` }) }}
             <router-link to="/explore" class="inline-link">/explore</router-link>.
           </template>
           <template v-else>
-            {{ $tr(`Yours could be first. Run a simulation, click the share icon on the result page, toggle "Public" — it'll appear here within 30 seconds.`, '你的可能是第一个。运行一次模拟,在结果页点击分享图标,切换为「公开」 — 它会在 30 秒内出现在这里。', { de: 'Ihrer könnte der erste sein. Führen Sie eine Simulation aus, klicken Sie auf das Teilen-Symbol auf der Ergebnisseite, schalten Sie auf „Öffentlich" — es erscheint hier innerhalb von 30 Sekunden.' }) }}
+            {{ $tr(`Yours could be first. Run a simulation, click the share icon on the result page, toggle "Public" — it'll appear here within 30 seconds.`, '你的可能是第一个。运行一次模拟,在结果页点击分享图标,切换为「公开」 — 它会在 30 秒内出现在这里。', { de: 'Ihrer könnte der erste sein. Führen Sie eine Simulation aus, klicken Sie auf das Teilen-Symbol auf der Ergebnisseite, schalten Sie auf „Öffentlich" — es erscheint hier innerhalb von 30 Sekunden.', fr: `Vous pourriez être le premier. Lancez une simulation, cliquez sur l'icône de partage sur la page de résultat, basculez sur « Public » — elle apparaîtra ici sous 30 secondes.` }) }}
           </template>
         </div>
         <button
@@ -243,14 +243,14 @@
           class="empty-cta empty-cta-button"
           @click="resetFilters"
         >
-          {{ $tr('Reset filters →', '重置筛选 →', { de: 'Filter zurücksetzen →' }) }}
+          {{ $tr('Reset filters →', '重置筛选 →', { de: 'Filter zurücksetzen →', fr: 'Réinitialiser les filtres →' }) }}
         </button>
         <router-link
           v-else
           :to="verifiedFilter ? '/explore' : '/'"
           class="empty-cta"
         >
-          {{ verifiedFilter ? $tr('Browse all public sims →', '浏览全部公开模拟 →', { de: 'Alle öffentlichen Simulationen durchsuchen →' }) : $tr('Run a simulation →', '运行一次模拟 →', { de: 'Simulation starten →' }) }}
+          {{ verifiedFilter ? $tr('Browse all public sims →', '浏览全部公开模拟 →', { de: 'Alle öffentlichen Simulationen durchsuchen →', fr: 'Parcourir toutes les simulations publiques →' }) : $tr('Run a simulation →', '运行一次模拟 →', { de: 'Simulation starten →', fr: 'Lancer une simulation →' }) }}
         </router-link>
       </div>
 
@@ -271,7 +271,7 @@
           <router-link
             :to="{ name: 'SimulationRun', params: { simulationId: item.simulation_id } }"
             class="card-thumb-link"
-            :title="item.scenario || $tr('Open simulation', '打开模拟', { de: 'Simulation öffnen' })"
+            :title="item.scenario || $tr('Open simulation', '打开模拟', { de: 'Simulation öffnen', fr: 'Ouvrir la simulation' })"
           >
             <img
               :src="shareCardSrc(item)"
@@ -286,7 +286,7 @@
           <!-- Body -->
           <div class="card-body">
             <h2 class="card-scenario" :title="item.scenario">
-              {{ item.scenario || $tr('(untitled scenario)', '(未命名情景)', { de: '(unbenanntes Szenario)' }) }}
+              {{ item.scenario || $tr('(untitled scenario)', '(未命名情景)', { de: '(unbenanntes Szenario)', fr: '(scénario sans titre)' }) }}
             </h2>
 
             <div class="card-pills">
@@ -308,7 +308,7 @@
                 v-if="item.quality_health"
                 class="pill"
                 :class="qualityPillClass(item.quality_health)"
-                :title="$tr('Quality health: ', '质量健康度:', { de: 'Qualitätsstatus: ' }) + item.quality_health"
+                :title="$tr('Quality health: ', '质量健康度:', { de: 'Qualitätsstatus: ', fr: 'État de qualité : ' }) + item.quality_health"
               >
                 ◉ {{ item.quality_health }}
               </span>
@@ -316,7 +316,7 @@
                 v-if="dominantStance(item)"
                 class="pill"
                 :class="stancePillClass(dominantStance(item).label)"
-                :title="$tr('Final consensus: ', '最终共识:', { de: 'Endkonsens: ' }) + stanceTooltip(item)"
+                :title="$tr('Final consensus: ', '最终共识:', { de: 'Endkonsens: ', fr: 'Consensus final : ' }) + stanceTooltip(item)"
               >
                 {{ stanceGlyph(dominantStance(item).label) }}
                 {{ stanceLabel(dominantStance(item).label) }} {{ dominantStance(item).pct }}%
@@ -324,14 +324,14 @@
               <span
                 v-if="item.resolution_outcome"
                 class="pill pill-resolved"
-                :title="$tr('Real-world outcome recorded: ', '真实结果已记录:', { de: 'Tatsächliches Ergebnis erfasst: ' }) + item.resolution_outcome"
+                :title="$tr('Real-world outcome recorded: ', '真实结果已记录:', { de: 'Tatsächliches Ergebnis erfasst: ', fr: 'Résultat réel enregistré : ' }) + item.resolution_outcome"
               >
-                ✓ {{ $tr('Resolved', '已结算', { de: 'Abgeschlossen' }) }} · {{ item.resolution_outcome }}
+                ✓ {{ $tr('Resolved', '已结算', { de: 'Abgeschlossen', fr: 'Résolue' }) }} · {{ item.resolution_outcome }}
               </span>
               <span
                 v-else
                 class="pill pill-status"
-                :title="$tr('Runner status: ', '运行状态:', { de: 'Ausführungsstatus: ' }) + item.runner_status"
+                :title="$tr('Runner status: ', '运行状态:', { de: 'Ausführungsstatus: ', fr: 'Statut du lanceur : ' }) + item.runner_status"
               >
                 {{ formatStatus(item) }}
               </span>
@@ -358,12 +358,12 @@
 
             <div class="card-meta">
               <span class="meta-item">
-                <span class="meta-label">{{ $tr('Agents', '智能体', { de: 'Agenten' }) }}</span>
+                <span class="meta-label">{{ $tr('Agents', '智能体', { de: 'Agenten', fr: 'Agents' }) }}</span>
                 <span class="meta-val">{{ item.agent_count || 0 }}</span>
               </span>
               <span class="meta-sep">·</span>
               <span class="meta-item">
-                <span class="meta-label">{{ $tr('Rounds', '轮次', { de: 'Runden' }) }}</span>
+                <span class="meta-label">{{ $tr('Rounds', '轮次', { de: 'Runden', fr: 'Tours' }) }}</span>
                 <span class="meta-val">
                   {{ item.current_round || 0 }}<span v-if="item.total_rounds">/{{ item.total_rounds }}</span>
                 </span>
@@ -380,16 +380,16 @@
                 :to="{ name: 'SimulationRun', params: { simulationId: item.simulation_id } }"
                 class="action-btn action-view"
               >
-                {{ $tr('Open →', '打开 →', { de: 'Öffnen →' }) }}
+                {{ $tr('Open →', '打开 →', { de: 'Öffnen →', fr: 'Ouvrir →' }) }}
               </router-link>
               <button
                 class="action-btn action-fork"
                 @click="forkAndOpen(item)"
                 :disabled="forkingId === item.simulation_id"
-                :title="$tr(`Copy this simulation's agents + config into a new run`, '将此模拟的智能体与配置复制到一次新的运行', { de: 'Agenten und Konfiguration dieser Simulation in einen neuen Lauf kopieren' })"
+                :title="$tr(`Copy this simulation's agents + config into a new run`, '将此模拟的智能体与配置复制到一次新的运行', { de: 'Agenten und Konfiguration dieser Simulation in einen neuen Lauf kopieren', fr: `Copier les agents et la configuration de cette simulation dans une nouvelle exécution` })"
               >
-                <span v-if="forkingId === item.simulation_id">{{ $tr('Forking…', '派生中…', { de: 'Verzweigen…' }) }}</span>
-                <span v-else>{{ $tr('Fork this →', '派生此项 →', { de: 'Verzweigen →' }) }}</span>
+                <span v-if="forkingId === item.simulation_id">{{ $tr('Forking…', '派生中…', { de: 'Verzweigen…', fr: 'Fork en cours…' }) }}</span>
+                <span v-else>{{ $tr('Fork this →', '派生此项 →', { de: 'Verzweigen →', fr: 'Forker cette simulation →' }) }}</span>
               </button>
             </div>
             <div
@@ -409,8 +409,8 @@
           @click="loadMore"
           :disabled="loadingMore"
         >
-          <span v-if="loadingMore">{{ $tr('Loading…', '加载中…', { de: 'Laden…' }) }}</span>
-          <span v-else>{{ $tr('Load more', '加载更多', { de: 'Mehr laden' }) }} ({{ total - items.length }} {{ $tr('remaining', '剩余', { de: 'verbleibend' }) }})</span>
+          <span v-if="loadingMore">{{ $tr('Loading…', '加载中…', { de: 'Laden…', fr: 'Chargement…' }) }}</span>
+          <span v-else>{{ $tr('Load more', '加载更多', { de: 'Mehr laden', fr: 'Charger plus' }) }} ({{ total - items.length }} {{ $tr('remaining', '剩余', { de: 'verbleibend', fr: 'restants' }) }})</span>
         </button>
       </div>
     </div>
@@ -418,7 +418,7 @@
     <footer class="explore-footer">
       <span class="footer-line"></span>
       <span class="footer-text">
-        {{ $tr(`Want yours here? Run a sim, open the Embed dialog, toggle "Public."`, '想让你的也出现在这里?运行一次模拟,打开嵌入对话框,切换为「公开」即可。', { de: 'Möchten Sie hier erscheinen? Führen Sie eine Simulation aus, öffnen Sie den Einbettungs-Dialog und schalten Sie auf „Öffentlich".' }) }}
+        {{ $tr(`Want yours here? Run a sim, open the Embed dialog, toggle "Public."`, '想让你的也出现在这里?运行一次模拟,打开嵌入对话框,切换为「公开」即可。', { de: 'Möchten Sie hier erscheinen? Führen Sie eine Simulation aus, öffnen Sie den Einbettungs-Dialog und schalten Sie auf „Öffentlich".', fr: `Vous voulez apparaître ici ? Lancez une simulation, ouvrez la boîte de dialogue d'intégration, basculez sur « Public ».` }) }}
       </span>
       <span class="footer-line"></span>
     </footer>
@@ -484,18 +484,18 @@ const quality = ref(_readEnumParam(route.query.quality, ALLOWED_QUALITY))
 const sortKey = ref(_readEnumParam(route.query.sort, ALLOWED_SORT) || 'date')
 
 const consensusOptions = [
-  { value: '', label: () => tr('All', '全部', { de: 'Alle' }) },
-  { value: 'bullish', glyph: '▲', glyphClass: 'glyph-bullish', label: () => tr('Bullish', '看涨', { de: 'Bullisch' }) },
-  { value: 'neutral', glyph: '●', glyphClass: 'glyph-neutral', label: () => tr('Neutral', '中立', { de: 'Neutral' }) },
-  { value: 'bearish', glyph: '▼', glyphClass: 'glyph-bearish', label: () => tr('Bearish', '看跌', { de: 'Bärisch' }) },
+  { value: '', label: () => $tr('All', '全部', { de: 'Alle', fr: 'Tous' }) },
+  { value: 'bullish', glyph: '▲', glyphClass: 'glyph-bullish', label: () => $tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' }) },
+  { value: 'neutral', glyph: '●', glyphClass: 'glyph-neutral', label: () => $tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' }) },
+  { value: 'bearish', glyph: '▼', glyphClass: 'glyph-bearish', label: () => $tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' }) },
 ]
 
 const qualityOptions = [
-  { value: '', label: () => tr('All', '全部', { de: 'Alle' }) },
-  { value: 'excellent', label: () => tr('Excellent', '优秀', { de: 'Ausgezeichnet' }) },
-  { value: 'good', label: () => tr('Good', '良好', { de: 'Gut' }) },
-  { value: 'fair', label: () => tr('Fair', '一般', { de: 'Ausreichend' }) },
-  { value: 'poor', label: () => tr('Poor', '较差', { de: 'Schlecht' }) },
+  { value: '', label: () => $tr('All', '全部', { de: 'Alle', fr: 'Tous' }) },
+  { value: 'excellent', label: () => $tr('Excellent', '优秀', { de: 'Ausgezeichnet', fr: 'Excellent' }) },
+  { value: 'good', label: () => $tr('Good', '良好', { de: 'Gut', fr: 'Bon' }) },
+  { value: 'fair', label: () => $tr('Fair', '一般', { de: 'Ausreichend', fr: 'Moyen' }) },
+  { value: 'poor', label: () => $tr('Poor', '较差', { de: 'Schlecht', fr: 'Médiocre' }) },
 ]
 
 const filtersActive = computed(
@@ -629,9 +629,9 @@ const stancePillClass = (label) => {
 }
 
 const stanceLabel = (label) => {
-  if (label === 'Bullish') return tr('Bullish', '看涨', { de: 'Bullisch' })
-  if (label === 'Bearish') return tr('Bearish', '看跌', { de: 'Bärisch' })
-  if (label === 'Neutral') return tr('Neutral', '中立', { de: 'Neutral' })
+  if (label === 'Bullish') return $tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' })
+  if (label === 'Bearish') return $tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' })
+  if (label === 'Neutral') return $tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' })
   return label
 }
 
@@ -641,7 +641,7 @@ const stanceTooltip = (item) => {
   const b = (c.bullish ?? 0).toFixed(1)
   const n = (c.neutral ?? 0).toFixed(1)
   const be = (c.bearish ?? 0).toFixed(1)
-  return `${tr('Bullish', '看涨', { de: 'Bullisch' })} ${b}% · ${tr('Neutral', '中立', { de: 'Neutral' })} ${n}% · ${tr('Bearish', '看跌', { de: 'Bärisch' })} ${be}%`
+  return `${$tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' })} ${b}% · ${$tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' })} ${n}% · ${$tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' })} ${be}%`
 }
 
 const qualityPillClass = (health) => {
@@ -665,9 +665,9 @@ const formatDate = (iso) => {
 }
 
 const outcomePillLabel = (label) => {
-  if (label === 'correct') return tr('Verified', '已验证', { de: 'Verifiziert' })
-  if (label === 'incorrect') return tr('Called wrong', '预言落空', { de: 'Falsch vorhergesagt' })
-  if (label === 'partial') return tr('Partial', '部分命中', { de: 'Teilweise zutreffend' })
+  if (label === 'correct') return $tr('Verified', '已验证', { de: 'Verifiziert', fr: 'Vérifié' })
+  if (label === 'incorrect') return $tr('Called wrong', '预言落空', { de: 'Falsch vorhergesagt', fr: 'Prédiction erronée' })
+  if (label === 'partial') return $tr('Partial', '部分命中', { de: 'Teilweise zutreffend', fr: 'Partielle' })
   return ''
 }
 
@@ -704,7 +704,7 @@ const loadPage = async (offset = 0) => {
     sort: sortKey.value || undefined,
   })
   if (!res?.success) {
-    throw new Error(res?.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen' }))
+    throw new Error(res?.error || $tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
   }
   return {
     data: res.data || [],
@@ -748,7 +748,7 @@ const refresh = async () => {
     forkErrors.value = {}
   } catch (err) {
     error.value =
-      err?.response?.data?.error || err?.message || tr('Failed to load gallery', '无法加载图库', { de: 'Galerie konnte nicht geladen werden' })
+      err?.response?.data?.error || err?.message || $tr('Failed to load gallery', '无法加载图库', { de: 'Galerie konnte nicht geladen werden', fr: 'Échec du chargement de la galerie' })
   } finally {
     loading.value = false
   }
@@ -767,7 +767,7 @@ const loadMore = async () => {
     hasMore.value = page.hasMore
   } catch (err) {
     error.value =
-      err?.response?.data?.error || err?.message || tr('Failed to load more', '加载更多失败', { de: 'Weitere Inhalte konnten nicht geladen werden' })
+      err?.response?.data?.error || err?.message || $tr('Failed to load more', '加载更多失败', { de: 'Weitere Inhalte konnten nicht geladen werden', fr: 'Échec du chargement supplémentaire' })
   } finally {
     loadingMore.value = false
   }
@@ -782,16 +782,16 @@ const forkAndOpen = async (item) => {
       parent_simulation_id: item.simulation_id,
     })
     if (!res?.success) {
-      throw new Error(res?.error || tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen' }))
+      throw new Error(res?.error || $tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen', fr: 'Échec du fork' }))
     }
     const newId = res.data?.simulation_id
-    if (!newId) throw new Error(tr('Fork did not return a simulation_id', '派生未返回 simulation_id', { de: 'Verzweigung hat keine simulation_id zurückgegeben' }))
+    if (!newId) throw new Error($tr('Fork did not return a simulation_id', '派生未返回 simulation_id', { de: 'Verzweigung hat keine simulation_id zurückgegeben', fr: `Le fork n'a pas renvoyé de simulation_id` }))
     router.push({ name: 'SimulationRun', params: { simulationId: newId } })
   } catch (err) {
     forkErrors.value = {
       ...forkErrors.value,
       [item.simulation_id]:
-        err?.response?.data?.error || err?.message || tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen' }),
+        err?.response?.data?.error || err?.message || $tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen', fr: 'Échec du fork' }),
     }
   } finally {
     forkingId.value = ''

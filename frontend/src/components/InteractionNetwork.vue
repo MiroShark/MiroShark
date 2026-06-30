@@ -4,37 +4,37 @@
     <div class="net-header">
       <div class="net-title">
         <span class="net-icon">⬡</span>
-        <span class="net-label">{{ $tr('INTERACTION NETWORK', '互动网络', { de: 'INTERAKTIONSNETZWERK' }) }}</span>
+        <span class="net-label">{{ $tr('INTERACTION NETWORK', '互动网络', { de: 'INTERAKTIONSNETZWERK', fr: `RÉSEAU D'INTERACTION` }) }}</span>
       </div>
       <div class="net-header-actions">
         <button
           class="net-export-btn"
           :disabled="!hasData || exporting || !copySupported"
-          :title="copySupported ? $tr('Copy graph as PNG (with MiroShark watermark)', '复制图为 PNG(含 MiroShark 水印)', { de: 'Graph als PNG kopieren (mit MiroShark-Wasserzeichen)' }) : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', { de: 'Bildkopie wird in diesem Browser nicht unterstützt' })"
+          :title="copySupported ? $tr('Copy graph as PNG (with MiroShark watermark)', '复制图为 PNG(含 MiroShark 水印)', { de: 'Graph als PNG kopieren (mit MiroShark-Wasserzeichen)', fr: 'Copier le graphe en PNG (avec filigrane MiroShark)' }) : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', { de: 'Bildkopie wird in diesem Browser nicht unterstützt', fr: `Copie d'image non supportée dans ce navigateur` })"
           @click="copyChart"
         >
-          {{ copiedFlash ? $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+          {{ copiedFlash ? $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
         </button>
         <button
           class="net-export-btn"
           :disabled="!hasData || exporting"
           @click="downloadChart"
-          :title="$tr('Download graph as PNG (with MiroShark watermark)', '下载图为 PNG(含 MiroShark 水印)', { de: 'Graph als PNG herunterladen (mit MiroShark-Wasserzeichen)' })"
+          :title="$tr('Download graph as PNG (with MiroShark watermark)', '下载图为 PNG(含 MiroShark 水印)', { de: 'Graph als PNG herunterladen (mit MiroShark-Wasserzeichen)', fr: 'Télécharger le graphe en PNG (avec filigrane MiroShark)' })"
         >
-          {{ $tr('Download ↓', '下载 ↓', { de: 'Herunterladen ↓' }) }}
+          {{ $tr('Download ↓', '下载 ↓', { de: 'Herunterladen ↓', fr: 'Télécharger ↓' }) }}
         </button>
       </div>
     </div>
 
     <!-- Legend -->
     <div class="net-legend">
-      <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨', { de: 'Optimistisch' }) }}</span>
-      <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立', { de: 'Neutral' }) }}</span>
-      <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌', { de: 'Pessimistisch' }) }}</span>
+      <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨', { de: 'Optimistisch', fr: 'Haussier' }) }}</span>
+      <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' }) }}</span>
+      <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌', { de: 'Pessimistisch', fr: 'Baissier' }) }}</span>
       <span class="legend-sep">|</span>
       <span class="legend-item"><span class="legend-line twitter-line"></span>Twitter</span>
       <span class="legend-item"><span class="legend-line reddit-line"></span>Reddit</span>
-      <span class="legend-item"><span class="legend-line cross-line"></span>{{ $tr('Cross-platform', '跨平台', { de: 'Plattformübergreifend' }) }}</span>
+      <span class="legend-item"><span class="legend-line cross-line"></span>{{ $tr('Cross-platform', '跨平台', { de: 'Plattformübergreifend', fr: 'Multi-plateforme' }) }}</span>
     </div>
 
     <!-- Platform filter -->
@@ -48,7 +48,7 @@
     <!-- Loading -->
     <div v-if="loading" class="net-state">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Computing interaction network...', '正在计算互动网络...', { de: 'Interaktionsnetzwerk wird berechnet...' }) }}</span>
+      <span>{{ $tr('Computing interaction network...', '正在计算互动网络...', { de: 'Interaktionsnetzwerk wird berechnet...', fr: `Calcul du réseau d'interaction…` }) }}</span>
     </div>
 
     <!-- Error -->
@@ -56,8 +56,8 @@
 
     <!-- No data -->
     <div v-else-if="!hasData" class="net-state">
-      <span>{{ $tr('No interaction data available.', '暂无互动数据。', { de: 'Keine Interaktionsdaten verfügbar.' }) }}</span>
-      <span class="net-hint">{{ $tr('Run a simulation to generate agent interactions.', '运行一次模拟以生成智能体互动。', { de: 'Führen Sie eine Simulation aus, um Agenteninteraktionen zu generieren.' }) }}</span>
+      <span>{{ $tr('No interaction data available.', '暂无互动数据。', { de: 'Keine Interaktionsdaten verfügbar.', fr: `Aucune donnée d'interaction disponible.` }) }}</span>
+      <span class="net-hint">{{ $tr('Run a simulation to generate agent interactions.', '运行一次模拟以生成智能体互动。', { de: 'Führen Sie eine Simulation aus, um Agenteninteraktionen zu generieren.', fr: `Lancez une simulation pour générer des interactions d'agents.` }) }}</span>
     </div>
 
     <!-- Graph -->
@@ -139,17 +139,17 @@
             {{ translateStance(hoveredNodeData?.stance) }} · {{ hoveredNodeData?.platforms?.join(', ') }}
           </text>
           <text x="0" y="26" font-size="9" font-family="monospace" fill="rgba(10,10,10,0.5)">
-            {{ $tr('In:', '入度:', { de: 'Ein:' }) }} {{ hoveredNodeData?.in_degree }} · {{ $tr('Out:', '出度:', { de: 'Aus:' }) }} {{ hoveredNodeData?.out_degree }} · {{ $tr('Rank', '排名', { de: 'Rang' }) }} #{{ hoveredNodeData?.rank }}
+            {{ $tr('In:', '入度:', { de: 'Ein:', fr: 'Entrée :' }) }} {{ hoveredNodeData?.in_degree }} · {{ $tr('Out:', '出度:', { de: 'Aus:', fr: 'Sortie :' }) }} {{ hoveredNodeData?.out_degree }} · {{ $tr('Rank', '排名', { de: 'Rang', fr: 'Rang' }) }} #{{ hoveredNodeData?.rank }}
           </text>
           <text x="0" y="34" font-size="0" fill="transparent">pad</text>
         </g>
       </svg>
 
       <!-- Zoom controls -->
-      <div class="net-zoom-controls" :aria-label="$tr('Zoom controls', '缩放控制', { de: 'Zoom-Steuerung' })">
-        <button class="zoom-btn" @click="zoomBy(1.25)" :title="$tr('Zoom in', '放大', { de: 'Vergrößern' })">+</button>
-        <button class="zoom-btn" @click="zoomBy(0.8)" :title="$tr('Zoom out', '缩小', { de: 'Verkleinern' })">−</button>
-        <button class="zoom-btn zoom-reset" @click="resetView" :title="$tr('Reset view (double-click graph)', '重置视图(双击图)', { de: 'Ansicht zurücksetzen (Doppelklick auf Graph)' })">⤢</button>
+      <div class="net-zoom-controls" :aria-label="$tr('Zoom controls', '缩放控制', { de: 'Zoom-Steuerung', fr: 'Contrôles de zoom' })">
+        <button class="zoom-btn" @click="zoomBy(1.25)" :title="$tr('Zoom in', '放大', { de: 'Vergrößern', fr: 'Zoomer' })">+</button>
+        <button class="zoom-btn" @click="zoomBy(0.8)" :title="$tr('Zoom out', '缩小', { de: 'Verkleinern', fr: 'Dézoomer' })">−</button>
+        <button class="zoom-btn zoom-reset" @click="resetView" :title="$tr('Reset view (double-click graph)', '重置视图(双击图)', { de: 'Ansicht zurücksetzen (Doppelklick auf Graph)', fr: 'Réinitialiser la vue (double-clic sur le graphe)' })">⤢</button>
         <span class="zoom-level">{{ Math.round(zoom * 100) }}%</span>
       </div>
     </div>
@@ -157,7 +157,7 @@
     <!-- Insights Panel -->
     <div v-if="hasData && networkData?.insights" class="net-insights">
       <div v-if="networkData.insights.top_hub" class="insight-card">
-        <span class="insight-label">{{ $tr('Top Hub', '顶级中心', { de: 'Wichtigster Hub' }) }}</span>
+        <span class="insight-label">{{ $tr('Top Hub', '顶级中心', { de: 'Wichtigster Hub', fr: 'Hub principal' }) }}</span>
         <span class="insight-text">{{ networkData.insights.top_hub.description }}</span>
       </div>
       <div v-if="networkData.insights.top_bridge" class="insight-card">
@@ -169,7 +169,7 @@
         <span class="insight-text">{{ networkData.insights.echo_chamber.description }}</span>
       </div>
       <div class="insight-card stats-row">
-        <span class="insight-stat">{{ networkData.insights.total_nodes }} {{ $tr('agents', '智能体', { de: 'Agenten' }) }}</span>
+        <span class="insight-stat">{{ networkData.insights.total_nodes }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }}</span>
         <span class="insight-stat">{{ networkData.insights.total_edges }} {{ $tr('interactions', '互动', { de: 'Interaktionen' }) }}</span>
       </div>
     </div>
@@ -189,8 +189,8 @@ import {
 import { tr } from '../i18n'
 
 const translateStance = (stance) => {
-  if (stance === 'bullish') return tr('bullish', '看涨', { de: 'optimistisch' })
-  if (stance === 'bearish') return tr('bearish', '看跌', { de: 'pessimistisch' })
+  if (stance === 'bullish') return $tr('bullish', '看涨', { de: 'optimistisch', fr: 'haussier' })
+  if (stance === 'bearish') return $tr('bearish', '看跌', { de: 'pessimistisch', fr: 'baissier' })
   if (stance === 'neutral') return tr('neutral', '中立', { de: 'neutral' })
   return stance
 }
@@ -547,7 +547,7 @@ const _buildExportCanvas = () => {
   const edgeCount = (networkData.value?.edges || []).length
   const { drawHeader, headerHeight } = buildTitledHeader({
     title: tr('Interaction Network', '互动网络', { de: 'Interaktionsnetzwerk' }),
-    subtitle: `${nodeCount} ${tr('agents', '智能体', { de: 'Agenten' })} · ${edgeCount} ${tr('edges', '条边', { de: 'Kanten' })}`,
+    subtitle: `${nodeCount} ${$tr('agents', '智能体', { de: 'Agenten', fr: 'agents' })} · ${edgeCount} ${tr('edges', '条边', { de: 'Kanten' })}`,
     width: W,
   })
   return renderSvgToCanvas(svgRef.value, {

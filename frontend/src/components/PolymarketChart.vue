@@ -4,25 +4,25 @@
     <div class="pm-header">
       <div class="pm-header-left">
         <img src="/pm.png" alt="Polymarket" class="pm-logo" />
-        <span class="pm-header-title">{{ $tr('Prediction Markets', '预测市场', { de: 'Vorhersagemärkte' }) }}</span>
-        <span v-if="live" class="pm-live-dot"><span class="pm-live-pulse"></span>{{ $tr('LIVE', '实时', { de: 'LIVE' }) }}</span>
+        <span class="pm-header-title">{{ $tr('Prediction Markets', '预测市场', { de: 'Vorhersagemärkte', fr: 'Marchés de prédiction' }) }}</span>
+        <span v-if="live" class="pm-live-dot"><span class="pm-live-pulse"></span>{{ $tr('LIVE', '实时', { de: 'LIVE', fr: 'EN DIRECT' }) }}</span>
       </div>
       <div v-if="selected" class="pm-header-actions">
         <button
           class="pm-export-btn"
           :disabled="exporting || !copySupported"
-          :title="copySupported ? $tr('Copy chart as PNG (with MiroShark watermark)', '复制图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG kopieren (mit MiroShark-Wasserzeichen)' }) : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', { de: 'Bild-Kopieren wird in diesem Browser nicht unterstützt' })"
+          :title="copySupported ? $tr('Copy chart as PNG (with MiroShark watermark)', '复制图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG kopieren (mit MiroShark-Wasserzeichen)', fr: 'Copier le graphique en PNG (avec filigrane MiroShark)' }) : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', { de: 'Bild-Kopieren wird in diesem Browser nicht unterstützt', fr: `Copie d'image non supportée dans ce navigateur` })"
           @click="copyChart"
         >
-          {{ copiedFlash ? $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+          {{ copiedFlash ? $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
         </button>
         <button
           class="pm-export-btn"
           :disabled="exporting"
-          :title="$tr('Download chart as PNG (with MiroShark watermark)', '下载图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG herunterladen (mit MiroShark-Wasserzeichen)' })"
+          :title="$tr('Download chart as PNG (with MiroShark watermark)', '下载图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG herunterladen (mit MiroShark-Wasserzeichen)', fr: 'Télécharger le graphique en PNG (avec filigrane MiroShark)' })"
           @click="downloadChart"
         >
-          {{ $tr('Download ↓', '下载 ↓', { de: 'Herunterladen ↓' }) }}
+          {{ $tr('Download ↓', '下载 ↓', { de: 'Herunterladen ↓', fr: 'Télécharger ↓' }) }}
         </button>
       </div>
     </div>
@@ -31,11 +31,11 @@
       <div class="pm-body">
         <!-- Market list -->
         <aside class="pm-market-list">
-          <div v-if="marketsLoading && !markets.length" class="pm-empty">{{ $tr('Loading markets...', '加载市场中...', { de: 'Märkte werden geladen...' }) }}</div>
+          <div v-if="marketsLoading && !markets.length" class="pm-empty">{{ $tr('Loading markets...', '加载市场中...', { de: 'Märkte werden geladen...', fr: 'Chargement des marchés…' }) }}</div>
           <div v-else-if="marketsError" class="pm-empty pm-error">{{ marketsError }}</div>
           <div v-else-if="!markets.length" class="pm-empty">
-            <div class="pm-empty-title">{{ $tr('No markets yet', '暂无市场', { de: 'Noch keine Märkte' }) }}</div>
-            <div class="pm-empty-hint">{{ $tr('Markets appear as agents create them during the simulation.', '智能体在模拟过程中创建市场后,将显示在此处。', { de: 'Märkte erscheinen, sobald Agenten sie während der Simulation erstellen.' }) }}</div>
+            <div class="pm-empty-title">{{ $tr('No markets yet', '暂无市场', { de: 'Noch keine Märkte', fr: `Aucun marché pour l'instant` }) }}</div>
+            <div class="pm-empty-hint">{{ $tr('Markets appear as agents create them during the simulation.', '智能体在模拟过程中创建市场后,将显示在此处。', { de: 'Märkte erscheinen, sobald Agenten sie während der Simulation erstellen.', fr: 'Les marchés apparaissent au fur et à mesure que les agents les créent pendant la simulation.' }) }}</div>
           </div>
           <button
             v-for="m in markets"
@@ -44,13 +44,13 @@
             :class="{ 'pm-market-row-active': selectedId === m.market_id }"
             @click="selectMarket(m.market_id)"
           >
-            <div class="pm-market-q">{{ m.question || `${$tr('Market', '市场', { de: 'Markt' })} #${m.market_id}` }}</div>
+            <div class="pm-market-q">{{ m.question || `${$tr('Market', '市场', { de: 'Markt', fr: 'Marché' })} #${m.market_id}` }}</div>
             <div class="pm-market-meta">
               <span class="pm-market-price" :class="priceClass(m.price_yes)">
                 {{ formatPct(m.price_yes) }}
               </span>
-              <span class="pm-market-trades">{{ m.trade_count }} {{ $tr('trades', '笔交易', { de: 'Trades' }) }}</span>
-              <span v-if="m.resolved" class="pm-market-resolved">{{ m.winning_outcome || $tr('RESOLVED', '已结算', { de: 'ABGERECHNET' }) }}</span>
+              <span class="pm-market-trades">{{ m.trade_count }} {{ $tr('trades', '笔交易', { de: 'Trades', fr: 'trades' }) }}</span>
+              <span v-if="m.resolved" class="pm-market-resolved">{{ m.winning_outcome || $tr('RESOLVED', '已结算', { de: 'ABGERECHNET', fr: 'RÉSOLU' }) }}</span>
             </div>
           </button>
         </aside>
@@ -59,26 +59,26 @@
         <section class="pm-chart-section">
           <div v-if="!selected" class="pm-placeholder">
             <div class="pm-placeholder-icon">◎</div>
-            <div class="pm-placeholder-text">{{ $tr('Select a market to view its price history', '选择一个市场以查看其价格历史', { de: 'Markt auswählen, um den Preisverlauf anzuzeigen' }) }}</div>
+            <div class="pm-placeholder-text">{{ $tr('Select a market to view its price history', '选择一个市场以查看其价格历史', { de: 'Markt auswählen, um den Preisverlauf anzuzeigen', fr: 'Sélectionnez un marché pour voir son historique de prix' }) }}</div>
           </div>
           <template v-else>
             <!-- Question + price header -->
             <div class="pm-chart-header">
-              <div class="pm-chart-q">{{ selected.market.question || `${$tr('Market', '市场', { de: 'Markt' })} #${selected.market.market_id}` }}</div>
+              <div class="pm-chart-q">{{ selected.market.question || `${$tr('Market', '市场', { de: 'Markt', fr: 'Marché' })} #${selected.market.market_id}` }}</div>
               <div class="pm-chart-price-row">
                 <div class="pm-chart-price" :class="priceClass(latestPrice)">
                   {{ formatPct(latestPrice) }}
-                  <span class="pm-chart-outcome-label">{{ $tr('chance', '概率', { de: 'Chance' }) }} {{ selected.market.outcome_a || 'YES' }}</span>
+                  <span class="pm-chart-outcome-label">{{ $tr('chance', '概率', { de: 'Chance', fr: 'chance' }) }} {{ selected.market.outcome_a || 'YES' }}</span>
                 </div>
                 <div v-if="priceDelta !== null" class="pm-chart-delta" :class="deltaClass(priceDelta)">
                   {{ priceDelta >= 0 ? '▲' : '▼' }} {{ formatPct(Math.abs(priceDelta)) }}
                 </div>
               </div>
               <div class="pm-chart-stats">
-                <span class="pm-stat"><span class="pm-stat-k">{{ $tr('TRADES', '交易', { de: 'TRADES' }) }}</span><span class="pm-stat-v">{{ selected.points.length - 1 }}</span></span>
-                <span class="pm-stat"><span class="pm-stat-k">{{ $tr('VOLUME', '成交量', { de: 'VOLUMEN' }) }}</span><span class="pm-stat-v">{{ tradeVolume.toFixed(1) }}</span></span>
-                <span class="pm-stat"><span class="pm-stat-k">{{ $tr('OUTCOMES', '结果', { de: 'ERGEBNISSE' }) }}</span><span class="pm-stat-v">{{ selected.market.outcome_a }}/{{ selected.market.outcome_b }}</span></span>
-                <span v-if="selected.market.resolved" class="pm-stat pm-stat-resolved">{{ $tr('RESOLVED:', '已结算:', { de: 'ABGERECHNET:' }) }} {{ selected.market.winning_outcome }}</span>
+                <span class="pm-stat"><span class="pm-stat-k">{{ $tr('TRADES', '交易', { de: 'TRADES', fr: 'TRADES' }) }}</span><span class="pm-stat-v">{{ selected.points.length - 1 }}</span></span>
+                <span class="pm-stat"><span class="pm-stat-k">{{ $tr('VOLUME', '成交量', { de: 'VOLUMEN', fr: 'VOLUME' }) }}</span><span class="pm-stat-v">{{ tradeVolume.toFixed(1) }}</span></span>
+                <span class="pm-stat"><span class="pm-stat-k">{{ $tr('OUTCOMES', '结果', { de: 'ERGEBNISSE', fr: 'RÉSULTATS' }) }}</span><span class="pm-stat-v">{{ selected.market.outcome_a }}/{{ selected.market.outcome_b }}</span></span>
+                <span v-if="selected.market.resolved" class="pm-stat pm-stat-resolved">{{ $tr('RESOLVED:', '已结算:', { de: 'ABGERECHNET:', fr: 'RÉSOLU :' }) }} {{ selected.market.winning_outcome }}</span>
               </div>
             </div>
 
@@ -173,7 +173,7 @@
                   {{ selected.points[hoverPoint].outcome }}
                   · {{ selected.points[hoverPoint].shares?.toFixed(1) }} shares
                 </div>
-                <div v-else class="pm-tooltip-trade">{{ $tr('Origin (no trades yet)', '初始(尚无交易)', { de: 'Start (noch keine Trades)' }) }}</div>
+                <div v-else class="pm-tooltip-trade">{{ $tr('Origin (no trades yet)', '初始(尚无交易)', { de: 'Start (noch keine Trades)', fr: `Origine (aucun trade pour l'instant)` }) }}</div>
                 <div class="pm-tooltip-time">{{ formatTime(selected.points[hoverPoint].t) }}</div>
               </div>
             </div>

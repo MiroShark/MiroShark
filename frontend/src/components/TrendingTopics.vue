@@ -2,21 +2,21 @@
   <div v-if="shouldRender" class="tt-wrap">
     <div class="tt-head">
       <span class="tt-label">
-        <span class="tt-dot">◉</span> {{ $tr(`What's Trending`, '热门话题', { de: 'Trendthemen' }) }}
+        <span class="tt-dot">◉</span> {{ $tr(`What's Trending`, '热门话题', { de: 'Trendthemen', fr: 'Tendances' }) }}
         <span class="tt-sub">{{ statusLine }}</span>
       </span>
       <button
         v-if="!loading"
         class="tt-refresh"
         type="button"
-        :title="$tr('Refresh feeds', '刷新源', { de: 'Feeds aktualisieren' })"
+        :title="$tr('Refresh feeds', '刷新源', { de: 'Feeds aktualisieren', fr: 'Actualiser les flux' })"
         @click="refresh"
       >↻</button>
     </div>
 
     <div v-if="loading && items.length === 0" class="tt-loading">
       <span class="tt-spinner"></span>
-      {{ $tr('Pulling current headlines from public feeds…', '正在从公共源拉取最新头条…', { de: 'Aktuelle Schlagzeilen aus öffentlichen Feeds werden geladen…' }) }}
+      {{ $tr('Pulling current headlines from public feeds…', '正在从公共源拉取最新头条…', { de: 'Aktuelle Schlagzeilen aus öffentlichen Feeds werden geladen…', fr: 'Récupération des titres actuels depuis les flux publics…' }) }}
     </div>
 
     <div v-else-if="items.length > 0" class="tt-grid">
@@ -37,7 +37,7 @@
         </div>
         <div class="tt-title">{{ item.title }}</div>
         <div class="tt-cta">
-          <span class="tt-cta-text">{{ $tr('Simulate', '模拟', { de: 'Simulieren' }) }}</span>
+          <span class="tt-cta-text">{{ $tr('Simulate', '模拟', { de: 'Simulieren', fr: 'Simuler' }) }}</span>
           <span class="tt-cta-arrow">→</span>
         </div>
       </button>
@@ -85,10 +85,10 @@ const shouldRender = computed(() => {
 })
 
 const statusLine = computed(() => {
-  if (loading.value) return tr('// fetching…', '// 抓取中…', { de: '// wird abgerufen…' })
+  if (loading.value) return tr('// fetching…', '// 抓取中…', { de: '// wird abgerufen…', fr: '// récupération…' })
   if (!fetchedAt.value) return ''
   const ago = relativeTime(fetchedAt.value)
-  return cached.value ? `// ${tr('cached · refreshed', '已缓存 · 刷新于', { de: 'zwischengespeichert · aktualisiert' })} ${ago}` : `// ${tr('refreshed', '刷新于', { de: 'aktualisiert' })} ${ago}`
+  return cached.value ? `// ${$tr('cached · refreshed', '已缓存 · 刷新于', { de: 'zwischengespeichert · aktualisiert', fr: 'cache · actualisé' })} ${ago}` : `// ${tr('refreshed', '刷新于', { de: 'aktualisiert', fr: 'actualisé' })} ${ago}`
 })
 
 const relativeTime = (iso) => {
@@ -96,7 +96,7 @@ const relativeTime = (iso) => {
   const t = Date.parse(iso)
   if (Number.isNaN(t)) return ''
   const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000))
-  if (diffSec < 60) return tr('just now', '刚刚', { de: 'gerade eben' })
+  if (diffSec < 60) return $tr('just now', '刚刚', { de: 'gerade eben', fr: `à l'instant` })
   const diffMin = Math.floor(diffSec / 60)
   if (diffMin < 60) return `${diffMin}${tr('m ago', ' 分钟前', { de: ' Min. her' })}`
   const diffHr = Math.floor(diffMin / 60)

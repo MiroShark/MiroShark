@@ -10,14 +10,14 @@
         <span>MiroShark</span>
       </router-link>
       <div class="ms-nav-links">
-        <router-link to="/explore" class="ms-nav-link" :title="$tr('Browse public simulations', '浏览公开模拟', { de: 'Öffentliche Simulationen durchsuchen' })">
-          {{ $tr('Explore', '浏览', { de: 'Entdecken' }) }}
+        <router-link to="/explore" class="ms-nav-link" :title="$tr('Browse public simulations', '浏览公开模拟', { de: 'Öffentliche Simulationen durchsuchen', fr: 'Parcourir les simulations publiques' })">
+          {{ $tr('Explore', '浏览', { de: 'Entdecken', fr: 'Explorer' }) }}
         </router-link>
         <a href="https://github.com/aaronjmars/MiroShark" target="_blank" rel="noopener" class="ms-nav-link">
           GitHub <span class="ms-nav-arrow">↗</span>
         </a>
         <LocaleToggle />
-        <button class="ms-nav-icon" @click="settingsOpen = true" :title="$tr('Settings', '设置', { de: 'Einstellungen' })" aria-label="Settings">
+        <button class="ms-nav-icon" @click="settingsOpen = true" :title="$tr('Settings', '设置', { de: 'Einstellungen', fr: 'Paramètres' })" aria-label="Settings">
           <svg viewBox="0 0 24 24" class="ms-nav-svg" fill="currentColor" aria-hidden="true">
             <path d="M19.4 13a7.8 7.8 0 0 0 0-2l2-1.6-2-3.4-2.4 1a7.6 7.6 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7.6 7.6 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.8 7.8 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a7.6 7.6 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7.6 7.6 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z" />
           </svg>
@@ -31,7 +31,7 @@
          resolves before redirecting. -->
     <div v-if="templateAutoLaunching" class="ms-toast ms-toast-info">
       <span class="ms-toast-dot" aria-hidden>◇</span>
-      <span>{{ $tr('Loading template — redirecting…', '正在加载模板 — 即将跳转…', { de: 'Vorlage wird geladen — Weiterleitung…' }) }}</span>
+      <span>{{ $tr('Loading template — redirecting…', '正在加载模板 — 即将跳转…', { de: 'Vorlage wird geladen — Weiterleitung…', fr: 'Chargement du modèle — redirection…' }) }}</span>
     </div>
     <div v-if="templateAutoLaunchError" class="ms-toast ms-toast-error">
       <span>⚠ {{ templateAutoLaunchError }}</span>
@@ -50,7 +50,7 @@
             <button class="ms-modal-close" @click="previewDoc = null" aria-label="Close">✕</button>
           </div>
           <div class="ms-modal-meta">
-            {{ previewDoc.char_count.toLocaleString() }} {{ $tr('chars', '字符', { de: 'Zeichen' }) }}
+            {{ previewDoc.char_count.toLocaleString() }} {{ $tr('chars', '字符', { de: 'Zeichen', fr: 'caractères' }) }}
             <span v-if="previewDoc.url" class="ms-modal-sep">·</span>
             <span v-if="previewDoc.url" class="ms-modal-url">{{ previewDoc.url }}</span>
           </div>
@@ -62,7 +62,7 @@
     <main class="ms-main">
       <!-- ── HERO ── -->
       <section class="ms-hero">
-        <span class="ms-chip">{{ $tr('Your first result in under 10 minutes', '10 分钟内得到首个结果', { de: 'Dein erstes Ergebnis in unter 10 Minuten' }) }}</span>
+        <span class="ms-chip">{{ $tr('Your first result in under 10 minutes', '10 分钟内得到首个结果', { de: 'Dein erstes Ergebnis in unter 10 Minuten', fr: 'Votre premier résultat en moins de 10 minutes' }) }}</span>
 
         <div class="ms-hero-stage">
           <div class="ms-shark-wrap ms-float">
@@ -71,9 +71,9 @@
 
           <h1
             class="ms-chrome-text ms-display"
-            :data-text="$tr('Simulate anything for $1', '一切皆可模拟 只需 $1', { de: 'Alles simulieren für $1' })"
+            :data-text="$tr('Simulate anything for $1', '一切皆可模拟 只需 $1', { de: 'Alles simulieren für $1', fr: `Simulez n'importe quoi pour $1` })"
           >
-            {{ $tr('Simulate anything for $1', '一切皆可模拟 只需 $1', { de: 'Alles simulieren für $1' }) }}
+            {{ $tr('Simulate anything for $1', '一切皆可模拟 只需 $1', { de: 'Alles simulieren für $1', fr: `Simulez n'importe quoi pour $1` }) }}
           </h1>
         </div>
 
@@ -111,19 +111,19 @@
           <div class="ms-side-panel ms-glossy">
             <header class="ms-side-head">
               <span class="ms-status-dot" aria-hidden></span>
-              {{ $tr('System Status', '系统状态', { de: 'Systemstatus' }) }}
+              {{ $tr('System Status', '系统状态', { de: 'Systemstatus', fr: 'État du système' }) }}
             </header>
 
-            <h2 class="ms-side-status">{{ $tr('Ready', '就绪', { de: 'Bereit' }) }}</h2>
+            <h2 class="ms-side-status">{{ $tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' }) }}</h2>
             <p class="ms-side-desc">
-              {{ $tr('First simulation in ~10 min, ~$1 on the cloud preset. Drop in a doc or pick a trending headline to start.', '使用云端预设,首次模拟约 10 分钟、约 $1。投入一份文档或挑一条热门头条即可开始。', { de: 'Erste Simulation in ~10 Min., ~$1 mit dem Cloud-Preset. Fügen Sie ein Dokument ein oder wählen Sie eine aktuelle Schlagzeile zum Starten.' }) }}
+              {{ $tr('First simulation in ~10 min, ~$1 on the cloud preset. Drop in a doc or pick a trending headline to start.', '使用云端预设,首次模拟约 10 分钟、约 $1。投入一份文档或挑一条热门头条即可开始。', { de: 'Erste Simulation in ~10 Min., ~$1 mit dem Cloud-Preset. Fügen Sie ein Dokument ein oder wählen Sie eine aktuelle Schlagzeile zum Starten.', fr: 'Première simulation en ~10 min, ~$1 sur le preset cloud. Déposez un document ou choisissez un titre tendance pour commencer.' }) }}
             </p>
           </div>
 
           <div class="ms-side-panel ms-glossy">
             <header class="ms-side-head ms-side-head-faint">
               <span class="ms-diamond" aria-hidden>◇</span>
-              {{ $tr('What it does', '它做什么', { de: 'Was es macht' }) }}
+              {{ $tr('What it does', '它做什么', { de: 'Was es macht', fr: 'Ce que ça fait' }) }}
             </header>
 
             <ol class="ms-steps">
@@ -146,7 +146,7 @@
               <path d="M3.9 12a3.1 3.1 0 0 1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7A3.1 3.1 0 0 1 3.9 12Zm5.1 1h6v-2H9v2Zm8-6h-4v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10Z" />
             </svg>
             <span class="ms-prefill-text">{{ prefillBannerCopy }}</span>
-            <button class="ms-prefill-close" :title="$tr('Dismiss', '关闭', { de: 'Schließen' })" @click="dismissPrefillBanner" aria-label="Dismiss">×</button>
+            <button class="ms-prefill-close" :title="$tr('Dismiss', '关闭', { de: 'Schließen', fr: 'Ignorer' })" @click="dismissPrefillBanner" aria-label="Dismiss">×</button>
           </div>
 
           <div class="ms-console ms-glossy">
@@ -176,8 +176,8 @@
                 />
                 <div v-if="files.length === 0" class="ms-drop-empty">
                   <div class="ms-drop-arrow" aria-hidden>↑</div>
-                  <div class="ms-drop-title">{{ $tr('Drop files to upload', '拖入文件以上传', { de: 'Dateien zum Hochladen ablegen' }) }}</div>
-                  <div class="ms-drop-hint">{{ $tr('or click to browse the file system', '或点击浏览文件系统', { de: 'oder klicken zum Durchsuchen' }) }}</div>
+                  <div class="ms-drop-title">{{ $tr('Drop files to upload', '拖入文件以上传', { de: 'Dateien zum Hochladen ablegen', fr: 'Déposez vos fichiers ici' }) }}</div>
+                  <div class="ms-drop-hint">{{ $tr('or click to browse the file system', '或点击浏览文件系统', { de: 'oder klicken zum Durchsuchen', fr: 'ou cliquez pour parcourir vos fichiers' }) }}</div>
                 </div>
                 <ul v-else class="ms-file-list">
                   <li v-for="(file, i) in files" :key="i" class="ms-file">
@@ -195,7 +195,7 @@
             <section class="ms-block">
               <header class="ms-block-head">
                 <span class="ms-block-label">{{ $tr('01a · Just Ask', '01a · 直接提问', { de: '01a · Einfach fragen' }) }}</span>
-                <span class="ms-block-meta">{{ $tr('No document? Type a question, we synthesize a briefing.', '没有文档?输入一个问题,我们会合成一份简报。', { de: 'Kein Dokument? Eine Frage eingeben, wir erstellen ein Briefing.' }) }}</span>
+                <span class="ms-block-meta">{{ $tr('No document? Type a question, we synthesize a briefing.', '没有文档?输入一个问题,我们会合成一份简报。', { de: 'Kein Dokument? Eine Frage eingeben, wir erstellen ein Briefing.', fr: 'Aucun document ? Tapez une question, nous synthétisons un brief.' }) }}</span>
               </header>
 
               <div class="ms-input-row">
@@ -209,11 +209,11 @@
                 />
                 <button class="ms-btn ms-btn-ghost" @click="runAskMode" :disabled="!askQuestion.trim() || loading || askBusy">
                   <span v-if="askBusy">…</span>
-                  <span v-else>{{ $tr('Research →', '研究 →', { de: 'Recherche →' }) }}</span>
+                  <span v-else>{{ $tr('Research →', '研究 →', { de: 'Recherche →', fr: 'Rechercher →' }) }}</span>
                 </button>
               </div>
               <p v-if="askError" class="ms-error">{{ askError }}</p>
-              <p v-if="askBusy" class="ms-hint">{{ $tr('Synthesizing briefing — Smart model, ~20–30s.', '正在合成简报 — Smart 模型,大约 20–30 秒。', { de: 'Briefing wird erstellt — Smart-Modell, ~20–30 Sek.' }) }}</p>
+              <p v-if="askBusy" class="ms-hint">{{ $tr('Synthesizing briefing — Smart model, ~20–30s.', '正在合成简报 — Smart 模型,大约 20–30 秒。', { de: 'Briefing wird erstellt — Smart-Modell, ~20–30 Sek.', fr: 'Synthèse du brief — modèle Smart, ~20–30 s.' }) }}</p>
 
               <ul v-if="askDocs.length" class="ms-doc-list">
                 <li
@@ -222,7 +222,7 @@
                   class="ms-doc"
                   role="button"
                   tabindex="0"
-                  :title="$tr('Click to preview the generated briefing', '点击预览生成的简报', { de: 'Klicken zum Vorschau des generierten Briefings' })"
+                  :title="$tr('Click to preview the generated briefing', '点击预览生成的简报', { de: 'Klicken zum Vorschau des generierten Briefings', fr: 'Cliquez pour prévisualiser le brief généré' })"
                   @click="previewDoc = doc"
                   @keydown.enter.prevent="previewDoc = doc"
                   @keydown.space.prevent="previewDoc = doc"
@@ -230,7 +230,7 @@
                   <span class="ms-doc-icon" aria-hidden>◈</span>
                   <div class="ms-doc-info">
                     <div class="ms-doc-title">{{ truncate(doc.title, 70) }}</div>
-                    <div class="ms-doc-meta">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符', { de: 'Zeichen' }) }} · {{ truncate(doc.url, 72) }}</div>
+                    <div class="ms-doc-meta">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符', { de: 'Zeichen', fr: 'caractères' }) }} · {{ truncate(doc.url, 72) }}</div>
                   </div>
                   <button @click.stop="removeUrlDocByRef(doc)" class="ms-x" aria-label="Remove">×</button>
                 </li>
@@ -241,7 +241,7 @@
             <section class="ms-block">
               <header class="ms-block-head">
                 <span class="ms-block-label">{{ $tr('01b · URL Import', '01b · 网址导入', { de: '01b · URL-Import' }) }}</span>
-                <span class="ms-block-meta">{{ $tr('Paste article or report URL', '粘贴文章或报告网址', { de: 'Artikel- oder Berichts-URL einfügen' }) }}</span>
+                <span class="ms-block-meta">{{ $tr('Paste article or report URL', '粘贴文章或报告网址', { de: 'Artikel- oder Berichts-URL einfügen', fr: `Collez l'URL d'un article ou d'un rapport` }) }}</span>
               </header>
 
               <div class="ms-input-row">
@@ -255,7 +255,7 @@
                 />
                 <button class="ms-btn ms-btn-ghost" @click="fetchUrlDoc" :disabled="!urlInput.trim() || loading || urlFetching">
                   <span v-if="urlFetching">…</span>
-                  <span v-else>{{ $tr('Fetch →', '抓取 →', { de: 'Abrufen →' }) }}</span>
+                  <span v-else>{{ $tr('Fetch →', '抓取 →', { de: 'Abrufen →', fr: 'Récupérer →' }) }}</span>
                 </button>
               </div>
               <p v-if="urlError" class="ms-error">{{ urlError }}</p>
@@ -267,7 +267,7 @@
                   class="ms-doc"
                   role="button"
                   tabindex="0"
-                  :title="$tr('Click to preview the extracted content', '点击预览提取的内容', { de: 'Klicken zum Vorschau des extrahierten Inhalts' })"
+                  :title="$tr('Click to preview the extracted content', '点击预览提取的内容', { de: 'Klicken zum Vorschau des extrahierten Inhalts', fr: 'Cliquez pour prévisualiser le contenu extrait' })"
                   @click="previewDoc = doc"
                   @keydown.enter.prevent="previewDoc = doc"
                   @keydown.space.prevent="previewDoc = doc"
@@ -275,7 +275,7 @@
                   <span class="ms-doc-icon" aria-hidden>◈</span>
                   <div class="ms-doc-info">
                     <div class="ms-doc-title">{{ truncate(doc.title, 70) }}</div>
-                    <div class="ms-doc-meta">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符', { de: 'Zeichen' }) }} · {{ truncate(doc.url, 72) }}</div>
+                    <div class="ms-doc-meta">{{ doc.char_count.toLocaleString() }} {{ $tr('chars', '字符', { de: 'Zeichen', fr: 'caractères' }) }} · {{ truncate(doc.url, 72) }}</div>
                   </div>
                   <button @click.stop="removeUrlDocByRef(doc)" class="ms-x" aria-label="Remove">×</button>
                 </li>
@@ -284,7 +284,7 @@
               <TrendingTopics :busy="urlFetching" @select="handleTrendingSelect" />
             </section>
 
-            <div class="ms-divider"><span>{{ $tr('Input parameters', '输入参数', { de: 'Eingabeparameter' }) }}</span></div>
+            <div class="ms-divider"><span>{{ $tr('Input parameters', '输入参数', { de: 'Eingabeparameter', fr: `Paramètres d'entrée` }) }}</span></div>
 
             <!-- 02 — Prompt -->
             <section class="ms-block">
@@ -306,24 +306,24 @@
                   rows="6"
                   :disabled="loading"
                 ></textarea>
-                <div class="ms-engine-tag">{{ $tr('Engine: MiroShark-V1.0', '引擎:MiroShark-V1.0', { de: 'Engine: MiroShark-V1.0' }) }}</div>
+                <div class="ms-engine-tag">{{ $tr('Engine: MiroShark-V1.0', '引擎:MiroShark-V1.0', { de: 'Engine: MiroShark-V1.0', fr: 'Moteur : MiroShark-V1.0' }) }}</div>
               </div>
 
               <div v-if="canShareScenarioLink" class="ms-share-row">
                 <button
                   class="ms-share-btn"
                   :class="{ 'is-copied': shareLinkCopied }"
-                  :title="$tr('Copy a URL that drops a reader into this pre-filled form', '复制可让读者直接进入此预填表单的链接', { de: 'URL kopieren, die einen Leser direkt in dieses vorausgefüllte Formular bringt' })"
+                  :title="$tr('Copy a URL that drops a reader into this pre-filled form', '复制可让读者直接进入此预填表单的链接', { de: 'URL kopieren, die einen Leser direkt in dieses vorausgefüllte Formular bringt', fr: 'Copiez une URL qui ouvre ce formulaire pré-rempli' })"
                   @click="copyScenarioShareLink"
                 >
                   <svg viewBox="0 0 24 24" class="ms-share-svg" fill="currentColor" aria-hidden="true">
                     <path d="M3.9 12a3.1 3.1 0 0 1 3.1-3.1h4V7H7a5 5 0 0 0 0 10h4v-1.9H7A3.1 3.1 0 0 1 3.9 12Zm5.1 1h6v-2H9v2Zm8-6h-4v1.9h4a3.1 3.1 0 0 1 0 6.2h-4V17h4a5 5 0 0 0 0-10Z" />
                   </svg>
-                  <span v-if="shareLinkCopied">{{ $tr('Link copied', '链接已复制', { de: 'Link kopiert' }) }}</span>
-                  <span v-else>{{ $tr('Share as link', '分享为链接', { de: 'Als Link teilen' }) }}</span>
+                  <span v-if="shareLinkCopied">{{ $tr('Link copied', '链接已复制', { de: 'Link kopiert', fr: 'Lien copié' }) }}</span>
+                  <span v-else>{{ $tr('Share as link', '分享为链接', { de: 'Als Link teilen', fr: 'Partager le lien' }) }}</span>
                 </button>
                 <span class="ms-share-hint">
-                  {{ $tr('Tweet this URL to invite anyone to run the same setup.', '发推此 URL,即可邀请他人运行相同设置。', { de: 'Diese URL tweeten, um andere einzuladen, das gleiche Setup auszuführen.' }) }}
+                  {{ $tr('Tweet this URL to invite anyone to run the same setup.', '发推此 URL,即可邀请他人运行相同设置。', { de: 'Diese URL tweeten, um andere einzuladen, das gleiche Setup auszuführen.', fr: 'Tweetez cette URL pour inviter qui vous voulez à lancer la même simulation.' }) }}
                 </span>
               </div>
               <p v-if="shareLinkError" class="ms-error">{{ shareLinkError }}</p>
@@ -336,8 +336,8 @@
                 @click="startSimulation"
                 :disabled="!canSubmit || loading"
               >
-                <span v-if="!loading">{{ $tr('Launch Simulation', '启动模拟', { de: 'Simulation starten' }) }}</span>
-                <span v-else>{{ $tr('Initializing…', '初始化中…', { de: 'Initialisierung…' }) }}</span>
+                <span v-if="!loading">{{ $tr('Launch Simulation', '启动模拟', { de: 'Simulation starten', fr: 'Lancer la simulation' }) }}</span>
+                <span v-else>{{ $tr('Initializing…', '初始化中…', { de: 'Initialisierung…', fr: 'Initialisation…' }) }}</span>
                 <span class="ms-cta-arrow" aria-hidden>→</span>
               </button>
             </div>
@@ -503,7 +503,7 @@ const fetchUrlDoc = async () => {
   const url = urlInput.value.trim()
   if (!url || urlFetching.value) return
   if (urlDocs.value.some(d => d.url === url)) {
-    urlError.value = tr('This URL has already been added.', '此网址已添加过。', { de: 'Diese URL wurde bereits hinzugefügt.' })
+    urlError.value = $tr('This URL has already been added.', '此网址已添加过。', { de: 'Diese URL wurde bereits hinzugefügt.', fr: 'Cette URL a déjà été ajoutée.' })
     return
   }
   urlFetching.value = true
@@ -514,10 +514,10 @@ const fetchUrlDoc = async () => {
       urlDocs.value.push(res.data)
       urlInput.value = ''
     } else {
-      urlError.value = res.error || tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.' })
+      urlError.value = res.error || $tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.', fr: `Échec de la récupération de l'URL.` })
     }
   } catch (err) {
-    urlError.value = err.message || tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.' })
+    urlError.value = err.message || $tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.', fr: `Échec de la récupération de l'URL.` })
   } finally {
     urlFetching.value = false
   }
@@ -531,7 +531,7 @@ const runAskMode = async () => {
   try {
     const res = await askMode(q)
     if (!res.success) {
-      askError.value = res.error || tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.' })
+      askError.value = res.error || $tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.', fr: 'Le mode question a échoué.' })
       return
     }
     const d = res.data
@@ -550,7 +550,7 @@ const runAskMode = async () => {
     }
     askQuestion.value = ''
   } catch (err) {
-    askError.value = err?.response?.data?.error || err?.message || tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.' })
+    askError.value = err?.response?.data?.error || err?.message || $tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.', fr: 'Le mode question a échoué.' })
   } finally {
     askBusy.value = false
   }
@@ -559,7 +559,7 @@ const runAskMode = async () => {
 const handleTrendingSelect = ({ url }) => {
   if (!url || urlFetching.value) return
   if (urlDocs.value.some(d => d.url === url)) {
-    urlError.value = tr('This URL is already loaded.', '此网址已加载。', { de: 'Diese URL ist bereits geladen.' })
+    urlError.value = $tr('This URL is already loaded.', '此网址已加载。', { de: 'Diese URL ist bereits geladen.', fr: 'Cette URL a déjà été chargée.' })
     return
   }
   urlInput.value = url

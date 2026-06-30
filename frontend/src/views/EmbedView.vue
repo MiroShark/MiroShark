@@ -5,13 +5,13 @@
   >
     <div v-if="loading" class="embed-state">
       <div class="embed-spinner"></div>
-      <span>{{ $tr('Loading simulation…', '加载模拟中…', { de: 'Simulation wird geladen…' }) }}</span>
+      <span>{{ $tr('Loading simulation…', '加载模拟中…', { de: 'Simulation wird geladen…', fr: 'Chargement de la simulation…' }) }}</span>
     </div>
 
     <div v-else-if="error" class="embed-state embed-error">
       <span>{{ error }}</span>
       <a class="embed-footer-link" :href="simulationUrl" target="_blank" rel="noopener">
-        {{ $tr('Open on MiroShark ↗', '在 MiroShark 中打开 ↗', { de: 'In MiroShark öffnen ↗' }) }}
+        {{ $tr('Open on MiroShark ↗', '在 MiroShark 中打开 ↗', { de: 'In MiroShark öffnen ↗', fr: 'Ouvrir sur MiroShark ↗' }) }}
       </a>
     </div>
 
@@ -21,13 +21,13 @@
         <div class="embed-meta">
           <span class="embed-pill status" :class="statusClass">{{ statusLabel }}</span>
           <span v-if="hasRounds" class="embed-pill">
-            {{ $tr('Round', '轮次', { de: 'Runde' }) }} {{ summary.current_round }}/{{ summary.total_rounds || summary.current_round }}
+            {{ $tr('Round', '轮次', { de: 'Runde', fr: 'Tour' }) }} {{ summary.current_round }}/{{ summary.total_rounds || summary.current_round }}
           </span>
-          <span class="embed-pill">{{ summary.profiles_count || 0 }} {{ $tr('agents', '智能体', { de: 'Agenten' }) }}</span>
+          <span class="embed-pill">{{ summary.profiles_count || 0 }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }}</span>
           <span
             v-if="costLabel"
             class="embed-pill cost"
-            :title="$tr('Estimated cost to run this simulation (lower bound, from logged LLM calls)', '运行此模拟的预估成本(基于已记录的 LLM 调用,为下限)', { de: 'Geschätzte Kosten für diese Simulation (Untergrenze, aus protokollierten LLM-Aufrufen)' })"
+            :title="$tr('Estimated cost to run this simulation (lower bound, from logged LLM calls)', '运行此模拟的预估成本(基于已记录的 LLM 调用,为下限)', { de: 'Geschätzte Kosten für diese Simulation (Untergrenze, aus protokollierten LLM-Aufrufen)', fr: 'Coût estimé pour cette simulation (borne basse, depuis les appels LLM loggés)' })"
           >
             {{ costLabel }}
           </span>
@@ -60,21 +60,21 @@
           />
         </svg>
         <div v-else class="embed-empty-chart">
-          <span>{{ $tr('No belief trajectory yet', '暂无信念轨迹', { de: 'Noch keine Überzeugungstrajektorie' }) }}</span>
+          <span>{{ $tr('No belief trajectory yet', '暂无信念轨迹', { de: 'Noch keine Überzeugungstrajektorie', fr: `Aucune trajectoire de croyances pour l'instant` }) }}</span>
         </div>
 
         <div v-if="hasBelief && !chartOnly" class="embed-final-row">
           <span class="final-chip bullish">
             <span class="chip-dot"></span>
-            {{ $tr('Bullish', '看涨', { de: 'Optimistisch' }) }} {{ finalBullish }}%
+            {{ $tr('Bullish', '看涨', { de: 'Optimistisch', fr: 'Haussier' }) }} {{ finalBullish }}%
           </span>
           <span class="final-chip neutral">
             <span class="chip-dot"></span>
-            {{ $tr('Neutral', '中立', { de: 'Neutral' }) }} {{ finalNeutral }}%
+            {{ $tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' }) }} {{ finalNeutral }}%
           </span>
           <span class="final-chip bearish">
             <span class="chip-dot"></span>
-            {{ $tr('Bearish', '看跌', { de: 'Pessimistisch' }) }} {{ finalBearish }}%
+            {{ $tr('Bearish', '看跌', { de: 'Pessimistisch', fr: 'Baissier' }) }} {{ finalBearish }}%
           </span>
         </div>
       </div>
@@ -87,7 +87,7 @@
           </span>
         </div>
         <a class="embed-footer-link" :href="simulationUrl" target="_blank" rel="noopener">
-          {{ $tr('Powered by', '技术支持:', { de: 'Bereitgestellt von' }) }} <strong>MiroShark</strong> ↗
+          {{ $tr('Powered by', '技术支持:', { de: 'Bereitgestellt von', fr: 'Propulsé par' }) }} <strong>MiroShark</strong> ↗
         </a>
       </footer>
     </template>
@@ -124,7 +124,7 @@ const cost = ref(null)
 
 const scenarioTitle = computed(() => {
   const raw = (summary.value?.scenario || '').trim()
-  if (!raw) return tr('Untitled simulation', '未命名模拟', { de: 'Unbenannte Simulation' })
+  if (!raw) return tr('Untitled simulation', '未命名模拟', { de: 'Unbenannte Simulation', fr: 'Simulation sans titre' })
   return raw.length > 140 ? raw.slice(0, 140).trimEnd() + '…' : raw
 })
 
@@ -134,12 +134,12 @@ const simulationUrl = computed(() => {
 })
 
 const statusLabel = computed(() => {
-  if (!summary.value) return tr('Unknown', '未知', { de: 'Unbekannt' })
+  if (!summary.value) return $tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' })
   const s = (summary.value.runner_status || summary.value.status || '').toLowerCase()
-  if (s === 'completed' || s === 'finished' || s === 'stopped') return tr('Completed', '已完成', { de: 'Abgeschlossen' })
-  if (s === 'running' || s === 'in_progress') return tr('Running', '运行中', { de: 'Läuft' })
-  if (s === 'error' || s === 'failed') return tr('Failed', '失败', { de: 'Fehlgeschlagen' })
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : tr('Ready', '就绪', { de: 'Bereit' })
+  if (s === 'completed' || s === 'finished' || s === 'stopped') return $tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' })
+  if (s === 'running' || s === 'in_progress') return tr('Running', '运行中', { de: 'Läuft', fr: 'En cours' })
+  if (s === 'error' || s === 'failed') return $tr('Failed', '失败', { de: 'Fehlgeschlagen', fr: 'Échec' })
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : $tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
 })
 
 const statusClass = computed(() => {
@@ -186,18 +186,18 @@ const qualityClass = computed(() => {
 const consensusLabel = computed(() => {
   const b = summary.value?.belief
   if (!b?.consensus_round) return ''
-  return `${tr('Consensus formed at round', '共识形成于第', { de: 'Konsens erreicht in Runde' })} ${b.consensus_round}${tr('', '轮', { de: '' })} (${b.consensus_stance})`
+  return `${tr('Consensus formed at round', '共识形成于第', { de: 'Konsens erreicht in Runde', fr: 'Consensus atteint au tour' })} ${b.consensus_round} (${b.consensus_stance})`
 })
 
 const resolutionLabel = computed(() => {
   const r = summary.value?.resolution
   if (!r) return ''
   if (r.accuracy_score !== null && r.accuracy_score !== undefined) {
-    if (r.accuracy_score >= 1.0) return `✓ ${tr('Correct', '正确', { de: 'Richtig' })} · ${tr('Actual', '实际', { de: 'Ergebnis' })} ${r.actual_outcome}`
-    if (r.accuracy_score <= 0.0) return `✗ ${tr('Missed', '未中', { de: 'Verfehlt' })} · ${tr('Actual', '实际', { de: 'Ergebnis' })} ${r.actual_outcome}`
-    return `~ ${tr('Split', '部分', { de: 'Geteilt' })} · ${tr('Actual', '实际', { de: 'Ergebnis' })} ${r.actual_outcome}`
+    if (r.accuracy_score >= 1.0) return `✓ ${tr('Correct', '正确', { de: 'Richtig', fr: 'Correct' })} · ${tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
+    if (r.accuracy_score <= 0.0) return `✗ ${$tr('Missed', '未中', { de: 'Verfehlt', fr: 'Manqué' })} · ${$tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
+    return `~ ${tr('Split', '部分', { de: 'Geteilt' })} · ${$tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
   }
-  return `${tr('Actual', '实际', { de: 'Ergebnis' })} ${r.actual_outcome}`
+  return `${$tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
 })
 
 const resolutionClass = computed(() => {
@@ -210,7 +210,7 @@ const resolutionClass = computed(() => {
 
 const chartAriaLabel = computed(() => {
   if (!hasBelief.value) return tr('No belief trajectory', '无信念轨迹', { de: 'Keine Überzeugungstrajektorie' })
-  return `${tr('Belief drift across', '信念漂移历经', { de: 'Überzeugungsdrift über' })} ${summary.value.belief.rounds.length} ${tr('rounds', '轮次', { de: 'Runden' })}`
+  return `${tr('Belief drift across', '信念漂移历经', { de: 'Überzeugungsdrift über' })} ${summary.value.belief.rounds.length} ${$tr('rounds', '轮次', { de: 'Runden', fr: 'tours' })}`
 })
 
 // Stacked area chart paths — stack order bullish (top), neutral (middle), bearish (bottom).

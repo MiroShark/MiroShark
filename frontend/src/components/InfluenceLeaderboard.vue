@@ -4,15 +4,15 @@
     <div class="lb-header">
       <div class="lb-title">
         <span class="lb-icon">◈</span>
-        <span class="lb-label">{{ $tr('AGENT INFLUENCE LEADERBOARD', '智能体影响力排行榜', { de: 'AGENTEN-EINFLUSS-RANGLISTE' }) }}</span>
+        <span class="lb-label">{{ $tr('AGENT INFLUENCE LEADERBOARD', '智能体影响力排行榜', { de: 'AGENTEN-EINFLUSS-RANGLISTE', fr: `CLASSEMENT D'INFLUENCE DES AGENTS` }) }}</span>
       </div>
       <button
         class="export-btn"
         :disabled="!agents.length"
         @click="exportReport"
-        :title="$tr('Download influence report as JSON', '下载影响力报告 JSON', { de: 'Einfluss-Bericht als JSON herunterladen' })"
+        :title="$tr('Download influence report as JSON', '下载影响力报告 JSON', { de: 'Einfluss-Bericht als JSON herunterladen', fr: `Télécharger le rapport d'influence en JSON` })"
       >
-        {{ $tr('Export JSON ↓', '导出 JSON ↓', { de: 'JSON exportieren ↓' }) }}
+        {{ $tr('Export JSON ↓', '导出 JSON ↓', { de: 'JSON exportieren ↓', fr: 'Export JSON ↓' }) }}
       </button>
     </div>
 
@@ -27,8 +27,8 @@
               <div>
                 <div class="iv-name">{{ interviewAgent.agent_name }}</div>
                 <div class="iv-meta">
-                  {{ $tr('Rank', '排名', { de: 'Rang' }) }} #{{ interviewAgent.rank }} · {{ interviewAgent.influence_score }} {{ $tr('pts', '分', { de: 'Pkt.' }) }}
-                  · {{ interviewAgent.posts_created }} {{ $tr('posts', '帖子', { de: 'Beiträge' }) }}
+                  {{ $tr('Rank', '排名', { de: 'Rang', fr: 'Rang' }) }} #{{ interviewAgent.rank }} · {{ interviewAgent.influence_score }} {{ $tr('pts', '分', { de: 'Pkt.', fr: 'pts' }) }}
+                  · {{ interviewAgent.posts_created }} {{ $tr('posts', '帖子', { de: 'Beiträge', fr: 'publications' }) }}
                 </div>
               </div>
             </div>
@@ -38,8 +38,8 @@
           <!-- Chat thread -->
           <div class="iv-thread" ref="threadEl">
             <div v-if="!interviewHistory.length && !interviewLoading" class="iv-empty">
-              {{ $tr('Ask', '询问', { de: 'Fragen Sie' }) }} {{ interviewAgent.agent_name }} {{ $tr('about their simulation experience.', '关于他们的模拟体验。', { de: 'nach ihrer Simulationserfahrung.' }) }}
-              {{ $tr(`Try: "Why did you post so much in the early rounds?" or "What changed your mind?"`, '试试:"你为什么在前几轮发帖这么多?" 或 "什么改变了你的想法?"', { de: 'Versuchen Sie: „Warum haben Sie in den frühen Runden so viel gepostet?" oder „Was hat Ihre Meinung geändert?"' }) }}
+              {{ $tr('Ask', '询问', { de: 'Fragen Sie', fr: 'Demander' }) }} {{ interviewAgent.agent_name }} {{ $tr('about their simulation experience.', '关于他们的模拟体验。', { de: 'nach ihrer Simulationserfahrung.', fr: 'sur leur expérience de simulation.' }) }}
+              {{ $tr(`Try: "Why did you post so much in the early rounds?" or "What changed your mind?"`, '试试:"你为什么在前几轮发帖这么多?" 或 "什么改变了你的想法?"', { de: 'Versuchen Sie: „Warum haben Sie in den frühen Runden so viel gepostet?" oder „Was hat Ihre Meinung geändert?"', fr: `Essayez : « Pourquoi avez-vous autant publié dans les premiers tours ? » ou « Qu'est-ce qui vous a fait changer d'avis ? »` }) }}
             </div>
             <div
               v-for="(qa, i) in interviewHistory"
@@ -47,7 +47,7 @@
               class="iv-qa-pair"
             >
               <div class="iv-question">
-                <span class="iv-role">{{ $tr('You', '你', { de: 'Sie' }) }}</span>
+                <span class="iv-role">{{ $tr('You', '你', { de: 'Sie', fr: 'Vous' }) }}</span>
                 <span class="iv-text">{{ qa.question }}</span>
               </div>
               <div class="iv-answer">
@@ -57,7 +57,7 @@
             </div>
             <div v-if="interviewLoading" class="iv-thinking">
               <div class="iv-dots"><span></span><span></span><span></span></div>
-              <span>{{ interviewAgent.agent_name }} {{ $tr('is thinking...', '正在思考...', { de: 'denkt nach...' }) }}</span>
+              <span>{{ interviewAgent.agent_name }} {{ $tr('is thinking...', '正在思考...', { de: 'denkt nach...', fr: 'réfléchit…' }) }}</span>
             </div>
           </div>
 
@@ -68,7 +68,7 @@
               v-model="interviewQuestion"
               class="iv-input"
               type="text"
-              :placeholder="$tr('Ask a question...', '提问...', { de: 'Frage stellen...' })"
+              :placeholder="$tr('Ask a question...', '提问...', { de: 'Frage stellen...', fr: 'Posez une question…' })"
               :disabled="interviewLoading"
               @keydown.enter.prevent="submitQuestion"
             />
@@ -77,7 +77,7 @@
               :disabled="interviewLoading || !interviewQuestion.trim()"
               @click="submitQuestion"
             >
-              {{ $tr('Ask', '提问', { de: 'Fragen' }) }}
+              {{ $tr('Ask', '提问', { de: 'Fragen', fr: 'Demander' }) }}
             </button>
           </div>
 
@@ -89,7 +89,7 @@
 
     <!-- Score legend -->
     <div class="lb-legend">
-      <span class="legend-item"><span class="legend-dot engage"></span>{{ $tr('Engagement ×3', '互动 ×3', { de: 'Engagement ×3' }) }}</span>
+      <span class="legend-item"><span class="legend-dot engage"></span>{{ $tr('Engagement ×3', '互动 ×3', { de: 'Engagement ×3', fr: 'Engagement ×3' }) }}</span>
       <span class="legend-item"><span class="legend-dot platform"></span>{{ $tr('Platforms ×5', '平台 ×5', { de: 'Plattformen ×5' }) }}</span>
       <span class="legend-item"><span class="legend-dot post"></span>{{ $tr('Posts ×1', '帖子 ×1', { de: 'Beiträge ×1' }) }}</span>
     </div>
@@ -170,7 +170,7 @@
 
     <!-- Footer -->
     <div v-if="totalAgents > agents.length" class="lb-footer">
-      {{ $tr('Showing top', '显示前', { de: 'Zeige Top' }) }} {{ agents.length }} {{ $tr('of', '/共', { de: 'von' }) }} {{ totalAgents }} {{ $tr('agents', '个智能体', { de: 'Agenten' }) }}
+      {{ $tr('Showing top', '显示前', { de: 'Zeige Top' }) }} {{ agents.length }} {{ $tr('of', '/共', { de: 'von', fr: 'de' }) }} {{ totalAgents }} {{ $tr('agents', '个智能体', { de: 'Agenten', fr: 'agents' }) }}
     </div>
   </div>
 </template>
@@ -218,7 +218,7 @@ const load = async () => {
       agents.value = res.data.agents || []
       totalAgents.value = res.data.total_agents || 0
     } else {
-      error.value = res.error || tr('Failed to load influence data.', '加载影响力数据失败。', { de: 'Einfluss-Daten konnten nicht geladen werden.' })
+      error.value = res.error || tr('Failed to load influence data.', '加载影响力数据失败。', { de: 'Einfluss-Daten konnten nicht geladen werden.', fr: `Échec du chargement des données d'influence.` })
     }
   } catch (err) {
     error.value = err.message || tr('Failed to load influence data.', '加载影响力数据失败。', { de: 'Einfluss-Daten konnten nicht geladen werden.' })

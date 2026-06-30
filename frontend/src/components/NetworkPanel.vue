@@ -1,12 +1,12 @@
 <template>
   <div class="network-panel">
     <div class="panel-header">
-      <span class="panel-title">{{ $tr('Agent Network', '智能体网络', { de: 'Agentennetzwerk' }) }}</span>
+      <span class="panel-title">{{ $tr('Agent Network', '智能体网络', { de: 'Agentennetzwerk', fr: `Réseau d'agents` }) }}</span>
       <div class="header-tools">
-        <span class="node-count" v-if="networkStats.nodes">{{ networkStats.nodes }} {{ $tr('agents', '智能体', { de: 'Agenten' }) }} · {{ networkStats.edges }} {{ $tr('links', '连接', { de: 'Verbindungen' }) }}</span>
-        <button class="tool-btn" @click="resetView" :title="$tr('Reset View', '重置视图', { de: 'Ansicht zurücksetzen' })">
+        <span class="node-count" v-if="networkStats.nodes">{{ networkStats.nodes }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }} · {{ networkStats.edges }} {{ $tr('links', '连接', { de: 'Verbindungen', fr: 'liens' }) }}</span>
+        <button class="tool-btn" @click="resetView" :title="$tr('Reset View', '重置视图', { de: 'Ansicht zurücksetzen', fr: 'Réinitialiser la vue' })">
           <span class="icon-refresh">↻</span>
-          <span class="btn-text">{{ $tr('Reset', '重置', { de: 'Zurücksetzen' }) }}</span>
+          <span class="btn-text">{{ $tr('Reset', '重置', { de: 'Zurücksetzen', fr: 'Réinitialiser' }) }}</span>
         </button>
       </div>
     </div>
@@ -26,7 +26,7 @@
           @input="onRoundChange"
         />
         <span class="round-label">
-          <template v-if="currentRound === 0">{{ $tr('ALL', '全部', { de: 'ALLE' }) }}</template>
+          <template v-if="currentRound === 0">{{ $tr('ALL', '全部', { de: 'ALLE', fr: 'TOUS' }) }}</template>
           <template v-else>R{{ currentRound }}/{{ maxRound }}</template>
         </span>
       </div>
@@ -42,7 +42,7 @@
           <div class="agent-avatar" :style="{ background: selectedAgent.color }">{{ selectedAgent.name[0] }}</div>
           <div class="agent-meta">
             <span class="agent-name">{{ selectedAgent.name }}</span>
-            <span class="agent-stats-line">{{ selectedAgent.actionCount }} {{ $tr('actions', '动作', { de: 'Aktionen' }) }} · {{ selectedAgent.connections }} {{ $tr('connections', '连接', { de: 'Verbindungen' }) }}</span>
+            <span class="agent-stats-line">{{ selectedAgent.actionCount }} {{ $tr('actions', '动作', { de: 'Aktionen', fr: 'actions' }) }} · {{ selectedAgent.connections }} {{ $tr('connections', '连接', { de: 'Verbindungen', fr: 'connexions' }) }}</span>
           </div>
           <button class="detail-close" @click="selectedAgent = null">×</button>
         </div>
@@ -65,19 +65,19 @@
       <!-- Empty State -->
       <div v-if="!hasData" class="empty-state">
         <div class="pulse-ring"></div>
-        <span>{{ $tr('Waiting for agent interactions...', '等待智能体互动...', { de: 'Warte auf Agenteninteraktionen...' }) }}</span>
+        <span>{{ $tr('Waiting for agent interactions...', '等待智能体互动...', { de: 'Warte auf Agenteninteraktionen...', fr: 'En attente des interactions des agents…' }) }}</span>
       </div>
     </div>
 
     <!-- Legend -->
     <div class="network-legend" v-if="hasData">
-      <span class="legend-title">{{ $tr('Platforms', '平台', { de: 'Plattformen' }) }}</span>
+      <span class="legend-title">{{ $tr('Platforms', '平台', { de: 'Plattformen', fr: 'Plateformes' }) }}</span>
       <div class="legend-items">
         <div class="legend-item"><span class="legend-dot" style="background: #f4f1ff"></span><span>X</span></div>
         <div class="legend-item"><span class="legend-dot" style="background: #a78bfa"></span><span>Reddit</span></div>
         <div class="legend-item"><span class="legend-dot" style="background: #c4b5fd"></span><span>Polymarket</span></div>
       </div>
-      <div class="legend-hint">{{ $tr('Node size = activity · Edge thickness = interactions', '节点大小 = 活跃度 · 边粗细 = 互动次数', { de: 'Knotengröße = Aktivität · Kantendicke = Interaktionen' }) }}</div>
+      <div class="legend-hint">{{ $tr('Node size = activity · Edge thickness = interactions', '节点大小 = 活跃度 · 边粗细 = 互动次数', { de: 'Knotengröße = Aktivität · Kantendicke = Interaktionen', fr: 'Taille des nœuds = activité · Épaisseur des arêtes = interactions' }) }}</div>
     </div>
   </div>
 </template>

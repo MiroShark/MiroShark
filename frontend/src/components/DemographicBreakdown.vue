@@ -4,19 +4,19 @@
     <div class="demo-header">
       <div class="demo-title">
         <span class="demo-icon">◇</span>
-        <span class="demo-label">{{ $tr('DEMOGRAPHIC BREAKDOWN', '人口分布', { de: 'DEMOGRAFISCHE AUFSCHLÜSSELUNG' }) }}</span>
+        <span class="demo-label">{{ $tr('DEMOGRAPHIC BREAKDOWN', '人口分布', { de: 'DEMOGRAFISCHE AUFSCHLÜSSELUNG', fr: 'RÉPARTITION DÉMOGRAPHIQUE' }) }}</span>
       </div>
       <div class="demo-header-actions">
         <span v-if="meta" class="demo-meta">
-          {{ meta.agents_with_stance }}/{{ meta.total_agents }} {{ $tr('agents with belief data', '个智能体含信念数据', { de: 'Agenten mit Überzeugungsdaten' }) }}
+          {{ meta.agents_with_stance }}/{{ meta.total_agents }} {{ $tr('agents with belief data', '个智能体含信念数据', { de: 'Agenten mit Überzeugungsdaten', fr: 'agents avec données de croyance' }) }}
         </span>
         <button
           class="demo-export-btn"
           :disabled="!hasData"
           @click="refresh"
-          :title="$tr('Refresh demographic breakdown', '刷新人口分布', { de: 'Demografische Aufschlüsselung aktualisieren' })"
+          :title="$tr('Refresh demographic breakdown', '刷新人口分布', { de: 'Demografische Aufschlüsselung aktualisieren', fr: 'Actualiser la répartition démographique' })"
         >
-          ↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren' }) }}
+          ↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren', fr: 'Actualiser' }) }}
         </button>
       </div>
     </div>
@@ -38,7 +38,7 @@
     <!-- Loading -->
     <div v-if="loading" class="demo-state">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Computing demographic breakdown...', '正在计算人口分布...', { de: 'Demografische Aufschlüsselung wird berechnet...' }) }}</span>
+      <span>{{ $tr('Computing demographic breakdown...', '正在计算人口分布...', { de: 'Demografische Aufschlüsselung wird berechnet...', fr: 'Calcul de la répartition démographique…' }) }}</span>
     </div>
 
     <!-- Error -->
@@ -46,31 +46,31 @@
 
     <!-- No data -->
     <div v-else-if="!hasData" class="demo-state">
-      <span>{{ $tr('No demographic data available.', '暂无人口数据。', { de: 'Keine demografischen Daten verfügbar.' }) }}</span>
-      <span class="demo-hint">{{ $tr('Run a simulation to generate agent profiles.', '运行一次模拟以生成智能体画像。', { de: 'Führen Sie eine Simulation aus, um Agentenprofile zu generieren.' }) }}</span>
+      <span>{{ $tr('No demographic data available.', '暂无人口数据。', { de: 'Keine demografischen Daten verfügbar.', fr: 'Aucune donnée démographique disponible.' }) }}</span>
+      <span class="demo-hint">{{ $tr('Run a simulation to generate agent profiles.', '运行一次模拟以生成智能体画像。', { de: 'Führen Sie eine Simulation aus, um Agentenprofile zu generieren.', fr: `Lancez une simulation pour générer des profils d'agents.` }) }}</span>
     </div>
 
     <!-- Main content -->
     <div v-else class="demo-content">
       <!-- Top divergence callout -->
       <div v-if="topDivergence" class="demo-highlight">
-        <span class="demo-highlight-label">{{ $tr('KEY SUBGROUP DYNAMIC', '关键子群体动态', { de: 'WICHTIGE UNTERGRUPPEN-DYNAMIK' }) }}</span>
+        <span class="demo-highlight-label">{{ $tr('KEY SUBGROUP DYNAMIC', '关键子群体动态', { de: 'WICHTIGE UNTERGRUPPEN-DYNAMIK', fr: 'DYNAMIQUE SOUS-GROUPE CLÉ' }) }}</span>
         <span class="demo-highlight-text">{{ topDivergence.headline }}</span>
       </div>
       <div v-else-if="meta && !meta.has_trajectory" class="demo-highlight demo-highlight-muted">
-        <span class="demo-highlight-label">{{ $tr('NOTICE', '提示', { de: 'HINWEIS' }) }}</span>
+        <span class="demo-highlight-label">{{ $tr('NOTICE', '提示', { de: 'HINWEIS', fr: 'AVIS' }) }}</span>
         <span class="demo-highlight-text">
-          {{ $tr('This simulation has no belief trajectory — stance comparisons will be unavailable, but counts and influence remain accurate.', '此模拟没有信念轨迹 — 立场对比将不可用,但数量和影响力数据仍然准确。', { de: 'Diese Simulation hat keine Überzeugungstrajektorie — Haltungsvergleiche sind nicht verfügbar, aber Zählungen und Einfluss bleiben korrekt.' }) }}
+          {{ $tr('This simulation has no belief trajectory — stance comparisons will be unavailable, but counts and influence remain accurate.', '此模拟没有信念轨迹 — 立场对比将不可用,但数量和影响力数据仍然准确。', { de: 'Diese Simulation hat keine Überzeugungstrajektorie — Haltungsvergleiche sind nicht verfügbar, aber Zählungen und Einfluss bleiben korrekt.', fr: `Cette simulation n'a pas de trajectoire de croyances — les comparaisons de position ne seront pas disponibles, mais les comptes et l'influence restent précis.` }) }}
         </span>
       </div>
 
       <!-- Legend -->
       <div class="demo-legend">
-        <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨', { de: 'Optimistisch' }) }}</span>
-        <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立', { de: 'Neutral' }) }}</span>
-        <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌', { de: 'Pessimistisch' }) }}</span>
+        <span class="legend-item"><span class="legend-dot bullish-dot"></span>{{ $tr('Bullish', '看涨', { de: 'Optimistisch', fr: 'Haussier' }) }}</span>
+        <span class="legend-item"><span class="legend-dot neutral-dot"></span>{{ $tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' }) }}</span>
+        <span class="legend-item"><span class="legend-dot bearish-dot"></span>{{ $tr('Bearish', '看跌', { de: 'Pessimistisch', fr: 'Baissier' }) }}</span>
         <span class="legend-sep">·</span>
-        <span class="legend-item">{{ $tr('Stance mean: -1 ↔ +1', '立场均值: -1 ↔ +1', { de: 'Haltungsmittelwert: -1 ↔ +1' }) }}</span>
+        <span class="legend-item">{{ $tr('Stance mean: -1 ↔ +1', '立场均值: -1 ↔ +1', { de: 'Haltungsmittelwert: -1 ↔ +1', fr: `Moyenne des positions : -1 ↔ +1` }) }}</span>
       </div>
 
       <!-- Segment list for active tab -->
@@ -90,12 +90,12 @@
             <div
               class="stance-seg stance-bullish"
               :style="{ width: segment.bullish_pct + '%' }"
-              :title="$tr('Bullish:', '看涨:', { de: 'Optimistisch:' }) + ` ${segment.bullish_pct}%`"
+              :title="$tr('Bullish:', '看涨:', { de: 'Optimistisch:', fr: 'Haussier :' }) + ` ${segment.bullish_pct}%`"
             ></div>
             <div
               class="stance-seg stance-neutral"
               :style="{ width: segment.neutral_pct + '%' }"
-              :title="$tr('Neutral:', '中立:', { de: 'Neutral:' }) + ` ${segment.neutral_pct}%`"
+              :title="$tr('Neutral:', '中立:', { de: 'Neutral:', fr: 'Neutre :' }) + ` ${segment.neutral_pct}%`"
             ></div>
             <div
               class="stance-seg stance-bearish"
@@ -190,13 +190,13 @@ const hasStanceData = (segment) =>
 const formatSegmentLabel = (raw) => {
   if (!raw) return tr('unknown', '未知', { de: 'unbekannt' })
   const map = {
-    unknown: tr('Unknown', '未知', { de: 'Unbekannt' }),
-    individual: tr('Individual', '个人', { de: 'Einzelperson' }),
-    institutional: tr('Institutional', '机构', { de: 'Institutionell' }),
-    inactive: tr('Inactive', '不活跃', { de: 'Inaktiv' }),
-    male: tr('Male', '男性', { de: 'Männlich' }),
-    female: tr('Female', '女性', { de: 'Weiblich' }),
-    other: tr('Other', '其他', { de: 'Sonstige' }),
+    unknown: $tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' }),
+    individual: tr('Individual', '个人', { de: 'Einzelperson', fr: 'Individuel' }),
+    institutional: tr('Institutional', '机构', { de: 'Institutionell', fr: 'Institutionnel' }),
+    inactive: $tr('Inactive', '不活跃', { de: 'Inaktiv', fr: 'Inactif' }),
+    male: $tr('Male', '男性', { de: 'Männlich', fr: 'Homme' }),
+    female: $tr('Female', '女性', { de: 'Weiblich', fr: 'Femme' }),
+    other: $tr('Other', '其他', { de: 'Sonstige', fr: 'Autre' }),
     twitter: 'X / Twitter',
     reddit: 'Reddit',
     polymarket: 'Polymarket',
@@ -206,11 +206,11 @@ const formatSegmentLabel = (raw) => {
 
 const translateTabLabel = (label) => {
   const map = {
-    'Age': tr('Age', '年龄', { de: 'Alter' }),
-    'Gender': tr('Gender', '性别', { de: 'Geschlecht' }),
-    'Country': tr('Country', '国家', { de: 'Land' }),
-    'Actor type': tr('Actor type', '主体类型', { de: 'Akteurstyp' }),
-    'Platform': tr('Platform', '平台', { de: 'Plattform' }),
+    'Age': tr('Age', '年龄', { de: 'Alter', fr: 'Âge' }),
+    'Gender': $tr('Gender', '性别', { de: 'Geschlecht', fr: 'Genre' }),
+    'Country': $tr('Country', '国家', { de: 'Land', fr: 'Pays' }),
+    'Actor type': $tr('Actor type', '主体类型', { de: 'Akteurstyp', fr: `Type d'acteur` }),
+    'Platform': $tr('Platform', '平台', { de: 'Plattform', fr: 'Plateforme' }),
   }
   return map[label] || label
 }
@@ -253,10 +253,10 @@ const load = async (opts = {}) => {
     } else if (res.success && !res.data) {
       payload.value = null
     } else {
-      error.value = res.error || tr('Failed to load demographic breakdown.', '加载人口分布失败。', { de: 'Demografische Aufschlüsselung konnte nicht geladen werden.' })
+      error.value = res.error || tr('Failed to load demographic breakdown.', '加载人口分布失败。', { de: 'Demografische Aufschlüsselung konnte nicht geladen werden.', fr: 'Échec du chargement de la répartition démographique.' })
     }
   } catch (err) {
-    error.value = err.message || tr('Failed to load demographic breakdown.', '加载人口分布失败。', { de: 'Demografische Aufschlüsselung konnte nicht geladen werden.' })
+    error.value = err.message || tr('Failed to load demographic breakdown.', '加载人口分布失败。', { de: 'Demografische Aufschlüsselung konnte nicht geladen werden.', fr: 'Échec du chargement de la répartition démographique.' })
   } finally {
     loading.value = false
   }

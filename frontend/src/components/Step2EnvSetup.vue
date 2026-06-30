@@ -6,37 +6,37 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">01</span>
-            <span class="step-title">{{ $tr('Simulation Instance Initialization', '模拟实例初始化', { de: 'Simulationsinstanz-Initialisierung' }) }}</span>
+            <span class="step-title">{{ $tr('Simulation Instance Initialization', '模拟实例初始化', { de: 'Simulationsinstanz-Initialisierung', fr: `Initialisation de l'instance de simulation` }) }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 0" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen' }) }}</span>
-            <span v-else-if="simulationId" class="badge processing"><span class="badge-dot"></span>{{ $tr('Initializing', '初始化中', { de: 'Wird initialisiert' }) }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Loading', '加载中…', { de: 'Wird geladen' }) }}</span>
+            <span v-if="phase > 0" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' }) }}</span>
+            <span v-else-if="simulationId" class="badge processing"><span class="badge-dot"></span>{{ $tr('Initializing', '初始化中', { de: 'Wird initialisiert', fr: 'Initialisation en cours' }) }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Loading', '加载中…', { de: 'Wird geladen', fr: 'Chargement' }) }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/create</p>
           <p class="description">
-            {{ $tr('Create a new simulation instance and fetch simulation world parameter templates', '创建一个新的模拟实例并获取模拟世界参数模板', { de: 'Neue Simulationsinstanz erstellen und Simulationswelt-Parametervorlagen abrufen' }) }}
+            {{ $tr('Create a new simulation instance and fetch simulation world parameter templates', '创建一个新的模拟实例并获取模拟世界参数模板', { de: 'Neue Simulationsinstanz erstellen und Simulationswelt-Parametervorlagen abrufen', fr: 'Créez une nouvelle instance de simulation et récupérez les modèles de paramètres du monde' }) }}
           </p>
 
           <div v-if="simulationId" class="info-card">
             <div class="info-row" @click="copyValue(projectData?.project_id)">
-              <span class="info-label">{{ $tr('Project ID', '项目 ID', { de: 'Projekt-ID' }) }}</span>
+              <span class="info-label">{{ $tr('Project ID', '项目 ID', { de: 'Projekt-ID', fr: 'ID du projet' }) }}</span>
               <span class="info-value mono copyable">{{ projectData?.project_id }}</span>
             </div>
             <div class="info-row" @click="copyValue(projectData?.graph_id)">
-              <span class="info-label">{{ $tr('Graph ID', '图谱 ID', { de: 'Graph-ID' }) }}</span>
+              <span class="info-label">{{ $tr('Graph ID', '图谱 ID', { de: 'Graph-ID', fr: 'ID du graphe' }) }}</span>
               <span class="info-value mono copyable">{{ projectData?.graph_id }}</span>
             </div>
             <div class="info-row" @click="copyValue(simulationId)">
-              <span class="info-label">{{ $tr('Simulation ID', '模拟 ID', { de: 'Simulations-ID' }) }}</span>
+              <span class="info-label">{{ $tr('Simulation ID', '模拟 ID', { de: 'Simulations-ID', fr: 'ID de la simulation' }) }}</span>
               <span class="info-value mono copyable">{{ simulationId }}</span>
             </div>
             <div class="info-row" @click="copyValue(taskId)">
-              <span class="info-label">{{ $tr('Task ID', '任务 ID', { de: 'Aufgaben-ID' }) }}</span>
-              <span class="info-value mono copyable">{{ taskId || $tr('Async task completed', '异步任务已完成', { de: 'Asynchrone Aufgabe abgeschlossen' }) }}</span>
+              <span class="info-label">{{ $tr('Task ID', '任务 ID', { de: 'Aufgaben-ID', fr: 'ID de la tâche' }) }}</span>
+              <span class="info-value mono copyable">{{ taskId || $tr('Async task completed', '异步任务已完成', { de: 'Asynchrone Aufgabe abgeschlossen', fr: 'Tâche asynchrone terminée' }) }}</span>
             </div>
           </div>
         </div>
@@ -47,41 +47,41 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">02</span>
-            <span class="step-title">{{ $tr('Generate Agent Profiles', '生成智能体画像', { de: 'Agent-Profile generieren' }) }}</span>
+            <span class="step-title">{{ $tr('Generate Agent Profiles', '生成智能体画像', { de: 'Agent-Profile generieren', fr: `Générer les profils d'agents` }) }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 1" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen' }) }}</span>
+            <span v-if="phase > 1" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' }) }}</span>
             <span v-else-if="phase === 1" class="badge processing"><span class="badge-dot"></span>{{ prepareProgress }}%</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend' }) }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend', fr: 'En attente' }) }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr('Combines context to automatically invoke tools, organize entities and relationships from the knowledge graph, initialize simulated individuals, and assign them unique behaviors and memories based on reality seeds', '结合上下文自动调用工具,从知识图谱整理实体与关系,初始化模拟个体,并基于现实种子赋予其独特的行为与记忆', { de: 'Kombiniert Kontext, um automatisch Werkzeuge aufzurufen, Entitäten und Beziehungen aus dem Wissensgraphen zu organisieren, simulierte Individuen zu initialisieren und ihnen einzigartige Verhaltensweisen und Erinnerungen auf Basis von Faktenbasis (Seeds) zuzuweisen' }) }}
+            {{ $tr('Combines context to automatically invoke tools, organize entities and relationships from the knowledge graph, initialize simulated individuals, and assign them unique behaviors and memories based on reality seeds', '结合上下文自动调用工具,从知识图谱整理实体与关系,初始化模拟个体,并基于现实种子赋予其独特的行为与记忆', { de: 'Kombiniert Kontext, um automatisch Werkzeuge aufzurufen, Entitäten und Beziehungen aus dem Wissensgraphen zu organisieren, simulierte Individuen zu initialisieren und ihnen einzigartige Verhaltensweisen und Erinnerungen auf Basis von Faktenbasis (Seeds) zuzuweisen', fr: 'Combine le contexte pour invoquer automatiquement des outils, organiser les entités et relations du graphe de connaissances, initialiser les individus simulés, et leur assigner des comportements et mémoires uniques basés sur les Fondements (Seeds)' }) }}
           </p>
 
           <!-- Profiles Stats -->
           <div v-if="profiles.length > 0" class="stats-grid">
             <div class="stat-card">
               <span class="stat-value">{{ profiles.length }}</span>
-              <span class="stat-label">{{ $tr('Current Agents', '当前智能体', { de: 'Aktuelle Agenten' }) }}</span>
+              <span class="stat-label">{{ $tr('Current Agents', '当前智能体', { de: 'Aktuelle Agenten', fr: 'Agents actuels' }) }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ expectedTotal || '-' }}</span>
-              <span class="stat-label">{{ $tr('Expected Total Agents', '预期智能体总数', { de: 'Erwartete Gesamtanzahl Agenten' }) }}</span>
+              <span class="stat-label">{{ $tr('Expected Total Agents', '预期智能体总数', { de: 'Erwartete Gesamtanzahl Agenten', fr: `Nombre total d'agents prévu` }) }}</span>
             </div>
             <div class="stat-card">
               <span class="stat-value">{{ totalTopicsCount }}</span>
-              <span class="stat-label">{{ $tr('Reality Seed Topics', '现实种子话题', { de: 'Faktenbasis-Themen' }) }}</span>
+              <span class="stat-label">{{ $tr('Reality Seed Topics', '现实种子话题', { de: 'Faktenbasis-Themen', fr: 'Sujets des Fondements (Seeds)' }) }}</span>
             </div>
           </div>
 
           <!-- Profiles List Preview -->
           <div v-if="profiles.length > 0" class="profiles-preview">
             <div class="preview-header">
-              <span class="preview-title">{{ $tr('Generated Agent Profiles', '已生成的智能体画像', { de: 'Generierte Agent-Profile' }) }}</span>
+              <span class="preview-title">{{ $tr('Generated Agent Profiles', '已生成的智能体画像', { de: 'Generierte Agent-Profile', fr: `Profils d'agents générés` }) }}</span>
             </div>
             <div class="profiles-list">
               <div
@@ -91,13 +91,13 @@
                 @click="selectProfile(profile)"
               >
                 <div class="profile-header">
-                  <span class="profile-realname">{{ profile.username || $tr('Unknown', '未知', { de: 'Unbekannt' }) }}</span>
+                  <span class="profile-realname">{{ profile.username || $tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' }) }}</span>
                   <span class="profile-username">@{{ profile.name || `agent_${idx}` }}</span>
                 </div>
                 <div class="profile-meta">
-                  <span class="profile-profession">{{ profile.profession || $tr('Unknown Profession', '未知职业', { de: 'Unbekannter Beruf' }) }}</span>
+                  <span class="profile-profession">{{ profile.profession || $tr('Unknown Profession', '未知职业', { de: 'Unbekannter Beruf', fr: 'Profession inconnue' }) }}</span>
                 </div>
-                <p class="profile-bio">{{ profile.bio || $tr('No bio available', '暂无简介', { de: 'Keine Vorstellung verfügbar' }) }}</p>
+                <p class="profile-bio">{{ profile.bio || $tr('No bio available', '暂无简介', { de: 'Keine Vorstellung verfügbar', fr: 'Aucune bio disponible' }) }}</p>
                 <div v-if="profile.interested_topics?.length" class="profile-topics">
                   <span
                     v-for="topic in profile.interested_topics.slice(0, 3)"
@@ -115,7 +115,7 @@
               class="profiles-toggle"
               @click="profilesExpanded = !profilesExpanded"
             >
-              {{ profilesExpanded ? $tr('Show less', '收起', { de: 'Weniger anzeigen' }) : $tr('Show all ', '查看全部 ', { de: 'Alle anzeigen ' }) + profiles.length + $tr(' agents', ' 个智能体', { de: ' Agenten' }) }}
+              {{ profilesExpanded ? $tr('Show less', '收起', { de: 'Weniger anzeigen', fr: 'Afficher moins' }) : $tr('Show all ', '查看全部 ', { de: 'Alle anzeigen ', fr: 'Afficher les ' }) + profiles.length + $tr(' agents', ' 个智能体', { de: ' Agenten', fr: ' agents' }) }}
             </button>
           </div>
         </div>
@@ -126,29 +126,29 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">03</span>
-            <span class="step-title">{{ $tr('Generate Simulation Config', '生成模拟配置', { de: 'Simulationskonfiguration generieren' }) }}</span>
+            <span class="step-title">{{ $tr('Generate Simulation Config', '生成模拟配置', { de: 'Simulationskonfiguration generieren', fr: 'Générer la configuration de la simulation' }) }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 2" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen' }) }}</span>
-            <span v-else-if="configError" class="badge error"><span class="badge-dot"></span>{{ $tr('Failed', '失败', { de: 'Fehlgeschlagen' }) }}</span>
-            <span v-else-if="phase === 2" class="badge processing"><span class="badge-dot"></span>{{ $tr('Generating', '生成中', { de: 'Wird generiert' }) }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend' }) }}</span>
+            <span v-if="phase > 2" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' }) }}</span>
+            <span v-else-if="configError" class="badge error"><span class="badge-dot"></span>{{ $tr('Failed', '失败', { de: 'Fehlgeschlagen', fr: 'Échec' }) }}</span>
+            <span v-else-if="phase === 2" class="badge processing"><span class="badge-dot"></span>{{ $tr('Generating', '生成中', { de: 'Wird generiert', fr: 'Génération en cours' }) }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend', fr: 'En attente' }) }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr(`LLM intelligently configures world time flow, recommendation algorithms, each individual's active time periods, posting frequency, event triggers, and other parameters based on simulation requirements and reality seeds`, 'LLM 根据模拟需求与现实种子,智能配置世界时间流速、推荐算法、每个个体的活跃时段、发帖频率、事件触发等参数', { de: 'LLM konfiguriert intelligent Weltzeitfluss, Empfehlungsalgorithmen, aktive Zeiträume jedes Einzelnen, Beitragshäufigkeit, Ereignisauslöser und weitere Parameter basierend auf Simulationsanforderungen und Faktenbasis (Seeds)' }) }}
+            {{ $tr(`LLM intelligently configures world time flow, recommendation algorithms, each individual's active time periods, posting frequency, event triggers, and other parameters based on simulation requirements and reality seeds`, 'LLM 根据模拟需求与现实种子,智能配置世界时间流速、推荐算法、每个个体的活跃时段、发帖频率、事件触发等参数', { de: 'LLM konfiguriert intelligent Weltzeitfluss, Empfehlungsalgorithmen, aktive Zeiträume jedes Einzelnen, Beitragshäufigkeit, Ereignisauslöser und weitere Parameter basierend auf Simulationsanforderungen und Faktenbasis (Seeds)', fr: `Le LLM configure intelligemment le flux temporel du monde, les algorithmes de recommandation, les périodes d'activité de chaque individu, la fréquence de publication, les déclencheurs d'événements et autres paramètres selon les exigences de la simulation et les Fondements (Seeds)` }) }}
           </p>
 
           <!-- Config Error Panel -->
           <div v-if="configError" class="config-error-panel">
-            <div class="config-error-title">{{ $tr('Config Generation Failed', '配置生成失败', { de: 'Konfigurationsgenerierung fehlgeschlagen' }) }}</div>
+            <div class="config-error-title">{{ $tr('Config Generation Failed', '配置生成失败', { de: 'Konfigurationsgenerierung fehlgeschlagen', fr: 'Échec de la génération de la configuration' }) }}</div>
             <div class="config-error-msg">{{ configError }}</div>
             <div class="config-error-hint">
-              {{ $tr('Common causes: OpenRouter API key invalid or quota exceeded, model name not found, network timeout.', '常见原因:OpenRouter API 密钥无效或额度耗尽、模型名称未找到、网络超时。', { de: 'Häufige Ursachen: OpenRouter API-Schlüssel ungültig oder Kontingent überschritten, Modellname nicht gefunden, Netzwerkzeitüberschreitung.' }) }}
-              {{ $tr('Check your', '请检查您的', { de: 'Bitte überprüfen Sie Ihre' }) }} <code>.env</code> {{ $tr('values for', '中的', { de: 'Werte für' }) }} <code>OPENROUTER_API_KEY</code> {{ $tr('and', '与', { de: 'und' }) }} <code>OPENROUTER_MODEL</code>.
+              {{ $tr('Common causes: OpenRouter API key invalid or quota exceeded, model name not found, network timeout.', '常见原因:OpenRouter API 密钥无效或额度耗尽、模型名称未找到、网络超时。', { de: 'Häufige Ursachen: OpenRouter API-Schlüssel ungültig oder Kontingent überschritten, Modellname nicht gefunden, Netzwerkzeitüberschreitung.', fr: 'Causes courantes : clé API OpenRouter invalide ou quota dépassé, nom de modèle introuvable, timeout réseau.' }) }}
+              {{ $tr('Check your', '请检查您的', { de: 'Bitte überprüfen Sie Ihre', fr: 'Vérifiez vos' }) }} <code>.env</code> {{ $tr('values for', '中的', { de: 'Werte für', fr: 'valeurs pour' }) }} <code>OPENROUTER_API_KEY</code> {{ $tr('and', '与', { de: 'und', fr: 'et' }) }} <code>OPENROUTER_MODEL</code>.
             </div>
             <button
               class="retry-config-btn"
@@ -156,7 +156,7 @@
               @click="handleConfigRetry"
             >
               <span v-if="isConfigRetrying" class="loading-spinner-small"></span>
-              {{ isConfigRetrying ? $tr('Retrying...', '重试中…', { de: 'Wird wiederholt…' }) : $tr('Retry Config Generation', '重新生成配置', { de: 'Konfiguration neu generieren' }) }}
+              {{ isConfigRetrying ? $tr('Retrying...', '重试中…', { de: 'Wird wiederholt…', fr: 'Nouvelle tentative…' }) : $tr('Retry Config Generation', '重新生成配置', { de: 'Konfiguration neu generieren', fr: 'Régénérer la configuration' }) }}
             </button>
           </div>
 
@@ -166,40 +166,40 @@
             <div class="config-block">
               <div class="config-grid">
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Simulation Duration', '模拟时长', { de: 'Simulationsdauer' }) }}</span>
-                  <span class="config-item-value">{{ simulationConfig.time_config?.total_simulation_hours || '-' }} {{ $tr('hours', '小时', { de: 'Stunden' }) }}</span>
+                  <span class="config-item-label">{{ $tr('Simulation Duration', '模拟时长', { de: 'Simulationsdauer', fr: 'Durée de la simulation' }) }}</span>
+                  <span class="config-item-value">{{ simulationConfig.time_config?.total_simulation_hours || '-' }} {{ $tr('hours', '小时', { de: 'Stunden', fr: 'heures' }) }}</span>
                 </div>
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Duration Per Round', '每轮时长', { de: 'Dauer pro Runde' }) }}</span>
-                  <span class="config-item-value">{{ simulationConfig.time_config?.minutes_per_round || '-' }} {{ $tr('min', '分钟', { de: 'Min' }) }}</span>
+                  <span class="config-item-label">{{ $tr('Duration Per Round', '每轮时长', { de: 'Dauer pro Runde', fr: 'Durée par tour' }) }}</span>
+                  <span class="config-item-value">{{ simulationConfig.time_config?.minutes_per_round || '-' }} {{ $tr('min', '分钟', { de: 'Min', fr: 'min' }) }}</span>
                 </div>
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Total Rounds', '总轮次', { de: 'Gesamtrunden' }) }}</span>
-                  <span class="config-item-value">{{ Math.floor((simulationConfig.time_config?.total_simulation_hours * 60 / simulationConfig.time_config?.minutes_per_round)) || '-' }} {{ $tr('rounds', '轮', { de: 'Runden' }) }}</span>
+                  <span class="config-item-label">{{ $tr('Total Rounds', '总轮次', { de: 'Gesamtrunden', fr: 'Nombre total de tours' }) }}</span>
+                  <span class="config-item-value">{{ Math.floor((simulationConfig.time_config?.total_simulation_hours * 60 / simulationConfig.time_config?.minutes_per_round)) || '-' }} {{ $tr('rounds', '轮', { de: 'Runden', fr: 'tours' }) }}</span>
                 </div>
                 <div class="config-item">
-                  <span class="config-item-label">{{ $tr('Active Per Hour', '每小时活跃数', { de: 'Aktive pro Stunde' }) }}</span>
+                  <span class="config-item-label">{{ $tr('Active Per Hour', '每小时活跃数', { de: 'Aktive pro Stunde', fr: 'Actifs par heure' }) }}</span>
                   <span class="config-item-value">{{ simulationConfig.time_config?.agents_per_hour_min }}-{{ simulationConfig.time_config?.agents_per_hour_max }}</span>
                 </div>
               </div>
               <div class="time-periods">
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Peak Hours', '高峰时段', { de: 'Hauptzeit' }) }}</span>
+                  <span class="period-label">{{ $tr('Peak Hours', '高峰时段', { de: 'Hauptzeit', fr: 'Heures de pointe' }) }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.peak_hours?.join(':00, ') }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.peak_activity_multiplier }}</span>
                 </div>
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Working Hours', '工作时段', { de: 'Arbeitszeiten' }) }}</span>
+                  <span class="period-label">{{ $tr('Working Hours', '工作时段', { de: 'Arbeitszeiten', fr: 'Heures de travail' }) }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.work_hours?.[0] }}:00-{{ simulationConfig.time_config?.work_hours?.slice(-1)[0] }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.work_activity_multiplier }}</span>
                 </div>
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Morning Hours', '清晨时段', { de: 'Morgenzeitraum' }) }}</span>
+                  <span class="period-label">{{ $tr('Morning Hours', '清晨时段', { de: 'Morgenzeitraum', fr: 'Heures du matin' }) }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.morning_hours?.[0] }}:00-{{ simulationConfig.time_config?.morning_hours?.slice(-1)[0] }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.morning_activity_multiplier }}</span>
                 </div>
                 <div class="period-item">
-                  <span class="period-label">{{ $tr('Off-Peak Hours', '低峰时段', { de: 'Ruhezeitraum' }) }}</span>
+                  <span class="period-label">{{ $tr('Off-Peak Hours', '低峰时段', { de: 'Ruhezeitraum', fr: 'Heures creuses' }) }}</span>
                   <span class="period-hours">{{ simulationConfig.time_config?.off_peak_hours?.[0] }}:00-{{ simulationConfig.time_config?.off_peak_hours?.slice(-1)[0] }}:00</span>
                   <span class="period-multiplier">×{{ simulationConfig.time_config?.off_peak_activity_multiplier }}</span>
                 </div>
@@ -209,7 +209,7 @@
             <!-- Agent Configuration -->
             <div class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">{{ $tr('Agent Configuration', '智能体配置', { de: 'Agent-Konfiguration' }) }}</span>
+                <span class="config-block-title">{{ $tr('Agent Configuration', '智能体配置', { de: 'Agent-Konfiguration', fr: 'Configuration des agents' }) }}</span>
                 <span class="config-block-badge">{{ simulationConfig.agent_configs?.length || 0 }}</span>
               </div>
               <div class="agents-cards">
@@ -221,7 +221,7 @@
                   <!-- Card Header -->
                   <div class="agent-card-header">
                     <div class="agent-identity">
-                      <span class="agent-id">{{ $tr('Agent', '智能体', { de: 'Agent' }) }} {{ agent.agent_id }}</span>
+                      <span class="agent-id">{{ $tr('Agent', '智能体', { de: 'Agent', fr: 'Agent' }) }} {{ agent.agent_id }}</span>
                       <span class="agent-name">{{ agent.entity_name }}</span>
                     </div>
                     <div class="agent-tags">
@@ -232,7 +232,7 @@
 
                   <!-- Profile Info (from generated profiles) -->
                   <div v-if="getAgentProfile(agent.agent_id)" class="agent-profile-info">
-                    <span class="profile-profession-tag">{{ getAgentProfile(agent.agent_id).profession || $tr('Unknown', '未知', { de: 'Unbekannt' }) }}</span>
+                    <span class="profile-profession-tag">{{ getAgentProfile(agent.agent_id).profession || $tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' }) }}</span>
                     <span v-if="getAgentProfile(agent.agent_id).country" class="profile-country-tag">{{ getAgentProfile(agent.agent_id).country }}</span>
                     <span v-if="getAgentProfile(agent.agent_id).mbti" class="profile-mbti-tag">{{ getAgentProfile(agent.agent_id).mbti }}</span>
                     <p class="profile-bio-snippet">{{ (getAgentProfile(agent.agent_id).bio || '').slice(0, 120) }}{{ (getAgentProfile(agent.agent_id).bio || '').length > 120 ? '...' : '' }}</p>
@@ -240,7 +240,7 @@
 
                   <!-- Active Timeline -->
                   <div class="agent-timeline">
-                    <span class="timeline-label">{{ $tr('Active Hours', '活跃时段', { de: 'Aktiver Zeitraum' }) }}</span>
+                    <span class="timeline-label">{{ $tr('Active Hours', '活跃时段', { de: 'Aktiver Zeitraum', fr: `Heures d'activité` }) }}</span>
                     <div class="mini-timeline">
                       <div 
                         v-for="hour in 24" 
@@ -263,34 +263,34 @@
                   <div class="agent-params">
                     <div class="param-group">
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Posts/hr', '帖子/小时', { de: 'Beiträge/Std' }) }}</span>
+                        <span class="param-label">{{ $tr('Posts/hr', '帖子/小时', { de: 'Beiträge/Std', fr: 'Publications/h' }) }}</span>
                         <span class="param-value">{{ agent.posts_per_hour }}</span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Comments/hr', '评论/小时', { de: 'Kommentare/Std' }) }}</span>
+                        <span class="param-label">{{ $tr('Comments/hr', '评论/小时', { de: 'Kommentare/Std', fr: 'Commentaires/h' }) }}</span>
                         <span class="param-value">{{ agent.comments_per_hour }}</span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Response Delay', '响应延迟', { de: 'Antwortverzögerung' }) }}</span>
-                        <span class="param-value">{{ agent.response_delay_min }}-{{ agent.response_delay_max }}{{ $tr('min', '分钟', { de: 'Min' }) }}</span>
+                        <span class="param-label">{{ $tr('Response Delay', '响应延迟', { de: 'Antwortverzögerung', fr: 'Délai de réponse' }) }}</span>
+                        <span class="param-value">{{ agent.response_delay_min }}-{{ agent.response_delay_max }}{{ $tr('min', '分钟', { de: 'Min', fr: 'min' }) }}</span>
                       </div>
                     </div>
                     <div class="param-group">
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Activity Level', '活跃水平', { de: 'Aktivitätsniveau' }) }}</span>
+                        <span class="param-label">{{ $tr('Activity Level', '活跃水平', { de: 'Aktivitätsniveau', fr: `Niveau d'activité` }) }}</span>
                         <span class="param-value with-bar">
                           <span class="mini-bar" :style="{ width: (agent.activity_level * 100) + '%' }"></span>
                           {{ (agent.activity_level * 100).toFixed(0) }}%
                         </span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Sentiment Tendency', '情绪倾向', { de: 'Stimmungstendenz' }) }}</span>
+                        <span class="param-label">{{ $tr('Sentiment Tendency', '情绪倾向', { de: 'Stimmungstendenz', fr: 'Tendance de sentiment' }) }}</span>
                         <span class="param-value" :class="agent.sentiment_bias > 0 ? 'positive' : agent.sentiment_bias < 0 ? 'negative' : 'neutral'">
                           {{ agent.sentiment_bias > 0 ? '+' : '' }}{{ agent.sentiment_bias?.toFixed(1) }}
                         </span>
                       </div>
                       <div class="param-item">
-                        <span class="param-label">{{ $tr('Influence', '影响力', { de: 'Einfluss' }) }}</span>
+                        <span class="param-label">{{ $tr('Influence', '影响力', { de: 'Einfluss', fr: 'Influence' }) }}</span>
                         <span class="param-value highlight">{{ agent.influence_weight?.toFixed(1) }}</span>
                       </div>
                     </div>
@@ -302,14 +302,14 @@
                 class="profiles-toggle"
                 @click="agentCardsExpanded = !agentCardsExpanded"
               >
-                {{ agentCardsExpanded ? $tr('Show less', '收起', { de: 'Weniger anzeigen' }) : $tr('Show all ', '查看全部 ', { de: 'Alle anzeigen ' }) + simulationConfig.agent_configs.length + $tr(' agents', ' 个智能体', { de: ' Agenten' }) }}
+                {{ agentCardsExpanded ? $tr('Show less', '收起', { de: 'Weniger anzeigen', fr: 'Afficher moins' }) : $tr('Show all ', '查看全部 ', { de: 'Alle anzeigen ', fr: 'Afficher les ' }) + simulationConfig.agent_configs.length + $tr(' agents', ' 个智能体', { de: ' Agenten', fr: ' agents' }) }}
               </button>
             </div>
 
             <!-- Platform Configuration -->
             <div class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">{{ $tr('Recommendation Algorithm Configuration', '推荐算法配置', { de: 'Empfehlungsalgorithmus-Konfiguration' }) }}</span>
+                <span class="config-block-title">{{ $tr('Recommendation Algorithm Configuration', '推荐算法配置', { de: 'Empfehlungsalgorithmus-Konfiguration', fr: `Configuration de l'algorithme de recommandation` }) }}</span>
               </div>
               <div class="platforms-grid">
                 <div v-if="simulationConfig.twitter_config" class="platform-card">
@@ -318,23 +318,23 @@
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重', { de: 'Zeitgewichtung' }) }}</span>
+                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重', { de: 'Zeitgewichtung', fr: `Pondération de l'actualité` }) }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.recency_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重', { de: 'Popularitätsgewichtung' }) }}</span>
+                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重', { de: 'Popularitätsgewichtung', fr: 'Pondération de la popularité' }) }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.popularity_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重', { de: 'Relevanzgewichtung' }) }}</span>
+                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重', { de: 'Relevanzgewichtung', fr: 'Pondération de la pertinence' }) }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.relevance_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值', { de: 'Viraler Schwellenwert' }) }}</span>
+                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值', { de: 'Viraler Schwellenwert', fr: 'Seuil viral' }) }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.viral_threshold }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度', { de: 'Echokammer-Stärke' }) }}</span>
+                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度', { de: 'Echokammer-Stärke', fr: `Intensité de la chambre d'écho` }) }}</span>
                       <span class="param-value">{{ simulationConfig.twitter_config.echo_chamber_strength }}</span>
                     </div>
                   </div>
@@ -345,23 +345,23 @@
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重', { de: 'Zeitgewichtung' }) }}</span>
+                      <span class="param-label">{{ $tr('Timeliness Weight', '时效性权重', { de: 'Zeitgewichtung', fr: `Pondération de l'actualité` }) }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.recency_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重', { de: 'Popularitätsgewichtung' }) }}</span>
+                      <span class="param-label">{{ $tr('Popularity Weight', '热度权重', { de: 'Popularitätsgewichtung', fr: 'Pondération de la popularité' }) }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.popularity_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重', { de: 'Relevanzgewichtung' }) }}</span>
+                      <span class="param-label">{{ $tr('Relevance Weight', '相关性权重', { de: 'Relevanzgewichtung', fr: 'Pondération de la pertinence' }) }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.relevance_weight }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值', { de: 'Viraler Schwellenwert' }) }}</span>
+                      <span class="param-label">{{ $tr('Viral Threshold', '病毒传播阈值', { de: 'Viraler Schwellenwert', fr: 'Seuil viral' }) }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.viral_threshold }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度', { de: 'Echokammer-Stärke' }) }}</span>
+                      <span class="param-label">{{ $tr('Echo Chamber Intensity', '回音室强度', { de: 'Echokammer-Stärke', fr: `Intensité de la chambre d'écho` }) }}</span>
                       <span class="param-value">{{ simulationConfig.reddit_config.echo_chamber_strength }}</span>
                     </div>
                   </div>
@@ -372,20 +372,20 @@
                   </div>
                   <div class="platform-params">
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Market Maker', '做市商', { de: 'Market Maker' }) }}</span>
-                      <span class="param-value">{{ $tr('Constant-Product AMM', '恒定乘积 AMM', { de: 'Constant-Product AMM' }) }}</span>
+                      <span class="param-label">{{ $tr('Market Maker', '做市商', { de: 'Market Maker', fr: 'Market Maker' }) }}</span>
+                      <span class="param-value">{{ $tr('Constant-Product AMM', '恒定乘积 AMM', { de: 'Constant-Product AMM', fr: 'AMM à produit constant' }) }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Initial Liquidity', '初始流动性', { de: 'Initiale Liquidität' }) }}</span>
-                      <span class="param-value">{{ $tr('$100 per outcome', '每个结果 $100', { de: '$100 pro Ergebnis' }) }}</span>
+                      <span class="param-label">{{ $tr('Initial Liquidity', '初始流动性', { de: 'Initiale Liquidität', fr: 'Liquidité initiale' }) }}</span>
+                      <span class="param-value">{{ $tr('$100 per outcome', '每个结果 $100', { de: '$100 pro Ergebnis', fr: '100 $ par résultat' }) }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Trading Actions', '交易操作', { de: 'Handelsaktionen' }) }}</span>
-                      <span class="param-value">{{ $tr('Buy/Sell YES & NO shares', '买入/卖出 YES 与 NO 份额', { de: 'YES & NO Anteile kaufen/verkaufen' }) }}</span>
+                      <span class="param-label">{{ $tr('Trading Actions', '交易操作', { de: 'Handelsaktionen', fr: 'Actions de trading' }) }}</span>
+                      <span class="param-value">{{ $tr('Buy/Sell YES & NO shares', '买入/卖出 YES 与 NO 份额', { de: 'YES & NO Anteile kaufen/verkaufen', fr: 'Acheter/Vendre des parts OUI & NON' }) }}</span>
                     </div>
                     <div class="param-row">
-                      <span class="param-label">{{ $tr('Market-Media Bridge', '市场-媒体桥接', { de: 'Markt-Medien-Brücke' }) }}</span>
-                      <span class="param-value">{{ $tr('Enabled (prices feed social media)', '已启用(价格反馈至社交媒体)', { de: 'Aktiviert (Preise speisen soziale Medien)' }) }}</span>
+                      <span class="param-label">{{ $tr('Market-Media Bridge', '市场-媒体桥接', { de: 'Markt-Medien-Brücke', fr: 'Pont marché-média' }) }}</span>
+                      <span class="param-value">{{ $tr('Enabled (prices feed social media)', '已启用(价格反馈至社交媒体)', { de: 'Aktiviert (Preise speisen soziale Medien)', fr: 'Activé (les prix alimentent les médias sociaux)' }) }}</span>
                     </div>
                   </div>
                 </div>
@@ -395,7 +395,7 @@
             <!-- LLM Configuration Reasoning -->
             <div v-if="simulationConfig.generation_reasoning" class="config-block">
               <div class="config-block-header">
-                <span class="config-block-title">{{ $tr('LLM Configuration Reasoning', 'LLM 配置推理', { de: 'LLM-Konfigurationsableitung' }) }}</span>
+                <span class="config-block-title">{{ $tr('LLM Configuration Reasoning', 'LLM 配置推理', { de: 'LLM-Konfigurationsableitung', fr: 'Raisonnement de configuration du LLM' }) }}</span>
               </div>
               <div class="reasoning-content">
                 <div 
@@ -416,19 +416,19 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">04</span>
-            <span class="step-title">{{ $tr('Initial Activation Orchestration', '初始激活编排', { de: 'Initiale Aktivierungsanordnung' }) }}</span>
+            <span class="step-title">{{ $tr('Initial Activation Orchestration', '初始激活编排', { de: 'Initiale Aktivierungsanordnung', fr: `Orchestration de l'activation initiale` }) }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase > 3" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen' }) }}</span>
-            <span v-else-if="phase === 3" class="badge processing"><span class="badge-dot"></span>{{ $tr('Orchestrating', '编排中', { de: 'Wird angeordnet' }) }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend' }) }}</span>
+            <span v-if="phase > 3" class="badge success"><span class="badge-dot"></span>{{ $tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' }) }}</span>
+            <span v-else-if="phase === 3" class="badge processing"><span class="badge-dot"></span>{{ $tr('Orchestrating', '编排中', { de: 'Wird angeordnet', fr: 'Orchestration en cours' }) }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend', fr: 'En attente' }) }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/prepare</p>
           <p class="description">
-            {{ $tr('Based on narrative direction, automatically generate initial activation events and hot topics to guide the initial state of the simulation world', '根据叙事方向,自动生成初始激活事件与热门话题,以引导模拟世界的初始状态', { de: 'Basierend auf der Narrativrichtung automatisch initiale Aktivierungsereignisse und Trendthemen generieren, um den Anfangszustand der Simulationswelt zu leiten' }) }}
+            {{ $tr('Based on narrative direction, automatically generate initial activation events and hot topics to guide the initial state of the simulation world', '根据叙事方向,自动生成初始激活事件与热门话题,以引导模拟世界的初始状态', { de: 'Basierend auf der Narrativrichtung automatisch initiale Aktivierungsereignisse und Trendthemen generieren, um den Anfangszustand der Simulationswelt zu leiten', fr: `Selon la direction narrative, génère automatiquement les événements d'activation initiale et sujets tendance pour guider l'état initial du monde de la simulation` }) }}
           </p>
 
           <div v-if="simulationConfig?.event_config" class="orchestration-content">
@@ -445,14 +445,14 @@
                     </linearGradient>
                   </defs>
                 </svg>
-                {{ $tr('Narrative Guidance Direction', '叙事引导方向', { de: 'Narrative Führungsrichtung' }) }}
+                {{ $tr('Narrative Guidance Direction', '叙事引导方向', { de: 'Narrative Führungsrichtung', fr: 'Direction du guidage narratif' }) }}
               </span>
               <p class="narrative-text">{{ simulationConfig.event_config.narrative_direction }}</p>
             </div>
 
             <!-- Hot Topics -->
             <div class="topics-section">
-              <span class="box-label">{{ $tr('Initial Hot Topics', '初始热门话题', { de: 'Initiale Trendthemen' }) }}</span>
+              <span class="box-label">{{ $tr('Initial Hot Topics', '初始热门话题', { de: 'Initiale Trendthemen', fr: 'Sujets tendance initiaux' }) }}</span>
               <div class="hot-topics-grid">
                 <span v-for="topic in simulationConfig.event_config.hot_topics" :key="topic" class="hot-topic-tag">
                   # {{ topic }}
@@ -462,7 +462,7 @@
 
             <!-- Initial Posts Stream -->
             <div class="initial-posts-section">
-              <span class="box-label">{{ $tr('Initial Activation Sequence (', '初始激活序列(', { de: 'Initiale Aktivierungssequenz (' }) }}{{ simulationConfig.event_config.initial_posts.length }}{{ $tr(')', ')', { de: ')' }) }}</span>
+              <span class="box-label">{{ $tr('Initial Activation Sequence (', '初始激活序列(', { de: 'Initiale Aktivierungssequenz (', fr: `Séquence d'activation initiale (` }) }}{{ simulationConfig.event_config.initial_posts.length }}{{ $tr(')', ')', { de: ')', fr: `)` }) }}</span>
               <div class="posts-timeline">
                 <div v-for="(post, idx) in simulationConfig.event_config.initial_posts" :key="idx" class="timeline-item">
                   <div class="timeline-marker"></div>
@@ -470,7 +470,7 @@
                     <div class="post-header">
                       <span class="post-role">{{ post.poster_type }}</span>
                       <span class="post-agent-info">
-                        <span class="post-id">{{ $tr('Agent', '智能体', { de: 'Agent' }) }} {{ post.poster_agent_id }}</span>
+                        <span class="post-id">{{ $tr('Agent', '智能体', { de: 'Agent', fr: 'Agent' }) }} {{ post.poster_agent_id }}</span>
                         <span class="post-username">@{{ getAgentUsername(post.poster_agent_id) }}</span>
                       </span>
                     </div>
@@ -488,29 +488,29 @@
         <div class="card-header">
           <div class="step-info">
             <span class="step-num">05</span>
-            <span class="step-title">{{ $tr('Preparation Complete', '准备完成', { de: 'Vorbereitung abgeschlossen' }) }}</span>
+            <span class="step-title">{{ $tr('Preparation Complete', '准备完成', { de: 'Vorbereitung abgeschlossen', fr: 'Préparation terminée' }) }}</span>
           </div>
           <div class="step-status">
-            <span v-if="phase >= 4" class="badge processing"><span class="badge-dot"></span>{{ $tr('In Progress', '进行中', { de: 'In Bearbeitung' }) }}</span>
-            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend' }) }}</span>
+            <span v-if="phase >= 4" class="badge processing"><span class="badge-dot"></span>{{ $tr('In Progress', '进行中', { de: 'In Bearbeitung', fr: 'En cours' }) }}</span>
+            <span v-else class="badge pending"><span class="badge-dot"></span>{{ $tr('Waiting', '等待中', { de: 'Ausstehend', fr: 'En attente' }) }}</span>
           </div>
         </div>
 
         <div class="card-content">
           <p class="api-note">POST /api/simulation/start</p>
-          <p class="description">{{ $tr('Simulation environment is ready, you can start running the simulation', '模拟环境已就绪,您可以开始运行模拟', { de: 'Simulationsumgebung vollständig vorbereitet, Simulation kann gestartet werden' }) }}</p>
+          <p class="description">{{ $tr('Simulation environment is ready, you can start running the simulation', '模拟环境已就绪,您可以开始运行模拟', { de: 'Simulationsumgebung vollständig vorbereitet, Simulation kann gestartet werden', fr: `L'environnement de simulation est prêt, vous pouvez lancer la simulation` }) }}</p>
 
           <!-- Simulation rounds config - only shown after config generation and rounds calculation -->
           <div v-if="simulationConfig && autoGeneratedRounds" class="rounds-config-section">
             <div class="rounds-header">
               <div class="header-left">
-                <span class="section-title">{{ $tr('Simulation Round Settings', '模拟轮次设置', { de: 'Simulationsrunden-Einstellung' }) }}</span>
-                <span class="section-desc">{{ $tr('MiroShark automatically plans to simulate ', 'MiroShark 已自动规划模拟 ', { de: 'MiroShark plant automatisch die Simulation von ' }) }}<span class="desc-highlight">{{ simulationConfig?.time_config?.total_simulation_hours || '-' }}</span>{{ $tr(' hours of reality, each round represents ', ' 小时的现实时间,每一轮代表 ', { de: ' Stunden Realität, jede Runde repräsentiert ' }) }}<span class="desc-highlight">{{ simulationConfig?.time_config?.minutes_per_round || '-' }}</span>{{ $tr(' minutes of elapsed time', ' 分钟的流逝时间', { de: ' Minuten abgelaufene Zeit' }) }}</span>
+                <span class="section-title">{{ $tr('Simulation Round Settings', '模拟轮次设置', { de: 'Simulationsrunden-Einstellung', fr: 'Paramètres des tours de simulation' }) }}</span>
+                <span class="section-desc">{{ $tr('MiroShark automatically plans to simulate ', 'MiroShark 已自动规划模拟 ', { de: 'MiroShark plant automatisch die Simulation von ', fr: 'MiroShark prévoit automatiquement de simuler ' }) }}<span class="desc-highlight">{{ simulationConfig?.time_config?.total_simulation_hours || '-' }}</span>{{ $tr(' hours of reality, each round represents ', ' 小时的现实时间,每一轮代表 ', { de: ' Stunden Realität, jede Runde repräsentiert ', fr: ' heures de réalité, chaque tour représente ' }) }}<span class="desc-highlight">{{ simulationConfig?.time_config?.minutes_per_round || '-' }}</span>{{ $tr(' minutes of elapsed time', ' 分钟的流逝时间', { de: ' Minuten abgelaufene Zeit', fr: ' minutes de temps écoulé' }) }}</span>
               </div>
               <label class="switch-control">
                 <input type="checkbox" v-model="useCustomRounds">
                 <span class="switch-track"></span>
-                <span class="switch-label">{{ $tr('Custom', '自定义', { de: 'Benutzerdefiniert' }) }}</span>
+                <span class="switch-label">{{ $tr('Custom', '自定义', { de: 'Benutzerdefiniert', fr: 'Personnalisé' }) }}</span>
               </label>
             </div>
             
@@ -519,10 +519,10 @@
                 <div class="slider-display">
                   <div class="slider-main-value">
                     <span class="val-num">{{ customMaxRounds }}</span>
-                    <span class="val-unit">{{ $tr('rounds', '轮', { de: 'Runden' }) }}</span>
+                    <span class="val-unit">{{ $tr('rounds', '轮', { de: 'Runden', fr: 'tours' }) }}</span>
                   </div>
                   <div class="slider-meta-info">
-                    <span>{{ $tr('Estimated duration ~', '预计时长约 ', { de: 'Geschätzte Dauer ~' }) }}{{ Math.round(customMaxRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟', { de: 'Min' }) }}</span>
+                    <span>{{ $tr('Estimated duration ~', '预计时长约 ', { de: 'Geschätzte Dauer ~', fr: 'Durée estimée ~' }) }}{{ Math.round(customMaxRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟', { de: 'Min', fr: 'min' }) }}</span>
                   </div>
                 </div>
 
@@ -543,7 +543,7 @@
                       :class="{ active: customMaxRounds === 40 }"
                       @click="customMaxRounds = 40"
                       :style="{ position: 'absolute', left: `calc(${(40 - 10) / (naturalMaxRounds - 10) * 100}% - 30px)` }"
-                    >40 {{ $tr('(Recommended)', '(推荐)', { de: '(Empfohlen)' }) }}</span>
+                    >40 {{ $tr('(Recommended)', '(推荐)', { de: '(Empfohlen)', fr: '(Recommandé)' }) }}</span>
                     <span>{{ naturalMaxRounds }}</span>
                   </div>
                 </div>
@@ -553,7 +553,7 @@
                 <div class="auto-info-card">
                   <div class="auto-value">
                     <span class="val-num">{{ autoGeneratedRounds }}</span>
-                    <span class="val-unit">{{ $tr('rounds', '轮', { de: 'Runden' }) }}</span>
+                    <span class="val-unit">{{ $tr('rounds', '轮', { de: 'Runden', fr: 'tours' }) }}</span>
                   </div>
                   <div class="auto-content">
                     <div class="auto-meta-row">
@@ -562,11 +562,11 @@
                           <circle cx="12" cy="12" r="10"></circle>
                           <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
-                        {{ $tr('Estimated duration ~', '预计时长约 ', { de: 'Geschätzte Dauer ~' }) }}{{ Math.round(autoGeneratedRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟', { de: 'Min' }) }}
+                        {{ $tr('Estimated duration ~', '预计时长约 ', { de: 'Geschätzte Dauer ~', fr: 'Durée estimée ~' }) }}{{ Math.round(autoGeneratedRounds * (profiles.length || 100) * 0.006) }} {{ $tr('min', '分钟', { de: 'Min', fr: 'min' }) }}
                       </span>
                     </div>
                     <div class="auto-desc">
-                      <p class="highlight-tip" @click="useCustomRounds = true">{{ $tr(`First time? Switch to ‘Custom Mode’ to reduce rounds for a quick preview ➝`, '首次体验?切换至「自定义模式」减少轮次以快速预览 ➝', { de: 'Zum ersten Mal? Wechsle zum „Anpassen-Modus“, um Runden für eine schnelle Vorschau zu reduzieren ➝' }) }}</p>
+                      <p class="highlight-tip" @click="useCustomRounds = true">{{ $tr(`First time? Switch to ‘Custom Mode’ to reduce rounds for a quick preview ➝`, '首次体验?切换至「自定义模式」减少轮次以快速预览 ➝', { de: 'Zum ersten Mal? Wechsle zum „Anpassen-Modus“, um Runden für eine schnelle Vorschau zu reduzieren ➝', fr: 'Première fois ? Passez en « Mode personnalisé » pour réduire le nombre de tours et obtenir un aperçu rapide ➝' }) }}</p>
                     </div>
                   </div>
                 </div>
@@ -579,14 +579,14 @@
               class="action-btn secondary"
               @click="$emit('go-back')"
             >
-              {{ $tr('← Back to Graph', '← 返回图谱', { de: '← Zurück zum Graph-Aufbau' }) }}
+              {{ $tr('← Back to Graph', '← 返回图谱', { de: '← Zurück zum Graph-Aufbau', fr: '← Retour au graphe' }) }}
             </button>
             <button
               class="action-btn primary"
               :disabled="phase < 4"
               @click="handleStartSimulation"
             >
-              {{ hasRunBefore ? $tr('Resume Simulation ➝', '继续模拟 ➝', { de: 'Simulation fortsetzen ➝' }) : $tr('Start Simulation ➝', '开始模拟 ➝', { de: 'Weltsimulation starten ➝' }) }}
+              {{ hasRunBefore ? $tr('Resume Simulation ➝', '继续模拟 ➝', { de: 'Simulation fortsetzen ➝', fr: 'Reprendre la simulation ➝' }) : $tr('Start Simulation ➝', '开始模拟 ➝', { de: 'Weltsimulation starten ➝', fr: 'Démarrer la simulation ➝' }) }}
             </button>
           </div>
         </div>
@@ -612,32 +612,32 @@
           <!-- Basic Info -->
           <div class="modal-info-grid">
             <div class="info-item">
-              <span class="info-label">{{ $tr('Apparent Age', '表观年龄', { de: 'Alter' }) }}</span>
-              <span class="info-value">{{ selectedProfile.age || '-' }} {{ $tr('years old', '岁', { de: 'Jahre' }) }}</span>
+              <span class="info-label">{{ $tr('Apparent Age', '表观年龄', { de: 'Alter', fr: 'Âge apparent' }) }}</span>
+              <span class="info-value">{{ selectedProfile.age || '-' }} {{ $tr('years old', '岁', { de: 'Jahre', fr: 'ans' }) }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">{{ $tr('Apparent Gender', '表观性别', { de: 'Geschlecht' }) }}</span>
-              <span class="info-value">{{ { male: $tr('Male', '男', { de: 'Männlich' }), female: $tr('Female', '女', { de: 'Weiblich' }), other: $tr('Other', '其他', { de: 'Divers' }) }[selectedProfile.gender] || selectedProfile.gender }}</span>
+              <span class="info-label">{{ $tr('Apparent Gender', '表观性别', { de: 'Geschlecht', fr: 'Genre apparent' }) }}</span>
+              <span class="info-value">{{ { male: $tr('Male', '男', { de: 'Männlich', fr: 'Homme' }), female: $tr('Female', '女', { de: 'Weiblich', fr: 'Femme' }), other: $tr('Other', '其他', { de: 'Divers', fr: 'Autre' }) }[selectedProfile.gender] || selectedProfile.gender }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">{{ $tr('Country/Region', '国家/地区', { de: 'Land/Region' }) }}</span>
+              <span class="info-label">{{ $tr('Country/Region', '国家/地区', { de: 'Land/Region', fr: 'Pays/Région' }) }}</span>
               <span class="info-value">{{ selectedProfile.country || '-' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">{{ $tr('Apparent MBTI', '表观 MBTI', { de: 'Scheinbares MBTI' }) }}</span>
+              <span class="info-label">{{ $tr('Apparent MBTI', '表观 MBTI', { de: 'Scheinbares MBTI', fr: 'MBTI apparent' }) }}</span>
               <span class="info-value mbti">{{ selectedProfile.mbti || '-' }}</span>
             </div>
           </div>
 
           <!-- Bio -->
           <div class="modal-section">
-            <span class="section-label">{{ $tr('Persona Summary', '人设摘要', { de: 'Persona-Vorstellung' }) }}</span>
-            <p class="section-bio">{{ selectedProfile.bio || $tr('No bio available', '暂无简介', { de: 'Keine Vorstellung verfügbar' }) }}</p>
+            <span class="section-label">{{ $tr('Persona Summary', '人设摘要', { de: 'Persona-Vorstellung', fr: 'Résumé de la persona' }) }}</span>
+            <p class="section-bio">{{ selectedProfile.bio || $tr('No bio available', '暂无简介', { de: 'Keine Vorstellung verfügbar', fr: 'Aucune bio disponible' }) }}</p>
           </div>
 
           <!-- Related Topics -->
           <div class="modal-section" v-if="selectedProfile.interested_topics?.length">
-            <span class="section-label">{{ $tr('Real-World Seed Related Topics', '现实种子相关话题', { de: 'Faktenbasis-bezogene Themen' }) }}</span>
+            <span class="section-label">{{ $tr('Real-World Seed Related Topics', '现实种子相关话题', { de: 'Faktenbasis-bezogene Themen', fr: 'Sujets liés aux Fondements (Seeds)' }) }}</span>
             <div class="topics-grid">
               <span
                 v-for="topic in selectedProfile.interested_topics"
@@ -649,25 +649,25 @@
 
           <!-- Detailed Persona -->
           <div class="modal-section" v-if="selectedProfile.persona">
-            <span class="section-label">{{ $tr('Detailed Persona Background', '详细人设背景', { de: 'Detaillierter Persona-Hintergrund' }) }}</span>
+            <span class="section-label">{{ $tr('Detailed Persona Background', '详细人设背景', { de: 'Detaillierter Persona-Hintergrund', fr: 'Contexte détaillé de la persona' }) }}</span>
 
             <!-- Persona Dimension Overview -->
             <div class="persona-dimensions">
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Full Event Experience', '完整事件经历', { de: 'Ereignis-Panoramaerfahrung' }) }}</span>
-                <span class="dim-desc">{{ $tr('Complete behavioral trajectory in this event', '在此事件中的完整行为轨迹', { de: 'Vollständige Verhaltenstrajektorie in diesem Ereignis' }) }}</span>
+                <span class="dim-title">{{ $tr('Full Event Experience', '完整事件经历', { de: 'Ereignis-Panoramaerfahrung', fr: `Expérience complète de l'événement` }) }}</span>
+                <span class="dim-desc">{{ $tr('Complete behavioral trajectory in this event', '在此事件中的完整行为轨迹', { de: 'Vollständige Verhaltenstrajektorie in diesem Ereignis', fr: 'Trajectoire comportementale complète dans cet événement' }) }}</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Behavioral Pattern Profile', '行为模式画像', { de: 'Verhaltensprofilierung' }) }}</span>
-                <span class="dim-desc">{{ $tr('Experience summary and behavioral style preferences', '经历摘要与行为风格偏好', { de: 'Erfahrungszusammenfassung und Verhaltensstilpräferenzen' }) }}</span>
+                <span class="dim-title">{{ $tr('Behavioral Pattern Profile', '行为模式画像', { de: 'Verhaltensprofilierung', fr: 'Profil de pattern comportemental' }) }}</span>
+                <span class="dim-desc">{{ $tr('Experience summary and behavioral style preferences', '经历摘要与行为风格偏好', { de: 'Erfahrungszusammenfassung und Verhaltensstilpräferenzen', fr: `Résumé d'expérience et préférences de style comportemental` }) }}</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Unique Memory Imprint', '独特记忆烙印', { de: 'Einzigartige Erinnerungsprägungen' }) }}</span>
-                <span class="dim-desc">{{ $tr('Memories formed from real-world seeds', '由现实种子形成的记忆', { de: 'Aus Faktenbasis (Seeds) geformte Erinnerungen' }) }}</span>
+                <span class="dim-title">{{ $tr('Unique Memory Imprint', '独特记忆烙印', { de: 'Einzigartige Erinnerungsprägungen', fr: 'Empreinte mémoire unique' }) }}</span>
+                <span class="dim-desc">{{ $tr('Memories formed from real-world seeds', '由现实种子形成的记忆', { de: 'Aus Faktenbasis (Seeds) geformte Erinnerungen', fr: 'Mémoires formées à partir des Fondements (Seeds)' }) }}</span>
               </div>
               <div class="dimension-card">
-                <span class="dim-title">{{ $tr('Social Relationship Network', '社交关系网络', { de: 'Soziales Beziehungsnetzwerk' }) }}</span>
-                <span class="dim-desc">{{ $tr('Individual connections and interaction graph', '个体连接与互动图', { de: 'Individuelle Verbindungen und Interaktionsgraph' }) }}</span>
+                <span class="dim-title">{{ $tr('Social Relationship Network', '社交关系网络', { de: 'Soziales Beziehungsnetzwerk', fr: 'Réseau de relations sociales' }) }}</span>
+                <span class="dim-desc">{{ $tr('Individual connections and interaction graph', '个体连接与互动图', { de: 'Individuelle Verbindungen und Interaktionsgraph', fr: `Connexions individuelles et graphe d'interaction` }) }}</span>
               </div>
             </div>
 
@@ -683,8 +683,8 @@
     <!-- Bottom Info / Logs -->
     <div class="system-logs" :class="{ collapsed: dashboardCollapsed }">
       <div class="log-header" @click="dashboardCollapsed = !dashboardCollapsed">
-        <span class="log-title">{{ $tr('SYSTEM DASHBOARD', '系统面板', { de: 'SYSTEM-DASHBOARD' }) }} <span class="log-toggle">{{ dashboardCollapsed ? '▲' : '▼' }}</span></span>
-        <span class="log-id">{{ simulationId || $tr('NO_SIMULATION', '无模拟', { de: 'KEINE_SIMULATION' }) }}</span>
+        <span class="log-title">{{ $tr('SYSTEM DASHBOARD', '系统面板', { de: 'SYSTEM-DASHBOARD', fr: 'TABLEAU DE BORD SYSTÈME' }) }} <span class="log-toggle">{{ dashboardCollapsed ? '▲' : '▼' }}</span></span>
+        <span class="log-id">{{ simulationId || $tr('NO_SIMULATION', '无模拟', { de: 'KEINE_SIMULATION', fr: 'AUCUNE_SIMULATION' }) }}</span>
       </div>
       <div v-show="!dashboardCollapsed" class="log-content" ref="logContent">
         <div class="log-line" v-for="(log, idx) in systemLogs" :key="idx">
@@ -761,7 +761,7 @@ watch(currentStage, (newStage) => {
     phase.value = 2
     // Entering config generation phase, start polling config
     if (!configTimer) {
-      addLog(tr('Starting to generate Dual-Platform Simulation Config...', '开始生成双平台模拟配置…', { de: 'Generierung der Dual-Plattform-Simulationskonfiguration wird gestartet…' }))
+      addLog(tr('Starting to generate Dual-Platform Simulation Config...', '开始生成双平台模拟配置…', { de: 'Generierung der Dual-Plattform-Simulationskonfiguration wird gestartet…', fr: 'Démarrage de la génération de la config de simulation bi-plateforme…' }))
       startConfigPolling()
     }
   } else if (newStage === 'Preparing Simulation Scripts' || newStage === 'copying_scripts') {
@@ -862,7 +862,7 @@ const selectProfile = (profile) => {
 // Automatically start simulation preparation
 const startPrepareSimulation = async () => {
   if (!props.simulationId) {
-    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt' }))
+    addLog($tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt', fr: 'Erreur : simulationId manquant' }))
     emit('update-status', 'error')
     return
   }
@@ -870,7 +870,7 @@ const startPrepareSimulation = async () => {
   // Mark first step complete, start second step
   phase.value = 1
   addLog(tr(`Simulation instance created: ${props.simulationId}`, `模拟实例已创建:${props.simulationId}`, { de: `Simulationsinstanz erstellt: ${props.simulationId}` }))
-  addLog(tr('Preparing simulation environment...', '正在准备模拟环境…', { de: 'Simulationsumgebung wird vorbereitet…' }))
+  addLog(tr('Preparing simulation environment...', '正在准备模拟环境…', { de: 'Simulationsumgebung wird vorbereitet…', fr: `Préparation de l'environnement de simulation…` }))
   emit('update-status', 'processing')
   
   try {
@@ -882,13 +882,13 @@ const startPrepareSimulation = async () => {
     
     if (res.success && res.data) {
       if (res.data.already_prepared) {
-        addLog(tr('Detected existing completed preparation, using directly', '检测到已完成的准备,直接使用', { de: 'Vorhandene abgeschlossene Vorbereitung erkannt, wird direkt verwendet' }))
+        addLog($tr('Detected existing completed preparation, using directly', '检测到已完成的准备,直接使用', { de: 'Vorhandene abgeschlossene Vorbereitung erkannt, wird direkt verwendet', fr: 'Préparation existante détectée et terminée, utilisation directe' }))
         await loadPreparedData()
         return
       }
 
       taskId.value = res.data.task_id
-      addLog(tr(`Preparation task started`, '准备任务已启动', { de: 'Vorbereitungsaufgabe gestartet' }))
+      addLog($tr(`Preparation task started`, '准备任务已启动', { de: 'Vorbereitungsaufgabe gestartet', fr: 'Tâche de préparation démarrée' }))
       addLog(tr(`  └─ Task ID: ${res.data.task_id}`, `  └─ 任务 ID:${res.data.task_id}`, { de: `  └─ Aufgaben-ID: ${res.data.task_id}` }))
 
       // Set Expected Total Agents immediately (from prepare API response)
@@ -900,7 +900,7 @@ const startPrepareSimulation = async () => {
         }
       }
 
-      addLog(tr('Starting to poll preparation progress...', '开始轮询准备进度…', { de: 'Fortschritt der Vorbereitung wird abgefragt…' }))
+      addLog($tr('Starting to poll preparation progress...', '开始轮询准备进度…', { de: 'Fortschritt der Vorbereitung wird abgefragt…', fr: 'Démarrage du polling de progression de la préparation…' }))
       // Start polling progress
       startPolling()
       // Start fetching profiles in real-time
@@ -984,7 +984,7 @@ const pollPrepareStatus = async () => {
       
       // Check if completed
       if (data.status === 'completed' || data.status === 'ready' || data.already_prepared) {
-        addLog(tr('✓ Preparation completed', '✓ 准备完成', { de: '✓ Vorbereitung abgeschlossen' }))
+        addLog($tr('✓ Preparation completed', '✓ 准备完成', { de: '✓ Vorbereitung abgeschlossen', fr: 'Préparation terminée' }))
         stopPolling()
         stopProfilesPolling()
         await loadPreparedData()
@@ -1028,7 +1028,7 @@ const fetchProfilesRealtime = async () => {
         const latestProfile = profiles.value[currentCount - 1]
         const profileName = latestProfile?.name || latestProfile?.username || `Agent_${currentCount}`
         if (currentCount === 1) {
-          addLog(tr(`Starting to generate agent personas...`, '开始生成智能体人设…', { de: 'Agent-Personas werden generiert…' }))
+          addLog($tr(`Starting to generate agent personas...`, '开始生成智能体人设…', { de: 'Agent-Personas werden generiert…', fr: `Démarrage de la génération des personas d'agents…` }))
         }
         addLog(tr(`→ Agent persona ${currentCount}/${total}: ${profileName} (${latestProfile?.profession || 'Unknown Profession'})`, `→ 智能体人设 ${currentCount}/${total}:${profileName}(${latestProfile?.profession || '未知职业'})`, { de: `→ Agent-Persona ${currentCount}/${total}: ${profileName} (${latestProfile?.profession || 'Unbekannter Beruf'})` }))
 
@@ -1063,8 +1063,8 @@ const fetchConfigRealtime = async () => {
   // Client-side timeout: give up after CONFIG_POLL_TIMEOUT_MS
   if (configPollStartTime && Date.now() - configPollStartTime > CONFIG_POLL_TIMEOUT_MS) {
     stopConfigPolling()
-    configError.value = tr('Config generation timed out after 90 seconds. The LLM may be unresponsive or overloaded.', '配置生成在 90 秒后超时。LLM 可能无响应或负载过高。', { de: 'Konfigurationsgenerierung nach 90 Sekunden abgebrochen. LLM reagiert möglicherweise nicht oder ist überlastet.' })
-    addLog(tr('✗ Config generation timed out (90s). Use "Retry Config" to try again.', '✗ 配置生成超时(90 秒)。请使用「重新生成配置」再次尝试。', { de: '✗ Konfigurationsgenerierung abgebrochen (90 s). Verwenden Sie „Konfiguration wiederholen", um es erneut zu versuchen.' }))
+    configError.value = $tr('Config generation timed out after 90 seconds. The LLM may be unresponsive or overloaded.', '配置生成在 90 秒后超时。LLM 可能无响应或负载过高。', { de: 'Konfigurationsgenerierung nach 90 Sekunden abgebrochen. LLM reagiert möglicherweise nicht oder ist überlastet.', fr: 'La génération de la config a expiré après 90 secondes. Le LLM est peut-être indisponible ou surchargé.' })
+    addLog(tr('✗ Config generation timed out (90s). Use "Retry Config" to try again.', '✗ 配置生成超时(90 秒)。请使用「重新生成配置」再次尝试。', { de: '✗ Konfigurationsgenerierung abgebrochen (90 s). Verwenden Sie „Konfiguration wiederholen", um es erneut zu versuchen.', fr: `✗ Génération de config expirée (90s). Utilisez « Régénérer la config » pour réessayer.` }))
     return
   }
 
@@ -1077,7 +1077,7 @@ const fetchConfigRealtime = async () => {
       // Backend reported a generation failure
       if (data.config_error || data.status === 'failed') {
         stopConfigPolling()
-        const reason = data.config_error || tr('Generation failed — check your OpenRouter API key and model name', '生成失败 — 请检查您的 OpenRouter API 密钥与模型名称', { de: 'Generierung fehlgeschlagen — überprüfen Sie Ihren OpenRouter API-Schlüssel und Modellnamen' })
+        const reason = data.config_error || $tr('Generation failed — check your OpenRouter API key and model name', '生成失败 — 请检查您的 OpenRouter API 密钥与模型名称', { de: 'Generierung fehlgeschlagen — überprüfen Sie Ihren OpenRouter API-Schlüssel und Modellnamen', fr: 'Échec de la génération — vérifiez votre clé API OpenRouter et le nom du modèle' })
         configError.value = reason
         addLog(tr(`✗ Config generation failed: ${reason}`, `✗ 配置生成失败:${reason}`, { de: `✗ Konfigurationsgenerierung fehlgeschlagen: ${reason}` }))
         return
@@ -1087,16 +1087,16 @@ const fetchConfigRealtime = async () => {
       if (data.generation_stage && data.generation_stage !== lastLoggedConfigStage) {
         lastLoggedConfigStage = data.generation_stage
         if (data.generation_stage === 'generating_profiles') {
-          addLog(tr('Generating agent persona configuration...', '生成智能体人设配置中…', { de: 'Agent-Persona-Konfiguration wird generiert…' }))
+          addLog($tr('Generating agent persona configuration...', '生成智能体人设配置中…', { de: 'Agent-Persona-Konfiguration wird generiert…', fr: `Génération de la configuration des personas d'agents…` }))
         } else if (data.generation_stage === 'generating_config') {
-          addLog(tr('Calling LLM to generate simulation configuration parameters...', '调用 LLM 生成模拟配置参数中…', { de: 'LLM wird aufgerufen, um Simulationskonfigurationsparameter zu generieren…' }))
+          addLog($tr('Calling LLM to generate simulation configuration parameters...', '调用 LLM 生成模拟配置参数中…', { de: 'LLM wird aufgerufen, um Simulationskonfigurationsparameter zu generieren…', fr: 'Appel du LLM pour générer les paramètres de configuration de la simulation…' }))
         }
       }
 
       // If config has been generated
       if (data.config_generated && data.config) {
         simulationConfig.value = data.config
-        addLog(tr('✓ Simulation configuration generated', '✓ 模拟配置已生成', { de: '✓ Simulationskonfiguration generiert' }))
+        addLog($tr('✓ Simulation configuration generated', '✓ 模拟配置已生成', { de: '✓ Simulationskonfiguration generiert', fr: 'Configuration de simulation générée' }))
 
         // Show detailed config summary
         if (data.summary) {
@@ -1121,7 +1121,7 @@ const fetchConfigRealtime = async () => {
 
         stopConfigPolling()
         phase.value = 4
-        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation' }))
+        addLog($tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation', fr: `Configuration de l'environnement terminée, prêt à lancer la simulation` }))
         emit('update-status', 'completed')
       }
     }
@@ -1135,19 +1135,19 @@ const handleConfigRetry = async () => {
   isConfigRetrying.value = true
   configError.value = null
   lastLoggedConfigStage = ''
-  addLog(tr('Retrying config generation...', '正在重试配置生成…', { de: 'Konfigurationsgenerierung wird wiederholt…' }))
+  addLog($tr('Retrying config generation...', '正在重试配置生成…', { de: 'Konfigurationsgenerierung wird wiederholt…', fr: 'Nouvelle tentative de génération de la config…' }))
 
   try {
     const res = await retrySimulationConfig(props.simulationId)
     if (res.success) {
-      addLog(tr('Config retry started — waiting for LLM...', '配置重试已启动 — 正在等待 LLM…', { de: 'Konfigurationswiederholung gestartet — warte auf LLM…' }))
+      addLog($tr('Config retry started — waiting for LLM...', '配置重试已启动 — 正在等待 LLM…', { de: 'Konfigurationswiederholung gestartet — warte auf LLM…', fr: 'Nouvelle tentative de config démarrée — en attente du LLM…' }))
       startConfigPolling()
     } else {
-      configError.value = res.error || tr('Retry failed — check backend logs', '重试失败 — 请检查后端日志', { de: 'Wiederholung fehlgeschlagen — Backend-Logs überprüfen' })
+      configError.value = res.error || $tr('Retry failed — check backend logs', '重试失败 — 请检查后端日志', { de: 'Wiederholung fehlgeschlagen — Backend-Logs überprüfen', fr: 'Échec de la nouvelle tentative — vérifiez les logs backend' })
       addLog(tr(`✗ Retry failed: ${res.error || 'unknown error'}`, `✗ 重试失败:${res.error || '未知错误'}`, { de: `✗ Wiederholung fehlgeschlagen: ${res.error || 'Unbekannter Fehler'}` }))
     }
   } catch (err) {
-    configError.value = err.message || tr('Retry request failed', '重试请求失败', { de: 'Wiederholungsanforderung fehlgeschlagen' })
+    configError.value = err.message || $tr('Retry request failed', '重试请求失败', { de: 'Wiederholungsanforderung fehlgeschlagen', fr: 'Échec de la requête de nouvelle tentative' })
     addLog(tr(`✗ Retry error: ${err.message}`, `✗ 重试出错:${err.message}`, { de: `✗ Wiederholungsfehler: ${err.message}` }))
   } finally {
     isConfigRetrying.value = false
@@ -1156,7 +1156,7 @@ const handleConfigRetry = async () => {
 
 const loadPreparedData = async () => {
   phase.value = 2
-  addLog(tr('Loading existing configuration data...', '正在加载已有配置数据…', { de: 'Vorhandene Konfigurationsdaten werden geladen…' }))
+  addLog($tr('Loading existing configuration data...', '正在加载已有配置数据…', { de: 'Vorhandene Konfigurationsdaten werden geladen…', fr: 'Chargement des données de configuration existantes…' }))
 
   // Fetch profiles one last time
   await fetchProfilesRealtime()
@@ -1168,7 +1168,7 @@ const loadPreparedData = async () => {
     if (res.success && res.data) {
       if (res.data.config_generated && res.data.config) {
         simulationConfig.value = res.data.config
-        addLog(tr('✓ Simulation configuration loaded successfully', '✓ 模拟配置加载成功', { de: '✓ Simulationskonfiguration erfolgreich geladen' }))
+        addLog($tr('✓ Simulation configuration loaded successfully', '✓ 模拟配置加载成功', { de: '✓ Simulationskonfiguration erfolgreich geladen', fr: 'Configuration de simulation chargée avec succès' }))
 
         // Show detailed config summary
         if (res.data.summary) {
@@ -1177,12 +1177,12 @@ const loadPreparedData = async () => {
           addLog(tr(`  └─ Initial posts: ${res.data.summary.initial_posts_count}`, `  └─ 初始帖子:${res.data.summary.initial_posts_count}`, { de: `  └─ Initiale Beiträge: ${res.data.summary.initial_posts_count}` }))
         }
 
-        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation' }))
+        addLog($tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation', fr: `Configuration de l'environnement terminée, prêt à lancer la simulation` }))
         phase.value = 4
         emit('update-status', 'completed')
       } else {
         // Config not yet generated, start polling
-        addLog(tr('Config generating, starting to poll...', '配置生成中,开始轮询…', { de: 'Konfiguration wird generiert, Abfrage wird gestartet…' }))
+        addLog($tr('Config generating, starting to poll...', '配置生成中,开始轮询…', { de: 'Konfiguration wird generiert, Abfrage wird gestartet…', fr: 'Config en cours de génération, démarrage du polling…' }))
         startConfigPolling()
       }
     }
@@ -1221,7 +1221,7 @@ onMounted(async () => {
       // no run state — fresh simulation
     }
 
-    addLog(tr('Step 2 Agent Setup Initializing', '第 2 步 智能体配置初始化中', { de: 'Schritt 2 Agent-Einrichtung wird initialisiert' }))
+    addLog($tr('Step 2 Agent Setup Initializing', '第 2 步 智能体配置初始化中', { de: 'Schritt 2 Agent-Einrichtung wird initialisiert', fr: 'Initialisation de la configuration des agents (Étape 2)' }))
     startPrepareSimulation()
   }
 })

@@ -4,41 +4,41 @@
     <div class="wi-header">
       <div class="wi-title">
         <span class="wi-icon">◐</span>
-        <span class="wi-label">{{ $tr('WHAT IF? — COUNTERFACTUAL', '假设性 — 反事实', { de: 'WAS WÄRE WENN? — KONTRAFAKTISCH' }) }}</span>
+        <span class="wi-label">{{ $tr('WHAT IF? — COUNTERFACTUAL', '假设性 — 反事实', { de: 'WAS WÄRE WENN? — KONTRAFAKTISCH', fr: 'ET SI ? — CONTREFACTUEL' }) }}</span>
       </div>
       <div class="wi-header-actions">
         <button
           class="wi-export-btn"
           :disabled="!hasChartData || exporting || !copySupported"
-          :title="copySupported ? $tr('Copy chart as PNG (with MiroShark watermark)', '复制图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG kopieren (mit MiroShark-Wasserzeichen)' }) : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', { de: 'Bildkopie wird in diesem Browser nicht unterstützt' })"
+          :title="copySupported ? $tr('Copy chart as PNG (with MiroShark watermark)', '复制图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG kopieren (mit MiroShark-Wasserzeichen)', fr: 'Copier le graphique en PNG (avec filigrane MiroShark)' }) : $tr('Image copy not supported in this browser', '此浏览器不支持图像复制', { de: 'Bildkopie wird in diesem Browser nicht unterstützt', fr: `Copie d'image non supportée dans ce navigateur` })"
           @click="copyChart"
         >
-          {{ copiedFlash ? $tr('Copied', '已复制', { de: 'Kopiert' }) : $tr('Copy', '复制', { de: 'Kopieren' }) }}
+          {{ copiedFlash ? $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy', '复制', { de: 'Kopieren', fr: 'Copier' }) }}
         </button>
         <button
           class="wi-export-btn"
           :disabled="!hasChartData || exporting"
           @click="downloadChart"
-          :title="$tr('Download chart as PNG (with MiroShark watermark)', '下载图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG herunterladen (mit MiroShark-Wasserzeichen)' })"
+          :title="$tr('Download chart as PNG (with MiroShark watermark)', '下载图表为 PNG(含 MiroShark 水印)', { de: 'Diagramm als PNG herunterladen (mit MiroShark-Wasserzeichen)', fr: 'Télécharger le graphique en PNG (avec filigrane MiroShark)' })"
         >
-          {{ $tr('Download ↓', '下载 ↓', { de: 'Herunterladen ↓' }) }}
+          {{ $tr('Download ↓', '下载 ↓', { de: 'Herunterladen ↓', fr: 'Télécharger ↓' }) }}
         </button>
       </div>
     </div>
 
     <div class="wi-hint">
-      {{ $tr('Pick up to', '最多挑选', { de: 'Bis zu' }) }} {{ MAX_PICKS }} {{ $tr('agents to remove, then recompute to see how consensus would have shifted. Uses existing trajectory data — no re-run.', '个智能体进行移除,然后重新计算以查看共识将如何变化。使用现有轨迹数据 — 无需重新运行。', { de: 'Agenten zum Entfernen auswählen, dann neu berechnen, um zu sehen, wie sich der Konsens verschoben hätte. Verwendet vorhandene Trajektoriendaten — kein erneuter Lauf.' }) }}
+      {{ $tr('Pick up to', '最多挑选', { de: 'Bis zu', fr: `Choisissez jusqu'à` }) }} {{ MAX_PICKS }} {{ $tr('agents to remove, then recompute to see how consensus would have shifted. Uses existing trajectory data — no re-run.', '个智能体进行移除,然后重新计算以查看共识将如何变化。使用现有轨迹数据 — 无需重新运行。', { de: 'Agenten zum Entfernen auswählen, dann neu berechnen, um zu sehen, wie sich der Konsens verschoben hätte. Verwendet vorhandene Trajektoriendaten — kein erneuter Lauf.', fr: 'agents à retirer, puis recalculez pour voir comment le consensus aurait évolué. Utilise les données de trajectoire existantes — pas de re-exécution.' }) }}
     </div>
 
     <!-- Loading agents -->
     <div v-if="agentsLoading" class="wi-state">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Loading agents...', '加载智能体中...', { de: 'Agenten werden geladen...' }) }}</span>
+      <span>{{ $tr('Loading agents...', '加载智能体中...', { de: 'Agenten werden geladen...', fr: 'Chargement des agents…' }) }}</span>
     </div>
 
     <!-- No agents -->
     <div v-else-if="!agents.length" class="wi-state">
-      <span>{{ $tr('No influence data yet — run the simulation first.', '暂无影响力数据 — 请先运行模拟。', { de: 'Noch keine Einflussdaten — führen Sie zuerst die Simulation aus.' }) }}</span>
+      <span>{{ $tr('No influence data yet — run the simulation first.', '暂无影响力数据 — 请先运行模拟。', { de: 'Noch keine Einflussdaten — führen Sie zuerst die Simulation aus.', fr: `Aucune donnée d'influence pour l'instant — lancez d'abord la simulation.` }) }}</span>
     </div>
 
     <template v-else>
@@ -50,7 +50,7 @@
             v-if="selectedNames.length"
             class="wi-clear"
             @click="clearSelection"
-          >{{ $tr('Clear', '清除', { de: 'Zurücksetzen' }) }} ({{ selectedNames.length }})</button>
+          >{{ $tr('Clear', '清除', { de: 'Zurücksetzen', fr: 'Effacer' }) }} ({{ selectedNames.length }})</button>
         </div>
         <div class="wi-agent-grid">
           <label
@@ -81,7 +81,7 @@
             @click="compute"
           >
             <span v-if="computing" class="wi-spinner"></span>
-            {{ computing ? $tr('Recomputing...', '重新计算中...', { de: 'Wird neu berechnet...' }) : $tr('Recompute counterfactual', '重新计算反事实', { de: 'Kontrafaktisch neu berechnen' }) }}
+            {{ computing ? $tr('Recomputing...', '重新计算中...', { de: 'Wird neu berechnet...', fr: 'Recalcul en cours…' }) : $tr('Recompute counterfactual', '重新计算反事实', { de: 'Kontrafaktisch neu berechnen', fr: 'Recalculer le contrefactuel' }) }}
           </button>
         </div>
       </div>
@@ -165,7 +165,7 @@
                 :x="xS(origData.consensus_round) + 4" :y="MT + 10"
                 fill="rgba(244,241,255,0.45)" font-size="9"
                 font-family="'Geist Mono', monospace"
-              >{{ $tr('orig r', '原 r', { de: 'Orig r' }) }}{{ origData.consensus_round }}</text>
+              >{{ $tr('orig r', '原 r', { de: 'Orig r', fr: 'r orig' }) }}{{ origData.consensus_round }}</text>
             </g>
             <g v-if="cfData?.consensus_round != null && cfData.consensus_round !== origData?.consensus_round">
               <line
@@ -178,7 +178,7 @@
                 :x="xS(cfData.consensus_round) + 4" :y="MT + 22"
                 fill="#c4b5fd" font-size="9"
                 font-family="'Geist Mono', monospace"
-              >{{ $tr('cf r', '反 r', { de: 'KF r' }) }}{{ cfData.consensus_round }}</text>
+              >{{ $tr('cf r', '反 r', { de: 'KF r', fr: 'r cf' }) }}{{ cfData.consensus_round }}</text>
             </g>
 
             <!-- X axis -->
@@ -199,11 +199,11 @@
           <div class="wi-legend">
             <span class="wi-legend-item">
               <span class="wi-legend-swatch orig"></span>
-              {{ $tr('Original', '原始', { de: 'Original' }) }} ({{ origData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten' }) }})
+              {{ $tr('Original', '原始', { de: 'Original' }) }} ({{ origData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }})
             </span>
             <span class="wi-legend-item">
               <span class="wi-legend-swatch cf"></span>
-              {{ $tr('Counterfactual', '反事实', { de: 'Kontrafaktisch' }) }} ({{ cfData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten' }) }})
+              {{ $tr('Counterfactual', '反事实', { de: 'Kontrafaktisch' }) }} ({{ cfData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }})
             </span>
           </div>
         </div>
@@ -220,7 +220,7 @@
                 v-if="result?.delta_final_bullish != null"
                 class="wi-delta"
                 :class="deltaClass(result.delta_final_bullish)"
-              >{{ fmtDelta(result.delta_final_bullish) }} {{ $tr('pts', '点', { de: 'Pkt.' }) }}</span>
+              >{{ fmtDelta(result.delta_final_bullish) }} {{ $tr('pts', '点', { de: 'Pkt.', fr: 'pts' }) }}</span>
             </span>
           </div>
           <div class="wi-impact-row">
@@ -233,20 +233,20 @@
                 v-if="result?.delta_consensus_round != null"
                 class="wi-delta"
                 :class="deltaClass(result.delta_consensus_round, true)"
-              >{{ fmtDelta(result.delta_consensus_round) }} {{ $tr('rounds', '轮次', { de: 'Runden' }) }}</span>
+              >{{ fmtDelta(result.delta_consensus_round) }} {{ $tr('rounds', '轮次', { de: 'Runden', fr: 'tours' }) }}</span>
             </span>
           </div>
           <div v-if="result?.impact" class="wi-impact-badge-row">
             <span
               class="wi-impact-badge"
               :class="'impact-' + result.impact"
-            >{{ impactLabel(result.impact) }} {{ $tr('influence', '影响力', { de: 'Einfluss' }) }}</span>
+            >{{ impactLabel(result.impact) }} {{ $tr('influence', '影响力', { de: 'Einfluss', fr: 'influence' }) }}</span>
           </div>
           <div v-if="result?.summary" class="wi-summary">
             {{ result.summary }}
           </div>
           <div v-if="result?.excluded_unresolved?.length" class="wi-warn">
-            {{ $tr(`Couldn't match:`, '未能匹配:', { de: 'Konnte nicht zuordnen:' }) }} {{ result.excluded_unresolved.join(', ') }}
+            {{ $tr(`Couldn't match:`, '未能匹配:', { de: 'Konnte nicht zuordnen:', fr: `Impossible d'associer :` }) }} {{ result.excluded_unresolved.join(', ') }}
           </div>
         </div>
       </div>
@@ -447,7 +447,7 @@ const _buildExportCanvas = () => {
     ? `${result.value.delta_final_bullish >= 0 ? '+' : ''}${result.value.delta_final_bullish} ${tr('pts on bullish share', '点看涨占比', { de: 'Pkt. beim optimistischen Anteil' })}`
     : null
   const { drawHeader, headerHeight } = buildTitledHeader({
-    title: `${tr('What If?', '假设性?', { de: 'Was wäre wenn?' })} — ${removed}`,
+    title: `${$tr('What If?', '假设性?', { de: 'Was wäre wenn?', fr: 'Et si ?' })} — ${removed}`,
     subtitle: deltaStr,
     width: W,
   })
