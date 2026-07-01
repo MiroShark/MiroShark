@@ -25,9 +25,11 @@ logger = get_logger('miroshark.run_summary')
 # ---------------------------------------------------------------------------
 MODEL_PRICING = {
     # Current Cloud preset (update as OpenRouter prices drift)
-    "xiaomi/mimo-v2.5":              {"input": 0.14, "output": 0.28},
-    "google/gemini-3-flash-preview":     {"input": 0.50, "output": 3.00},
+    "inception/mercury-2":               {"input": 0.25, "output": 0.75},    # Default (diffusion)
+    "google/gemini-3-flash-preview":     {"input": 0.50, "output": 3.00},    # Smart + NER
+    "deepseek/deepseek-v4-flash":        {"input": 0.098, "output": 0.196},  # Wonderwall + web search
     # Tracked for mixed / legacy setups
+    "xiaomi/mimo-v2.5":              {"input": 0.14, "output": 0.28},
     "qwen/qwen3.5-flash-02-23":          {"input": 0.065, "output": 0.26},
     "deepseek/deepseek-v3.2":            {"input": 0.252, "output": 0.378},
     "google/gemini-2.0-flash-001":       {"input": 0.10, "output": 0.40},

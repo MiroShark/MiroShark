@@ -34,22 +34,22 @@ def _mask_key(key: str) -> str:
 # copied into when the caller supplies `preset_api_key`.
 _PRESETS = {
     'cheap': {
-        'label': 'Cloud — ~$1/run (Mimo V2.5 + Gemini 3 Flash)',
+        'label': 'Cloud — ~$1/run (Mercury 2 + Gemini 3 Flash + DeepSeek V4)',
         'fields': {
             'LLM_PROVIDER': 'openai',
             'LLM_BASE_URL': 'https://openrouter.ai/api/v1',
-            'LLM_MODEL_NAME': 'xiaomi/mimo-v2.5',
+            'LLM_MODEL_NAME': 'inception/mercury-2:nitro',
             'SMART_PROVIDER': 'openai',
             'SMART_BASE_URL': 'https://openrouter.ai/api/v1',
             'SMART_MODEL_NAME': 'google/gemini-3-flash-preview',
             'NER_BASE_URL': 'https://openrouter.ai/api/v1',
             'NER_MODEL_NAME': 'google/gemini-3-flash-preview',
-            'WONDERWALL_MODEL_NAME': 'xiaomi/mimo-v2.5',
+            'WONDERWALL_MODEL_NAME': 'deepseek/deepseek-v4-flash:nitro',
             'EMBEDDING_PROVIDER': 'openai',
             'EMBEDDING_BASE_URL': 'https://openrouter.ai/api',
             'EMBEDDING_MODEL': 'openai/text-embedding-3-large',
             'EMBEDDING_DIMENSIONS': 768,
-            'WEB_SEARCH_MODEL': 'google/gemini-3-flash-preview:online',
+            'WEB_SEARCH_MODEL': 'deepseek/deepseek-v4-flash:online',
         },
         'key_slots': ['LLM_API_KEY', 'SMART_API_KEY', 'NER_API_KEY', 'EMBEDDING_API_KEY'],
     },

@@ -93,7 +93,7 @@ git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
 cp .env.example .env
 ```
 
-`.env.example` ships with the Cloud preset (Mimo V2.5 + Gemini 3 Flash) as the active default. Open `.env` and paste your OpenRouter key into the five blank `*_API_KEY=` lines (`LLM_`, `SMART_`, `NER_`, `OPENAI_`, `EMBEDDING_` — same key in all of them). No model edits needed unless you want a different lineup.
+`.env.example` ships with the Cloud preset (Mercury 2 + Gemini 3 Flash + DeepSeek V4 Flash) as the active default. Open `.env` and paste your OpenRouter key into the five blank `*_API_KEY=` lines (`LLM_`, `SMART_`, `NER_`, `OPENAI_`, `EMBEDDING_` — same key in all of them). No model edits needed unless you want a different lineup.
 
 Then launch:
 
@@ -133,7 +133,7 @@ One key covers every slot, including embeddings. Easiest to set up and the path 
 ```bash
 LLM_API_KEY=sk-or-v1-YOUR_KEY
 LLM_BASE_URL=https://openrouter.ai/api/v1
-LLM_MODEL_NAME=xiaomi/mimo-v2.5
+LLM_MODEL_NAME=inception/mercury-2:nitro
 
 SMART_PROVIDER=openai
 SMART_API_KEY=sk-or-v1-YOUR_KEY
@@ -144,8 +144,8 @@ NER_MODEL_NAME=google/gemini-3-flash-preview
 NER_BASE_URL=https://openrouter.ai/api/v1
 NER_API_KEY=sk-or-v1-YOUR_KEY
 
-WONDERWALL_MODEL_NAME=xiaomi/mimo-v2.5
-WEB_SEARCH_MODEL=google/gemini-3-flash-preview:online
+WONDERWALL_MODEL_NAME=deepseek/deepseek-v4-flash:nitro
+WEB_SEARCH_MODEL=deepseek/deepseek-v4-flash:online
 
 OPENAI_API_KEY=sk-or-v1-YOUR_KEY
 OPENAI_API_BASE_URL=https://openrouter.ai/api/v1

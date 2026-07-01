@@ -10,7 +10,7 @@ All settings live in `.env` (copy from `.env.example`). The full reference below
 # LLM
 LLM_API_KEY=your-api-key
 LLM_BASE_URL=https://openrouter.ai/api/v1     # or http://localhost:11434/v1 for Ollama
-LLM_MODEL_NAME=xiaomi/mimo-v2.5
+LLM_MODEL_NAME=inception/mercury-2:nitro
 
 # Neo4j
 NEO4J_URI=bolt://localhost:7687
@@ -53,7 +53,7 @@ LLM_MODEL_NAME=qwen2.5:32b
 # SMART_MODEL_NAME=google/gemini-3-flash-preview          # Cloud preset
 
 # ─── Wonderwall (agent sim loop — #1 cost driver, use cheapest viable) ───
-# WONDERWALL_MODEL_NAME=xiaomi/mimo-v2.5
+# WONDERWALL_MODEL_NAME=deepseek/deepseek-v4-flash:nitro
 # Optional: route Wonderwall to a custom OpenAI-compatible endpoint
 # (self-hosted vLLM, Modal, custom fine-tune…). Both fields are
 # optional — leaving either blank inherits LLM_BASE_URL / LLM_API_KEY.
@@ -110,7 +110,7 @@ REASONING_TRACE_ENABLED=true
 # Also powers the /api/graph/fetch-url URL importer — models without native
 # browsing must use an ":online" variant.
 WEB_ENRICHMENT_ENABLED=true
-# WEB_SEARCH_MODEL=google/gemini-3-flash-preview:online
+# WEB_SEARCH_MODEL=deepseek/deepseek-v4-flash:online
 
 # ─── Embedding batching ───
 # How many texts per HTTP request. Higher is faster on graph builds;

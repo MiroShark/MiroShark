@@ -6,7 +6,7 @@ scrapes the page via POST /v1/scrape and returns markdown — handles JS-heavy
 pages (automatic fetch → CycleTLS → Hero browser fallback) and PDFs/DOCX.
 
 Fallback path: ask the configured web-search LLM (WEB_SEARCH_MODEL, e.g.
-`google/gemini-3-flash-preview:online`) to read the URL and return the main
+`deepseek/deepseek-v4-flash:online`) to read the URL and return the main
 readable content. The model MUST have web access — use an `:online` variant
 on OpenRouter for any model without native browsing, otherwise it'll reject
 URLs dated past its training cutoff.
@@ -132,7 +132,7 @@ def _fetch_via_llm(url: str, timeout: int) -> tuple:
     if not model:
         raise ValueError(
             "No web-search model configured. Set WEB_SEARCH_MODEL in .env "
-            "(e.g. google/gemini-3-flash-preview:online)."
+            "(e.g. deepseek/deepseek-v4-flash:online)."
         )
 
     logger.info(f"Fetching URL via LLM ({model}): {url}")

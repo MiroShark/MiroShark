@@ -30,20 +30,21 @@ class Config:
     # LLM configuration (unified OpenAI format)
     # LLM_PROVIDER: "openai" (default, any OpenAI-compatible API) or "claude-code" (local CLI)
     # Default model is used for profile generation, sim config, memory compaction.
-    # Cloud preset: xiaomi/mimo-v2.5 (cheap personas + sim configs)
+    # Cloud preset: inception/mercury-2:nitro (diffusion LLM — picked for speed;
+    # off the report's quality path. Fallback for any unset tier.)
     LLM_PROVIDER = os.environ.get('LLM_PROVIDER', 'openai')
     LLM_API_KEY = os.environ.get('LLM_API_KEY')
     LLM_BASE_URL = os.environ.get('LLM_BASE_URL', 'https://api.openai.com/v1')
-    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME') or 'xiaomi/mimo-v2.5'  # `or` so a blank LLM_MODEL_NAME= falls back instead of sending an empty model
+    LLM_MODEL_NAME = os.environ.get('LLM_MODEL_NAME') or 'inception/mercury-2:nitro'  # `or` so a blank LLM_MODEL_NAME= falls back instead of sending an empty model
 
     # Smart model — stronger model for intelligence-sensitive workflows
     # (report generation, ontology extraction, graph reasoning).
-    # When not set, these workflows use the default LLM config above.
-    # Cloud preset: google/gemini-3-flash-preview (stable JSON, fast reports)
+    # Defaults to google/gemini-3-flash-preview (stable JSON, fast reports);
+    # set SMART_MODEL_NAME= (empty) to inherit the default LLM config above.
     SMART_PROVIDER = os.environ.get('SMART_PROVIDER', '')   # "openai", "claude-code", or empty (inherit)
     SMART_API_KEY = os.environ.get('SMART_API_KEY', '')
     SMART_BASE_URL = os.environ.get('SMART_BASE_URL', '')
-    SMART_MODEL_NAME = os.environ.get('SMART_MODEL_NAME', '')
+    SMART_MODEL_NAME = os.environ.get('SMART_MODEL_NAME', 'google/gemini-3-flash-preview')
     
     # Neo4j configuration
     NEO4J_URI = os.environ.get('NEO4J_URI', 'bolt://localhost:7687')
@@ -143,9 +144,11 @@ class Config:
     # Web Enrichment — LLM-powered research for persona generation
     # Triggers for notable figures (politicians, CEOs, etc.) or when graph context is thin
     WEB_ENRICHMENT_ENABLED = os.environ.get('WEB_ENRICHMENT_ENABLED', 'true').lower() == 'true'
-    # Optional: dedicated model for web research (e.g. "perplexity/sonar-pro" on OpenRouter
-    # for grounded search, or "perplexity/sonar" for fast search). If empty, uses default LLM.
-    WEB_SEARCH_MODEL = os.environ.get('WEB_SEARCH_MODEL', '')
+    # Dedicated model for web research (web_research + deep_research + url_fetch).
+    # Defaults to deepseek/deepseek-v4-flash:online (bake-off value winner). Any
+    # ":online" OpenRouter variant works; set WEB_SEARCH_MODEL= (empty) to inherit
+    # the default LLM (only viable if the default model can browse).
+    WEB_SEARCH_MODEL = os.environ.get('WEB_SEARCH_MODEL', 'deepseek/deepseek-v4-flash:online')
 
     # SearXNG metasearch — when set, web enrichment does real search-then-
     # synthesize with the DEFAULT LLM instead of requiring a websearch-enabled
@@ -161,10 +164,10 @@ class Config:
     FIRECRAWL_API_KEY = os.environ.get('MIROSHARK_FIRECRAWL_API_KEY', '')
 
     # Wonderwall model — model for Wonderwall/CAMEL agent simulation loop.
-    # When not set, uses LLM_MODEL_NAME.
-    # Cloud preset: xiaomi/mimo-v2.5 (same as default to reuse quota)
+    # Defaults to deepseek/deepseek-v4-flash:nitro; set WONDERWALL_MODEL_NAME=
+    # (empty) to inherit LLM_MODEL_NAME.
     # Wonderwall is the #1 cost driver — 850+ calls per run. Keep it cheap.
-    WONDERWALL_MODEL_NAME = os.environ.get('WONDERWALL_MODEL_NAME', '')
+    WONDERWALL_MODEL_NAME = os.environ.get('WONDERWALL_MODEL_NAME', 'deepseek/deepseek-v4-flash:nitro')
     # Optional per-slot endpoint override — point Wonderwall at a different
     # OpenAI-compatible API (e.g. a self-hosted Modal/vLLM endpoint) without
     # affecting the Default/Smart/NER slots. When unset, the simulation
@@ -173,9 +176,9 @@ class Config:
     WONDERWALL_BASE_URL = os.environ.get('WONDERWALL_BASE_URL', '')
 
     # NER model — faster model for entity extraction (high-volume, mechanical task)
-    # When not set, NER uses the default LLM config above.
-    # Cloud preset: google/gemini-3-flash-preview (stable JSON with reasoning disabled)
-    NER_MODEL_NAME = os.environ.get('NER_MODEL_NAME', '')
+    # Defaults to google/gemini-3-flash-preview (stable JSON with reasoning disabled);
+    # set NER_MODEL_NAME= (empty) to inherit the default LLM config above.
+    NER_MODEL_NAME = os.environ.get('NER_MODEL_NAME', 'google/gemini-3-flash-preview')
     NER_BASE_URL = os.environ.get('NER_BASE_URL', '')
     NER_API_KEY = os.environ.get('NER_API_KEY', '')
 
