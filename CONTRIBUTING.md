@@ -41,6 +41,8 @@ Thanks for helping make swarm simulation cheaper and more credible. This guide c
 ## Testing
 
 A pytest suite lives at `backend/tests/`.
+Before investigating a failing local run, check [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)
+for the current known test and dependency problems.
 
 ### Fast offline unit suite
 
