@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/images/miroshark-logo.jpg" alt="MiroShark" width="120" />
+  <img src="../docs/images/miroshark-logo.jpg" alt="MiroShark" width="120" />
 </p>
 
 <h1 align="center">MiroShark</h1>
@@ -12,11 +12,11 @@
 </p>
 
 <p align="center">
-  <b>English</b> · <a href="./README.zh-CN.md">中文</a> · <a href="./README.ja.md">日本語</a> · <a href="./README.fr.md">Français</a>
+  <b>English</b> · <a href="README.zh-CN.md">中文</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a>
 </p>
 
 <p align="center">
-  <img src="./docs/images/miroshark-demo.gif" alt="MiroShark Demo" />
+  <img src="../docs/images/miroshark-demo.gif" alt="MiroShark Demo" />
 </p>
 
 ---
@@ -25,7 +25,7 @@
 > Drop in anything — a press release, a news headline, a policy draft, a question you can't answer, a historical what-if — and MiroShark spawns hundreds of agents that react to it hour by hour. Posting, arguing, trading, changing their minds.
 
 <p align="center">
-  <img src="./docs/images/simulate-anything-hero-v2.jpg" alt="Simulate anything — $1 per simulation, 10 min first result, 100 agents: input → build world → swarm → report" width="100%" />
+  <img src="../docs/images/simulate-anything-hero-v2.jpg" alt="Simulate anything — $1 per simulation, 10 min first result, 100 agents: input → build world → swarm → report" width="100%" />
 </p>
 
 ## What it does
@@ -36,7 +36,7 @@
 - Get a report on what happened, citing actual posts and trades.
 
 <p align="center">
-  <img src="./docs/images/simulation-phases-v2.jpg" alt="MiroShark pipeline: Phase 1 Ontology Generation → Phase 2 Graph Building → Phase 3 Agent Setup → Phase 4 Simulation Execution → Phase 5 Report & Interaction" width="100%" />
+  <img src="../docs/images/simulation-phases-v2.jpg" alt="MiroShark pipeline: Phase 1 Ontology Generation → Phase 2 Graph Building → Phase 3 Agent Setup → Phase 4 Simulation Execution → Phase 5 Report & Interaction" width="100%" />
 </p>
 
 ## Quick start
@@ -65,10 +65,10 @@ cp .env.example .env
 
 The launcher checks dependencies, starts Neo4j, installs frontend + backend, and serves `:3000` + `:5001`. Ctrl+C stops everything. Open `http://localhost:3000` and drop in a document.
 
-**Other paths** — [one-click Railway / Render deploy](docs/INSTALL.md#one-click-cloud), [Docker + Ollama](docs/INSTALL.md#option-b-docker--local-ollama), [manual Ollama](docs/INSTALL.md#option-c-manual--local-ollama), [Claude Code CLI](docs/INSTALL.md#option-d-claude-code-no-api-key) — all in **[docs/INSTALL.md](docs/INSTALL.md)**.
+**Other paths** — [one-click Railway / Render deploy](../docs/INSTALL.md#one-click-cloud), [Docker + Ollama](../docs/INSTALL.md#option-b-docker--local-ollama), [manual Ollama](../docs/INSTALL.md#option-c-manual--local-ollama), [Claude Code CLI](../docs/INSTALL.md#option-d-claude-code-no-api-key) — all in **[docs/INSTALL.md](../docs/INSTALL.md)**.
 
 <p align="center">
-  <img src="./docs/images/miroshark-overview-diagram-v2.jpg" alt="MiroShark Overview" />
+  <img src="../docs/images/miroshark-overview-diagram-v2.jpg" alt="MiroShark Overview" />
 </p>
 
 ## Interface language
@@ -86,7 +86,7 @@ After launching, use the language selector in the top-right of the navbar to swi
 - **Creative experiments** — feed a novel with a lost ending; agents write a narratively consistent conclusion
 
 <p align="center">
-  <img src="./docs/images/agent-grounding-v2.jpg" alt="Five layers of grounding per agent: demographic seed, web enrichment, semantic search, relationships, graph attributes" width="100%" />
+  <img src="../docs/images/agent-grounding-v2.jpg" alt="Five layers of grounding per agent: demographic seed, web enrichment, semantic search, relationships, graph attributes" width="100%" />
 </p>
 
 ## Features
@@ -104,36 +104,36 @@ A few of the highlights:
 | **Public Gallery & Verified Predictions** | Browse and fork every published sim at `/explore`; track the calls that landed at `/verified` |
 | **Share everywhere** | Social cards, replay GIFs, tweet threads, RSS / Atom, embeds, and Slack / Discord / Telegram / webhook notifications |
 
-…and **40+ more** — share surfaces, exports, integrations, observability, and on-chain citation. See the **[full feature list and deep dives in docs/FEATURES.md](docs/FEATURES.md)**.
+…and **40+ more** — share surfaces, exports, integrations, observability, and on-chain citation. See the **[full feature list and deep dives in docs/FEATURES.md](../docs/FEATURES.md)**.
 
 <p align="center">
-  <img src="./docs/images/graph-memory-pipeline-v2.jpg" alt="Graph memory pipeline: ingestion (NER, embed, entity resolution, contradiction check, temporal edges) and retrieval (vector + BM25 + BFS, fused, reranked)" width="100%" />
+  <img src="../docs/images/graph-memory-pipeline-v2.jpg" alt="Graph memory pipeline: ingestion (NER, embed, entity resolution, contradiction check, temporal edges) and retrieval (vector + BM25 + BFS, fused, reranked)" width="100%" />
 </p>
 
 ## Documentation
 
 | | |
 |---|---|
-| [Install](docs/INSTALL.md) | Every deployment path: cloud, Docker, Ollama, Claude Code |
-| [Configuration](docs/CONFIGURATION.md) | Env vars, model routing, feature flags |
-| [Models](docs/MODELS.md) | Cloud preset, local Ollama models, benchmark findings |
-| [Architecture](docs/ARCHITECTURE.md) | Simulation engine, memory pipeline, graph retrieval |
-| [Features](docs/FEATURES.md) | Deep dive on every feature in the table above |
-| [HTTP API](docs/API.md) | Every endpoint, grouped by concern — plus interactive Swagger UI at `/api/docs` and a spec at `/api/openapi.yaml` |
-| [CLI](docs/CLI.md) | `miroshark-cli` reference |
-| [MCP](docs/MCP.md) | Claude Desktop / Cursor / Windsurf / Continue integration + report agent tools (auto-generated snippets in Settings → AI Integration) |
-| [Webhooks](docs/WEBHOOKS.md) | Completion webhook payload, headers, delivery semantics, Slack/Discord/Zapier/n8n recipes |
-| [DKG citation](docs/DKG.md) | OriginTrail DKG anchoring — UAL + Merkle root + on-chain citation key for any finished sim |
-| [WaybackClaw archive](docs/WAYBACKCLAW.md) | WaybackClaw submission — snapshot id + IPFS CID + Nostr event id for any finished sim |
-| [Observability](docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
-| [Ecosystem](ECOSYSTEM.md) | Projects, agents, and products built on top of MiroShark |
+| [Install](../docs/INSTALL.md) | Every deployment path: cloud, Docker, Ollama, Claude Code |
+| [Configuration](../docs/CONFIGURATION.md) | Env vars, model routing, feature flags |
+| [Models](../docs/MODELS.md) | Cloud preset, local Ollama models, benchmark findings |
+| [Architecture](../docs/ARCHITECTURE.md) | Simulation engine, memory pipeline, graph retrieval |
+| [Features](../docs/FEATURES.md) | Deep dive on every feature in the table above |
+| [HTTP API](../docs/API.md) | Every endpoint, grouped by concern — plus interactive Swagger UI at `/api/docs` and a spec at `/api/openapi.yaml` |
+| [CLI](../docs/CLI.md) | `miroshark-cli` reference |
+| [MCP](../docs/MCP.md) | Claude Desktop / Cursor / Windsurf / Continue integration + report agent tools (auto-generated snippets in Settings → AI Integration) |
+| [Webhooks](../docs/WEBHOOKS.md) | Completion webhook payload, headers, delivery semantics, Slack/Discord/Zapier/n8n recipes |
+| [DKG citation](../docs/DKG.md) | OriginTrail DKG anchoring — UAL + Merkle root + on-chain citation key for any finished sim |
+| [WaybackClaw archive](../docs/WAYBACKCLAW.md) | WaybackClaw submission — snapshot id + IPFS CID + Nostr event id for any finished sim |
+| [Observability](../docs/OBSERVABILITY.md) | Debug panel, event stream, logging |
+| [Ecosystem](../ECOSYSTEM.md) | Projects, agents, and products built on top of MiroShark |
 | [Contributing](CONTRIBUTING.md) | Local setup, tests, PR conventions, and how to add an API endpoint |
 
 ---
 
 ## License
 
-AGPL-3.0. See [LICENSE](./LICENSE).
+AGPL-3.0. See [LICENSE](LICENSE).
 
 Support the project: `0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
 

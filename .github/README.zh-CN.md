@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/images/miroshark-logo.jpg" alt="MiroShark" width="120" />
+  <img src="../docs/images/miroshark-logo.jpg" alt="MiroShark" width="120" />
 </p>
 
 <h1 align="center">MiroShark</h1>
@@ -12,11 +12,11 @@
 </p>
 
 <p align="center">
-  <a href="./README.md">English</a> · <b>中文</b> · <a href="./README.ja.md">日本語</a> · <a href="./README.fr.md">Français</a>
+  <a href="README.md">English</a> · <b>中文</b> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a>
 </p>
 
 <p align="center">
-  <img src="./docs/images/miroshark-demo.gif" alt="MiroShark 演示" />
+  <img src="../docs/images/miroshark-demo.gif" alt="MiroShark 演示" />
 </p>
 
 ---
@@ -25,7 +25,7 @@
 > 投入任何素材 — 新闻稿、头条、政策草案、一个无解的问题、一段历史假设 — MiroShark 都会派出数百个智能体,每小时一轮地做出反应:发帖、辩论、交易、改变想法。
 
 <p align="center">
-  <img src="./docs/images/simulate-anything-hero-v2.jpg" alt="一切皆可模拟 — 每次模拟 $1、10 分钟出首份结果、100 个智能体:输入 → 构建世界 → 群体 → 报告" width="100%" />
+  <img src="../docs/images/simulate-anything-hero-v2.jpg" alt="一切皆可模拟 — 每次模拟 $1、10 分钟出首份结果、100 个智能体:输入 → 构建世界 → 群体 → 报告" width="100%" />
 </p>
 
 ## 它做什么
@@ -36,7 +36,7 @@
 - 生成一份引用真实发帖与交易的复盘报告。
 
 <p align="center">
-  <img src="./docs/images/simulation-phases-v2.jpg" alt="MiroShark 流水线:阶段 1 本体生成 → 阶段 2 图谱构建 → 阶段 3 智能体配置 → 阶段 4 模拟执行 → 阶段 5 报告与交互" width="100%" />
+  <img src="../docs/images/simulation-phases-v2.jpg" alt="MiroShark 流水线:阶段 1 本体生成 → 阶段 2 图谱构建 → 阶段 3 智能体配置 → 阶段 4 模拟执行 → 阶段 5 报告与交互" width="100%" />
 </p>
 
 ## 快速开始
@@ -65,10 +65,10 @@ cp .env.example .env
 
 启动器会检查依赖、启动 Neo4j、安装前后端,并在 `:3000` + `:5001` 提供服务。Ctrl+C 停止一切。打开 `http://localhost:3000` 并投入一份文档即可。
 
-**其他路径** — [一键 Railway / Render 部署](docs/INSTALL.zh-CN.md#一键云部署)、[Docker + Ollama](docs/INSTALL.zh-CN.md#方案-b-docker--本地-ollama)、[手动 Ollama](docs/INSTALL.zh-CN.md#方案-c-手动--本地-ollama)、[Claude Code CLI](docs/INSTALL.zh-CN.md#方案-d-claude-code无需-api-密钥) — 全部见 **[docs/INSTALL.zh-CN.md](docs/INSTALL.zh-CN.md)**。
+**其他路径** — [一键 Railway / Render 部署](../docs/INSTALL.zh-CN.md#一键云部署)、[Docker + Ollama](../docs/INSTALL.zh-CN.md#方案-b-docker--本地-ollama)、[手动 Ollama](../docs/INSTALL.zh-CN.md#方案-c-手动--本地-ollama)、[Claude Code CLI](../docs/INSTALL.zh-CN.md#方案-d-claude-code无需-api-密钥) — 全部见 **[docs/INSTALL.zh-CN.md](../docs/INSTALL.zh-CN.md)**。
 
 <p align="center">
-  <img src="./docs/images/miroshark-overview-cn-v2.jpg" alt="MiroShark 总览" />
+  <img src="../docs/images/miroshark-overview-cn-v2.jpg" alt="MiroShark 总览" />
 </p>
 
 ## 界面语言
@@ -86,7 +86,7 @@ cp .env.example .env
 - **创意实验** — 喂入失去结尾的小说,智能体续写出叙事自洽的结局
 
 <p align="center">
-  <img src="./docs/images/agent-grounding-v2.jpg" alt="每个智能体的五层接地:人口学种子、网络补全、语义检索、关系、图谱属性" width="100%" />
+  <img src="../docs/images/agent-grounding-v2.jpg" alt="每个智能体的五层接地:人口学种子、网络补全、语义检索、关系、图谱属性" width="100%" />
 </p>
 
 ## 主要功能
@@ -104,36 +104,36 @@ cp .env.example .env
 | **公开图库与已验证预言** | 在 `/explore` 浏览并派生所有公开模拟;在 `/verified` 追踪命中的预言 |
 | **全渠道分享** | 社交卡片、回放动图、推文串、RSS / Atom、嵌入,以及 Slack / Discord / Telegram / Webhook 通知 |
 
-……以及 **40+ 项更多功能** — 分享表面、导出、集成、可观测性与链上引用。详见 **[完整功能列表与深入解析:docs/FEATURES.zh-CN.md](docs/FEATURES.zh-CN.md)**。
+……以及 **40+ 项更多功能** — 分享表面、导出、集成、可观测性与链上引用。详见 **[完整功能列表与深入解析:docs/FEATURES.zh-CN.md](../docs/FEATURES.zh-CN.md)**。
 
 <p align="center">
-  <img src="./docs/images/graph-memory-pipeline-v2.jpg" alt="图谱记忆流水线:摄入(NER、嵌入、实体消歧、矛盾检测、时间边)与检索(向量 + BM25 + BFS 融合 + 重排)" width="100%" />
+  <img src="../docs/images/graph-memory-pipeline-v2.jpg" alt="图谱记忆流水线:摄入(NER、嵌入、实体消歧、矛盾检测、时间边)与检索(向量 + BM25 + BFS 融合 + 重排)" width="100%" />
 </p>
 
 ## 文档
 
 | | |
 |---|---|
-| [安装](docs/INSTALL.zh-CN.md) | 全部部署路径:云端、Docker、Ollama、Claude Code |
-| [配置](docs/CONFIGURATION.zh-CN.md) | 环境变量、模型路由、特性开关 |
-| [模型](docs/MODELS.zh-CN.md) | 云端预设、本地 Ollama 模型、基准发现 |
-| [架构](docs/ARCHITECTURE.zh-CN.md) | 模拟引擎、记忆管线、图谱检索 |
-| [功能](docs/FEATURES.zh-CN.md) | 上述功能表中每一项的深入解析 |
-| [HTTP API](docs/API.zh-CN.md) | 按关注点分组的全部端点 — 含 `/api/docs` 交互式 Swagger UI 与 `/api/openapi.yaml` 规范 |
-| [CLI](docs/CLI.zh-CN.md) | `miroshark-cli` 参考 |
-| [MCP](docs/MCP.zh-CN.md) | Claude Desktop / Cursor / Windsurf / Continue 集成 + 报告智能体工具(可在「设置 → AI 集成」中获取自动生成的片段) |
-| [Webhook](docs/WEBHOOKS.zh-CN.md) | 完成 Webhook 载荷、头部、投递语义、Slack / Discord / Zapier / n8n 食谱 |
-| [DKG 引用](docs/DKG.md) | OriginTrail DKG 锚定 — 任何已完成模拟的 UAL + Merkle 根 + 链上引用键 |
-| [WaybackClaw 归档](docs/WAYBACKCLAW.md) | WaybackClaw 提交 — 任何已完成模拟的快照 id + IPFS CID + Nostr 事件 id |
-| [可观测性](docs/OBSERVABILITY.zh-CN.md) | 调试面板、事件流、日志 |
-| [生态](ECOSYSTEM.md) | 基于 MiroShark 构建的项目、智能体与产品 |
+| [安装](../docs/INSTALL.zh-CN.md) | 全部部署路径:云端、Docker、Ollama、Claude Code |
+| [配置](../docs/CONFIGURATION.zh-CN.md) | 环境变量、模型路由、特性开关 |
+| [模型](../docs/MODELS.zh-CN.md) | 云端预设、本地 Ollama 模型、基准发现 |
+| [架构](../docs/ARCHITECTURE.zh-CN.md) | 模拟引擎、记忆管线、图谱检索 |
+| [功能](../docs/FEATURES.zh-CN.md) | 上述功能表中每一项的深入解析 |
+| [HTTP API](../docs/API.zh-CN.md) | 按关注点分组的全部端点 — 含 `/api/docs` 交互式 Swagger UI 与 `/api/openapi.yaml` 规范 |
+| [CLI](../docs/CLI.zh-CN.md) | `miroshark-cli` 参考 |
+| [MCP](../docs/MCP.zh-CN.md) | Claude Desktop / Cursor / Windsurf / Continue 集成 + 报告智能体工具(可在「设置 → AI 集成」中获取自动生成的片段) |
+| [Webhook](../docs/WEBHOOKS.zh-CN.md) | 完成 Webhook 载荷、头部、投递语义、Slack / Discord / Zapier / n8n 食谱 |
+| [DKG 引用](../docs/DKG.md) | OriginTrail DKG 锚定 — 任何已完成模拟的 UAL + Merkle 根 + 链上引用键 |
+| [WaybackClaw 归档](../docs/WAYBACKCLAW.md) | WaybackClaw 提交 — 任何已完成模拟的快照 id + IPFS CID + Nostr 事件 id |
+| [可观测性](../docs/OBSERVABILITY.zh-CN.md) | 调试面板、事件流、日志 |
+| [生态](../ECOSYSTEM.md) | 基于 MiroShark 构建的项目、智能体与产品 |
 | [贡献](CONTRIBUTING.zh-CN.md) | 测试与开发 |
 
 ---
 
 ## 许可证
 
-AGPL-3.0,详见 [LICENSE](./LICENSE)。
+AGPL-3.0,详见 [LICENSE](LICENSE)。
 
 支持本项目:`0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
 

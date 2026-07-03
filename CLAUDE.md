@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-Guidance for AI coding agents (Claude Code and similar) working in this repo. Human-facing docs live in [`README.md`](README.md) and [`docs/`](docs/) — this file is the agent's map: how the code is laid out, how to run and test it, and the conventions a change must respect to pass CI and review.
+Guidance for AI coding agents (Claude Code and similar) working in this repo. Human-facing docs live in [`README.md`](.github/README.md) and [`docs/`](docs/) — this file is the agent's map: how the code is laid out, how to run and test it, and the conventions a change must respect to pass CI and review.
 
 ## What MiroShark is
 
@@ -60,7 +60,7 @@ A PR to `main` must pass three jobs:
 
 ## Conventions that matter
 
-- **Adding an HTTP endpoint is contract-first.** `backend/tests/test_unit_openapi.py` fails CI if `openapi.yaml` and the real Flask routes disagree. To add one: register the route on the right blueprint in `app/api/`, document the path in `openapi.yaml` under a declared tag, and add an offline `test_unit_<feature>.py`. A brand-new blueprint must also be registered in `app/__init__.py` and added to the drift test's prefix map. Internal/debug routes go on the test's undocumented allowlist instead. Full recipe: [`CONTRIBUTING.md`](CONTRIBUTING.md#adding-an-api-endpoint).
+- **Adding an HTTP endpoint is contract-first.** `backend/tests/test_unit_openapi.py` fails CI if `openapi.yaml` and the real Flask routes disagree. To add one: register the route on the right blueprint in `app/api/`, document the path in `openapi.yaml` under a declared tag, and add an offline `test_unit_<feature>.py`. A brand-new blueprint must also be registered in `app/__init__.py` and added to the drift test's prefix map. Internal/debug routes go on the test's undocumented allowlist instead. Full recipe: [`CONTRIBUTING.md`](.github/CONTRIBUTING.md#adding-an-api-endpoint).
 - **The internal-key auth guard fails closed.** `app/__init__.py:internal_auth_guard` protects `/api/*` with `MIROSHARK_INTERNAL_KEY`. A short, deliberate exempt list (`/health`, OpenAPI docs, and keyless polling probes like `/api/status.json`, `/api/activity.json`, `/api/simulation/batch-status`) is public by design; their handlers gate output to public+completed sims. When unset, the guard returns 503 on any managed deploy (Railway/Cloud Run env vars) or non-debug run — `FLASK_DEBUG` defaults to `"True"`, so never rely on `Config.DEBUG` alone as a "safe" signal. Don't widen the exempt list or weaken this posture without understanding the gate.
 - **stdout is reserved for MCP traffic.** `mcp_server.py` speaks over stdio — log to stderr / the logger (`app/utils/logger.py`), never `print()` to stdout in code that runs under the MCP server.
 - **Keep translations in sync.** If you touch a doc that has a translation counterpart, update it too or flag it as needing translation in the PR. The root `README` has `*.zh-CN.md` / `*.ja.md` / `*.fr.md`; `CONTRIBUTING` and most of `docs/` have `*.zh-CN.md` only. Prompt locales have their own CI coverage gate (see commit history around `i18n`).
