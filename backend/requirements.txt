@@ -6,7 +6,7 @@
 # ===========================================
 
 # ============= Core Framework =============
-flask>=3.0.0
+flask>=3.1.3
 flask-cors>=6.0.0
 flask-compress>=1.17
 
@@ -19,7 +19,7 @@ neo4j>=5.26.0
 
 # ============= HTTP Requests =============
 # For Ollama embedding API and smoke test script
-requests>=2.31.0
+requests>=2.33.0
 
 # ============= Wonderwall Social Media Simulation (Wonderwall fork) =============
 # Wonderwall (wonderwall package) is bundled directly in backend/wonderwall/
@@ -34,7 +34,7 @@ chardet>=5.0.0
 
 # ============= Utility Libraries =============
 # Environment variable loading
-python-dotenv>=1.0.0
+python-dotenv>=1.2.2
 
 # Data validation
 pydantic>=2.0.0

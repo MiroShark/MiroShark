@@ -10,7 +10,7 @@ authors = [
 
 dependencies = [
     # Core framework
-    "flask>=3.0.0",
+    "flask>=3.1.3",
     "flask-cors>=6.0.0",
     "flask-compress>=1.17",
     # Production WSGI server (used by Dockerfile.railway / Cloud Run)
@@ -23,7 +23,7 @@ dependencies = [
     "neo4j>=5.15.0",
 
     # HTTP requests (for Ollama embedding API)
-    "requests>=2.31.0",
+    "requests>=2.33.0",
 
     # Wonderwall social media simulation (Wonderwall fork)
     # Wonderwall (wonderwall package) is bundled directly in backend/wonderwall/
@@ -35,7 +35,7 @@ dependencies = [
     "numpy>=1.26.0",
     "pandas>=2.0.0",
     "scikit-learn>=1.3.0",
-    "torch>=2.0.0",
+    "torch>=2.12.1",
     "sentence-transformers>=2.2.0",
     "igraph>=0.11.0",
 
@@ -46,7 +46,7 @@ dependencies = [
     "chardet>=5.0.0",
 
     # Utility libraries
-    "python-dotenv>=1.0.0",
+    "python-dotenv>=1.2.2",
     "pydantic>=2.0.0",
 
     # Demographic grounding (optional — feature degrades to graph-only
@@ -57,7 +57,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-    "pytest>=8.0.0",
+    "pytest>=9.0.3",
     "pytest-asyncio>=0.23.0",
     "pipreqs>=0.5.0",
 ]
@@ -79,7 +79,7 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.0.0",
+    "pytest>=9.0.3",
     "pytest-asyncio>=0.23.0",
 ]
 
