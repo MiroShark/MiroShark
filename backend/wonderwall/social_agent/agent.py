@@ -17,7 +17,7 @@ import inspect
 import logging
 import sys
 from datetime import datetime
-from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 from camel.agents import ChatAgent
 from camel.messages import BaseMessage
@@ -27,6 +27,7 @@ from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
 
 from app.utils.i18n import get_active_locale, t as _t
+from app.utils.llm_message_filter import filter_openai_messages_for_api
 from wonderwall.social_agent.agent_action import SocialAction
 from wonderwall.social_agent.agent_environment import SocialEnvironment
 from wonderwall.social_platform import Channel
@@ -51,33 +52,6 @@ if "sphinx" not in sys.modules:
         agent_log.addHandler(file_handler)
 
 ALL_SOCIAL_ACTIONS = [action.value for action in ActionType]
-
-
-def filter_openai_messages_for_api(
-    openai_messages: List[Dict[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Prepare CAMEL memory messages for an OpenAI-compatible chat call.
-
-    Gemini rejects assistant/user turns whose ``content`` is empty
-    (INVALID_ARGUMENT).  Drop those, but **keep** assistant turns that only
-    carry ``tool_calls`` (empty content is normal) and their ``tool`` /
-    ``function`` results — Azure returns 400 if a ``tool`` message is not
-    immediately preceded by an assistant message with ``tool_calls``.
-    """
-    filtered: List[Dict[str, Any]] = []
-    for msg in openai_messages:
-        content = msg.get("content")
-        has_content = content is not None and str(content).strip()
-        role = msg.get("role")
-        if has_content:
-            filtered.append(msg)
-        elif role == "assistant" and msg.get("tool_calls"):
-            filtered.append(msg)
-        elif role in ("tool", "function"):
-            filtered.append(msg)
-    if not filtered:
-        filtered = [{"role": "user", "content": "(empty context)"}]
-    return filtered
 
 
 class SocialAgent(ChatAgent):

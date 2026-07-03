@@ -1,6 +1,6 @@
 """Unit tests for Wonderwall SocialAgent OpenAI message filtering."""
 
-from wonderwall.social_agent.agent import filter_openai_messages_for_api
+from app.utils.llm_message_filter import filter_openai_messages_for_api
 
 
 def test_filter_drops_empty_user_turns():
