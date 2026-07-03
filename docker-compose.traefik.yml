@@ -67,6 +67,7 @@ services:
       - traefik.http.services.miroshark-api.loadbalancer.server.port=5001
     volumes:
       - ./backend/uploads:/app/backend/uploads
+      - ./backend/data:/app/backend/data
       - ./backend/logs:/app/backend/logs
       - hf_cache:/root/.cache/huggingface
     networks:
