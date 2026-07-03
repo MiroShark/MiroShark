@@ -190,13 +190,13 @@ const hasStanceData = (segment) =>
 const formatSegmentLabel = (raw) => {
   if (!raw) return tr('unknown', '未知', { de: 'unbekannt' })
   const map = {
-    unknown: $tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' }),
+    unknown: tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' }),
     individual: tr('Individual', '个人', { de: 'Einzelperson', fr: 'Individuel' }),
     institutional: tr('Institutional', '机构', { de: 'Institutionell', fr: 'Institutionnel' }),
-    inactive: $tr('Inactive', '不活跃', { de: 'Inaktiv', fr: 'Inactif' }),
-    male: $tr('Male', '男性', { de: 'Männlich', fr: 'Homme' }),
-    female: $tr('Female', '女性', { de: 'Weiblich', fr: 'Femme' }),
-    other: $tr('Other', '其他', { de: 'Sonstige', fr: 'Autre' }),
+    inactive: tr('Inactive', '不活跃', { de: 'Inaktiv', fr: 'Inactif' }),
+    male: tr('Male', '男性', { de: 'Männlich', fr: 'Homme' }),
+    female: tr('Female', '女性', { de: 'Weiblich', fr: 'Femme' }),
+    other: tr('Other', '其他', { de: 'Sonstige', fr: 'Autre' }),
     twitter: 'X / Twitter',
     reddit: 'Reddit',
     polymarket: 'Polymarket',
@@ -207,10 +207,10 @@ const formatSegmentLabel = (raw) => {
 const translateTabLabel = (label) => {
   const map = {
     'Age': tr('Age', '年龄', { de: 'Alter', fr: 'Âge' }),
-    'Gender': $tr('Gender', '性别', { de: 'Geschlecht', fr: 'Genre' }),
-    'Country': $tr('Country', '国家', { de: 'Land', fr: 'Pays' }),
-    'Actor type': $tr('Actor type', '主体类型', { de: 'Akteurstyp', fr: `Type d'acteur` }),
-    'Platform': $tr('Platform', '平台', { de: 'Plattform', fr: 'Plateforme' }),
+    'Gender': tr('Gender', '性别', { de: 'Geschlecht', fr: 'Genre' }),
+    'Country': tr('Country', '国家', { de: 'Land', fr: 'Pays' }),
+    'Actor type': tr('Actor type', '主体类型', { de: 'Akteurstyp', fr: `Type d'acteur` }),
+    'Platform': tr('Platform', '平台', { de: 'Plattform', fr: 'Plateforme' }),
   }
   return map[label] || label
 }

@@ -491,10 +491,10 @@ import { tr } from '../i18n'
 const translateHealth = (health) => {
   if (!health) return ''
   const map = {
-    'Excellent': $tr('Excellent', '优秀', { de: 'Ausgezeichnet', fr: 'Excellent' }),
-    'Good': $tr('Good', '良好', { de: 'Gut', fr: 'Bon' }),
-    'Fair': $tr('Fair', '一般', { de: 'Akzeptabel', fr: 'Moyen' }),
-    'Poor': $tr('Poor', '差', { de: 'Schlecht', fr: 'Médiocre' }),
+    'Excellent': tr('Excellent', '优秀', { de: 'Ausgezeichnet', fr: 'Excellent' }),
+    'Good': tr('Good', '良好', { de: 'Gut', fr: 'Bon' }),
+    'Fair': tr('Fair', '一般', { de: 'Akzeptabel', fr: 'Moyen' }),
+    'Poor': tr('Poor', '差', { de: 'Schlecht', fr: 'Médiocre' }),
   }
   return map[health] || health
 }
@@ -788,8 +788,8 @@ const formatSimulationId = (simulationId) => {
 const formatRounds = (simulation) => {
   const current = simulation.current_round || 0
   const total = simulation.total_rounds || 0
-  if (total === 0) return $tr('Not Started', '未开始', { de: 'Nicht gestartet', fr: 'Non démarré' })
-  return `${current}/${total} ${$tr('rounds', '轮次', { de: 'Runden', fr: 'tours' })}`
+  if (total === 0) return tr('Not Started', '未开始', { de: 'Nicht gestartet', fr: 'Non démarré' })
+  return `${current}/${total} ${tr('rounds', '轮次', { de: 'Runden', fr: 'tours' })}`
 }
 
 // Get file type (for styling)
@@ -812,7 +812,7 @@ const getFileType = (filename) => {
 const getFileTypeLabel = (filename) => {
   if (!filename) return tr('FILE', '文件', { de: 'DATEI', fr: 'FICHIER' })
   const ext = filename.split('.').pop()?.toUpperCase()
-  return ext || $tr('FILE', '文件', { de: 'DATEI', fr: 'FICHIER' })
+  return ext || tr('FILE', '文件', { de: 'DATEI', fr: 'FICHIER' })
 }
 
 // Build a clickable URL for an associated file:
@@ -830,7 +830,7 @@ const fileLinkFor = (file, project) => {
 
 // Truncate filename (preserve extension)
 const truncateFilename = (filename, maxLength) => {
-  if (!filename) return $tr('Unknown file', '未知文件', { de: 'Unbekannte Datei', fr: 'Fichier inconnu' })
+  if (!filename) return tr('Unknown file', '未知文件', { de: 'Unbekannte Datei', fr: 'Fichier inconnu' })
   if (filename.length <= maxLength) return filename
 
   const ext = filename.includes('.') ? '.' + filename.split('.').pop() : ''
@@ -961,10 +961,10 @@ const executeFork = async () => {
       await loadHistory()
       router.push({ name: 'SimulationRun', params: { simulationId: newSimId } })
     } else {
-      forkError.value = response.error || $tr('Fork failed', '派生失败', { de: 'Forken fehlgeschlagen', fr: 'Échec du fork' })
+      forkError.value = response.error || tr('Fork failed', '派生失败', { de: 'Forken fehlgeschlagen', fr: 'Échec du fork' })
     }
   } catch (err) {
-    forkError.value = err?.response?.data?.error || err.message || $tr('Fork failed', '派生失败', { de: 'Forken fehlgeschlagen', fr: 'Échec du fork' })
+    forkError.value = err?.response?.data?.error || err.message || tr('Fork failed', '派生失败', { de: 'Forken fehlgeschlagen', fr: 'Échec du fork' })
   } finally {
     forking.value = false
   }
@@ -994,21 +994,21 @@ const getResolutionLabel = (project) => {
   }
   if (r.accuracy_score >= 1.0) {
     const pct = r.predicted_confidence ? Math.round(r.predicted_confidence * 100) : null
-    return { text: `${$tr('✓ Correct', '✓ 正确', { de: '✓ Korrekt', fr: '✓ Correct' })}${pct ? ` — ${pct}% ${$tr('confident', '置信度', { de: 'Konfidenz', fr: 'confiant' })}` : ''}`, cls: 'resolved-correct' }
+    return { text: `${tr('✓ Correct', '✓ 正确', { de: '✓ Korrekt', fr: '✓ Correct' })}${pct ? ` — ${pct}% ${tr('confident', '置信度', { de: 'Konfidenz', fr: 'confiant' })}` : ''}`, cls: 'resolved-correct' }
   }
   if (r.accuracy_score <= 0.0) {
     const pct = r.predicted_confidence ? Math.round(r.predicted_confidence * 100) : null
-    return { text: `${$tr('✗ Incorrect', '✗ 错误', { de: '✗ Falsch', fr: '✗ Incorrect' })}${pct ? ` — ${pct}% ${$tr('confident', '置信度', { de: 'Konfidenz', fr: 'confiant' })}` : ''}`, cls: 'resolved-wrong' }
+    return { text: `${tr('✗ Incorrect', '✗ 错误', { de: '✗ Falsch', fr: '✗ Incorrect' })}${pct ? ` — ${pct}% ${tr('confident', '置信度', { de: 'Konfidenz', fr: 'confiant' })}` : ''}`, cls: 'resolved-wrong' }
   }
-  return { text: $tr('~ Split', '~ 分歧', { de: '~ Geteilt', fr: '~ Partagé' }), cls: 'resolved-split' }
+  return { text: tr('~ Split', '~ 分歧', { de: '~ Geteilt', fr: '~ Partagé' }), cls: 'resolved-split' }
 }
 
 const getQualityTooltip = (q) => {
   if (!q) return ''
-  const parts = [`${$tr('Simulation Health:', '模拟健康度:', { de: 'Simulationsgesundheit:', fr: 'Santé de la simulation :' })} ${translateHealth(q.health)}`]
-  parts.push(`${$tr('Participation', '参与度', { de: 'Beteiligung', fr: 'Participation' })} ${Math.round(q.participation_rate * 100)}%`)
+  const parts = [`${tr('Simulation Health:', '模拟健康度:', { de: 'Simulationsgesundheit:', fr: 'Santé de la simulation :' })} ${translateHealth(q.health)}`]
+  parts.push(`${tr('Participation', '参与度', { de: 'Beteiligung', fr: 'Participation' })} ${Math.round(q.participation_rate * 100)}%`)
   if (q.stance_entropy !== null && q.stance_entropy !== undefined) {
-    const level = q.stance_entropy >= 0.7 ? $tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? $tr('medium', '中', { de: 'mittel', fr: 'moyenne' }) : $tr('low', '低', { de: 'niedrig', fr: 'faible' })
+    const level = q.stance_entropy >= 0.7 ? tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? tr('medium', '中', { de: 'mittel', fr: 'moyenne' }) : tr('low', '低', { de: 'niedrig', fr: 'faible' })
     parts.push(`${tr('Stance diversity:', '立场多样性:', { de: 'Haltungsvielfalt:', fr: 'Diversité des positions :' })} ${level}`)
   }
   if (q.convergence_round !== null && q.convergence_round !== undefined) {
@@ -1042,10 +1042,10 @@ const executeResolve = async (outcome) => {
       if (idx >= 0) projects.value[idx].resolution = response.data
       showResolvePanel.value = false
     } else {
-      resolveError.value = response.error || $tr('Resolve failed', '结算失败', { de: 'Auflösung fehlgeschlagen', fr: 'Échec de la résolution' })
+      resolveError.value = response.error || tr('Resolve failed', '结算失败', { de: 'Auflösung fehlgeschlagen', fr: 'Échec de la résolution' })
     }
   } catch (err) {
-    resolveError.value = err?.response?.data?.error || err.message || $tr('Resolve failed', '结算失败', { de: 'Auflösung fehlgeschlagen', fr: 'Échec de la résolution' })
+    resolveError.value = err?.response?.data?.error || err.message || tr('Resolve failed', '结算失败', { de: 'Auflösung fehlgeschlagen', fr: 'Échec de la résolution' })
   } finally {
     resolving.value = false
   }

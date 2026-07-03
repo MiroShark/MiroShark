@@ -661,7 +661,7 @@ const selectAgent = (agent, idx) => {
 
   // Restore this Agent's chat records
   chatHistory.value = chatHistoryCache.value[`agent_${idx}`] || []
-  addLog(`${$tr('Select chat target', '选择对话对象', { de: 'Gesprächsziel auswählen', fr: 'Sélectionner la cible de discussion' })}: ${agent.username}`)
+  addLog(`${tr('Select chat target', '选择对话对象', { de: 'Gesprächsziel auswählen', fr: 'Sélectionner la cible de discussion' })}: ${agent.username}`)
 }
 
 const formatTime = (timestamp) => {
@@ -701,10 +701,10 @@ const sendMessage = async () => {
       await sendToAgent(message)
     }
   } catch (err) {
-    addLog(`${$tr('Send failed', '发送失败', { de: 'Senden fehlgeschlagen', fr: `Échec de l'envoi` })}: ${err.message}`)
+    addLog(`${tr('Send failed', '发送失败', { de: 'Senden fehlgeschlagen', fr: `Échec de l'envoi` })}: ${err.message}`)
     chatHistory.value.push({
       role: 'assistant',
-      content: `${$tr('Sorry, an error occurred', '抱歉,发生了错误', { de: 'Es ist ein Fehler aufgetreten', fr: 'Désolé, une erreur est survenue' })}: ${err.message}`,
+      content: `${tr('Sorry, an error occurred', '抱歉,发生了错误', { de: 'Es ist ein Fehler aufgetreten', fr: 'Désolé, une erreur est survenue' })}: ${err.message}`,
       timestamp: new Date().toISOString()
     })
   } finally {
@@ -716,7 +716,7 @@ const sendMessage = async () => {
 }
 
 const sendToReportAgent = async (message) => {
-  addLog(`${$tr('Sending to Report Agent', '发送至报告智能体', { de: 'Sende an Report Agent', fr: `Envoi à l'agent rapport` })}: ${message.substring(0, 50)}...`)
+  addLog(`${tr('Sending to Report Agent', '发送至报告智能体', { de: 'Sende an Report Agent', fr: `Envoi à l'agent rapport` })}: ${message.substring(0, 50)}...`)
   
   // Build chat history for API
   const historyForApi = chatHistory.value
@@ -736,12 +736,12 @@ const sendToReportAgent = async (message) => {
   if (res.success && res.data) {
     chatHistory.value.push({
       role: 'assistant',
-      content: res.data.response || res.data.answer || $tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' }),
+      content: res.data.response || res.data.answer || tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' }),
       timestamp: new Date().toISOString()
     })
-    addLog($tr('Report Agent has replied', '报告智能体已回复', { de: 'Report Agent hat geantwortet', fr: `L'agent rapport a répondu` }))
+    addLog(tr('Report Agent has replied', '报告智能体已回复', { de: 'Report Agent hat geantwortet', fr: `L'agent rapport a répondu` }))
   } else {
-    throw new Error(res.error || $tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
+    throw new Error(res.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
   }
 }
 
@@ -750,7 +750,7 @@ const sendToAgent = async (message) => {
     throw new Error(tr('Please select a simulated individual first', '请先选择一个模拟个体', { de: 'Bitte wählen Sie zuerst ein simuliertes Individuum aus', fr: `Veuillez d'abord sélectionner un individu simulé` }))
   }
   
-  addLog(`${$tr('Sending to', '发送至', { de: 'Sende an', fr: 'Envoi à' })} ${selectedAgent.value.username}: ${message.substring(0, 50)}...`)
+  addLog(`${tr('Sending to', '发送至', { de: 'Sende an', fr: 'Envoi à' })} ${selectedAgent.value.username}: ${message.substring(0, 50)}...`)
   
   // Build prompt with chat history
   let prompt = message
@@ -800,12 +800,12 @@ const sendToAgent = async (message) => {
         content: responseContent,
         timestamp: new Date().toISOString()
       })
-      addLog(`${selectedAgent.value.username} ${$tr('has replied', '已回复', { de: 'hat geantwortet', fr: 'a répondu' })}`)
+      addLog(`${selectedAgent.value.username} ${tr('has replied', '已回复', { de: 'hat geantwortet', fr: 'a répondu' })}`)
     } else {
-      throw new Error($tr('No response data', '没有响应数据', { de: 'Keine Antwortdaten', fr: 'Aucune donnée de réponse' }))
+      throw new Error(tr('No response data', '没有响应数据', { de: 'Keine Antwortdaten', fr: 'Aucune donnée de réponse' }))
     }
   } else {
-    throw new Error(res.error || $tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
+    throw new Error(res.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
   }
 }
 
@@ -843,7 +843,7 @@ const submitSurvey = async () => {
 
   isSurveying.value = true
   surveyError.value = ''
-  addLog(`${tr('Sending survey to', '正在向', { de: 'Sende Umfrage an', fr: 'Envoi du sondage à' })} ${selectedAgents.value.size} ${$tr('targets...', '个对象发送问卷...', { de: 'Ziele...', fr: 'cibles…' })}`)
+  addLog(`${tr('Sending survey to', '正在向', { de: 'Sende Umfrage an', fr: 'Envoi du sondage à' })} ${selectedAgents.value.size} ${tr('targets...', '个对象发送问卷...', { de: 'Ziele...', fr: 'cibles…' })}`)
 
   try {
     const interviews = Array.from(selectedAgents.value).map(idx => ({
@@ -870,20 +870,20 @@ const submitSurvey = async () => {
         const agent = profiles.value[agentIdx]
 
         // Prefer reddit platform reply, then twitter
-        let responseContent = $tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' })
+        let responseContent = tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' })
 
         if (typeof resultsDict === 'object' && !Array.isArray(resultsDict)) {
           const redditKey = `reddit_${agentIdx}`
           const twitterKey = `twitter_${agentIdx}`
           const agentResult = resultsDict[redditKey] || resultsDict[twitterKey]
           if (agentResult) {
-            responseContent = agentResult.response || agentResult.answer || $tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' })
+            responseContent = agentResult.response || agentResult.answer || tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' })
           }
         } else if (Array.isArray(resultsDict)) {
           // Compatible with array format
           const matchedResult = resultsDict.find(r => r.agent_id === agentIdx)
           if (matchedResult) {
-            responseContent = matchedResult.response || matchedResult.answer || $tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' })
+            responseContent = matchedResult.response || matchedResult.answer || tr('No response', '无响应', { de: 'Keine Antwort', fr: 'Aucune réponse' })
           }
         }
 
@@ -897,9 +897,9 @@ const submitSurvey = async () => {
       }
 
       surveyResults.value = surveyResultsList
-      addLog(`${$tr('Received', '已收到', { de: 'Erhalten', fr: 'Reçu' })} ${surveyResults.value.length} ${$tr('replies', '条回复', { de: 'Antworten', fr: 'réponses' })}`)
+      addLog(`${tr('Received', '已收到', { de: 'Erhalten', fr: 'Reçu' })} ${surveyResults.value.length} ${tr('replies', '条回复', { de: 'Antworten', fr: 'réponses' })}`)
     } else {
-      throw new Error(res.error || $tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
+      throw new Error(res.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
     }
   } catch (err) {
     surveyError.value = err.message
@@ -914,7 +914,7 @@ const loadReportData = async () => {
   if (!props.reportId) return
   
   try {
-    addLog(`${$tr('Loading report data', '加载报告数据', { de: 'Lade Berichtsdaten', fr: 'Chargement des données du rapport' })}: ${props.reportId}`)
+    addLog(`${tr('Loading report data', '加载报告数据', { de: 'Lade Berichtsdaten', fr: 'Chargement des données du rapport' })}: ${props.reportId}`)
     
     // Get report info
     const reportRes = await getReport(props.reportId)
@@ -923,7 +923,7 @@ const loadReportData = async () => {
       await loadAgentLogs()
     }
   } catch (err) {
-    addLog(`${$tr('Failed to load report', '加载报告失败', { de: 'Bericht konnte nicht geladen werden', fr: 'Échec du chargement du rapport' })}: ${err.message}`)
+    addLog(`${tr('Failed to load report', '加载报告失败', { de: 'Bericht konnte nicht geladen werden', fr: 'Échec du chargement du rapport' })}: ${err.message}`)
   }
 }
 
@@ -945,10 +945,10 @@ const loadAgentLogs = async () => {
         }
       })
       
-      addLog($tr('Report data loaded', '报告数据已加载', { de: 'Berichtsdaten geladen', fr: 'Données du rapport chargées' }))
+      addLog(tr('Report data loaded', '报告数据已加载', { de: 'Berichtsdaten geladen', fr: 'Données du rapport chargées' }))
     }
   } catch (err) {
-    addLog(`${$tr('Failed to load report logs', '加载报告日志失败', { de: 'Berichtsprotokolle konnten nicht geladen werden', fr: 'Échec du chargement des logs du rapport' })}: ${err.message}`)
+    addLog(`${tr('Failed to load report logs', '加载报告日志失败', { de: 'Berichtsprotokolle konnten nicht geladen werden', fr: 'Échec du chargement des logs du rapport' })}: ${err.message}`)
   }
 }
 
@@ -959,10 +959,10 @@ const loadProfiles = async () => {
     const res = await getSimulationProfilesRealtime(props.simulationId, 'reddit')
     if (res.success && res.data) {
       profiles.value = res.data.profiles || []
-      addLog(`${$tr('Loaded', '已加载', { de: 'Geladen', fr: 'Chargé' })} ${profiles.value.length} ${$tr('simulated individuals', '个模拟个体', { de: 'simulierte Individuen', fr: 'individus simulés' })}`)
+      addLog(`${tr('Loaded', '已加载', { de: 'Geladen', fr: 'Chargé' })} ${profiles.value.length} ${tr('simulated individuals', '个模拟个体', { de: 'simulierte Individuen', fr: 'individus simulés' })}`)
     }
   } catch (err) {
-    addLog(`${$tr('Failed to load simulated individuals', '加载模拟个体失败', { de: 'Simulierte Individuen konnten nicht geladen werden', fr: 'Échec du chargement des individus simulés' })}: ${err.message}`)
+    addLog(`${tr('Failed to load simulated individuals', '加载模拟个体失败', { de: 'Simulierte Individuen konnten nicht geladen werden', fr: 'Échec du chargement des individus simulés' })}: ${err.message}`)
   }
 }
 
@@ -976,7 +976,7 @@ const handleClickOutside = (e) => {
 
 // Lifecycle
 onMounted(() => {
-  addLog($tr('Step 5 Deep Interaction initializing', '步骤 5 深度交互初始化中', { de: 'Schritt 5 Tiefe Interaktion wird initialisiert', fr: `Initialisation de l'interaction approfondie (Étape 5)` }))
+  addLog(tr('Step 5 Deep Interaction initializing', '步骤 5 深度交互初始化中', { de: 'Schritt 5 Tiefe Interaktion wird initialisiert', fr: `Initialisation de l'interaction approfondie (Étape 5)` }))
   loadReportData()
   loadProfiles()
   document.addEventListener('click', handleClickOutside)

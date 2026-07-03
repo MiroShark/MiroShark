@@ -297,11 +297,11 @@ const handleEnterEnvSetup = async () => {
       })
     } else {
       console.error('Failed to create simulation:', res.error)
-      alert($tr('Failed to create simulation: ', '创建模拟失败:', { de: 'Simulation konnte nicht erstellt werden: ', fr: 'Échec de la création de la simulation : ' }) + (res.error || $tr('Unknown error', '未知错误', { de: 'Unbekannter Fehler', fr: 'Erreur inconnue' })))
+      alert(tr('Failed to create simulation: ', '创建模拟失败:', { de: 'Simulation konnte nicht erstellt werden: ', fr: 'Échec de la création de la simulation : ' }) + (res.error || tr('Unknown error', '未知错误', { de: 'Unbekannter Fehler', fr: 'Erreur inconnue' })))
     }
   } catch (err) {
     console.error('Simulation creation error:', err)
-    alert($tr('Simulation creation error: ', '创建模拟出错:', { de: 'Fehler bei der Simulationserstellung: ', fr: 'Erreur de création de la simulation : ' }) + err.message)
+    alert(tr('Simulation creation error: ', '创建模拟出错:', { de: 'Fehler bei der Simulationserstellung: ', fr: 'Erreur de création de la simulation : ' }) + err.message)
   } finally {
     creatingSimulation.value = false
   }

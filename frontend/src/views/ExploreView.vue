@@ -484,18 +484,18 @@ const quality = ref(_readEnumParam(route.query.quality, ALLOWED_QUALITY))
 const sortKey = ref(_readEnumParam(route.query.sort, ALLOWED_SORT) || 'date')
 
 const consensusOptions = [
-  { value: '', label: () => $tr('All', '全部', { de: 'Alle', fr: 'Tous' }) },
-  { value: 'bullish', glyph: '▲', glyphClass: 'glyph-bullish', label: () => $tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' }) },
-  { value: 'neutral', glyph: '●', glyphClass: 'glyph-neutral', label: () => $tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' }) },
-  { value: 'bearish', glyph: '▼', glyphClass: 'glyph-bearish', label: () => $tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' }) },
+  { value: '', label: () => tr('All', '全部', { de: 'Alle', fr: 'Tous' }) },
+  { value: 'bullish', glyph: '▲', glyphClass: 'glyph-bullish', label: () => tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' }) },
+  { value: 'neutral', glyph: '●', glyphClass: 'glyph-neutral', label: () => tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' }) },
+  { value: 'bearish', glyph: '▼', glyphClass: 'glyph-bearish', label: () => tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' }) },
 ]
 
 const qualityOptions = [
-  { value: '', label: () => $tr('All', '全部', { de: 'Alle', fr: 'Tous' }) },
-  { value: 'excellent', label: () => $tr('Excellent', '优秀', { de: 'Ausgezeichnet', fr: 'Excellent' }) },
-  { value: 'good', label: () => $tr('Good', '良好', { de: 'Gut', fr: 'Bon' }) },
-  { value: 'fair', label: () => $tr('Fair', '一般', { de: 'Ausreichend', fr: 'Moyen' }) },
-  { value: 'poor', label: () => $tr('Poor', '较差', { de: 'Schlecht', fr: 'Médiocre' }) },
+  { value: '', label: () => tr('All', '全部', { de: 'Alle', fr: 'Tous' }) },
+  { value: 'excellent', label: () => tr('Excellent', '优秀', { de: 'Ausgezeichnet', fr: 'Excellent' }) },
+  { value: 'good', label: () => tr('Good', '良好', { de: 'Gut', fr: 'Bon' }) },
+  { value: 'fair', label: () => tr('Fair', '一般', { de: 'Ausreichend', fr: 'Moyen' }) },
+  { value: 'poor', label: () => tr('Poor', '较差', { de: 'Schlecht', fr: 'Médiocre' }) },
 ]
 
 const filtersActive = computed(
@@ -629,9 +629,9 @@ const stancePillClass = (label) => {
 }
 
 const stanceLabel = (label) => {
-  if (label === 'Bullish') return $tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' })
-  if (label === 'Bearish') return $tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' })
-  if (label === 'Neutral') return $tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' })
+  if (label === 'Bullish') return tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' })
+  if (label === 'Bearish') return tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' })
+  if (label === 'Neutral') return tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' })
   return label
 }
 
@@ -641,7 +641,7 @@ const stanceTooltip = (item) => {
   const b = (c.bullish ?? 0).toFixed(1)
   const n = (c.neutral ?? 0).toFixed(1)
   const be = (c.bearish ?? 0).toFixed(1)
-  return `${$tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' })} ${b}% · ${$tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' })} ${n}% · ${$tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' })} ${be}%`
+  return `${tr('Bullish', '看涨', { de: 'Bullisch', fr: 'Haussier' })} ${b}% · ${tr('Neutral', '中立', { de: 'Neutral', fr: 'Neutre' })} ${n}% · ${tr('Bearish', '看跌', { de: 'Bärisch', fr: 'Baissier' })} ${be}%`
 }
 
 const qualityPillClass = (health) => {
@@ -665,9 +665,9 @@ const formatDate = (iso) => {
 }
 
 const outcomePillLabel = (label) => {
-  if (label === 'correct') return $tr('Verified', '已验证', { de: 'Verifiziert', fr: 'Vérifié' })
-  if (label === 'incorrect') return $tr('Called wrong', '预言落空', { de: 'Falsch vorhergesagt', fr: 'Prédiction erronée' })
-  if (label === 'partial') return $tr('Partial', '部分命中', { de: 'Teilweise zutreffend', fr: 'Partielle' })
+  if (label === 'correct') return tr('Verified', '已验证', { de: 'Verifiziert', fr: 'Vérifié' })
+  if (label === 'incorrect') return tr('Called wrong', '预言落空', { de: 'Falsch vorhergesagt', fr: 'Prédiction erronée' })
+  if (label === 'partial') return tr('Partial', '部分命中', { de: 'Teilweise zutreffend', fr: 'Partielle' })
   return ''
 }
 
@@ -704,7 +704,7 @@ const loadPage = async (offset = 0) => {
     sort: sortKey.value || undefined,
   })
   if (!res?.success) {
-    throw new Error(res?.error || $tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
+    throw new Error(res?.error || tr('Request failed', '请求失败', { de: 'Anfrage fehlgeschlagen', fr: 'Échec de la requête' }))
   }
   return {
     data: res.data || [],
@@ -748,7 +748,7 @@ const refresh = async () => {
     forkErrors.value = {}
   } catch (err) {
     error.value =
-      err?.response?.data?.error || err?.message || $tr('Failed to load gallery', '无法加载图库', { de: 'Galerie konnte nicht geladen werden', fr: 'Échec du chargement de la galerie' })
+      err?.response?.data?.error || err?.message || tr('Failed to load gallery', '无法加载图库', { de: 'Galerie konnte nicht geladen werden', fr: 'Échec du chargement de la galerie' })
   } finally {
     loading.value = false
   }
@@ -767,7 +767,7 @@ const loadMore = async () => {
     hasMore.value = page.hasMore
   } catch (err) {
     error.value =
-      err?.response?.data?.error || err?.message || $tr('Failed to load more', '加载更多失败', { de: 'Weitere Inhalte konnten nicht geladen werden', fr: 'Échec du chargement supplémentaire' })
+      err?.response?.data?.error || err?.message || tr('Failed to load more', '加载更多失败', { de: 'Weitere Inhalte konnten nicht geladen werden', fr: 'Échec du chargement supplémentaire' })
   } finally {
     loadingMore.value = false
   }
@@ -782,16 +782,16 @@ const forkAndOpen = async (item) => {
       parent_simulation_id: item.simulation_id,
     })
     if (!res?.success) {
-      throw new Error(res?.error || $tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen', fr: 'Échec du fork' }))
+      throw new Error(res?.error || tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen', fr: 'Échec du fork' }))
     }
     const newId = res.data?.simulation_id
-    if (!newId) throw new Error($tr('Fork did not return a simulation_id', '派生未返回 simulation_id', { de: 'Verzweigung hat keine simulation_id zurückgegeben', fr: `Le fork n'a pas renvoyé de simulation_id` }))
+    if (!newId) throw new Error(tr('Fork did not return a simulation_id', '派生未返回 simulation_id', { de: 'Verzweigung hat keine simulation_id zurückgegeben', fr: `Le fork n'a pas renvoyé de simulation_id` }))
     router.push({ name: 'SimulationRun', params: { simulationId: newId } })
   } catch (err) {
     forkErrors.value = {
       ...forkErrors.value,
       [item.simulation_id]:
-        err?.response?.data?.error || err?.message || $tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen', fr: 'Échec du fork' }),
+        err?.response?.data?.error || err?.message || tr('Fork failed', '派生失败', { de: 'Verzweigung fehlgeschlagen', fr: 'Échec du fork' }),
     }
   } finally {
     forkingId.value = ''

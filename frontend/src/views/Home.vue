@@ -503,7 +503,7 @@ const fetchUrlDoc = async () => {
   const url = urlInput.value.trim()
   if (!url || urlFetching.value) return
   if (urlDocs.value.some(d => d.url === url)) {
-    urlError.value = $tr('This URL has already been added.', '此网址已添加过。', { de: 'Diese URL wurde bereits hinzugefügt.', fr: 'Cette URL a déjà été ajoutée.' })
+    urlError.value = tr('This URL has already been added.', '此网址已添加过。', { de: 'Diese URL wurde bereits hinzugefügt.', fr: 'Cette URL a déjà été ajoutée.' })
     return
   }
   urlFetching.value = true
@@ -514,10 +514,10 @@ const fetchUrlDoc = async () => {
       urlDocs.value.push(res.data)
       urlInput.value = ''
     } else {
-      urlError.value = res.error || $tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.', fr: `Échec de la récupération de l'URL.` })
+      urlError.value = res.error || tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.', fr: `Échec de la récupération de l'URL.` })
     }
   } catch (err) {
-    urlError.value = err.message || $tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.', fr: `Échec de la récupération de l'URL.` })
+    urlError.value = err.message || tr('Failed to fetch URL.', '抓取网址失败。', { de: 'URL konnte nicht abgerufen werden.', fr: `Échec de la récupération de l'URL.` })
   } finally {
     urlFetching.value = false
   }
@@ -531,7 +531,7 @@ const runAskMode = async () => {
   try {
     const res = await askMode(q)
     if (!res.success) {
-      askError.value = res.error || $tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.', fr: 'Le mode question a échoué.' })
+      askError.value = res.error || tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.', fr: 'Le mode question a échoué.' })
       return
     }
     const d = res.data
@@ -550,7 +550,7 @@ const runAskMode = async () => {
     }
     askQuestion.value = ''
   } catch (err) {
-    askError.value = err?.response?.data?.error || err?.message || $tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.', fr: 'Le mode question a échoué.' })
+    askError.value = err?.response?.data?.error || err?.message || tr('Ask mode failed.', '提问模式失败。', { de: 'Fragemodus fehlgeschlagen.', fr: 'Le mode question a échoué.' })
   } finally {
     askBusy.value = false
   }
@@ -559,7 +559,7 @@ const runAskMode = async () => {
 const handleTrendingSelect = ({ url }) => {
   if (!url || urlFetching.value) return
   if (urlDocs.value.some(d => d.url === url)) {
-    urlError.value = $tr('This URL is already loaded.', '此网址已加载。', { de: 'Diese URL ist bereits geladen.', fr: 'Cette URL a déjà été chargée.' })
+    urlError.value = tr('This URL is already loaded.', '此网址已加载。', { de: 'Diese URL ist bereits geladen.', fr: 'Cette URL a déjà été chargée.' })
     return
   }
   urlInput.value = url

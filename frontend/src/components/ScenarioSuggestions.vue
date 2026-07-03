@@ -95,7 +95,7 @@ const shouldShow = computed(() => {
 
 const statusLine = computed(() => {
   if (loading.value) return tr('// generating…', '// 生成中…', { de: '// wird generiert…', fr: '// génération…' })
-  if (suggestions.value.length > 0) return $tr('// pick one or refine your own', '// 选择一个或自行完善', { de: '// eines auswählen oder eigenes verfeinern', fr: '// choisissez-en un ou affinez le vôtre' })
+  if (suggestions.value.length > 0) return tr('// pick one or refine your own', '// 选择一个或自行完善', { de: '// eines auswählen oder eigenes verfeinern', fr: '// choisissez-en un ou affinez le vôtre' })
   return ''
 })
 

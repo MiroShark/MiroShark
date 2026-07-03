@@ -689,7 +689,7 @@ const modelList = ref([])
 const loadingModels = ref(false)
 const modelLoadError = ref('')
 const advancedOpen = ref(false)
-const inheritMarker = $tr('— inherits default —', '— 继承默认值 —', { de: '— übernimmt Standard —', fr: '— hérite de la valeur par défaut —' })
+const inheritMarker = tr('— inherits default —', '— 继承默认值 —', { de: '— übernimmt Standard —', fr: '— hérite de la valeur par défaut —' })
 
 // Webhook integration state
 const webhookTesting = ref(false)
@@ -806,7 +806,7 @@ const loadOpenRouterModels = async () => {
         })
     }
   } catch (_) {
-    modelLoadError.value = $tr('Could not load model list — check your network connection.', '无法加载模型列表 — 请检查网络连接。', { de: 'Modellliste konnte nicht geladen werden — bitte Netzwerkverbindung prüfen.', fr: 'Impossible de charger la liste des modèles — vérifiez votre connexion réseau.' })
+    modelLoadError.value = tr('Could not load model list — check your network connection.', '无法加载模型列表 — 请检查网络连接。', { de: 'Modellliste konnte nicht geladen werden — bitte Netzwerkverbindung prüfen.', fr: 'Impossible de charger la liste des modèles — vérifiez votre connexion réseau.' })
   } finally {
     loadingModels.value = false
   }
@@ -835,10 +835,10 @@ const loadMcpStatus = async () => {
     if (res?.success && res.data) {
       mcpStatus.value = res.data
     } else {
-      mcpLoadError.value = res?.error || $tr('MCP status unavailable', 'MCP 状态不可用', { de: 'MCP-Status nicht verfügbar', fr: 'Statut MCP indisponible' })
+      mcpLoadError.value = res?.error || tr('MCP status unavailable', 'MCP 状态不可用', { de: 'MCP-Status nicht verfügbar', fr: 'Statut MCP indisponible' })
     }
   } catch (e) {
-    mcpLoadError.value = e?.message || $tr('MCP status request failed', 'MCP 状态请求失败', { de: 'MCP-Status-Anfrage fehlgeschlagen', fr: 'Échec de la requête de statut MCP' })
+    mcpLoadError.value = e?.message || tr('MCP status request failed', 'MCP 状态请求失败', { de: 'MCP-Status-Anfrage fehlgeschlagen', fr: 'Échec de la requête de statut MCP' })
   } finally {
     mcpLoading.value = false
   }
@@ -856,17 +856,17 @@ const mcpHealthClass = computed(() => {
 })
 
 const mcpHealthText = computed(() => {
-  if (!mcpStatus.value) return $tr('Loading', '加载中', { de: 'Wird geladen', fr: 'Chargement' })
+  if (!mcpStatus.value) return tr('Loading', '加载中', { de: 'Wird geladen', fr: 'Chargement' })
   if (!mcpStatus.value.paths.mcp_script_exists) return tr('Server file missing', '服务文件缺失', { de: 'Server-Datei fehlt', fr: 'Fichier serveur manquant' })
-  return mcpStatus.value.neo4j.connected ? $tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' }) : tr('Neo4j down', 'Neo4j 不可用', { de: 'Neo4j nicht erreichbar', fr: 'Neo4j injoignable' })
+  return mcpStatus.value.neo4j.connected ? tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' }) : tr('Neo4j down', 'Neo4j 不可用', { de: 'Neo4j nicht erreichbar', fr: 'Neo4j injoignable' })
 })
 
 const formatJson = (obj) => JSON.stringify(obj, null, 2)
 
 const copyButtonLabel = computed(() => {
-  if (copyState.value === 'ok') return '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' })
-  if (copyState.value === 'fail') return '✗ ' + $tr('Copy failed', '复制失败', { de: 'Kopieren fehlgeschlagen', fr: 'Échec de la copie' })
-  return $tr('Copy snippet', '复制代码片段', { de: 'Snippet kopieren', fr: `Copier l'extrait` })
+  if (copyState.value === 'ok') return '✓ ' + tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' })
+  if (copyState.value === 'fail') return '✗ ' + tr('Copy failed', '复制失败', { de: 'Kopieren fehlgeschlagen', fr: 'Échec de la copie' })
+  return tr('Copy snippet', '复制代码片段', { de: 'Snippet kopieren', fr: `Copier l'extrait` })
 })
 
 const copySnippet = async () => {
@@ -901,8 +901,8 @@ const testStatus = computed(() => {
 })
 
 const testStatusText = computed(() => {
-  if (!testResult.value) return $tr('Not tested', '未测试', { de: 'Nicht getestet', fr: 'Non testé' })
-  return testResult.value.success ? $tr('Connected', '已连接', { de: 'Verbunden', fr: 'Connecté' }) : $tr('Failed', '失败', { de: 'Fehlgeschlagen', fr: 'Échec' })
+  if (!testResult.value) return tr('Not tested', '未测试', { de: 'Nicht getestet', fr: 'Non testé' })
+  return testResult.value.success ? tr('Connected', '已连接', { de: 'Verbunden', fr: 'Connecté' }) : tr('Failed', '失败', { de: 'Fehlgeschlagen', fr: 'Échec' })
 })
 
 const webhookConfigured = computed(() =>
@@ -911,7 +911,7 @@ const webhookConfigured = computed(() =>
 
 const webhookSavedClass = computed(() => (webhookConfigured.value ? 'ok' : 'idle'))
 const webhookSavedText = computed(() =>
-  webhookConfigured.value ? tr('Configured', '已配置', { de: 'Konfiguriert', fr: 'Configuré' }) : $tr('Not configured', '未配置', { de: 'Nicht konfiguriert', fr: 'Non configuré' })
+  webhookConfigured.value ? tr('Configured', '已配置', { de: 'Konfiguriert', fr: 'Configuré' }) : tr('Not configured', '未配置', { de: 'Nicht konfiguriert', fr: 'Non configuré' })
 )
 
 const webhookPlaceholder = computed(() => {
@@ -919,7 +919,7 @@ const webhookPlaceholder = computed(() => {
     const masked = currentSettings.value.integrations?.webhook?.url_masked
     return masked
       ? `${masked}${tr(' — leave blank to keep, type to replace', ' — 留空保留,输入以替换', { de: ' — leer lassen zum Behalten, eingeben zum Ersetzen', fr: ' — laissez vide pour garder, saisissez pour remplacer' })}`
-      : $tr('Leave blank to keep saved URL, type to replace', '留空保留已保存的 URL,输入以替换', { de: 'Leer lassen, um gespeicherte URL zu behalten, eingeben zum Ersetzen', fr: `Laissez vide pour conserver l'URL enregistrée, saisissez pour remplacer` })
+      : tr('Leave blank to keep saved URL, type to replace', '留空保留已保存的 URL,输入以替换', { de: 'Leer lassen, um gespeicherte URL zu behalten, eingeben zum Ersetzen', fr: `Laissez vide pour conserver l'URL enregistrée, saisissez pour remplacer` })
   }
   return 'https://hooks.slack.com/services/T0…/B0…/abc'
 })
@@ -936,7 +936,7 @@ const testSearxngFire = async () => {
     const res = await testSearxng(form.searxng_base_url?.trim() || '')
     searxngTestResult.value = res
   } catch (e) {
-    searxngTestResult.value = { success: false, error: e?.message || $tr('Network error', '网络错误', { de: 'Netzwerkfehler', fr: 'Erreur réseau' }) }
+    searxngTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误', { de: 'Netzwerkfehler', fr: 'Erreur réseau' }) }
   } finally {
     searxngTesting.value = false
   }
@@ -951,7 +951,7 @@ const testWebhookFire = async () => {
     const res = await testWebhook(url, baseUrl)
     webhookTestResult.value = res
   } catch (e) {
-    webhookTestResult.value = { success: false, error: e?.message || $tr('Network error', '网络错误', { de: 'Netzwerkfehler', fr: 'Erreur réseau' }) }
+    webhookTestResult.value = { success: false, error: e?.message || tr('Network error', '网络错误', { de: 'Netzwerkfehler', fr: 'Erreur réseau' }) }
   } finally {
     webhookTesting.value = false
   }
@@ -1023,7 +1023,7 @@ const saveSettings = async () => {
       form.integrations.webhook.url = ''
       setTimeout(() => { saveSuccess.value = false }, 4000)
     } else {
-      saveError.value = res?.error || $tr('Save failed', '保存失败', { de: 'Speichern fehlgeschlagen', fr: `Échec de l'enregistrement` })
+      saveError.value = res?.error || tr('Save failed', '保存失败', { de: 'Speichern fehlgeschlagen', fr: `Échec de l'enregistrement` })
     }
   } catch (e) {
     saveError.value = e.message

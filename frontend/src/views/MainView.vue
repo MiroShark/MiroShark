@@ -147,11 +147,11 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (error.value) return $tr('Error', '错误', { de: 'Fehler', fr: 'Erreur' })
-  if (currentPhase.value >= 2) return $tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
+  if (error.value) return tr('Error', '错误', { de: 'Fehler', fr: 'Erreur' })
+  if (currentPhase.value >= 2) return tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
   if (currentPhase.value === 1) return tr('Building Graph', '构建图谱中', { de: 'Graph wird aufgebaut', fr: 'Construction du graphe en cours' })
   if (currentPhase.value === 0) return tr('Generating Ontology', '生成本体中', { de: 'Ontologie wird generiert', fr: `Génération de l'ontologie` })
-  return $tr('Idle', '空闲', { de: 'Leerlauf', fr: 'Inactif' })
+  return tr('Idle', '空闲', { de: 'Leerlauf', fr: 'Inactif' })
 })
 
 // --- Helpers ---
@@ -217,7 +217,7 @@ const handleNewProject = async () => {
   try {
     loading.value = true
     currentPhase.value = 0
-    ontologyProgress.value = { message: $tr('Uploading and analyzing docs...', '正在上传并分析文档...', { de: 'Dokumente werden hochgeladen und analysiert...', fr: 'Téléversement et analyse des docs…' }) }
+    ontologyProgress.value = { message: tr('Uploading and analyzing docs...', '正在上传并分析文档...', { de: 'Dokumente werden hochgeladen und analysiert...', fr: 'Téléversement et analyse des docs…' }) }
     addLog(hasTemplate
       ? `Starting from template "${pending.templateName}"...`
       : hasUrlDocs && !hasFiles
@@ -297,7 +297,7 @@ const updatePhaseByStatus = (status) => {
     case 'ontology_generated': currentPhase.value = 0; break;
     case 'graph_building': currentPhase.value = 1; break;
     case 'graph_completed': currentPhase.value = 2; break;
-    case 'failed': error.value = $tr('Project failed', '项目失败', { de: 'Projekt fehlgeschlagen', fr: 'Projet échoué' }); break;
+    case 'failed': error.value = tr('Project failed', '项目失败', { de: 'Projekt fehlgeschlagen', fr: 'Projet échoué' }); break;
   }
 }
 

@@ -106,12 +106,12 @@ async function loadCountryDetail(code) {
     const res = await getCountry(code)
     if (res?.success) {
       geoCache.value[code] = {
-        label: res.data?.geography?.label || $tr('Geography', '地区', { de: 'Geografie', fr: 'Géographie' }),
+        label: res.data?.geography?.label || tr('Geography', '地区', { de: 'Geografie', fr: 'Géographie' }),
         values: res.data?.geography?.values || [],
       }
     }
   } catch (err) {
-    geoCache.value[code] = { label: $tr('Geography', '地区', { de: 'Geografie', fr: 'Géographie' }), values: [] }
+    geoCache.value[code] = { label: tr('Geography', '地区', { de: 'Geografie', fr: 'Géographie' }), values: [] }
   }
 }
 

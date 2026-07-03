@@ -846,7 +846,7 @@ const qualityTooltip = computed(() => {
   if (!q) return ''
   const parts = [tr(`Health: ${q.health}`, `健康度:${q.health}`, { de: `Gesundheit: ${q.health}` }), tr(`Participation ${Math.round(q.participation_rate * 100)}%`, `参与度 ${Math.round(q.participation_rate * 100)}%`, { de: `Beteiligung ${Math.round(q.participation_rate * 100)}%` })]
   if (q.stance_entropy !== null) {
-    const level = q.stance_entropy >= 0.7 ? $tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? $tr('medium', '中', { de: 'mittel', fr: 'moyenne' }) : $tr('low', '低', { de: 'niedrig', fr: 'faible' })
+    const level = q.stance_entropy >= 0.7 ? tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? tr('medium', '中', { de: 'mittel', fr: 'moyenne' }) : tr('low', '低', { de: 'niedrig', fr: 'faible' })
     parts.push(tr(`Diversity: ${level}`, `多样性:${level}`, { de: `Vielfalt: ${level}` }))
   }
   return parts.join(' · ')
@@ -886,10 +886,10 @@ const handleInjectEvent = async () => {
       directorEventsTotal.value = res.total_events
       await loadDirectorEvents()
     } else {
-      directorError.value = res.error || $tr('Failed to inject event', '注入事件失败', { de: 'Ereignis konnte nicht injiziert werden', fr: `Échec de l'injection de l'événement` })
+      directorError.value = res.error || tr('Failed to inject event', '注入事件失败', { de: 'Ereignis konnte nicht injiziert werden', fr: `Échec de l'injection de l'événement` })
     }
   } catch (err) {
-    directorError.value = err.response?.data?.error || err.message || $tr('Failed to inject event', '注入事件失败', { de: 'Ereignis konnte nicht injiziert werden', fr: `Échec de l'injection de l'événement` })
+    directorError.value = err.response?.data?.error || err.message || tr('Failed to inject event', '注入事件失败', { de: 'Ereignis konnte nicht injiziert werden', fr: `Échec de l'injection de l'événement` })
   } finally {
     isInjectingEvent.value = false
   }
@@ -1079,7 +1079,7 @@ const resetAllState = () => {
 // Start simulation
 const doStartSimulation = async () => {
   if (!props.simulationId) {
-    addLog($tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt', fr: 'Erreur : simulationId manquant' }))
+    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt', fr: 'Erreur : simulationId manquant' }))
     return
   }
 
@@ -1088,7 +1088,7 @@ const doStartSimulation = async () => {
 
   isStarting.value = true
   startError.value = null
-  addLog($tr('Starting dual-platform parallel simulation...', '正在启动双平台并行模拟…', { de: 'Weltsimulation wird gestartet…', fr: 'Démarrage de la simulation parallèle bi-plateforme…' }))
+  addLog(tr('Starting dual-platform parallel simulation...', '正在启动双平台并行模拟…', { de: 'Weltsimulation wird gestartet…', fr: 'Démarrage de la simulation parallèle bi-plateforme…' }))
   emit('update-status', 'processing')
   
   try {
@@ -1105,15 +1105,15 @@ const doStartSimulation = async () => {
       addLog(tr(`Set max simulation rounds: ${props.maxRounds}`, `设定最大模拟轮次:${props.maxRounds}`, { de: `Maximale Simulationsrunden festgelegt: ${props.maxRounds}` }))
     }
 
-    addLog($tr('Dynamic graph memory update mode enabled', '已启用动态图记忆更新模式', { de: 'Dynamischer Graphspeicher-Aktualisierungsmodus aktiviert', fr: 'Mode de mise à jour dynamique de la mémoire du graphe activé' }))
+    addLog(tr('Dynamic graph memory update mode enabled', '已启用动态图记忆更新模式', { de: 'Dynamischer Graphspeicher-Aktualisierungsmodus aktiviert', fr: 'Mode de mise à jour dynamique de la mémoire du graphe activé' }))
 
     const res = await startSimulation(params)
 
     if (res.success && res.data) {
       if (res.data.force_restarted) {
-        addLog($tr('Old simulation logs cleaned, restarting simulation', '已清理旧的模拟日志,重新启动模拟', { de: 'Alte Simulations-Logs bereinigt, Simulation wird neu gestartet', fr: 'Anciens journaux de simulation nettoyés, redémarrage de la simulation' }))
+        addLog(tr('Old simulation logs cleaned, restarting simulation', '已清理旧的模拟日志,重新启动模拟', { de: 'Alte Simulations-Logs bereinigt, Simulation wird neu gestartet', fr: 'Anciens journaux de simulation nettoyés, redémarrage de la simulation' }))
       }
-      addLog($tr('Simulation engine started successfully', '模拟引擎启动成功', { de: 'Simulationsmotor erfolgreich gestartet', fr: 'Le moteur de simulation a démarré avec succès' }))
+      addLog(tr('Simulation engine started successfully', '模拟引擎启动成功', { de: 'Simulationsmotor erfolgreich gestartet', fr: 'Le moteur de simulation a démarré avec succès' }))
       addLog(tr(`  ├─ PID: ${res.data.process_pid || '-'}`, `  ├─ PID:${res.data.process_pid || '-'}`, { de: `  ├─ PID: ${res.data.process_pid || '-'}` }))
 
       phase.value = 1
@@ -1122,7 +1122,7 @@ const doStartSimulation = async () => {
       startStatusPolling()
       startDetailPolling()
     } else {
-      startError.value = res.error || $tr('Start failed', '启动失败', { de: 'Start fehlgeschlagen', fr: 'Échec du démarrage' })
+      startError.value = res.error || tr('Start failed', '启动失败', { de: 'Start fehlgeschlagen', fr: 'Échec du démarrage' })
       addLog(tr(`Start failed: ${res.error || 'Unknown error'}`, `启动失败:${res.error || '未知错误'}`, { de: `Start fehlgeschlagen: ${res.error || 'Unbekannter Fehler'}` }))
       emit('update-status', 'error')
     }
@@ -1170,7 +1170,7 @@ const handleResume = async () => {
       startStatusPolling()
       startDetailPolling()
     } else {
-      startError.value = res.error || $tr('Resume failed', '继续失败', { de: 'Fortsetzen fehlgeschlagen', fr: 'Échec de la reprise' })
+      startError.value = res.error || tr('Resume failed', '继续失败', { de: 'Fortsetzen fehlgeschlagen', fr: 'Échec de la reprise' })
       addLog(tr(`Resume failed: ${res.error || 'Unknown error'}`, `继续失败:${res.error || '未知错误'}`, { de: `Fortsetzen fehlgeschlagen: ${res.error || 'Unbekannter Fehler'}` }))
       emit('update-status', 'error')
     }
@@ -1191,7 +1191,7 @@ const openReplay = () => {
 // Restart simulation (force restart from scratch)
 const handleRestart = async () => {
   if (!props.simulationId) return
-  addLog($tr('Restarting simulation from scratch...', '从零重新启动模拟…', { de: 'Simulation wird von Grund auf neu gestartet…', fr: 'Redémarrage de la simulation depuis zéro…' }))
+  addLog(tr('Restarting simulation from scratch...', '从零重新启动模拟…', { de: 'Simulation wird von Grund auf neu gestartet…', fr: 'Redémarrage de la simulation depuis zéro…' }))
   resetAllState()
   doStartSimulation()
 }
@@ -1201,13 +1201,13 @@ const handleStopSimulation = async () => {
   if (!props.simulationId) return
 
   isStopping.value = true
-  addLog($tr('Stopping simulation...', '正在停止模拟…', { de: 'Simulation wird gestoppt…', fr: 'Arrêt de la simulation…' }))
+  addLog(tr('Stopping simulation...', '正在停止模拟…', { de: 'Simulation wird gestoppt…', fr: 'Arrêt de la simulation…' }))
 
   try {
     const res = await stopSimulation({ simulation_id: props.simulationId })
 
     if (res.success) {
-      addLog($tr('Simulation stopped', '模拟已停止', { de: 'Simulation gestoppt', fr: 'Simulation arrêtée' }))
+      addLog(tr('Simulation stopped', '模拟已停止', { de: 'Simulation gestoppt', fr: 'Simulation arrêtée' }))
       phase.value = 2
       stopPolling()
       emit('update-status', 'completed')
@@ -1279,9 +1279,9 @@ const fetchRunStatus = async () => {
       
       if (isCompleted || platformsCompleted) {
         if (platformsCompleted && !isCompleted) {
-          addLog($tr('All platform simulations have ended', '所有平台模拟均已结束', { de: 'Alle Plattformsimulationen beendet', fr: 'Toutes les simulations de plateforme sont terminées' }))
+          addLog(tr('All platform simulations have ended', '所有平台模拟均已结束', { de: 'Alle Plattformsimulationen beendet', fr: 'Toutes les simulations de plateforme sont terminées' }))
         }
-        addLog($tr('Simulation completed', '模拟已完成', { de: 'Simulation abgeschlossen', fr: 'Simulation terminée' }))
+        addLog(tr('Simulation completed', '模拟已完成', { de: 'Simulation abgeschlossen', fr: 'Simulation terminée' }))
         phase.value = 2
         stopPolling()
         emit('update-status', 'completed')
@@ -1380,7 +1380,7 @@ const getActionTypeLabel = (type) => {
     'VIEW_PORTFOLIO': 'PORTFOLIO',
     'COMMENT_ON_MARKET': 'COMMENT',
   }
-  return labels[type] || type || $tr('UNKNOWN', '未知', { de: 'UNBEKANNT', fr: 'INCONNU' })
+  return labels[type] || type || tr('UNKNOWN', '未知', { de: 'UNBEKANNT', fr: 'INCONNU' })
 }
 
 const getActionTypeClass = (type) => {
@@ -1431,12 +1431,12 @@ const formatActionTime = (timestamp) => {
 
 const handleNextStep = async () => {
   if (!props.simulationId) {
-    addLog($tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt', fr: 'Erreur : simulationId manquant' }))
+    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt', fr: 'Erreur : simulationId manquant' }))
     return
   }
 
   if (isGeneratingReport.value) {
-    addLog($tr('Report generation request already sent, please wait...', '报告生成请求已发送,请稍候…', { de: 'Berichterstellungsanfrage bereits gesendet, bitte warten…', fr: 'Demande de génération de rapport déjà envoyée, veuillez patienter…' }))
+    addLog(tr('Report generation request already sent, please wait...', '报告生成请求已发送,请稍候…', { de: 'Berichterstellungsanfrage bereits gesendet, bitte warten…', fr: 'Demande de génération de rapport déjà envoyée, veuillez patienter…' }))
     return
   }
 
@@ -1444,12 +1444,12 @@ const handleNextStep = async () => {
 
   // If simulation is still running, stop it first
   if (phase.value === 1) {
-    addLog($tr('Stopping simulation before generating report...', '正在停止模拟以生成报告…', { de: 'Simulation wird vor der Berichterstellung gestoppt…', fr: 'Arrêt de la simulation avant génération du rapport…' }))
+    addLog(tr('Stopping simulation before generating report...', '正在停止模拟以生成报告…', { de: 'Simulation wird vor der Berichterstellung gestoppt…', fr: 'Arrêt de la simulation avant génération du rapport…' }))
     try {
       await stopSimulation({ simulation_id: props.simulationId })
       phase.value = 2
       stopPolling()
-      addLog($tr('Simulation stopped — proceeding with partial data', '模拟已停止 — 将使用部分数据继续', { de: 'Simulation gestoppt — wird mit Teildaten fortgefahren', fr: 'Simulation arrêtée — on continue avec des données partielles' }))
+      addLog(tr('Simulation stopped — proceeding with partial data', '模拟已停止 — 将使用部分数据继续', { de: 'Simulation gestoppt — wird mit Teildaten fortgefahren', fr: 'Simulation arrêtée — on continue avec des données partielles' }))
       emit('update-status', 'completed')
     } catch (err) {
       addLog(tr(`Warning: could not stop simulation (${err.message}), proceeding anyway`, `警告:无法停止模拟(${err.message}),仍将继续`, { de: `Warnung: Simulation konnte nicht gestoppt werden (${err.message}), wird trotzdem fortgefahren` }))
@@ -1460,7 +1460,7 @@ const handleNextStep = async () => {
 
   try {
     // First try to get existing report (don't regenerate)
-    addLog($tr('Checking for existing report...', '正在检查已有报告…', { de: 'Vorhandener Bericht wird geprüft…', fr: `Vérification d'un rapport existant…` }))
+    addLog(tr('Checking for existing report...', '正在检查已有报告…', { de: 'Vorhandener Bericht wird geprüft…', fr: `Vérification d'un rapport existant…` }))
     const res = await generateReport({
       simulation_id: props.simulationId,
       force_regenerate: false
@@ -1532,7 +1532,7 @@ const tryResumeOrStart = async () => {
         const totalActions = (res.data.twitter_actions_count || 0) + (res.data.reddit_actions_count || 0)
         if (totalActions > 0) {
           addLog(tr(`Previous simulation crashed at round ${res.data.current_round}/${res.data.total_rounds} with ${totalActions} actions`, `之前的模拟在第 ${res.data.current_round}/${res.data.total_rounds} 轮崩溃,共 ${totalActions} 个动作`, { de: `Vorherige Simulation bei Runde ${res.data.current_round}/${res.data.total_rounds} mit ${totalActions} Aktionen abgestürzt` }))
-          addLog($tr('You can generate a report from partial data or restart', '您可以基于部分数据生成报告或重新启动', { de: 'Du kannst einen Bericht aus Teildaten generieren oder neu starten', fr: 'Vous pouvez générer un rapport à partir de données partielles ou redémarrer' }))
+          addLog(tr('You can generate a report from partial data or restart', '您可以基于部分数据生成报告或重新启动', { de: 'Du kannst einen Bericht aus Teildaten generieren oder neu starten', fr: 'Vous pouvez générer un rapport à partir de données partielles ou redémarrer' }))
           runStatus.value = res.data
           phase.value = 2  // treat as completed so buttons work
           emit('update-status', 'completed')
@@ -1540,7 +1540,7 @@ const tryResumeOrStart = async () => {
           return
         }
         // No data — just start fresh
-        addLog($tr('Previous simulation failed with no data — starting fresh', '之前的模拟失败且无数据 — 重新开始', { de: 'Vorherige Simulation ohne Daten fehlgeschlagen — wird neu gestartet', fr: 'La simulation précédente a échoué sans données — on recommence' }))
+        addLog(tr('Previous simulation failed with no data — starting fresh', '之前的模拟失败且无数据 — 重新开始', { de: 'Vorherige Simulation ohne Daten fehlgeschlagen — wird neu gestartet', fr: 'La simulation précédente a échoué sans données — on recommence' }))
       }
     }
   } catch (err) {
@@ -1566,10 +1566,10 @@ const generateArticle = async () => {
     if (res.success && res.data?.article_text) {
       articleText.value = res.data.article_text
     } else {
-      articleError.value = res.error || $tr('Failed to generate article.', '生成文章失败。', { de: 'Artikel konnte nicht generiert werden.', fr: `Échec de la génération de l'article.` })
+      articleError.value = res.error || tr('Failed to generate article.', '生成文章失败。', { de: 'Artikel konnte nicht generiert werden.', fr: `Échec de la génération de l'article.` })
     }
   } catch (err) {
-    articleError.value = err?.message || $tr('Network error generating article.', '生成文章时发生网络错误。', { de: 'Netzwerkfehler beim Generieren des Artikels.', fr: `Erreur réseau lors de la génération de l'article.` })
+    articleError.value = err?.message || tr('Network error generating article.', '生成文章时发生网络错误。', { de: 'Netzwerkfehler beim Generieren des Artikels.', fr: `Erreur réseau lors de la génération de l'article.` })
   } finally {
     isGeneratingArticle.value = false
   }
@@ -1608,7 +1608,7 @@ watch(phase, (newPhase) => {
 })
 
 onMounted(() => {
-  addLog($tr('Step3 Simulation Run initialized', '第 3 步 模拟运行已初始化', { de: 'Schritt 3 Simulationslauf initialisiert', fr: 'Exécution de simulation Étape 3 initialisée' }))
+  addLog(tr('Step3 Simulation Run initialized', '第 3 步 模拟运行已初始化', { de: 'Schritt 3 Simulationslauf initialisiert', fr: 'Exécution de simulation Étape 3 initialisée' }))
   tryResumeOrStart()
 })
 

@@ -3264,7 +3264,7 @@ const volatilityIndexBarWidth = (idx) => {
 const volatilityTrendLabel = (trend) => {
   if (trend === 'converging') return tr('Converging', '收敛', { de: 'Konvergierend' })
   if (trend === 'contested') return tr('Contested', '争议', { de: 'Umstritten' })
-  return $tr('Stable', '稳定', { de: 'Stabil', fr: 'Stable' })
+  return tr('Stable', '稳定', { de: 'Stabil', fr: 'Stable' })
 }
 
 const volatilityTrendBadgeClass = (trend) => {
@@ -3677,8 +3677,8 @@ const loadThread = async () => {
     if (!res.ok) {
       threadError.value =
         res.status === 403
-          ? $tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。', { de: 'Veröffentliche die Simulation, um den Tweet-Thread zu aktivieren.', fr: 'Publiez la simulation pour activer le fil de tweets.' })
-          : `${$tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden', fr: 'Impossible de charger le fil' })} (HTTP ${res.status})`
+          ? tr('Publish the simulation to enable the tweet thread.', '发布模拟以启用推文串。', { de: 'Veröffentliche die Simulation, um den Tweet-Thread zu aktivieren.', fr: 'Publiez la simulation pour activer le fil de tweets.' })
+          : `${tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden', fr: 'Impossible de charger le fil' })} (HTTP ${res.status})`
       threadTweets.value = []
       threadTotal.value = 0
       threadTruncated.value = false
@@ -3690,7 +3690,7 @@ const loadThread = async () => {
     threadTruncated.value = !!data?.truncated
   } catch (err) {
     threadError.value =
-      err?.message || $tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden', fr: 'Impossible de charger le fil' })
+      err?.message || tr('Could not load thread', '无法加载推文串', { de: 'Thread konnte nicht geladen werden', fr: 'Impossible de charger le fil' })
     threadTweets.value = []
     threadTotal.value = 0
     threadTruncated.value = false
@@ -4367,8 +4367,8 @@ const copy = async (which) => {
 // ── Verified-prediction outcome submission ─────────────────────────────
 const outcomeOptions = [
   { value: 'correct', label: tr('Called it', '命中', { de: 'Richtig gelegen' }), icon: '📍' },
-  { value: 'partial', label: $tr('Partial', '部分命中', { de: 'Teilweise richtig', fr: 'Partielle' }), icon: '◑' },
-  { value: 'incorrect', label: $tr('Called wrong', '判断错误', { de: 'Falsch gelegen', fr: 'Prédiction erronée' }), icon: '⚠' },
+  { value: 'partial', label: tr('Partial', '部分命中', { de: 'Teilweise richtig', fr: 'Partielle' }), icon: '◑' },
+  { value: 'incorrect', label: tr('Called wrong', '判断错误', { de: 'Falsch gelegen', fr: 'Prédiction erronée' }), icon: '⚠' },
 ]
 
 const outcomeForm = reactive({

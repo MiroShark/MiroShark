@@ -129,8 +129,8 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return $tr('Error', '错误', { de: 'Fehler', fr: 'Erreur' })
-  if (currentStatus.value === 'completed') return $tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' })
+  if (currentStatus.value === 'error') return tr('Error', '错误', { de: 'Fehler', fr: 'Erreur' })
+  if (currentStatus.value === 'completed') return tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' })
   return tr('Running', '运行中', { de: 'Läuft', fr: 'En cours' })
 })
 

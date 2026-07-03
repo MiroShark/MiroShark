@@ -281,10 +281,10 @@ const _buildExportCanvas = () => {
   const bearish = d.bearish || []
   const parts = []
   if (bullish.length) parts.push(`${bullish[bullish.length - 1]}% ${tr('bullish', '看涨', { de: 'optimistisch', fr: 'haussier' })}`)
-  if (bearish.length) parts.push(`${bearish[bearish.length - 1]}% ${$tr('bearish', '看跌', { de: 'pessimistisch', fr: 'baissier' })}`)
+  if (bearish.length) parts.push(`${bearish[bearish.length - 1]}% ${tr('bearish', '看跌', { de: 'pessimistisch', fr: 'baissier' })}`)
   const { drawHeader, headerHeight } = buildTitledHeader({
     title: tr('Belief drift — bullish / neutral / bearish', '信念漂移 — 看涨 / 中立 / 看跌', { de: 'Überzeugungsdrift — optimistisch / neutral / pessimistisch' }),
-    subtitle: parts.length ? `${$tr('Final:', '最终:', { de: 'Endergebnis:', fr: 'Final :' })} ${parts.join(' · ')}` : null,
+    subtitle: parts.length ? `${tr('Final:', '最终:', { de: 'Endergebnis:', fr: 'Final :' })} ${parts.join(' · ')}` : null,
     width: W,
   })
   return renderSvgToCanvas(svgRef.value, {

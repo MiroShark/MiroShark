@@ -134,12 +134,12 @@ const simulationUrl = computed(() => {
 })
 
 const statusLabel = computed(() => {
-  if (!summary.value) return $tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' })
+  if (!summary.value) return tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' })
   const s = (summary.value.runner_status || summary.value.status || '').toLowerCase()
-  if (s === 'completed' || s === 'finished' || s === 'stopped') return $tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' })
+  if (s === 'completed' || s === 'finished' || s === 'stopped') return tr('Completed', '已完成', { de: 'Abgeschlossen', fr: 'Terminé' })
   if (s === 'running' || s === 'in_progress') return tr('Running', '运行中', { de: 'Läuft', fr: 'En cours' })
-  if (s === 'error' || s === 'failed') return $tr('Failed', '失败', { de: 'Fehlgeschlagen', fr: 'Échec' })
-  return s ? s.charAt(0).toUpperCase() + s.slice(1) : $tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
+  if (s === 'error' || s === 'failed') return tr('Failed', '失败', { de: 'Fehlgeschlagen', fr: 'Échec' })
+  return s ? s.charAt(0).toUpperCase() + s.slice(1) : tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
 })
 
 const statusClass = computed(() => {
@@ -194,10 +194,10 @@ const resolutionLabel = computed(() => {
   if (!r) return ''
   if (r.accuracy_score !== null && r.accuracy_score !== undefined) {
     if (r.accuracy_score >= 1.0) return `✓ ${tr('Correct', '正确', { de: 'Richtig', fr: 'Correct' })} · ${tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
-    if (r.accuracy_score <= 0.0) return `✗ ${$tr('Missed', '未中', { de: 'Verfehlt', fr: 'Manqué' })} · ${$tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
-    return `~ ${tr('Split', '部分', { de: 'Geteilt' })} · ${$tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
+    if (r.accuracy_score <= 0.0) return `✗ ${tr('Missed', '未中', { de: 'Verfehlt', fr: 'Manqué' })} · ${tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
+    return `~ ${tr('Split', '部分', { de: 'Geteilt' })} · ${tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
   }
-  return `${$tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
+  return `${tr('Actual', '实际', { de: 'Ergebnis', fr: 'Réel' })} ${r.actual_outcome}`
 })
 
 const resolutionClass = computed(() => {
@@ -210,7 +210,7 @@ const resolutionClass = computed(() => {
 
 const chartAriaLabel = computed(() => {
   if (!hasBelief.value) return tr('No belief trajectory', '无信念轨迹', { de: 'Keine Überzeugungstrajektorie' })
-  return `${tr('Belief drift across', '信念漂移历经', { de: 'Überzeugungsdrift über' })} ${summary.value.belief.rounds.length} ${$tr('rounds', '轮次', { de: 'Runden', fr: 'tours' })}`
+  return `${tr('Belief drift across', '信念漂移历经', { de: 'Überzeugungsdrift über' })} ${summary.value.belief.rounds.length} ${tr('rounds', '轮次', { de: 'Runden', fr: 'tours' })}`
 })
 
 // Stacked area chart paths — stack order bullish (top), neutral (middle), bearish (bottom).

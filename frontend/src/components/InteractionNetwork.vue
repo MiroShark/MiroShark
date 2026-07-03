@@ -189,8 +189,8 @@ import {
 import { tr } from '../i18n'
 
 const translateStance = (stance) => {
-  if (stance === 'bullish') return $tr('bullish', '看涨', { de: 'optimistisch', fr: 'haussier' })
-  if (stance === 'bearish') return $tr('bearish', '看跌', { de: 'pessimistisch', fr: 'baissier' })
+  if (stance === 'bullish') return tr('bullish', '看涨', { de: 'optimistisch', fr: 'haussier' })
+  if (stance === 'bearish') return tr('bearish', '看跌', { de: 'pessimistisch', fr: 'baissier' })
   if (stance === 'neutral') return tr('neutral', '中立', { de: 'neutral' })
   return stance
 }
@@ -547,7 +547,7 @@ const _buildExportCanvas = () => {
   const edgeCount = (networkData.value?.edges || []).length
   const { drawHeader, headerHeight } = buildTitledHeader({
     title: tr('Interaction Network', '互动网络', { de: 'Interaktionsnetzwerk' }),
-    subtitle: `${nodeCount} ${$tr('agents', '智能体', { de: 'Agenten', fr: 'agents' })} · ${edgeCount} ${tr('edges', '条边', { de: 'Kanten' })}`,
+    subtitle: `${nodeCount} ${tr('agents', '智能体', { de: 'Agenten', fr: 'agents' })} · ${edgeCount} ${tr('edges', '条边', { de: 'Kanten' })}`,
     width: W,
   })
   return renderSvgToCanvas(svgRef.value, {

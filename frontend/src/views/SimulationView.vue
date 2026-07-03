@@ -118,14 +118,14 @@ const statusClass = computed(() => {
 })
 
 const statusText = computed(() => {
-  if (currentStatus.value === 'error') return $tr('Error', '错误', { de: 'Fehler', fr: 'Erreur' })
-  if (currentStatus.value === 'completed') return $tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
+  if (currentStatus.value === 'error') return tr('Error', '错误', { de: 'Fehler', fr: 'Erreur' })
+  if (currentStatus.value === 'completed') return tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
   switch (currentPhase.value) {
-    case 0: return $tr('Initializing', '初始化中', { de: 'Wird initialisiert', fr: 'Initialisation en cours' })
+    case 0: return tr('Initializing', '初始化中', { de: 'Wird initialisiert', fr: 'Initialisation en cours' })
     case 1: return tr('Generating Profiles', '生成画像中', { de: 'Profile werden generiert', fr: 'Génération des profils' })
     case 2: return tr('Generating Config', '生成配置中', { de: 'Konfiguration wird generiert', fr: 'Génération de la config' })
-    case 3: return $tr('Orchestrating', '编排中', { de: 'Wird orchestriert', fr: 'Orchestration en cours' })
-    case 4: return $tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
+    case 3: return tr('Orchestrating', '编排中', { de: 'Wird orchestriert', fr: 'Orchestration en cours' })
+    case 4: return tr('Ready', '就绪', { de: 'Bereit', fr: 'Prêt' })
     default: return tr('Preparing', '准备中', { de: 'Vorbereitung', fr: 'Préparation en cours' })
   }
 })

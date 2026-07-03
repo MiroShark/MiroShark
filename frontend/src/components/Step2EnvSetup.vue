@@ -862,7 +862,7 @@ const selectProfile = (profile) => {
 // Automatically start simulation preparation
 const startPrepareSimulation = async () => {
   if (!props.simulationId) {
-    addLog($tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt', fr: 'Erreur : simulationId manquant' }))
+    addLog(tr('Error: missing simulationId', '错误:缺少 simulationId', { de: 'Fehler: simulationId fehlt', fr: 'Erreur : simulationId manquant' }))
     emit('update-status', 'error')
     return
   }
@@ -882,13 +882,13 @@ const startPrepareSimulation = async () => {
     
     if (res.success && res.data) {
       if (res.data.already_prepared) {
-        addLog($tr('Detected existing completed preparation, using directly', '检测到已完成的准备,直接使用', { de: 'Vorhandene abgeschlossene Vorbereitung erkannt, wird direkt verwendet', fr: 'Préparation existante détectée et terminée, utilisation directe' }))
+        addLog(tr('Detected existing completed preparation, using directly', '检测到已完成的准备,直接使用', { de: 'Vorhandene abgeschlossene Vorbereitung erkannt, wird direkt verwendet', fr: 'Préparation existante détectée et terminée, utilisation directe' }))
         await loadPreparedData()
         return
       }
 
       taskId.value = res.data.task_id
-      addLog($tr(`Preparation task started`, '准备任务已启动', { de: 'Vorbereitungsaufgabe gestartet', fr: 'Tâche de préparation démarrée' }))
+      addLog(tr(`Preparation task started`, '准备任务已启动', { de: 'Vorbereitungsaufgabe gestartet', fr: 'Tâche de préparation démarrée' }))
       addLog(tr(`  └─ Task ID: ${res.data.task_id}`, `  └─ 任务 ID:${res.data.task_id}`, { de: `  └─ Aufgaben-ID: ${res.data.task_id}` }))
 
       // Set Expected Total Agents immediately (from prepare API response)
@@ -900,7 +900,7 @@ const startPrepareSimulation = async () => {
         }
       }
 
-      addLog($tr('Starting to poll preparation progress...', '开始轮询准备进度…', { de: 'Fortschritt der Vorbereitung wird abgefragt…', fr: 'Démarrage du polling de progression de la préparation…' }))
+      addLog(tr('Starting to poll preparation progress...', '开始轮询准备进度…', { de: 'Fortschritt der Vorbereitung wird abgefragt…', fr: 'Démarrage du polling de progression de la préparation…' }))
       // Start polling progress
       startPolling()
       // Start fetching profiles in real-time
@@ -984,7 +984,7 @@ const pollPrepareStatus = async () => {
       
       // Check if completed
       if (data.status === 'completed' || data.status === 'ready' || data.already_prepared) {
-        addLog($tr('✓ Preparation completed', '✓ 准备完成', { de: '✓ Vorbereitung abgeschlossen', fr: 'Préparation terminée' }))
+        addLog(tr('✓ Preparation completed', '✓ 准备完成', { de: '✓ Vorbereitung abgeschlossen', fr: 'Préparation terminée' }))
         stopPolling()
         stopProfilesPolling()
         await loadPreparedData()
@@ -1028,7 +1028,7 @@ const fetchProfilesRealtime = async () => {
         const latestProfile = profiles.value[currentCount - 1]
         const profileName = latestProfile?.name || latestProfile?.username || `Agent_${currentCount}`
         if (currentCount === 1) {
-          addLog($tr(`Starting to generate agent personas...`, '开始生成智能体人设…', { de: 'Agent-Personas werden generiert…', fr: `Démarrage de la génération des personas d'agents…` }))
+          addLog(tr(`Starting to generate agent personas...`, '开始生成智能体人设…', { de: 'Agent-Personas werden generiert…', fr: `Démarrage de la génération des personas d'agents…` }))
         }
         addLog(tr(`→ Agent persona ${currentCount}/${total}: ${profileName} (${latestProfile?.profession || 'Unknown Profession'})`, `→ 智能体人设 ${currentCount}/${total}:${profileName}(${latestProfile?.profession || '未知职业'})`, { de: `→ Agent-Persona ${currentCount}/${total}: ${profileName} (${latestProfile?.profession || 'Unbekannter Beruf'})` }))
 
@@ -1063,7 +1063,7 @@ const fetchConfigRealtime = async () => {
   // Client-side timeout: give up after CONFIG_POLL_TIMEOUT_MS
   if (configPollStartTime && Date.now() - configPollStartTime > CONFIG_POLL_TIMEOUT_MS) {
     stopConfigPolling()
-    configError.value = $tr('Config generation timed out after 90 seconds. The LLM may be unresponsive or overloaded.', '配置生成在 90 秒后超时。LLM 可能无响应或负载过高。', { de: 'Konfigurationsgenerierung nach 90 Sekunden abgebrochen. LLM reagiert möglicherweise nicht oder ist überlastet.', fr: 'La génération de la config a expiré après 90 secondes. Le LLM est peut-être indisponible ou surchargé.' })
+    configError.value = tr('Config generation timed out after 90 seconds. The LLM may be unresponsive or overloaded.', '配置生成在 90 秒后超时。LLM 可能无响应或负载过高。', { de: 'Konfigurationsgenerierung nach 90 Sekunden abgebrochen. LLM reagiert möglicherweise nicht oder ist überlastet.', fr: 'La génération de la config a expiré après 90 secondes. Le LLM est peut-être indisponible ou surchargé.' })
     addLog(tr('✗ Config generation timed out (90s). Use "Retry Config" to try again.', '✗ 配置生成超时(90 秒)。请使用「重新生成配置」再次尝试。', { de: '✗ Konfigurationsgenerierung abgebrochen (90 s). Verwenden Sie „Konfiguration wiederholen", um es erneut zu versuchen.', fr: `✗ Génération de config expirée (90s). Utilisez « Régénérer la config » pour réessayer.` }))
     return
   }
@@ -1077,7 +1077,7 @@ const fetchConfigRealtime = async () => {
       // Backend reported a generation failure
       if (data.config_error || data.status === 'failed') {
         stopConfigPolling()
-        const reason = data.config_error || $tr('Generation failed — check your OpenRouter API key and model name', '生成失败 — 请检查您的 OpenRouter API 密钥与模型名称', { de: 'Generierung fehlgeschlagen — überprüfen Sie Ihren OpenRouter API-Schlüssel und Modellnamen', fr: 'Échec de la génération — vérifiez votre clé API OpenRouter et le nom du modèle' })
+        const reason = data.config_error || tr('Generation failed — check your OpenRouter API key and model name', '生成失败 — 请检查您的 OpenRouter API 密钥与模型名称', { de: 'Generierung fehlgeschlagen — überprüfen Sie Ihren OpenRouter API-Schlüssel und Modellnamen', fr: 'Échec de la génération — vérifiez votre clé API OpenRouter et le nom du modèle' })
         configError.value = reason
         addLog(tr(`✗ Config generation failed: ${reason}`, `✗ 配置生成失败:${reason}`, { de: `✗ Konfigurationsgenerierung fehlgeschlagen: ${reason}` }))
         return
@@ -1087,16 +1087,16 @@ const fetchConfigRealtime = async () => {
       if (data.generation_stage && data.generation_stage !== lastLoggedConfigStage) {
         lastLoggedConfigStage = data.generation_stage
         if (data.generation_stage === 'generating_profiles') {
-          addLog($tr('Generating agent persona configuration...', '生成智能体人设配置中…', { de: 'Agent-Persona-Konfiguration wird generiert…', fr: `Génération de la configuration des personas d'agents…` }))
+          addLog(tr('Generating agent persona configuration...', '生成智能体人设配置中…', { de: 'Agent-Persona-Konfiguration wird generiert…', fr: `Génération de la configuration des personas d'agents…` }))
         } else if (data.generation_stage === 'generating_config') {
-          addLog($tr('Calling LLM to generate simulation configuration parameters...', '调用 LLM 生成模拟配置参数中…', { de: 'LLM wird aufgerufen, um Simulationskonfigurationsparameter zu generieren…', fr: 'Appel du LLM pour générer les paramètres de configuration de la simulation…' }))
+          addLog(tr('Calling LLM to generate simulation configuration parameters...', '调用 LLM 生成模拟配置参数中…', { de: 'LLM wird aufgerufen, um Simulationskonfigurationsparameter zu generieren…', fr: 'Appel du LLM pour générer les paramètres de configuration de la simulation…' }))
         }
       }
 
       // If config has been generated
       if (data.config_generated && data.config) {
         simulationConfig.value = data.config
-        addLog($tr('✓ Simulation configuration generated', '✓ 模拟配置已生成', { de: '✓ Simulationskonfiguration generiert', fr: 'Configuration de simulation générée' }))
+        addLog(tr('✓ Simulation configuration generated', '✓ 模拟配置已生成', { de: '✓ Simulationskonfiguration generiert', fr: 'Configuration de simulation générée' }))
 
         // Show detailed config summary
         if (data.summary) {
@@ -1121,7 +1121,7 @@ const fetchConfigRealtime = async () => {
 
         stopConfigPolling()
         phase.value = 4
-        addLog($tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation', fr: `Configuration de l'environnement terminée, prêt à lancer la simulation` }))
+        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation', fr: `Configuration de l'environnement terminée, prêt à lancer la simulation` }))
         emit('update-status', 'completed')
       }
     }
@@ -1135,19 +1135,19 @@ const handleConfigRetry = async () => {
   isConfigRetrying.value = true
   configError.value = null
   lastLoggedConfigStage = ''
-  addLog($tr('Retrying config generation...', '正在重试配置生成…', { de: 'Konfigurationsgenerierung wird wiederholt…', fr: 'Nouvelle tentative de génération de la config…' }))
+  addLog(tr('Retrying config generation...', '正在重试配置生成…', { de: 'Konfigurationsgenerierung wird wiederholt…', fr: 'Nouvelle tentative de génération de la config…' }))
 
   try {
     const res = await retrySimulationConfig(props.simulationId)
     if (res.success) {
-      addLog($tr('Config retry started — waiting for LLM...', '配置重试已启动 — 正在等待 LLM…', { de: 'Konfigurationswiederholung gestartet — warte auf LLM…', fr: 'Nouvelle tentative de config démarrée — en attente du LLM…' }))
+      addLog(tr('Config retry started — waiting for LLM...', '配置重试已启动 — 正在等待 LLM…', { de: 'Konfigurationswiederholung gestartet — warte auf LLM…', fr: 'Nouvelle tentative de config démarrée — en attente du LLM…' }))
       startConfigPolling()
     } else {
-      configError.value = res.error || $tr('Retry failed — check backend logs', '重试失败 — 请检查后端日志', { de: 'Wiederholung fehlgeschlagen — Backend-Logs überprüfen', fr: 'Échec de la nouvelle tentative — vérifiez les logs backend' })
+      configError.value = res.error || tr('Retry failed — check backend logs', '重试失败 — 请检查后端日志', { de: 'Wiederholung fehlgeschlagen — Backend-Logs überprüfen', fr: 'Échec de la nouvelle tentative — vérifiez les logs backend' })
       addLog(tr(`✗ Retry failed: ${res.error || 'unknown error'}`, `✗ 重试失败:${res.error || '未知错误'}`, { de: `✗ Wiederholung fehlgeschlagen: ${res.error || 'Unbekannter Fehler'}` }))
     }
   } catch (err) {
-    configError.value = err.message || $tr('Retry request failed', '重试请求失败', { de: 'Wiederholungsanforderung fehlgeschlagen', fr: 'Échec de la requête de nouvelle tentative' })
+    configError.value = err.message || tr('Retry request failed', '重试请求失败', { de: 'Wiederholungsanforderung fehlgeschlagen', fr: 'Échec de la requête de nouvelle tentative' })
     addLog(tr(`✗ Retry error: ${err.message}`, `✗ 重试出错:${err.message}`, { de: `✗ Wiederholungsfehler: ${err.message}` }))
   } finally {
     isConfigRetrying.value = false
@@ -1156,7 +1156,7 @@ const handleConfigRetry = async () => {
 
 const loadPreparedData = async () => {
   phase.value = 2
-  addLog($tr('Loading existing configuration data...', '正在加载已有配置数据…', { de: 'Vorhandene Konfigurationsdaten werden geladen…', fr: 'Chargement des données de configuration existantes…' }))
+  addLog(tr('Loading existing configuration data...', '正在加载已有配置数据…', { de: 'Vorhandene Konfigurationsdaten werden geladen…', fr: 'Chargement des données de configuration existantes…' }))
 
   // Fetch profiles one last time
   await fetchProfilesRealtime()
@@ -1168,7 +1168,7 @@ const loadPreparedData = async () => {
     if (res.success && res.data) {
       if (res.data.config_generated && res.data.config) {
         simulationConfig.value = res.data.config
-        addLog($tr('✓ Simulation configuration loaded successfully', '✓ 模拟配置加载成功', { de: '✓ Simulationskonfiguration erfolgreich geladen', fr: 'Configuration de simulation chargée avec succès' }))
+        addLog(tr('✓ Simulation configuration loaded successfully', '✓ 模拟配置加载成功', { de: '✓ Simulationskonfiguration erfolgreich geladen', fr: 'Configuration de simulation chargée avec succès' }))
 
         // Show detailed config summary
         if (res.data.summary) {
@@ -1177,12 +1177,12 @@ const loadPreparedData = async () => {
           addLog(tr(`  └─ Initial posts: ${res.data.summary.initial_posts_count}`, `  └─ 初始帖子:${res.data.summary.initial_posts_count}`, { de: `  └─ Initiale Beiträge: ${res.data.summary.initial_posts_count}` }))
         }
 
-        addLog($tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation', fr: `Configuration de l'environnement terminée, prêt à lancer la simulation` }))
+        addLog(tr('✓ Environment setup complete, ready to start simulation', '✓ 环境配置完成,可开始模拟', { de: '✓ Umgebungseinrichtung abgeschlossen, bereit zum Starten der Simulation', fr: `Configuration de l'environnement terminée, prêt à lancer la simulation` }))
         phase.value = 4
         emit('update-status', 'completed')
       } else {
         // Config not yet generated, start polling
-        addLog($tr('Config generating, starting to poll...', '配置生成中,开始轮询…', { de: 'Konfiguration wird generiert, Abfrage wird gestartet…', fr: 'Config en cours de génération, démarrage du polling…' }))
+        addLog(tr('Config generating, starting to poll...', '配置生成中,开始轮询…', { de: 'Konfiguration wird generiert, Abfrage wird gestartet…', fr: 'Config en cours de génération, démarrage du polling…' }))
         startConfigPolling()
       }
     }
@@ -1221,7 +1221,7 @@ onMounted(async () => {
       // no run state — fresh simulation
     }
 
-    addLog($tr('Step 2 Agent Setup Initializing', '第 2 步 智能体配置初始化中', { de: 'Schritt 2 Agent-Einrichtung wird initialisiert', fr: 'Initialisation de la configuration des agents (Étape 2)' }))
+    addLog(tr('Step 2 Agent Setup Initializing', '第 2 步 智能体配置初始化中', { de: 'Schritt 2 Agent-Einrichtung wird initialisiert', fr: 'Initialisation de la configuration des agents (Étape 2)' }))
     startPrepareSimulation()
   }
 })

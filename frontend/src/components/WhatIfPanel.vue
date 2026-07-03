@@ -447,7 +447,7 @@ const _buildExportCanvas = () => {
     ? `${result.value.delta_final_bullish >= 0 ? '+' : ''}${result.value.delta_final_bullish} ${tr('pts on bullish share', '点看涨占比', { de: 'Pkt. beim optimistischen Anteil' })}`
     : null
   const { drawHeader, headerHeight } = buildTitledHeader({
-    title: `${$tr('What If?', '假设性?', { de: 'Was wäre wenn?', fr: 'Et si ?' })} — ${removed}`,
+    title: `${tr('What If?', '假设性?', { de: 'Was wäre wenn?', fr: 'Et si ?' })} — ${removed}`,
     subtitle: deltaStr,
     width: W,
   })

@@ -88,7 +88,7 @@ const statusLine = computed(() => {
   if (loading.value) return tr('// fetching…', '// 抓取中…', { de: '// wird abgerufen…', fr: '// récupération…' })
   if (!fetchedAt.value) return ''
   const ago = relativeTime(fetchedAt.value)
-  return cached.value ? `// ${$tr('cached · refreshed', '已缓存 · 刷新于', { de: 'zwischengespeichert · aktualisiert', fr: 'cache · actualisé' })} ${ago}` : `// ${tr('refreshed', '刷新于', { de: 'aktualisiert', fr: 'actualisé' })} ${ago}`
+  return cached.value ? `// ${tr('cached · refreshed', '已缓存 · 刷新于', { de: 'zwischengespeichert · aktualisiert', fr: 'cache · actualisé' })} ${ago}` : `// ${tr('refreshed', '刷新于', { de: 'aktualisiert', fr: 'actualisé' })} ${ago}`
 })
 
 const relativeTime = (iso) => {
@@ -96,7 +96,7 @@ const relativeTime = (iso) => {
   const t = Date.parse(iso)
   if (Number.isNaN(t)) return ''
   const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000))
-  if (diffSec < 60) return $tr('just now', '刚刚', { de: 'gerade eben', fr: `à l'instant` })
+  if (diffSec < 60) return tr('just now', '刚刚', { de: 'gerade eben', fr: `à l'instant` })
   const diffMin = Math.floor(diffSec / 60)
   if (diffMin < 60) return `${diffMin}${tr('m ago', ' 分钟前', { de: ' Min. her' })}`
   const diffHr = Math.floor(diffMin / 60)
