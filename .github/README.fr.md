@@ -134,7 +134,7 @@ Quelques points forts :
 
 ## Licence
 
-AGPL-3.0. Voir [LICENSE](LICENSE).
+AGPL-3.0. Voir [LICENSE](../LICENSE).
 
 Soutenir le projet : `0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
 

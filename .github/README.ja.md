@@ -134,7 +134,7 @@ cp .env.example .env
 
 ## ライセンス
 
-AGPL-3.0。[LICENSE](LICENSE) を参照してください。
+AGPL-3.0。[LICENSE](../LICENSE) を参照してください。
 
 プロジェクトを支援する:`0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
 

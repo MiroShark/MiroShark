@@ -111,4 +111,4 @@ environment (OS, Node/Python versions, deployment target).
 ## License
 
 By contributing, you agree that your contributions are licensed under the
-repository's [LICENSE](LICENSE).
+repository's [LICENSE](../LICENSE).

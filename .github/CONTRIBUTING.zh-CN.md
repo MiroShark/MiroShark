@@ -83,4 +83,4 @@ pytest -m "integration and slow"                # 完整流水线冒烟测试（
 
 ## 许可证
 
-提交贡献即表示你同意你的贡献按仓库的 [LICENSE](LICENSE) 授权。
+提交贡献即表示你同意你的贡献按仓库的 [LICENSE](../LICENSE) 授权。
