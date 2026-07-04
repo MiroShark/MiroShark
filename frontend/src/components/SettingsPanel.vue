@@ -65,7 +65,7 @@
               <span class="setup-val">{{ currentSettings.searxng_base_url || $tr('— not set —', '— 未设置 —', { de: '— nicht gesetzt —', fr: '— non défini —' }) }}</span>
             </div>
             <div class="setup-row">
-              <span class="setup-key">{{ $tr('Firecrawl', 'Firecrawl', { de: 'Firecrawl' }) }}</span>
+              <span class="setup-key">{{ $tr('Firecrawl', 'Firecrawl', { de: 'Firecrawl' , fr: 'Firecrawl'}) }}</span>
               <span class="setup-val">{{ currentSettings.firecrawl?.base_url || $tr('— not set —', '— 未设置 —', { de: '— nicht gesetzt —', fr: '— non défini —' }) }}</span>
             </div>
             <div class="setup-row">

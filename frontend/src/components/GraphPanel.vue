@@ -49,7 +49,7 @@
               <span class="detail-value">{{ selectedItem.data.name }}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">{{ $tr('UUID:', 'UUID:', { de: 'UUID:' }) }}</span>
+              <span class="detail-label">{{ $tr('UUID:', 'UUID:', { de: 'UUID:' , fr: 'UUID :'}) }}</span>
               <span class="detail-value uuid-text copyable" @click="copyText(selectedItem.data.uuid)">{{ selectedItem.data.uuid }}</span>
             </div>
             <div class="detail-row" v-if="selectedItem.data.created_at">

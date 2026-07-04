@@ -351,7 +351,7 @@
               <!-- Not yet resolved or re-resolving -->
               <div v-else-if="!showResolvePanel" class="resolve-intro">
                 <p class="resolve-desc">{{ $tr('Did the simulation correctly predict what happened? Record the real-world outcome to build your accuracy track record.', '模拟是否正确预测了实际发生的事情?记录真实结果以建立你的准确率战绩。', { de: 'Hat die Simulation das Ergebnis korrekt vorhergesagt? Trage das reale Ergebnis ein, um deine Genauigkeitsbilanz aufzubauen.', fr: `La simulation a-t-elle correctement prédit ce qui s'est passé ? Enregistrez le résultat réel pour construire votre historique de précision.` }) }}</p>
-                <button class="resolve-trigger-btn" @click="openResolvePanel">⌘ {{ $tr('Record Outcome', '记录结果', { de: 'Ergebnis eintragen', fr: 'Enregistrer le résultat' }) }}</button>
+                <button class="resolve-trigger-btn" @click="openResolvePanel">⌘ {{ $tr('Record Outcome', '记录结果', { de: 'Ergebnis eintragen', fr: 'Consigner le résultat' }) }}</button>
               </div>
 
               <div v-if="showResolvePanel" class="resolve-form">
@@ -1008,7 +1008,7 @@ const getQualityTooltip = (q) => {
   const parts = [`${tr('Simulation Health:', '模拟健康度:', { de: 'Simulationsgesundheit:', fr: 'Santé de la simulation :' })} ${translateHealth(q.health)}`]
   parts.push(`${tr('Participation', '参与度', { de: 'Beteiligung', fr: 'Participation' })} ${Math.round(q.participation_rate * 100)}%`)
   if (q.stance_entropy !== null && q.stance_entropy !== undefined) {
-    const level = q.stance_entropy >= 0.7 ? tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? tr('medium', '中', { de: 'mittel', fr: 'moyenne' }) : tr('low', '低', { de: 'niedrig', fr: 'faible' })
+    const level = q.stance_entropy >= 0.7 ? tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? tr('medium', '中', { de: 'mittel', fr: 'Intermédiaire' }) : tr('low', '低', { de: 'niedrig', fr: 'faible' })
     parts.push(`${tr('Stance diversity:', '立场多样性:', { de: 'Haltungsvielfalt:', fr: 'Diversité des positions :' })} ${level}`)
   }
   if (q.convergence_round !== null && q.convergence_round !== undefined) {

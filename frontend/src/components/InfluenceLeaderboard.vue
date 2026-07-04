@@ -90,14 +90,14 @@
     <!-- Score legend -->
     <div class="lb-legend">
       <span class="legend-item"><span class="legend-dot engage"></span>{{ $tr('Engagement ×3', '互动 ×3', { de: 'Engagement ×3', fr: 'Engagement ×3' }) }}</span>
-      <span class="legend-item"><span class="legend-dot platform"></span>{{ $tr('Platforms ×5', '平台 ×5', { de: 'Plattformen ×5' }) }}</span>
-      <span class="legend-item"><span class="legend-dot post"></span>{{ $tr('Posts ×1', '帖子 ×1', { de: 'Beiträge ×1' }) }}</span>
+      <span class="legend-item"><span class="legend-dot platform"></span>{{ $tr('Platforms ×5', '平台 ×5', { de: 'Plattformen ×5' , fr: 'Plateformes ×5'}) }}</span>
+      <span class="legend-item"><span class="legend-dot post"></span>{{ $tr('Posts ×1', '帖子 ×1', { de: 'Beiträge ×1' , fr: 'Posts ×1'}) }}</span>
     </div>
 
     <!-- Loading -->
     <div v-if="loading" class="lb-loading">
       <div class="pulse-ring"></div>
-      <span>{{ $tr('Computing influence scores...', '正在计算影响力分数...', { de: 'Einfluss-Scores werden berechnet...' }) }}</span>
+      <span>{{ $tr('Computing influence scores...', '正在计算影响力分数...', { de: 'Einfluss-Scores werden berechnet...' , fr: 'Calcul des scores d\'influence...'}) }}</span>
     </div>
 
     <!-- Error -->
@@ -105,7 +105,7 @@
 
     <!-- Empty -->
     <div v-else-if="!agents.length" class="lb-empty">
-      {{ $tr('No simulation data available yet. Run the simulation first.', '尚无模拟数据。请先运行模拟。', { de: 'Noch keine Simulationsdaten verfügbar. Bitte zuerst die Simulation starten.' }) }}
+      {{ $tr('No simulation data available yet. Run the simulation first.', '尚无模拟数据。请先运行模拟。', { de: 'Noch keine Simulationsdaten verfügbar. Bitte zuerst die Simulation starten.' , fr: 'Aucune donnée de simulation. Lancez la simulation d\'abord.'}) }}
     </div>
 
     <!-- Leaderboard rows -->
@@ -136,12 +136,12 @@
 
         <!-- Score breakdown -->
         <div class="lb-breakdown">
-          <div class="bd-item" :title="$tr('Engagement received (likes, reposts, quotes)', '收到的互动(点赞、转发、引用)', { de: 'Erhaltenes Engagement (Likes, Reposts, Zitate)' })">
-            <span class="bd-label engage">{{ $tr('ENG', '互动', { de: 'ENG' }) }}</span>
+          <div class="bd-item" :title="$tr('Engagement received (likes, reposts, quotes)', '收到的互动(点赞、转发、引用)', { de: 'Erhaltenes Engagement (Likes, Reposts, Zitate)' , fr: 'Engagement reçu (likes, reposts, citations)'})">
+            <span class="bd-label engage">{{ $tr('ENG', '互动', { de: 'ENG' , fr: 'ENG'}) }}</span>
             <span class="bd-value">{{ agent.engagement_received }}</span>
           </div>
-          <div class="bd-item" :title="$tr('Original posts created', '发布的原创帖子', { de: 'Erstellte Original-Beiträge' })">
-            <span class="bd-label post">{{ $tr('PST', '帖子', { de: 'BEI' }) }}</span>
+          <div class="bd-item" :title="$tr('Original posts created', '发布的原创帖子', { de: 'Erstellte Original-Beiträge' , fr: 'Posts originaux créés'})">
+            <span class="bd-label post">{{ $tr('PST', '帖子', { de: 'BEI' , fr: 'PST'}) }}</span>
             <span class="bd-value">{{ agent.posts_created }}</span>
           </div>
         </div>
@@ -161,9 +161,9 @@
         <button
           class="iv-btn"
           @click.stop="openInterview(agent)"
-          :title="$tr('Interview this agent about their simulation', '采访这位智能体关于其模拟的经历', { de: 'Diesen Agenten zur Simulation befragen' })"
+          :title="$tr('Interview this agent about their simulation', '采访这位智能体关于其模拟的经历', { de: 'Diesen Agenten zur Simulation befragen' , fr: 'Interviewer cet agent sur sa simulation'})"
         >
-          ▶ {{ $tr('Interview', '采访', { de: 'Befragen' }) }}
+          ▶ {{ $tr('Interview', '采访', { de: 'Befragen' , fr: 'Interview'}) }}
         </button>
       </div>
     </div>
@@ -221,7 +221,7 @@ const load = async () => {
       error.value = res.error || tr('Failed to load influence data.', '加载影响力数据失败。', { de: 'Einfluss-Daten konnten nicht geladen werden.', fr: `Échec du chargement des données d'influence.` })
     }
   } catch (err) {
-    error.value = err.message || tr('Failed to load influence data.', '加载影响力数据失败。', { de: 'Einfluss-Daten konnten nicht geladen werden.' })
+    error.value = err.message || tr('Failed to load influence data.', '加载影响力数据失败。', { de: 'Einfluss-Daten konnten nicht geladen werden.' , fr: 'Échec du chargement des données d\'influence.'})
   } finally {
     loading.value = false
   }
@@ -301,10 +301,10 @@ const submitQuestion = async () => {
       await nextTick()
       scrollThread()
     } else {
-      interviewError.value = res.error || tr('Failed to get a response.', '未能获取回复。', { de: 'Keine Antwort erhalten.' })
+      interviewError.value = res.error || tr('Failed to get a response.', '未能获取回复。', { de: 'Keine Antwort erhalten.' , fr: 'Échec de l\'obtention d\'une réponse.'})
     }
   } catch (err) {
-    interviewError.value = err.message || tr('Request failed.', '请求失败。', { de: 'Anfrage fehlgeschlagen.' })
+    interviewError.value = err.message || tr('Request failed.', '请求失败。', { de: 'Anfrage fehlgeschlagen.' , fr: 'Échec de la requête.'})
   } finally {
     interviewLoading.value = false
     await nextTick()

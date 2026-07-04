@@ -98,11 +98,11 @@ const relativeTime = (iso) => {
   const diffSec = Math.max(0, Math.floor((Date.now() - t) / 1000))
   if (diffSec < 60) return tr('just now', '刚刚', { de: 'gerade eben', fr: `à l'instant` })
   const diffMin = Math.floor(diffSec / 60)
-  if (diffMin < 60) return `${diffMin}${tr('m ago', ' 分钟前', { de: ' Min. her' })}`
+  if (diffMin < 60) return `${diffMin}${tr('m ago', ' 分钟前', { de: ' Min. her' , fr: 'm'})}`
   const diffHr = Math.floor(diffMin / 60)
-  if (diffHr < 24) return `${diffHr}${tr('h ago', ' 小时前', { de: ' Std. her' })}`
+  if (diffHr < 24) return `${diffHr}${tr('h ago', ' 小时前', { de: ' Std. her' , fr: 'h'})}`
   const diffDay = Math.floor(diffHr / 24)
-  return `${diffDay}${tr('d ago', ' 天前', { de: ' T. her' })}`
+  return `${diffDay}${tr('d ago', ' 天前', { de: ' T. her' , fr: 'j'})}`
 }
 
 const load = async ({ force = false } = {}) => {

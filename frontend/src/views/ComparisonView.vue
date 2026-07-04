@@ -346,8 +346,8 @@ const divergenceDescription = computed(() => {
   if (!data.value) return ''
   const s = data.value.divergence_score
   if (s < 0.2) return tr('Simulations produced very similar influence rankings — comparable outcomes.', '两次模拟的影响力排名非常相似 — 结果可比。', { de: 'Simulationen erzeugten sehr ähnliche Einfluss-Rankings — vergleichbare Ergebnisse.', fr: 'Les simulations ont produit des classements d’influence très similaires - des résultats comparables.' })
-  if (s < 0.5) return tr('Moderate divergence — some agents shifted in relative influence between runs.', '中等分歧 — 部分智能体在两次运行中相对影响力发生变化。', { de: 'Mäßige Divergenz — einige Agenten verschoben ihren relativen Einfluss zwischen den Läufen.' })
-  return tr('High divergence — the two simulations produced substantially different influence outcomes.', '高度分歧 — 两次模拟产生了截然不同的影响力结果。', { de: 'Hohe Divergenz — die zwei Simulationen erzeugten deutlich unterschiedliche Einflussergebnisse.' })
+  if (s < 0.5) return tr('Moderate divergence — some agents shifted in relative influence between runs.', '中等分歧 — 部分智能体在两次运行中相对影响力发生变化。', { de: 'Mäßige Divergenz — einige Agenten verschoben ihren relativen Einfluss zwischen den Läufen.' , fr: 'Divergence modérée — certains agents ont changé d\'influence relative.'})
+  return tr('High divergence — the two simulations produced substantially different influence outcomes.', '高度分歧 — 两次模拟产生了截然不同的影响力结果。', { de: 'Hohe Divergenz — die zwei Simulationen erzeugten deutlich unterschiedliche Einflussergebnisse.' , fr: 'Divergence élevée — les deux simulations ont produit des résultats d\'influence très différents.'})
 })
 
 // Rank delta helpers
@@ -372,9 +372,9 @@ const getRankDeltaClass = (name, simKey) => {
 
 const getRankDeltaTitle = (name, simKey) => {
   const label = getRankDeltaLabel(name, simKey)
-  if (label === '—') return tr('Not in other simulation\'s top 10', '不在另一次模拟的前 10 名中', { de: 'Nicht in den Top 10 der anderen Simulation' })
-  if (label === '=') return tr('Same rank in both simulations', '两次模拟中排名相同', { de: 'Gleicher Rang in beiden Simulationen' })
-  return `${tr('Rank difference:', '排名差:', { de: 'Rangunterschied:' })} ${label.replace(/[▲▼]/, '')}`
+  if (label === '—') return tr('Not in other simulation\'s top 10', '不在另一次模拟的前 10 名中', { de: 'Nicht in den Top 10 der anderen Simulation' , fr: 'Pas dans le top 10 de l\'autre simulation'})
+  if (label === '=') return tr('Same rank in both simulations', '两次模拟中排名相同', { de: 'Gleicher Rang in beiden Simulationen' , fr: 'Même rang dans les deux simulations'})
+  return `${tr('Rank difference:', '排名差:', { de: 'Rangunterschied:' , fr: 'Différence de rang :'})} ${label.replace(/[▲▼]/, '')}`
 }
 
 // Chart point computation — shared Y-axis scale across both timelines

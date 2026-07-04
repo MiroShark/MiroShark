@@ -1,0 +1,1323 @@
+{
+  "total": 263,
+  "note_fr": "Vérifier la qualité, l'idiomaticité et la cohérence des traductions.",
+  "note_en": "Review the FR translations for quality, idiomaticity and consistency.",
+  "note_escaping": "Les \\' dans les strings single-quote sont des échappements normaux en JS (ex: d\\'URL = d'URL). Les \\${} dans les backtick strings sont des template literals JS (garder tels quels).",
+  "pairs": [
+    {
+      "file": "frontend/src/views/Home.vue",
+      "en": "01 · Reality Seeds",
+      "fr": "01 · Reality Seeds"
+    },
+    {
+      "file": "frontend/src/views/Home.vue",
+      "en": "01a · Just Ask",
+      "fr": "01a · Demandez simplement"
+    },
+    {
+      "file": "frontend/src/views/Home.vue",
+      "en": ">_ 02 · Simulation Prompt",
+      "fr": ">_ 02 · Prompt de simulation"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "A minimal full-viewport page built for live spectating — the belief bar, round counter, and progress bar update every 15 s while the simulation runs. Auto-unfurls as a card on Twitter / X, Discord, Slack, LinkedIn. Different format from the finished-result share above; tweet this URL mid-run to broadcast as it happens.",
+      "fr": "Une page plein écran minimale pour le direct — la barre de croyance, le compteur de tours et la barre de progression se mettent à jour toutes les 15 secondes. Se déplie automatiquement en carte sur Twitter/X, Discord, Slack, LinkedIn. Format différent du partage ci-dessus ; tweetez cette URL en cours de route pour diffuser en direct."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Agent roster fetch failed",
+      "fr": "Échec de la récupération du registre des agents"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Agents JSON URL",
+      "fr": "URL JSON des agents"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Already anchored — returned existing citation.",
+      "fr": "Déjà ancré — citation existante retournée."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Already submitted — returned existing record.",
+      "fr": "Déjà soumis — enregistrement existant retourné."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Anchoring on-chain…",
+      "fr": "Ancrage on-chain…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Any",
+      "fr": "Tout"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Atom 1.0 feed of the public gallery",
+      "fr": "Flux Atom 1.0 de la galerie publique"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Atom feed",
+      "fr": "Flux Atom"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Atom feed restricted to verified predictions only",
+      "fr": "Flux Atom limité aux prédictions vérifiées uniquement"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Atom feed ↗",
+      "fr": "Flux Atom ↗"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Auto-fires on simulation completion. Records the last 50 attempts on disk so a delivery failure is visible without checking server logs.",
+      "fr": "Se déclenche automatiquement à la fin de la simulation. Enregistre les 50 dernières tentatives sur le disque."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Auto-generated /sitemap.xml lists every published simulation",
+      "fr": "/sitemap.xml généré automatiquement liste les URL de partage et de direct de chaque simulation."
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Avg Latency",
+      "fr": "Latence moyenne"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Badge URL",
+      "fr": "URL du badge"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Bearish peak",
+      "fr": "Pic baissier"
+    },
+    {
+      "file": "frontend/src/components/DemographicBreakdown.vue",
+      "en": "Bearish:",
+      "fr": "Baissier :"
+    },
+    {
+      "file": "frontend/src/views/EmbedView.vue",
+      "en": "Belief drift across",
+      "fr": "Dérive des croyances sur"
+    },
+    {
+      "file": "frontend/src/components/BeliefDriftChart.vue",
+      "en": "Belief drift — bullish / neutral / bearish",
+      "fr": "Dérive des croyances — haussier / neutre / baissier"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "BibTeX citation (.bib)",
+      "fr": "Citation BibTeX (.bib)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Binary YES / NO probability shape a Polymarket trading bot expects — one curl call between",
+      "fr": "Format binaire OUI/NON attendu par un bot Polymarket. Directionnel : haussier = OUI élevé ; baissier = faible ; neutre = 0.5."
+    },
+    {
+      "file": "frontend/src/components/CounterfactualBranchPanel.vue",
+      "en": "Branch created:",
+      "fr": "Branche créée :"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Build a filtered feed",
+      "fr": "Construire un flux filtré"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Bullish peak",
+      "fr": "Pic haussier"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "CSV URL (paste into pandas.read_csv())",
+      "fr": "URL CSV (à coller dans pandas.read_csv())"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Called it",
+      "fr": "Réussi"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Channel notifications on completion",
+      "fr": "Notifications de canal à la fin"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Channel setup guide on GitHub",
+      "fr": "Guide de configuration du canal sur GitHub"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Child",
+      "fr": "Enfant"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Children",
+      "fr": "Enfants"
+    },
+    {
+      "file": "frontend/src/components/ZhWarningBanner.vue",
+      "en": "Chinese mode notice",
+      "fr": "Avis mode chinois"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Citation",
+      "fr": "Citation"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Clone URL",
+      "fr": "URL du clone"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Clone fetch failed",
+      "fr": "Échec de la récupération du clone"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Compact",
+      "fr": "Compact"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Compose on Warpcast",
+      "fr": "Composer sur Warpcast"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Confidence",
+      "fr": "Confiance"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Confidence tier",
+      "fr": "Niveau de confiance"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Config hash",
+      "fr": "Hash de configuration"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Consensus round",
+      "fr": "Tour de consensus"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Contested",
+      "fr": "Contesté"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Converging",
+      "fr": "Convergence"
+    },
+    {
+      "file": "frontend/src/views/Home.vue",
+      "en": "Copy failed — long-press the link to copy manually.",
+      "fr": "Échec de copie — appui long pour copier le lien manuellement."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not generate link",
+      "fr": "Impossible de générer le lien"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not load distribution stats.",
+      "fr": "Impossible de charger les statistiques de distribution."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not load the lineage.",
+      "fr": "Impossible de charger la lignée."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not load the reproduction config.",
+      "fr": "Impossible de charger la configuration de reproduction."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not publish to DKG.",
+      "fr": "Impossible de publier sur le DKG."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not queue retry.",
+      "fr": "Impossible de planifier une nouvelle tentative."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not revoke link",
+      "fr": "Impossible de révoquer le lien"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not submit to WaybackClaw.",
+      "fr": "Impossible de soumettre à WaybackClaw."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Could not submit to WaybackClaw.",
+      "fr": "Impossible de soumettre à WaybackClaw."
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Counterfactual",
+      "fr": "Contrefactuel"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Counterfactual drift",
+      "fr": "Dérive contrefactuelle"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Country pack",
+      "fr": "Pack de pays"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Direction",
+      "fr": "Direction"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Discord rich embeds are wired up — completed sims land as coloured cards",
+      "fr": "Les Discord rich embeds sont configurés — les simulations terminées apparaissent en cartes colorées"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Discoverable in web search",
+      "fr": "Découvrable dans la recherche web"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Download .jsonl",
+      "fr": "Télécharger .jsonl"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Download archive.zip",
+      "fr": "Télécharger archive.zip"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Download clone.json",
+      "fr": "Télécharger clone.json"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Download polymarket.json",
+      "fr": "Télécharger polymarket.json"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "ENG",
+      "fr": "ENG"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "Engagement received (likes, reposts, quotes)",
+      "fr": "Engagement reçu (likes, reposts, citations)"
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Error:",
+      "fr": "Erreur :"
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Errors",
+      "fr": "Erreurs"
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Errors",
+      "fr": "Erreurs"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Every newly published MiroShark simulation appears in your reader (Feedly, Readwise, Inoreader, Obsidian RSS, NetNewsWire, …). No login, no account.",
+      "fr": "Chaque nouvelle simulation publiée apparaît dans votre lecteur RSS. Sans connexion, sans compte."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Expires",
+      "fr": "Expire"
+    },
+    {
+      "file": "frontend/src/views/ReplayView.vue",
+      "en": "FOLLOW",
+      "fr": "SUIVRE"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Failed to compute counterfactual.",
+      "fr": "Échec du calcul contrefactuel."
+    },
+    {
+      "file": "frontend/src/components/PolymarketChart.vue",
+      "en": "Failed to load markets",
+      "fr": "Échec du chargement des marchés"
+    },
+    {
+      "file": "frontend/src/components/PolymarketChart.vue",
+      "en": "Failed to load prices",
+      "fr": "Échec du chargement des prix"
+    },
+    {
+      "file": "frontend/src/views/EmbedView.vue",
+      "en": "Failed to load simulation",
+      "fr": "Échec du chargement de la simulation"
+    },
+    {
+      "file": "frontend/src/views/EmbedView.vue",
+      "en": "Failed to load simulation",
+      "fr": "Échec du chargement de la simulation"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Farcaster Frame preview",
+      "fr": "Aperçu Farcaster Frame"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Final bullish share",
+      "fr": "Part haussière finale"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Finalized",
+      "fr": "Finalisé"
+    },
+    {
+      "file": "frontend/src/components/SettingsPanel.vue",
+      "en": "Firecrawl",
+      "fr": "Firecrawl"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Follow the gallery via RSS",
+      "fr": "Suivre la galerie via RSS"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "For public embeds, deploy MiroShark somewhere reachable from the internet.",
+      "fr": "Pour les embeds publics, déployez MiroShark à un endroit accessible depuis internet."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Format",
+      "fr": "Format"
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Full response:",
+      "fr": "Réponse complète :"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Generic JSON webhook is wired up — Zapier / Make / n8n / IFTTT / custom listeners",
+      "fr": "Le webhook JSON générique est configuré — Zapier / Make / n8n / IFTTT"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "IPFS + Nostr",
+      "fr": "IPFS + Nostr"
+    },
+    {
+      "file": "frontend/src/components/CounterfactualBranchPanel.vue",
+      "en": "Injection (breaking-news style)",
+      "fr": "Injection (type breaking news)"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "Interview",
+      "fr": "Interview"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "Interview this agent about their simulation",
+      "fr": "Interviewer cet agent sur sa simulation"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Jupyter notebook · IPYNB",
+      "fr": "Jupyter notebook · IPYNB"
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "LLM response:",
+      "fr": "Réponse LLM :"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Lineage",
+      "fr": "Lignée"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Lineage graph",
+      "fr": "Graphe de lignée"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Live on the public gallery",
+      "fr": "En direct sur la galerie publique"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading Polymarket prediction…",
+      "fr": "Chargement de la prédiction Polymarket…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading agent roster…",
+      "fr": "Chargement du registre des agents…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading clone configuration…",
+      "fr": "Chargement de la configuration clone…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading distribution data…",
+      "fr": "Chargement des données de distribution…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading lineage…",
+      "fr": "Chargement de la lignée…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading peak beliefs…",
+      "fr": "Chargement des croyances de pic…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading preview…",
+      "fr": "Publiez la simulation pour activer la carte de partage."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Loading volatility…",
+      "fr": "Chargement de la volatilité…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Max swing",
+      "fr": "Swing max"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Mean swing",
+      "fr": "Swing moyen"
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Messages:",
+      "fr": "Messages :"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Minimal",
+      "fr": "Minimal"
+    },
+    {
+      "file": "frontend/src/views/EmbedView.vue",
+      "en": "Missing simulation id",
+      "fr": "ID de simulation manquant"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Moderate",
+      "fr": "Modéré"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Most volatile",
+      "fr": "Plus volatil"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "NO probability",
+      "fr": "Probabilité NON"
+    },
+    {
+      "file": "frontend/src/views/EmbedView.vue",
+      "en": "No belief trajectory",
+      "fr": "Aucune trajectoire de croyance"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "No deliveries recorded yet. The webhook fires automatically on simulation completion.",
+      "fr": "Aucune livraison enregistrée. Le webhook se déclenche automatiquement."
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "No errors recorded.",
+      "fr": "Aucune erreur enregistrée."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "No on-chain citation yet for this simulation.",
+      "fr": "Pas encore de citation on-chain."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "No platforms enabled",
+      "fr": "Aucune plateforme activée"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "No surface serves recorded yet — share this simulation to see distribution data appear here.",
+      "fr": "Aucune consultation — partagez cette simulation pour voir les données de distribution."
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "No trajectory data available for this simulation.",
+      "fr": "Aucune donnée de trajectoire pour cette simulation."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "No trajectory data yet — every agent shows the profile-only neutral default.",
+      "fr": "Pas encore de données de trajectoire — profil neutre par défaut."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "No trajectory yet — the Frame will preview the share card until rounds are recorded.",
+      "fr": "Pas encore de trajectoire — le Frame affichera la carte de partage."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "No webhook URL configured.",
+      "fr": "Aucune URL de webhook configurée."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Open /sitemap.xml in a new tab",
+      "fr": "Ouvrir /sitemap.xml dans un nouvel onglet"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Open gallery ↗",
+      "fr": "Ouvrir la galerie ↗"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Open parent ↗",
+      "fr": "Ouvrir le parent ↗"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Open watch page ↗",
+      "fr": "Page de direct ↗"
+    },
+    {
+      "file": "frontend/src/components/TemplateGallery.vue",
+      "en": "Oracle seeds disabled server-side. Set ORACLE_SEED_ENABLED=true in .env to enable.",
+      "fr": "Oracle seeds désactivés côté serveur. Définissez ORACLE_SEED_ENABLED=true dans .env."
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Original",
+      "fr": "Original"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "Original posts created",
+      "fr": "Posts originaux créés"
+    },
+    {
+      "file": "frontend/src/views/Home.vue",
+      "en": "PDF · MD · TXT",
+      "fr": "PDF · MD · TXT"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "PST",
+      "fr": "PST"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Parent",
+      "fr": "Parent"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Path",
+      "fr": "Chemin"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Peak-round URL",
+      "fr": "URL du pic de tour"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Peak-round fetch failed",
+      "fr": "Échec de la récupération du pic de tour"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Per-agent belief sparklines — each agent",
+      "fr": "Sparklines par agent — position de chaque agent au fil des tours, colorée par stance finale."
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "Platforms ×5",
+      "fr": "Plateformes ×5"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Polymarket",
+      "fr": "Polymarket"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Polymarket URL",
+      "fr": "URL Polymarket"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Polymarket fetch failed",
+      "fr": "Échec de la récupération Polymarket"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "Posts ×1",
+      "fr": "Posts ×1"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Project",
+      "fr": "Projet"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish failed",
+      "fr": "Échec de la publication"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the BibTeX citation.",
+      "fr": "Publiez la simulation pour activer la citation BibTeX."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the Farcaster Frame.",
+      "fr": "Publiez la simulation pour activer le Farcaster Frame."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the Polymarket prediction.",
+      "fr": "Publiez la simulation pour activer la prédiction Polymarket."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the agent roster.",
+      "fr": "Publiez la simulation pour activer le registre des agents."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the belief replay GIF.",
+      "fr": "Publiez la simulation pour activer le GIF de rejeu."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the clone configuration.",
+      "fr": "Publiez la simulation pour activer la configuration clone."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the live watch page.",
+      "fr": "Publiez la simulation pour activer la page de direct."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the status badge.",
+      "fr": "Publiez la simulation pour activer le badge de statut."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish the simulation to enable the trajectory chart.",
+      "fr": "Publiez la simulation pour activer le graphique de trajectoire."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Publish to DKG",
+      "fr": "Publier sur le DKG"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Published to DKG. Citation anchored on-chain.",
+      "fr": "Publié sur le DKG. Citation ancrée on-chain."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "RSS 2.0 feed of the public gallery",
+      "fr": "Flux RSS 2.0 de la galerie publique"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "RSS feed",
+      "fr": "Flux RSS"
+    },
+    {
+      "file": "frontend/src/views/ComparisonView.vue",
+      "en": "Rank difference:",
+      "fr": "Différence de rang :"
+    },
+    {
+      "file": "frontend/src/components/HistoryDatabase.vue",
+      "en": "Record Outcome",
+      "fr": "Consigner le résultat"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Reddit",
+      "fr": "Reddit"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Refreshing…",
+      "fr": "Actualisation…"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Removed",
+      "fr": "Retiré"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Replay GIF URL (auto-plays in Discord / Slack)",
+      "fr": "URL du GIF de rejeu (lecture auto dans Discord/Slack)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Reproduce config · JSON",
+      "fr": "Config de reproduction · JSON"
+    },
+    {
+      "file": "frontend/src/components/InfluenceLeaderboard.vue",
+      "en": "Request failed.",
+      "fr": "Échec de la requête."
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Response preview:",
+      "fr": "Aperçu de la réponse :"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Risk tier",
+      "fr": "Niveau de risque"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Round — bullish %",
+      "fr": "Tour — % haussier"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "SMTP completion emails are wired up — every terminal-state transition ships a multipart/alternative message to the configured recipients",
+      "fr": "Les emails de fin SMTP sont configurés — chaque transition envoie un message multipart/alternative"
+    },
+    {
+      "file": "frontend/src/views/ComparisonView.vue",
+      "en": "Same rank in both simulations",
+      "fr": "Même rang dans les deux simulations"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Save outcome",
+      "fr": "Enregistrer le résultat"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Saving…",
+      "fr": "Enregistrement…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Scenario",
+      "fr": "Scénario"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Schema",
+      "fr": "Schéma"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Search indexing disabled",
+      "fr": "Indexation de recherche désactivée"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Set DISCORD_WEBHOOK_URL to enable Discord rich-embed cards",
+      "fr": "Définissez DISCORD_WEBHOOK_URL pour les cartes Discord"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Set SLACK_WEBHOOK_URL to enable Slack Block Kit messages",
+      "fr": "Définissez SLACK_WEBHOOK_URL pour les messages Slack"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Set SMTP_HOST and SMTP_TO to enable completion emails (SMTP_USER/SMTP_PASSWORD optional)",
+      "fr": "Définissez SMTP_HOST et SMTP_TO pour les emails de fin"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Set WEBHOOK_URL to enable the generic JSON webhook channel",
+      "fr": "Définissez WEBHOOK_URL pour le webhook JSON"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Setup guide ↗",
+      "fr": "Guide de configuration ↗"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Share URL (paste into a Farcaster cast)",
+      "fr": "URL de partage (à coller dans un cast Farcaster)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Share link (auto-unfurls with card)",
+      "fr": "Lien de partage (dépliage auto avec carte)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Showing first",
+      "fr": "Affichage des premiers"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Showing top 12 by final stance — full roster in the JSON payload.",
+      "fr": "Top 12 par position finale — registre complet dans le JSON."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Signal URL",
+      "fr": "URL du signal"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Signal fetch failed",
+      "fr": "Échec de la récupération du signal"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Sitemap disabled — set ENABLE_SITEMAP=true in your environment to surface this deployment",
+      "fr": "Sitemap désactivé — définissez ENABLE_SITEMAP=true pour exposer les simulations publiques dans la recherche."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Slack Block Kit messages are wired up — completed sims land as channel cards",
+      "fr": "Les messages Slack Block Kit sont configurés"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Snapshot",
+      "fr": "Instantané"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Sparklines URL",
+      "fr": "URL des sparklines"
+    },
+    {
+      "file": "frontend/src/components/DemographicBreakdown.vue",
+      "en": "Stance values average each agent",
+      "fr": "Valeurs de position moyennes de chaque agent sur les sujets suivis (-1 baissier à +1 haussier)."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Standard",
+      "fr": "Standard"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Std dev",
+      "fr": "Écart-type"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Strong",
+      "fr": "Fort"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Submit to WaybackClaw",
+      "fr": "Soumettre à WaybackClaw"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Submitted to WaybackClaw. Snapshot archived.",
+      "fr": "Soumis à WaybackClaw. Instantané archivé."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Submitting…",
+      "fr": "Soumission en cours…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Suggested title",
+      "fr": "Titre suggéré"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "The first share surface that returns inputs rather than outputs. clone_payload is wire-compatible with POST /api/simulation/create — fork the sim with one curl, or swap a knob (agent count, polymarket markets, demographic country) and POST a variant. simulation_requirement is echoed alongside for context; the create body itself does not accept the scenario text (that lives on the project).",
+      "fr": "La première surface de partage qui retourne des entrées plutôt que des sorties."
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "This simulation is now visible on",
+      "fr": "Cette simulation est maintenant visible sur"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Thread .txt URL (paste into a tweet scheduler)",
+      "fr": "URL du thread .txt (à coller dans un planificateur)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Toggle",
+      "fr": "Activez « Public » ci-dessus et ce run rejoint la galerie communautaire sur"
+    },
+    {
+      "file": "frontend/src/components/InteractionNetwork.vue",
+      "en": "Top Bridge",
+      "fr": "Pont principal"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "Top agents by influence",
+      "fr": "Agents les plus influents"
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "Total Tokens",
+      "fr": "Total des tokens"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Total rounds",
+      "fr": "Tours totaux"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Total serves",
+      "fr": "Consultations totales"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Trajectory · CSV",
+      "fr": "Trajectoire · CSV"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Trajectory · JSONL",
+      "fr": "Trajectoire · JSONL"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Tweet thread · JSON",
+      "fr": "Thread tweet · JSON"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Tweet thread · TXT",
+      "fr": "Thread tweet · TXT"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Twitter",
+      "fr": "Twitter"
+    },
+    {
+      "file": "frontend/src/views/ReplayView.vue",
+      "en": "UPVOTE",
+      "fr": "UPVOTE"
+    },
+    {
+      "file": "frontend/src/components/GraphPanel.vue",
+      "en": "UUID:",
+      "fr": "UUID :"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Update outcome",
+      "fr": "Mettre à jour le résultat"
+    },
+    {
+      "file": "frontend/src/components/TemplateGallery.vue",
+      "en": "Use live oracle data",
+      "fr": "Utiliser les données oracle en direct"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Verification snippets (Python / Node.js / curl)",
+      "fr": "Extraits de vérification (Python / Node.js / curl)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Verified only ↗",
+      "fr": "Vérifiés uniquement ↗"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Verify webhook signatures",
+      "fr": "Vérifier les signatures webhook"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "View on /verified ↗",
+      "fr": "Voir sur /verified ↗"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "View sitemap.xml ↗",
+      "fr": "Voir sitemap.xml ↗"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Volatility URL",
+      "fr": "URL de volatilité"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Volatility fetch failed",
+      "fr": "Échec de la récupération de la volatilité"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Volatility index",
+      "fr": "Indice de volatilité"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Watch URL (auto-unfurls with card on tweet)",
+      "fr": "URL du direct (dépliage auto sur tweet)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Watch live (broadcast page)",
+      "fr": "Voir en direct (page de diffusion)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Watch page",
+      "fr": "Page de direct"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "WaybackClaw archive",
+      "fr": "Archive WaybackClaw"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Webhook delivery history",
+      "fr": "Historique de livraison du webhook"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "What happened, in one or two sentences (max 280 chars)",
+      "fr": "En une ou deux phrases (max 280 car.)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Wide",
+      "fr": "Large"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "Working…",
+      "fr": "En cours…"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "YES probability",
+      "fr": "Probabilité OUI"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "attempt",
+      "fr": "tentative"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "block",
+      "fr": "bloc"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "branch",
+      "fr": "branche"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "cite.bib URL",
+      "fr": "URL cite.bib"
+    },
+    {
+      "file": "frontend/src/components/TrendingTopics.vue",
+      "en": "d ago",
+      "fr": "j"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "day",
+      "fr": "jour"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "days",
+      "fr": "jours"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "days left",
+      "fr": "jours restants"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "deflate-compressed",
+      "fr": "compressé (deflate)"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "deltas",
+      "fr": "deltas"
+    },
+    {
+      "file": "frontend/src/components/TemplateGallery.vue",
+      "en": "easy",
+      "fr": "facile"
+    },
+    {
+      "file": "frontend/src/components/TrendingTopics.vue",
+      "en": "h ago",
+      "fr": "h"
+    },
+    {
+      "file": "frontend/src/components/HistoryDatabase.vue",
+      "en": "high",
+      "fr": "élevée"
+    },
+    {
+      "file": "frontend/src/components/Step3Simulation.vue",
+      "en": "high",
+      "fr": "élevée"
+    },
+    {
+      "file": "frontend/src/components/DemographicBreakdown.vue",
+      "en": "influence",
+      "fr": "influence"
+    },
+    {
+      "file": "frontend/src/components/InteractionNetwork.vue",
+      "en": "interactions",
+      "fr": "interactions"
+    },
+    {
+      "file": "frontend/src/components/TrendingTopics.vue",
+      "en": "m ago",
+      "fr": "m"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "mainnet",
+      "fr": "mainnet"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "manifest.json with per-file SHA-256",
+      "fr": "manifest.json avec SHA-256 par fichier"
+    },
+    {
+      "file": "frontend/src/components/DemographicBreakdown.vue",
+      "en": "mean",
+      "fr": "moyenne"
+    },
+    {
+      "file": "frontend/src/components/InteractionNetwork.vue",
+      "en": "neutral",
+      "fr": "neutre"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "no consensus",
+      "fr": "pas de consensus"
+    },
+    {
+      "file": "frontend/src/components/WhatIfPanel.vue",
+      "en": "pts on bullish share",
+      "fr": "pts sur la part haussière"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "round",
+      "fr": "tour"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "testnet",
+      "fr": "testnet"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "the public gallery where anyone can browse published runs and fork them into their own simulations.",
+      "fr": "la galerie publique où chacun peut parcourir les runs publiés et les forker dans leurs propres simulations."
+    },
+    {
+      "file": "frontend/src/components/DebugPanel.vue",
+      "en": "unknown",
+      "fr": "inconnu"
+    },
+    {
+      "file": "frontend/src/components/DemographicBreakdown.vue",
+      "en": "unknown",
+      "fr": "inconnu"
+    },
+    {
+      "file": "frontend/src/components/DemographicBreakdown.vue",
+      "en": "volatility",
+      "fr": "volatilité"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "🔀 Counterfactual",
+      "fr": "🔀 Contrefactuel"
+    },
+    {
+      "file": "frontend/src/components/EmbedDialog.vue",
+      "en": "🪐 Forked",
+      "fr": "🪐 Forké"
+    }
+  ]
+}

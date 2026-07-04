@@ -44,7 +44,7 @@
           </span>
           <span class="meta-dot">·</span>
           <span class="meta-item difficulty" :class="template.difficulty">
-            {{ template.difficulty === 'easy' ? $tr('easy', '简单', { de: 'Einfach', fr: 'facile' }) : template.difficulty === 'medium' ? $tr('medium', '中等', { de: 'Mittel', fr: 'moyenne' }) : template.difficulty === 'hard' ? $tr('hard', '困难', { de: 'Schwer', fr: 'difficile' }) : template.difficulty }}
+            {{ template.difficulty === 'easy' ? $tr('easy', '简单', { de: 'Einfach', fr: 'facile' }) : template.difficulty === 'medium' ? $tr('medium', '中等', { de: 'Mittel', fr: 'Intermédiaire' }) : template.difficulty === 'hard' ? $tr('hard', '困难', { de: 'Schwer', fr: 'difficile' }) : template.difficulty }}
           </span>
         </div>
 
@@ -72,7 +72,7 @@
           :class="{ disabled: !capabilities.oracle_seed_enabled }"
           :title="capabilities.oracle_seed_enabled
             ? $tr(`Dispatch this template's oracle_tools against FeedOracle MCP before ingest.`, '在注入前调度此模板的 oracle_tools 对接 FeedOracle MCP。', { de: 'Die oracle_tools dieser Vorlage vor der Einspeisung gegen FeedOracle MCP ausführen.', fr: `Dispatchez les oracle_tools de ce modèle contre FeedOracle MCP avant l'ingest.` })
-            : $tr('Oracle seeds disabled server-side. Set ORACLE_SEED_ENABLED=true in .env to enable.', '服务器已禁用 Oracle 种子。请在 .env 中设置 ORACLE_SEED_ENABLED=true 启用。', { de: 'Oracle-Seeds serverseitig deaktiviert. Setzen Sie ORACLE_SEED_ENABLED=true in .env zum Aktivieren.' })"
+            : $tr('Oracle seeds disabled server-side. Set ORACLE_SEED_ENABLED=true in .env to enable.', '服务器已禁用 Oracle 种子。请在 .env 中设置 ORACLE_SEED_ENABLED=true 启用。', { de: 'Oracle-Seeds serverseitig deaktiviert. Setzen Sie ORACLE_SEED_ENABLED=true in .env zum Aktivieren.' , fr: 'Oracle seeds désactivés côté serveur. Définissez ORACLE_SEED_ENABLED=true dans .env.'})"
           @click.stop
         >
           <input
@@ -81,7 +81,7 @@
             :disabled="!capabilities.oracle_seed_enabled"
             @change="toggleOracleOpt(template.id, $event.target.checked)"
           />
-          <span>{{ $tr('Use live oracle data', '使用实时 oracle 数据', { de: 'Live-Oracle-Daten verwenden' }) }}</span>
+          <span>{{ $tr('Use live oracle data', '使用实时 oracle 数据', { de: 'Live-Oracle-Daten verwenden' , fr: 'Utiliser les données oracle en direct'}) }}</span>
         </label>
 
         <div class="card-actions">

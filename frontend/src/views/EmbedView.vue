@@ -209,8 +209,8 @@ const resolutionClass = computed(() => {
 })
 
 const chartAriaLabel = computed(() => {
-  if (!hasBelief.value) return tr('No belief trajectory', '无信念轨迹', { de: 'Keine Überzeugungstrajektorie' })
-  return `${tr('Belief drift across', '信念漂移历经', { de: 'Überzeugungsdrift über' })} ${summary.value.belief.rounds.length} ${tr('rounds', '轮次', { de: 'Runden', fr: 'tours' })}`
+  if (!hasBelief.value) return tr('No belief trajectory', '无信念轨迹', { de: 'Keine Überzeugungstrajektorie' , fr: 'Aucune trajectoire de croyance'})
+  return `${tr('Belief drift across', '信念漂移历经', { de: 'Überzeugungsdrift über' , fr: 'Dérive des croyances sur'})} ${summary.value.belief.rounds.length} ${tr('rounds', '轮次', { de: 'Runden', fr: 'tours' })}`
 })
 
 // Stacked area chart paths — stack order bullish (top), neutral (middle), bearish (bottom).
@@ -278,7 +278,7 @@ const isCompact = computed(() => {
 
 const fetchData = async () => {
   if (!simulationId.value) {
-    error.value = tr('Missing simulation id', '缺少模拟 ID', { de: 'Simulations-ID fehlt' })
+    error.value = tr('Missing simulation id', '缺少模拟 ID', { de: 'Simulations-ID fehlt' , fr: 'ID de simulation manquant'})
     loading.value = false
     return
   }
@@ -287,10 +287,10 @@ const fetchData = async () => {
     if (res?.success) {
       summary.value = res.data
     } else {
-      error.value = res?.error || tr('Failed to load simulation', '加载模拟失败', { de: 'Simulation konnte nicht geladen werden' })
+      error.value = res?.error || tr('Failed to load simulation', '加载模拟失败', { de: 'Simulation konnte nicht geladen werden' , fr: 'Échec du chargement de la simulation'})
     }
   } catch (err) {
-    error.value = err?.response?.data?.error || err?.message || tr('Failed to load simulation', '加载模拟失败', { de: 'Simulation konnte nicht geladen werden' })
+    error.value = err?.response?.data?.error || err?.message || tr('Failed to load simulation', '加载模拟失败', { de: 'Simulation konnte nicht geladen werden' , fr: 'Échec du chargement de la simulation'})
   } finally {
     loading.value = false
   }

@@ -6,7 +6,7 @@
         class="zh-warning-overlay"
         role="dialog"
         aria-modal="true"
-        :aria-label="tr('Chinese mode notice', '中文模式提示', { de: 'Hinweis zum chinesischen Modus' })"
+        :aria-label="tr('Chinese mode notice', '中文模式提示', { de: 'Hinweis zum chinesischen Modus' , fr: 'Avis mode chinois'})"
         @click.self="dismissZhWarning"
       >
         <div class="zh-warning-modal">

@@ -425,8 +425,8 @@ const getActionTypeLabel = (type) => {
     'CREATE_POST': tr('POST', '发帖', { de: 'BEITRAG', fr: 'POST' }), 'REPOST': tr('REPOST', '转发', { de: 'TEILEN', fr: 'REPOST' }), 'LIKE_POST': tr('LIKE', '点赞', { de: 'LIKE', fr: `J'AIME` }),
     'CREATE_COMMENT': tr('COMMENT', '评论', { de: 'KOMMENTAR', fr: 'COMMENTAIRE' }), 'LIKE_COMMENT': tr('LIKE', '点赞', { de: 'LIKE', fr: `J'AIME` }), 'DISLIKE_POST': tr('DISLIKE', '踩', { de: 'ABLEHNEN', fr: `JE N'AIME PAS` }),
     'DISLIKE_COMMENT': tr('DISLIKE', '踩', { de: 'ABLEHNEN', fr: `JE N'AIME PAS` }), 'MUTE': tr('MUTE', '静音', { de: 'STUMM' }), 'DO_NOTHING': tr('IDLE', '空闲', { de: 'INAKTIV' }),
-    'FOLLOW': tr('FOLLOW', '关注', { de: 'FOLGEN' }), 'SEARCH_POSTS': tr('SEARCH', '搜索', { de: 'SUCHEN' }), 'QUOTE_POST': tr('QUOTE', '引用', { de: 'ZITIEREN' }),
-    'UPVOTE_POST': tr('UPVOTE', '顶', { de: 'HOCHVOTEN' }), 'DOWNVOTE_POST': tr('DOWNVOTE', '踩', { de: 'DOWNVOTEN' }),
+    'FOLLOW': tr('FOLLOW', '关注', { de: 'FOLGEN' , fr: 'SUIVRE'}), 'SEARCH_POSTS': tr('SEARCH', '搜索', { de: 'SUCHEN' }), 'QUOTE_POST': tr('QUOTE', '引用', { de: 'ZITIEREN' }),
+    'UPVOTE_POST': tr('UPVOTE', '顶', { de: 'HOCHVOTEN' , fr: 'UPVOTE'}), 'DOWNVOTE_POST': tr('DOWNVOTE', '踩', { de: 'DOWNVOTEN' }),
     'BUY_SHARES': tr('BUY', '买入', { de: 'KAUFEN', fr: 'ACHETER' }), 'SELL_SHARES': tr('SELL', '卖出', { de: 'VERKAUFEN', fr: 'VENDRE' }), 'CREATE_MARKET': tr('NEW MARKET', '新市场', { de: 'NEUER MARKT', fr: 'NOUVEAU MARCHÉ' }),
     'BROWSE_MARKETS': tr('BROWSE', '浏览', { de: 'DURCHSUCHEN', fr: 'PARCOURIR' }), 'VIEW_PORTFOLIO': tr('PORTFOLIO', '组合', { de: 'PORTFOLIO', fr: 'PORTEFEUILLE' }), 'COMMENT_ON_MARKET': tr('COMMENT', '评论', { de: 'KOMMENTAR', fr: 'COMMENTAIRE' }),
   }

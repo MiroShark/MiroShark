@@ -344,7 +344,7 @@
         <textarea
           v-model="directorEventText"
           class="director-input"
-          :placeholder="$tr(`Describe the event (e.g. 'Central bank unexpectedly raised rates by 100bps')...`, `描述事件(例如「央行意外加息 100 个基点」)…`, { de: `Beschreibe das Ereignis (z. B. „Zentralbank erhöhte Zinsen unerwartet um 100 Bp.“…` })"
+          :placeholder="$tr(`Describe the event (e.g. 'Central bank unexpectedly raised rates by 100bps')...`, `描述事件(例如「央行意外加息 100 个基点」)…`, { de: `Beschreibe das Ereignis (z. B. „Zentralbank erhöhte Zinsen unerwartet um 100 Bp.“…` , fr: `Décrire l'événement (ex. « La banque centrale a augmenté les taux de 100 points de base »)...`})"
           maxlength="500"
           :disabled="directorEventsTotal >= 10 || isInjectingEvent"
           rows="3"
@@ -846,7 +846,7 @@ const qualityTooltip = computed(() => {
   if (!q) return ''
   const parts = [tr(`Health: ${q.health}`, `健康度:${q.health}`, { de: `Gesundheit: ${q.health}` }), tr(`Participation ${Math.round(q.participation_rate * 100)}%`, `参与度 ${Math.round(q.participation_rate * 100)}%`, { de: `Beteiligung ${Math.round(q.participation_rate * 100)}%` })]
   if (q.stance_entropy !== null) {
-    const level = q.stance_entropy >= 0.7 ? tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? tr('medium', '中', { de: 'mittel', fr: 'moyenne' }) : tr('low', '低', { de: 'niedrig', fr: 'faible' })
+    const level = q.stance_entropy >= 0.7 ? tr('high', '高', { de: 'hoch', fr: 'élevée' }) : q.stance_entropy >= 0.4 ? tr('medium', '中', { de: 'mittel', fr: 'Intermédiaire' }) : tr('low', '低', { de: 'niedrig', fr: 'faible' })
     parts.push(tr(`Diversity: ${level}`, `多样性:${level}`, { de: `Vielfalt: ${level}` }))
   }
   return parts.join(' · ')

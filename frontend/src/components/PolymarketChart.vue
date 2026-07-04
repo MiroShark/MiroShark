@@ -312,7 +312,7 @@ async function fetchMarkets({ autoSelect = false } = {}) {
       selectedId.value = topMarket.market_id
     }
   } catch (err) {
-    marketsError.value = err?.response?.data?.error || err?.message || tr('Failed to load markets', '加载市场失败', { de: 'Märkte konnten nicht geladen werden' })
+    marketsError.value = err?.response?.data?.error || err?.message || tr('Failed to load markets', '加载市场失败', { de: 'Märkte konnten nicht geladen werden' , fr: 'Échec du chargement des marchés'})
   } finally {
     marketsLoading.value = false
   }
@@ -328,7 +328,7 @@ async function fetchSelected() {
       selectedError.value = ''
     }
   } catch (err) {
-    selectedError.value = err?.response?.data?.error || err?.message || tr('Failed to load prices', '加载价格失败', { de: 'Preise konnten nicht geladen werden' })
+    selectedError.value = err?.response?.data?.error || err?.message || tr('Failed to load prices', '加载价格失败', { de: 'Preise konnten nicht geladen werden' , fr: 'Échec du chargement des prix'})
   }
 }
 

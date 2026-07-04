@@ -58,12 +58,12 @@
 
     <!-- Injection text -->
     <div class="cf-form-row cf-form-row--stack">
-      <label class="cf-form-label">{{ $tr('Injection (breaking-news style)', '注入内容(突发新闻风格)', { de: 'Injektion (Breaking-News-Stil)' }) }}</label>
+      <label class="cf-form-label">{{ $tr('Injection (breaking-news style)', '注入内容(突发新闻风格)', { de: 'Injektion (Breaking-News-Stil)' , fr: 'Injection (type breaking news)'}) }}</label>
       <textarea
         class="cf-form-textarea"
         v-model="injectionText"
         maxlength="2000"
-        :placeholder="$tr(`The board has just announced the CEO's resignation, effective immediately. The CFO steps in as interim lead.`, '董事会刚刚宣布 CEO 立即辞职,CFO 作为临时负责人接任。', { de: 'Der Vorstand hat soeben den sofortigen Rücktritt des CEO bekanntgegeben. Der CFO übernimmt als Interims-Chef.' })"
+        :placeholder="$tr(`The board has just announced the CEO's resignation, effective immediately. The CFO steps in as interim lead.`, '董事会刚刚宣布 CEO 立即辞职,CFO 作为临时负责人接任。', { de: 'Der Vorstand hat soeben den sofortigen Rücktritt des CEO bekanntgegeben. Der CFO übernimmt als Interims-Chef.' , fr: 'Le conseil vient d\'annoncer la démission du PDG, avec effet immédiat.'})"
         rows="4"
         :disabled="busy"
       ></textarea>
@@ -74,7 +74,7 @@
 
     <div v-if="error" class="cf-error">{{ error }}</div>
     <div v-if="result" class="cf-result">
-      {{ $tr('Branch created:', '分支已创建:', { de: 'Zweig erstellt:' }) }} <code>{{ result.simulation_id }}</code>
+      {{ $tr('Branch created:', '分支已创建:', { de: 'Zweig erstellt:' , fr: 'Branche créée :'}) }} <code>{{ result.simulation_id }}</code>
       <span v-if="result.config_diff?.counterfactual?.label">
         · "{{ result.config_diff.counterfactual.label }}"
       </span>

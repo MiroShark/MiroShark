@@ -161,16 +161,16 @@
         <span class="insight-text">{{ networkData.insights.top_hub.description }}</span>
       </div>
       <div v-if="networkData.insights.top_bridge" class="insight-card">
-        <span class="insight-label">{{ $tr('Top Bridge', '顶级桥梁', { de: 'Wichtigste Brücke' }) }}</span>
+        <span class="insight-label">{{ $tr('Top Bridge', '顶级桥梁', { de: 'Wichtigste Brücke' , fr: 'Pont principal'}) }}</span>
         <span class="insight-text">{{ networkData.insights.top_bridge.description }}</span>
       </div>
       <div v-if="networkData.insights.echo_chamber" class="insight-card">
-        <span class="insight-label">{{ $tr('Echo Chamber', '回音室', { de: 'Echokammer' }) }}</span>
+        <span class="insight-label">{{ $tr('Echo Chamber', '回音室', { de: 'Echokammer' , fr: 'Chambre d\'écho'}) }}</span>
         <span class="insight-text">{{ networkData.insights.echo_chamber.description }}</span>
       </div>
       <div class="insight-card stats-row">
         <span class="insight-stat">{{ networkData.insights.total_nodes }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }}</span>
-        <span class="insight-stat">{{ networkData.insights.total_edges }} {{ $tr('interactions', '互动', { de: 'Interaktionen' }) }}</span>
+        <span class="insight-stat">{{ networkData.insights.total_edges }} {{ $tr('interactions', '互动', { de: 'Interaktionen' , fr: 'interactions'}) }}</span>
       </div>
     </div>
   </div>
@@ -191,7 +191,7 @@ import { tr } from '../i18n'
 const translateStance = (stance) => {
   if (stance === 'bullish') return tr('bullish', '看涨', { de: 'optimistisch', fr: 'haussier' })
   if (stance === 'bearish') return tr('bearish', '看跌', { de: 'pessimistisch', fr: 'baissier' })
-  if (stance === 'neutral') return tr('neutral', '中立', { de: 'neutral' })
+  if (stance === 'neutral') return tr('neutral', '中立', { de: 'neutral' , fr: 'neutre'})
   return stance
 }
 
@@ -530,7 +530,7 @@ const load = async () => {
     } else if (res.success && !res.data) {
       networkData.value = null
     } else {
-      error.value = res.error || tr('Failed to load interaction network.', '加载互动网络失败。', { de: 'Interaktionsnetzwerk konnte nicht geladen werden.' })
+      error.value = res.error || tr('Failed to load interaction network.', '加载互动网络失败。', { de: 'Interaktionsnetzwerk konnte nicht geladen werden.' , fr: 'Échec du chargement du réseau d\'interactions.'})
     }
   } catch (err) {
     error.value = err.message || tr('Failed to load interaction network.', '加载互动网络失败。', { de: 'Interaktionsnetzwerk konnte nicht geladen werden.' })
@@ -546,7 +546,7 @@ const _buildExportCanvas = () => {
   const nodeCount = (networkData.value?.nodes || []).length
   const edgeCount = (networkData.value?.edges || []).length
   const { drawHeader, headerHeight } = buildTitledHeader({
-    title: tr('Interaction Network', '互动网络', { de: 'Interaktionsnetzwerk' }),
+    title: tr('Interaction Network', '互动网络', { de: 'Interaktionsnetzwerk' , fr: 'Réseau d\'interactions'}),
     subtitle: `${nodeCount} ${tr('agents', '智能体', { de: 'Agenten', fr: 'agents' })} · ${edgeCount} ${tr('edges', '条边', { de: 'Kanten' })}`,
     width: W,
   })

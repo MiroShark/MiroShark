@@ -96,7 +96,7 @@
         </p>
 
         <p class="ms-slogan">
-          {{ $tr("Don't predict the future. Simulate it", '不要预测未来。模拟它', { de: 'Nicht die Zukunft vorhersagen. Sie simulieren' }) }}<span class="ms-cursor">_</span>
+          {{ $tr("Don't predict the future. Simulate it", '不要预测未来。模拟它', { de: 'Nicht die Zukunft vorhersagen. Sie simulieren' , fr: 'Ne prédisez pas l\'avenir. Simulez-le.'}) }}<span class="ms-cursor">_</span>
         </p>
 
         <button class="ms-scroll-btn" @click="scrollToBottom" aria-label="Scroll to console">↓</button>
@@ -153,8 +153,8 @@
             <!-- 01 — Files -->
             <section class="ms-block">
               <header class="ms-block-head">
-                <span class="ms-block-label">{{ $tr('01 · Reality Seeds', '01 · 现实种子', { de: '01 · Faktenbasis (Seeds)' }) }}</span>
-                <span class="ms-block-meta">{{ $tr('PDF · MD · TXT', 'PDF · MD · TXT', { de: 'PDF · MD · TXT' }) }}</span>
+                <span class="ms-block-label">{{ $tr('01 · Reality Seeds', '01 · 现实种子', { de: '01 · Faktenbasis (Seeds)' , fr: '01 · Reality Seeds'}) }}</span>
+                <span class="ms-block-meta">{{ $tr('PDF · MD · TXT', 'PDF · MD · TXT', { de: 'PDF · MD · TXT' , fr: 'PDF · MD · TXT'}) }}</span>
               </header>
 
               <div
@@ -194,7 +194,7 @@
             <!-- 01a — Ask -->
             <section class="ms-block">
               <header class="ms-block-head">
-                <span class="ms-block-label">{{ $tr('01a · Just Ask', '01a · 直接提问', { de: '01a · Einfach fragen' }) }}</span>
+                <span class="ms-block-label">{{ $tr('01a · Just Ask', '01a · 直接提问', { de: '01a · Einfach fragen' , fr: '01a · Demandez simplement'}) }}</span>
                 <span class="ms-block-meta">{{ $tr('No document? Type a question, we synthesize a briefing.', '没有文档?输入一个问题,我们会合成一份简报。', { de: 'Kein Dokument? Eine Frage eingeben, wir erstellen ein Briefing.', fr: 'Aucun document ? Tapez une question, nous synthétisons un brief.' }) }}</span>
               </header>
 
@@ -240,7 +240,7 @@
             <!-- 01b — URL -->
             <section class="ms-block">
               <header class="ms-block-head">
-                <span class="ms-block-label">{{ $tr('01b · URL Import', '01b · 网址导入', { de: '01b · URL-Import' }) }}</span>
+                <span class="ms-block-label">{{ $tr('01b · URL Import', '01b · 网址导入', { de: '01b · URL-Import' , fr: '01b · Import d\'URL'}) }}</span>
                 <span class="ms-block-meta">{{ $tr('Paste article or report URL', '粘贴文章或报告网址', { de: 'Artikel- oder Berichts-URL einfügen', fr: `Collez l'URL d'un article ou d'un rapport` }) }}</span>
               </header>
 
@@ -289,7 +289,7 @@
             <!-- 02 — Prompt -->
             <section class="ms-block">
               <header class="ms-block-head">
-                <span class="ms-block-label">{{ $tr('>_ 02 · Simulation Prompt', '>_ 02 · 模拟提示词', { de: '>_ 02 · Simulationsprompt' }) }}</span>
+                <span class="ms-block-label">{{ $tr('>_ 02 · Simulation Prompt', '>_ 02 · 模拟提示词', { de: '>_ 02 · Simulationsprompt' , fr: '>_ 02 · Prompt de simulation'}) }}</span>
               </header>
 
               <ScenarioSuggestions
@@ -599,22 +599,22 @@ const prefillBannerCopy = computed(() => {
     case 'url':
       return tr('Document pre-filled from a shared link — review the scenario below before launching.',
         '已通过分享链接预填文档 — 启动前请检查下方情景设置。',
-        { de: 'Dokument aus geteiltem Link vorausgefüllt — Szenario unten vor dem Starten prüfen.' },
+        { de: 'Dokument aus geteiltem Link vorausgefüllt — Szenario unten vor dem Starten prüfen.' , fr: 'Document pré-rempli depuis un lien partagé — révisez le scénario ci-dessous avant de lancer.'},
       )
     case 'ask':
       return tr('Question pre-filled from a shared link — click Research to synthesize the briefing, or edit the question first.',
         '已通过分享链接预填问题 — 点击「研究」合成简报,或先修改问题。',
-        { de: 'Frage aus geteiltem Link vorausgefüllt — auf „Recherche" klicken, um das Briefing zu erstellen, oder die Frage zuerst bearbeiten.' },
+        { de: 'Frage aus geteiltem Link vorausgefüllt — auf „Recherche" klicken, um das Briefing zu erstellen, oder die Frage zuerst bearbeiten.' , fr: 'Question pré-remplie depuis un lien partagé — cliquez sur Rechercher pour synthétiser le briefing.'},
       )
     case 'mixed':
       return tr('Scenario, document, and question pre-filled from a shared link — review the form below before launching.',
         '情景、文档与问题均已通过分享链接预填 — 启动前请检查下方表单。',
-        { de: 'Szenario, Dokument und Frage aus geteiltem Link vorausgefüllt — Formular unten vor dem Starten prüfen.' },
+        { de: 'Szenario, Dokument und Frage aus geteiltem Link vorausgefüllt — Formular unten vor dem Starten prüfen.' , fr: 'Scénario, document et question pré-remplis — vérifiez le formulaire.'},
       )
     default:
       return tr('Scenario pre-filled from a shared link — review the form below before launching.',
         '已通过分享链接预填情景 — 启动前请检查下方表单。',
-        { de: 'Szenario aus geteiltem Link vorausgefüllt — Formular unten vor dem Starten prüfen.' },
+        { de: 'Szenario aus geteiltem Link vorausgefüllt — Formular unten vor dem Starten prüfen.' , fr: 'Scénario pré-rempli depuis un lien partagé — vérifiez le formulaire.'},
       )
   }
 })
@@ -627,7 +627,7 @@ const autoLaunchTemplate = async (slug) => {
     if (!res?.success || !res.data) {
       templateAutoLaunchError.value = tr(`Couldn't load that template. The link may be stale.`,
         '无法加载该模板。链接可能已失效。',
-        { de: 'Vorlage konnte nicht geladen werden. Der Link ist möglicherweise veraltet.' },
+        { de: 'Vorlage konnte nicht geladen werden. Der Link ist möglicherweise veraltet.' , fr: 'Impossible de charger ce modèle. Le lien est peut-être périmé.'},
       )
       return
     }
@@ -718,7 +718,7 @@ const copyScenarioShareLink = async () => {
     setTimeout(() => { shareLinkCopiedTick.value++ }, 2300)
   } catch (err) {
     shareLinkError.value =
-      err?.message || tr('Copy failed — long-press the link to copy manually.', '复制失败 — 长按链接手动复制。', { de: 'Kopieren fehlgeschlagen — Link lang drücken, um manuell zu kopieren.' })
+      err?.message || tr('Copy failed — long-press the link to copy manually.', '复制失败 — 长按链接手动复制。', { de: 'Kopieren fehlgeschlagen — Link lang drücken, um manuell zu kopieren.' , fr: 'Échec de copie — appui long pour copier le lien manuellement.'})
   }
 }
 </script>

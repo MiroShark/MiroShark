@@ -41,8 +41,8 @@
               <label class="share-link-expiry">
                 <span>{{ $tr('Expires in', '有效期', { de: 'Läuft ab in', fr: 'Expire dans' }) }}</span>
                 <select v-model.number="shareLinkExpiresInDays" :disabled="shareLinkBusy">
-                  <option :value="1">1 {{ $tr('day', '天', { de: 'Tag' }) }}</option>
-                  <option :value="7">7 {{ $tr('days', '天', { de: 'Tagen' }) }}</option>
+                  <option :value="1">1 {{ $tr('day', '天', { de: 'Tag' , fr: 'jour'}) }}</option>
+                  <option :value="7">7 {{ $tr('days', '天', { de: 'Tagen' , fr: 'jours'}) }}</option>
                   <option :value="30">30 {{ $tr('days', '天', { de: 'Tagen' }) }}</option>
                   <option :value="90">90 {{ $tr('days', '天', { de: 'Tagen' }) }}</option>
                   <option :value="365">365 {{ $tr('days', '天', { de: 'Tagen' }) }}</option>
@@ -53,7 +53,7 @@
                 @click="mintShareLink"
                 :disabled="shareLinkBusy || !simulationId"
               >
-                {{ shareLinkBusy ? $tr('Working…', '处理中…', { de: 'Verarbeitung…' }) : $tr('Generate link', '生成链接', { de: 'Link generieren' }) }}
+                {{ shareLinkBusy ? $tr('Working…', '处理中…', { de: 'Verarbeitung…' , fr: 'En cours…'}) : $tr('Generate link', '生成链接', { de: 'Link generieren' , fr: 'Générer le lien'}) }}
               </button>
             </div>
             <p v-if="shareLinkError" class="share-link-error">{{ shareLinkError }}</p>
@@ -64,9 +64,9 @@
                 </div>
                 <div class="share-link-meta">
                   <span>
-                    {{ $tr('Expires', '过期时间', { de: 'Läuft ab' }) }}: {{ entry.expires_at_iso || '—' }}
+                    {{ $tr('Expires', '过期时间', { de: 'Läuft ab' , fr: 'Expire'}) }}: {{ entry.expires_at_iso || '—' }}
                     <template v-if="entry.expires_in_days_remaining != null">
-                      ({{ entry.expires_in_days_remaining }} {{ $tr('days left', '天剩余', { de: 'Tage verbleibend' }) }})
+                      ({{ entry.expires_in_days_remaining }} {{ $tr('days left', '天剩余', { de: 'Tage verbleibend' , fr: 'jours restants'}) }})
                     </template>
                   </span>
                 </div>
@@ -178,14 +178,14 @@
                 @error="onShareCardError"
               />
               <div v-else class="share-card-empty">
-                {{ isPublic ? $tr('Loading preview…', '加载预览中…', { de: 'Vorschau wird geladen…' }) : $tr('Publish the simulation to enable the share card.', '发布模拟以启用分享卡片。', { de: 'Veröffentliche die Simulation, um die Share Card zu aktivieren.' }) }}
+                {{ isPublic ? $tr('Loading preview…', '加载预览中…', { de: 'Vorschau wird geladen…' , fr: 'Chargement de l\'aperçu…'}) : $tr('Publish the simulation to enable the share card.', '发布模拟以启用分享卡片。', { de: 'Veröffentliche die Simulation, um die Share Card zu aktivieren.' , fr: 'Publiez la simulation pour activer la carte de partage.'}) }}
               </div>
             </div>
 
             <div class="share-card-actions">
               <div class="snippet-block share-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Share link (auto-unfurls with card)', '分享链接(随卡片自动展开)', { de: 'Freigabelink (entfaltet sich automatisch mit Card)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Share link (auto-unfurls with card)', '分享链接(随卡片自动展开)', { de: 'Freigabelink (entfaltet sich automatisch mit Card)' , fr: 'Lien de partage (dépliage auto avec carte)'}) }}</span>
                   <button class="snippet-copy-btn" @click="copy('share')" :disabled="!isPublic">
                     {{ copied === 'share' ? '✓ ' + $tr('Copied', '已复制', { de: 'Kopiert', fr: 'Copié' }) : $tr('Copy link', '复制链接', { de: 'Link kopieren', fr: 'Copier le lien' }) }}
                   </button>
@@ -223,9 +223,9 @@
               <div class="watch-head">
                 <span class="watch-icon">📡</span>
                 <div class="watch-head-body">
-                  <div class="watch-title">{{ $tr('Watch live (broadcast page)', '实时观看(直播页面)', { de: 'Live zuschauen (Broadcast-Seite)' }) }}</div>
+                  <div class="watch-title">{{ $tr('Watch live (broadcast page)', '实时观看(直播页面)', { de: 'Live zuschauen (Broadcast-Seite)' , fr: 'Voir en direct (page de diffusion)'}) }}</div>
                   <div class="watch-sub">
-                    {{ $tr('A minimal full-viewport page built for live spectating — the belief bar, round counter, and progress bar update every 15 s while the simulation runs. Auto-unfurls as a card on Twitter / X, Discord, Slack, LinkedIn. Different format from the finished-result share above; tweet this URL mid-run to broadcast as it happens.', '专为实时观看打造的极简全屏页面 — 信念条、轮次计数器和进度条在模拟运行时每 15 秒更新一次。在 Twitter / X、Discord、Slack、LinkedIn 上自动展开为卡片。与上方的完成结果分享不同;在运行过程中发推此 URL 即可实时广播。', { de: 'Eine minimalistische Vollbild-Seite für Live-Zuschauer — der Überzeugungsbalken, Rundenanzahl und Fortschrittsbalken aktualisieren sich alle 15 Sekunden während die Simulation läuft. Entfaltet sich automatisch als Card auf Twitter/X, Discord, Slack, LinkedIn. Anderes Format als die oben stehende Ergebnis-Freigabe; tweete diese URL während der Laufzeit für Live-Übertragung.' }) }}
+                    {{ $tr('A minimal full-viewport page built for live spectating — the belief bar, round counter, and progress bar update every 15 s while the simulation runs. Auto-unfurls as a card on Twitter / X, Discord, Slack, LinkedIn. Different format from the finished-result share above; tweet this URL mid-run to broadcast as it happens.', '专为实时观看打造的极简全屏页面 — 信念条、轮次计数器和进度条在模拟运行时每 15 秒更新一次。在 Twitter / X、Discord、Slack、LinkedIn 上自动展开为卡片。与上方的完成结果分享不同;在运行过程中发推此 URL 即可实时广播。', { de: 'Eine minimalistische Vollbild-Seite für Live-Zuschauer — der Überzeugungsbalken, Rundenanzahl und Fortschrittsbalken aktualisieren sich alle 15 Sekunden während die Simulation läuft. Entfaltet sich automatisch als Card auf Twitter/X, Discord, Slack, LinkedIn. Anderes Format als die oben stehende Ergebnis-Freigabe; tweete diese URL während der Laufzeit für Live-Übertragung.' , fr: 'Une page plein écran minimale pour le direct — la barre de croyance, le compteur de tours et la barre de progression se mettent à jour toutes les 15 secondes. Se déplie automatiquement en carte sur Twitter/X, Discord, Slack, LinkedIn. Format différent du partage ci-dessus ; tweetez cette URL en cours de route pour diffuser en direct.'}) }}
                   </div>
                 </div>
               </div>
@@ -238,16 +238,16 @@
                   target="_blank"
                   rel="noopener"
                 >
-                  👀 {{ $tr('Open watch page ↗', '打开观看页面 ↗', { de: 'Watch-Seite öffnen ↗' }) }}
+                  👀 {{ $tr('Open watch page ↗', '打开观看页面 ↗', { de: 'Watch-Seite öffnen ↗' , fr: 'Page de direct ↗'}) }}
                 </a>
                 <span v-if="!isPublic" class="watch-empty">
-                  {{ $tr('Publish the simulation to enable the live watch page.', '发布模拟以启用实时观看页面。', { de: 'Veröffentliche die Simulation, um die Live-Watch-Seite zu aktivieren.' }) }}
+                  {{ $tr('Publish the simulation to enable the live watch page.', '发布模拟以启用实时观看页面。', { de: 'Veröffentliche die Simulation, um die Live-Watch-Seite zu aktivieren.' , fr: 'Publiez la simulation pour activer la page de direct.'}) }}
                 </span>
               </div>
 
               <div class="snippet-block watch-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Watch URL (auto-unfurls with card on tweet)', '观看 URL(发推时随卡片自动展开)', { de: 'Watch-URL (entfaltet sich beim Tweet automatisch als Card)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Watch URL (auto-unfurls with card on tweet)', '观看 URL(发推时随卡片自动展开)', { de: 'Watch-URL (entfaltet sich beim Tweet automatisch als Card)' , fr: 'URL du direct (dépliage auto sur tweet)'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('watch')"
@@ -295,13 +295,13 @@
                 </div>
               </div>
               <div v-else class="replay-empty">
-                {{ $tr('Publish the simulation to enable the belief replay GIF.', '发布模拟以启用信念回放 GIF。', { de: 'Veröffentliche die Simulation, um das Überzeugungswiedergabe-GIF zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the belief replay GIF.', '发布模拟以启用信念回放 GIF。', { de: 'Veröffentliche die Simulation, um das Überzeugungswiedergabe-GIF zu aktivieren.' , fr: 'Publiez la simulation pour activer le GIF de rejeu.'}) }}
               </div>
 
               <div class="replay-actions">
                 <div class="snippet-block share-snippet">
                   <div class="snippet-head">
-                    <span class="snippet-label">{{ $tr('Replay GIF URL (auto-plays in Discord / Slack)', '回放 GIF URL(在 Discord / Slack 中自动播放)', { de: 'Wiedergabe-GIF-URL (automatische Wiedergabe in Discord / Slack)' }) }}</span>
+                    <span class="snippet-label">{{ $tr('Replay GIF URL (auto-plays in Discord / Slack)', '回放 GIF URL(在 Discord / Slack 中自动播放)', { de: 'Wiedergabe-GIF-URL (automatische Wiedergabe in Discord / Slack)' , fr: 'URL du GIF de rejeu (lecture auto dans Discord/Slack)'}) }}</span>
                     <button
                       class="snippet-copy-btn"
                       @click="copy('replay')"
@@ -408,16 +408,16 @@
                   :href="trajectoryJsonlUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-trajectory.jsonl`"
                 >
-                  ↓ {{ $tr('Download .jsonl', '下载 .jsonl', { de: '.jsonl herunterladen' }) }}
+                  ↓ {{ $tr('Download .jsonl', '下载 .jsonl', { de: '.jsonl herunterladen' , fr: 'Télécharger .jsonl'}) }}
                 </a>
                 <span v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to enable the trajectory export.', '发布模拟以启用轨迹数据导出。', { de: 'Veröffentliche die Simulation, um den Trajektorienexport zu aktivieren.' }) }}
+                  {{ $tr('Publish the simulation to enable the trajectory export.', '发布模拟以启用轨迹数据导出。', { de: 'Veröffentliche die Simulation, um den Trajektorienexport zu aktivieren.' , fr: 'Publiez la simulation pour activer l\'export de trajectoire.'}) }}
                 </span>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('CSV URL (paste into pandas.read_csv())', 'CSV URL(粘贴至 pandas.read_csv())', { de: 'CSV-URL (in pandas.read_csv() einfügen)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('CSV URL (paste into pandas.read_csv())', 'CSV URL(粘贴至 pandas.read_csv())', { de: 'CSV-URL (in pandas.read_csv() einfügen)' , fr: 'URL CSV (à coller dans pandas.read_csv())'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('trajectoryCsv')"
@@ -470,13 +470,13 @@
                   ↓ {{ $tr('Download .svg', '下载 .svg', { de: '.svg herunterladen', fr: 'Télécharger .svg' }) }}
                 </a>
                 <span v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to enable the trajectory chart.', '发布模拟以启用轨迹图。', { de: 'Veröffentliche die Simulation, um den Trajektorienchart zu aktivieren.' }) }}
+                  {{ $tr('Publish the simulation to enable the trajectory chart.', '发布模拟以启用轨迹图。', { de: 'Veröffentliche die Simulation, um den Trajektorienchart zu aktivieren.' , fr: 'Publiez la simulation pour activer le graphique de trajectoire.'}) }}
                 </span>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Chart URL (paste into <img src="…">)', '图表 URL(粘贴至 <img src="…">)', { de: 'Chart-URL (in <img src="…"> einfügen)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Chart URL (paste into <img src="…">)', '图表 URL(粘贴至 <img src="…">)', { de: 'Chart-URL (in <img src="…"> einfügen)' , fr: 'URL du graphique (à coller dans <img src="…">)'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('chartSvg')"
@@ -527,7 +527,7 @@
               <div v-if="isPublic && farcasterFrameImage" class="chart-svg-preview farcaster-frame-preview">
                 <img
                   :src="farcasterFrameImage"
-                  :alt="$tr('Farcaster Frame preview', 'Farcaster Frame 预览', { de: 'Farcaster Frame Vorschau' })"
+                  :alt="$tr('Farcaster Frame preview', 'Farcaster Frame 预览', { de: 'Farcaster Frame Vorschau' , fr: 'Aperçu Farcaster Frame'})"
                   loading="lazy"
                   class="chart-svg-img"
                 />
@@ -541,22 +541,22 @@
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  🟣 {{ $tr('Compose on Warpcast', '在 Warpcast 中撰写', { de: 'Auf Warpcast verfassen' }) }}
+                  🟣 {{ $tr('Compose on Warpcast', '在 Warpcast 中撰写', { de: 'Auf Warpcast verfassen' , fr: 'Composer sur Warpcast'}) }}
                 </a>
                 <span v-if="!isPublic" class="transcript-empty">
-                  {{ $tr('Publish the simulation to enable the Farcaster Frame.', '发布模拟以启用 Farcaster Frame。', { de: 'Veröffentliche die Simulation, um den Farcaster Frame zu aktivieren.' }) }}
+                  {{ $tr('Publish the simulation to enable the Farcaster Frame.', '发布模拟以启用 Farcaster Frame。', { de: 'Veröffentliche die Simulation, um den Farcaster Frame zu aktivieren.' , fr: 'Publiez la simulation pour activer le Farcaster Frame.'}) }}
                 </span>
                 <span
                   v-else-if="farcasterHasTrajectory === false"
                   class="transcript-empty farcaster-frame-fallback"
                 >
-                  {{ $tr('No trajectory yet — the Frame will preview the share card until rounds are recorded.', '尚无轨迹数据 — 在记录回合之前,Frame 将预览分享卡片。', { de: 'Noch keine Trajektorie — der Frame zeigt die Share Card in der Vorschau, bis Runden aufgezeichnet wurden.' }) }}
+                  {{ $tr('No trajectory yet — the Frame will preview the share card until rounds are recorded.', '尚无轨迹数据 — 在记录回合之前,Frame 将预览分享卡片。', { de: 'Noch keine Trajektorie — der Frame zeigt die Share Card in der Vorschau, bis Runden aufgezeichnet wurden.' , fr: 'Pas encore de trajectoire — le Frame affichera la carte de partage.'}) }}
                 </span>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Share URL (paste into a Farcaster cast)', '分享 URL(粘贴到 Farcaster Cast)', { de: 'Freigabe-URL (in einen Farcaster-Cast einfügen)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Share URL (paste into a Farcaster cast)', '分享 URL(粘贴到 Farcaster Cast)', { de: 'Freigabe-URL (in einen Farcaster-Cast einfügen)' , fr: 'URL de partage (à coller dans un cast Farcaster)'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('farcasterShare')"
@@ -600,12 +600,12 @@
                 />
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable the status badge.', '发布模拟以启用状态徽章。', { de: 'Veröffentliche die Simulation, um das Statusabzeichen zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the status badge.', '发布模拟以启用状态徽章。', { de: 'Veröffentliche die Simulation, um das Statusabzeichen zu aktivieren.' , fr: 'Publiez la simulation pour activer le badge de statut.'}) }}
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Badge URL', '徽章 URL', { de: 'Abzeichen-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Badge URL', '徽章 URL', { de: 'Abzeichen-URL' , fr: 'URL du badge'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('badgeUrl')"
@@ -670,17 +670,17 @@
 
               <div v-if="isPublic && signalPayload" class="signal-preview">
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Direction', '方向', { de: 'Richtung' }) }}</span>
+                  <span class="signal-label">{{ $tr('Direction', '方向', { de: 'Richtung' , fr: 'Direction'}) }}</span>
                   <span :class="['signal-value', `signal-direction-${signalPayload.direction.toLowerCase()}`]">
                     {{ signalPayload.direction }}
                   </span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Confidence', '置信度', { de: 'Konfidenz' }) }}</span>
+                  <span class="signal-label">{{ $tr('Confidence', '置信度', { de: 'Konfidenz' , fr: 'Confiance'}) }}</span>
                   <span class="signal-value">{{ signalPayload.confidence_pct }}%</span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Risk tier', '风险等级', { de: 'Risikoklasse' }) }}</span>
+                  <span class="signal-label">{{ $tr('Risk tier', '风险等级', { de: 'Risikoklasse' , fr: 'Niveau de risque'}) }}</span>
                   <span :class="['signal-value', `signal-risk-${signalPayload.risk_tier}`]">
                     {{ signalPayload.risk_tier }}
                   </span>
@@ -715,7 +715,7 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Signal URL', '信号 URL', { de: 'Signal-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Signal URL', '信号 URL', { de: 'Signal-URL' , fr: 'URL du signal'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('signalUrl')"
@@ -759,48 +759,48 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Machine-readable inflection points — the round each stance (bullish / neutral / bearish) peaked, the most volatile round, and the maximum round-over-round swing. The analytical summary quant tools need alongside trajectory.csv, in one O(n) pass.', '机器可读的拐点 — 每种立场(看涨 / 中性 / 看跌)达到峰值的回合、最波动的回合,以及最大的回合间摆动幅度。量化工具在 trajectory.csv 之外需要的分析摘要,一次 O(n) 遍历即可获得。', { de: 'Maschinenlesbare Wendepunkte — die Runde, in der jede Haltung (Bullish/Neutral/Bearish) ihren Höhepunkt erreichte, die volatilste Runde und der maximale Rundenübergang. Die analytische Zusammenfassung, die Quant-Tools neben trajectory.csv benötigen, in einem O(n)-Durchlauf.' }) }}
+                    {{ $tr('Machine-readable inflection points — the round each stance (bullish / neutral / bearish) peaked, the most volatile round, and the maximum round-over-round swing. The analytical summary quant tools need alongside trajectory.csv, in one O(n) pass.', '机器可读的拐点 — 每种立场(看涨 / 中性 / 看跌)达到峰值的回合、最波动的回合,以及最大的回合间摆动幅度。量化工具在 trajectory.csv 之外需要的分析摘要,一次 O(n) 遍历即可获得。', { de: 'Maschinenlesbare Wendepunkte — die Runde, in der jede Haltung (Bullish/Neutral/Bearish) ihren Höhepunkt erreichte, die volatilste Runde und der maximale Rundenübergang. Die analytische Zusammenfassung, die Quant-Tools neben trajectory.csv benötigen, in einem O(n)-Durchlauf.' , fr: 'Points d\'inflexion machine — le tour de pic de chaque position, le tour le plus volatil, et le swing max entre deux tours. Le résumé analytique pour les outils quant, en un seul passage O(n).'}) }}
                   </div>
                 </div>
               </div>
 
               <div v-if="isPublic && peakPayload" class="signal-preview">
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Bullish peak', '看涨峰值', { de: 'Bullish-Höhepunkt' }) }}</span>
+                  <span class="signal-label">{{ $tr('Bullish peak', '看涨峰值', { de: 'Bullish-Höhepunkt' , fr: 'Pic haussier'}) }}</span>
                   <span class="signal-value signal-direction-bullish">
-                    {{ peakPayload.bullish.pct }}% · {{ $tr('round', '回合', { de: 'Runde' }) }} {{ peakPayload.bullish.round }}
+                    {{ peakPayload.bullish.pct }}% · {{ $tr('round', '回合', { de: 'Runde' , fr: 'tour'}) }} {{ peakPayload.bullish.round }}
                   </span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Bearish peak', '看跌峰值', { de: 'Bearish-Höhepunkt' }) }}</span>
+                  <span class="signal-label">{{ $tr('Bearish peak', '看跌峰值', { de: 'Bearish-Höhepunkt' , fr: 'Pic baissier'}) }}</span>
                   <span class="signal-value signal-direction-bearish">
                     {{ peakPayload.bearish.pct }}% · {{ $tr('round', '回合', { de: 'Runde' }) }} {{ peakPayload.bearish.round }}
                   </span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Most volatile', '最波动', { de: 'Volatilste' }) }}</span>
+                  <span class="signal-label">{{ $tr('Most volatile', '最波动', { de: 'Volatilste' , fr: 'Plus volatil'}) }}</span>
                   <span class="signal-value">
                     {{ $tr('round', '回合', { de: 'Runde' }) }} {{ peakPayload.most_volatile_round }} (±{{ peakPayload.max_swing_pct }}%)
                   </span>
                 </div>
                 <div class="signal-row signal-row-breakdown">
-                  <span class="signal-label">{{ $tr('Total rounds', '总回合数', { de: 'Gesamtrunden' }) }}</span>
+                  <span class="signal-label">{{ $tr('Total rounds', '总回合数', { de: 'Gesamtrunden' , fr: 'Tours totaux'}) }}</span>
                   <span class="signal-value">{{ peakPayload.total_rounds }}</span>
                 </div>
               </div>
               <div v-else-if="isPublic && peakLoading" class="signal-loading">
-                {{ $tr('Loading peak beliefs…', '加载峰值信念中…', { de: 'Spitzenüberzeugungen werden geladen…' }) }}
+                {{ $tr('Loading peak beliefs…', '加载峰值信念中…', { de: 'Spitzenüberzeugungen werden geladen…' , fr: 'Chargement des croyances de pic…'}) }}
               </div>
               <div v-else-if="isPublic && peakError" class="signal-empty">
                 {{ peakError }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable peak-round analytics.', '发布模拟以启用峰值回合分析。', { de: 'Veröffentliche die Simulation, um die Spitzenrunden-Analyse zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable peak-round analytics.', '发布模拟以启用峰值回合分析。', { de: 'Veröffentliche die Simulation, um die Spitzenrunden-Analyse zu aktivieren.' , fr: 'Publiez la simulation pour activer l\'analyse des pics de tour.'}) }}
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Peak-round URL', '峰值回合 URL', { de: 'Spitzenrunden-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Peak-round URL', '峰值回合 URL', { de: 'Spitzenrunden-URL' , fr: 'URL du pic de tour'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('peakUrl')"
@@ -859,7 +859,7 @@
 
               <div v-if="isPublic && volatilityPayload" class="signal-preview">
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Volatility index', '波动指数', { de: 'Volatilitätsindex' }) }}</span>
+                  <span class="signal-label">{{ $tr('Volatility index', '波动指数', { de: 'Volatilitätsindex' , fr: 'Indice de volatilité'}) }}</span>
                   <span class="signal-value">
                     {{ volatilityPayload.volatility_index }} / 100
                   </span>
@@ -872,40 +872,40 @@
                   ></div>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Max swing', '最大摆动', { de: 'Maximaler Schwing' }) }}</span>
+                  <span class="signal-label">{{ $tr('Max swing', '最大摆动', { de: 'Maximaler Schwing' , fr: 'Swing max'}) }}</span>
                   <span class="signal-value">
                     ±{{ volatilityPayload.max_delta_pct }}% · {{ $tr('round', '回合', { de: 'Runde' }) }} {{ volatilityPayload.max_delta_round }}
                   </span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Mean swing', '平均摆动', { de: 'Mittlerer Schwing' }) }}</span>
+                  <span class="signal-label">{{ $tr('Mean swing', '平均摆动', { de: 'Mittlerer Schwing' , fr: 'Swing moyen'}) }}</span>
                   <span class="signal-value">±{{ volatilityPayload.mean_delta_pct }}%</span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Std dev', '标准差', { de: 'Std.-Abw.' }) }}</span>
+                  <span class="signal-label">{{ $tr('Std dev', '标准差', { de: 'Std.-Abw.' , fr: 'Écart-type'}) }}</span>
                   <span class="signal-value">±{{ volatilityPayload.std_dev_delta_pct }}%</span>
                 </div>
                 <div class="signal-row signal-row-breakdown">
-                  <span class="signal-label">{{ $tr('Path', '路径', { de: 'Verlauf' }) }}</span>
+                  <span class="signal-label">{{ $tr('Path', '路径', { de: 'Verlauf' , fr: 'Chemin'}) }}</span>
                   <span class="signal-value">
                     {{ volatilityTrendLabel(volatilityPayload.trend) }}
-                    · {{ volatilityPayload.delta_count }} {{ $tr('deltas', '差值', { de: 'Deltas' }) }}
+                    · {{ volatilityPayload.delta_count }} {{ $tr('deltas', '差值', { de: 'Deltas' , fr: 'deltas'}) }}
                   </span>
                 </div>
               </div>
               <div v-else-if="isPublic && volatilityLoading" class="signal-loading">
-                {{ $tr('Loading volatility…', '加载波动率中…', { de: 'Volatilität wird geladen…' }) }}
+                {{ $tr('Loading volatility…', '加载波动率中…', { de: 'Volatilität wird geladen…' , fr: 'Chargement de la volatilité…'}) }}
               </div>
               <div v-else-if="isPublic && volatilityError" class="signal-empty">
                 {{ volatilityError }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable volatility analytics.', '发布模拟以启用波动率分析。', { de: 'Veröffentliche die Simulation, um die Volatilitätsanalyse zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable volatility analytics.', '发布模拟以启用波动率分析。', { de: 'Veröffentliche die Simulation, um die Volatilitätsanalyse zu aktivieren.' , fr: 'Publiez la simulation pour activer l\'analyse de volatilité.'}) }}
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Volatility URL', '波动率 URL', { de: 'Volatilitäts-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Volatility URL', '波动率 URL', { de: 'Volatilitäts-URL' , fr: 'URL de volatilité'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('volatilityUrl')"
@@ -952,7 +952,7 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr(`Per-agent belief sparklines — each agent's position across rounds, colored by final stance (bullish / neutral / bearish). The agent-level layer under chart.svg's aggregate curve: which agent anchored the consensus, which cohort aligned first. Same ±0.2 threshold every surface uses.`, '单智能体信念迷你趋势图 — 每个智能体在各回合的立场,按最终立场着色(看涨 / 中性 / 看跌)。chart.svg 聚合曲线之下的智能体层:哪个智能体锚定了共识,哪个群体最先对齐。与所有界面一致的 ±0.2 阈值。', { de: `Überzeugungssparklines pro Agent — die Position jedes Agenten über die Runden, farblich nach Endstance (bullish/neutral/bearish). Die Agentenebene unter chart.svg's Aggregatkurve: welcher Agent den Konsens verankert hat, welche Gruppe sich zuerst ausgerichtet hat. Gleiche ±0,2-Schwelle wie alle anderen Ansichten.` }) }}
+                    {{ $tr(`Per-agent belief sparklines — each agent's position across rounds, colored by final stance (bullish / neutral / bearish). The agent-level layer under chart.svg's aggregate curve: which agent anchored the consensus, which cohort aligned first. Same ±0.2 threshold every surface uses.`, '单智能体信念迷你趋势图 — 每个智能体在各回合的立场,按最终立场着色(看涨 / 中性 / 看跌)。chart.svg 聚合曲线之下的智能体层:哪个智能体锚定了共识,哪个群体最先对齐。与所有界面一致的 ±0.2 阈值。', { de: `Überzeugungssparklines pro Agent — die Position jedes Agenten über die Runden, farblich nach Endstance (bullish/neutral/bearish). Die Agentenebene unter chart.svg's Aggregatkurve: welcher Agent den Konsens verankert hat, welche Gruppe sich zuerst ausgerichtet hat. Gleiche ±0,2-Schwelle wie alle anderen Ansichten.` , fr: `Sparklines par agent — position de chaque agent au fil des tours, colorée par stance finale.`}) }}
                   </div>
                 </div>
               </div>
@@ -995,18 +995,18 @@
                 </div>
               </div>
               <div v-else-if="isPublic && sparklinesLoading" class="signal-loading">
-                {{ $tr('Loading agent trajectories…', '加载智能体轨迹中…', { de: 'Agenten-Trajektorien werden geladen…' }) }}
+                {{ $tr('Loading agent trajectories…', '加载智能体轨迹中…', { de: 'Agenten-Trajektorien werden geladen…' , fr: 'Chargement des trajectoires d\'agents…'}) }}
               </div>
               <div v-else-if="isPublic && sparklinesError" class="signal-empty">
                 {{ sparklinesError }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable agent trajectories.', '发布模拟以启用智能体轨迹。', { de: 'Veröffentliche die Simulation, um Agenten-Trajektorien zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable agent trajectories.', '发布模拟以启用智能体轨迹。', { de: 'Veröffentliche die Simulation, um Agenten-Trajektorien zu aktivieren.' , fr: 'Publiez la simulation pour activer les trajectoires d\'agents.'}) }}
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Sparklines URL', '迷你趋势图 URL', { de: 'Sparklines-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Sparklines URL', '迷你趋势图 URL', { de: 'Sparklines-URL' , fr: 'URL des sparklines'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('sparkUrl')"
@@ -1055,7 +1055,7 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Per-agent identity export — name, username, bio, persona preview, demographics (age / country / profession / mbti / interested topics), karma, plus final stance and rounds participated. The participants companion to sparklines (which show belief trajectories): this surface answers who was in the debate. Persona is previewed to 280 chars; full text remains in transcript.md.', '单智能体身份导出 — 姓名、用户名、简介、persona 预览、人口属性(年龄 / 国家 / 职业 / mbti / 关注话题)、karma,加上最终立场与参与回合数。迷你趋势图的参与者侧补充(迷你趋势图展示信念轨迹):此界面回答”辩论中有谁”。Persona 预览截至 280 字符;完整文本保留在 transcript.md。', { de: 'Identitätsexport pro Agent — Name, Benutzername, Bio, Persona-Vorschau, Demografik (Alter/Land/Beruf/MBTI/Interessenthemen), Karma sowie Endstance und teilgenommene Runden. Die Teilnehmer-Ergänzung zu Sparklines (die die Überzeugungstrajektorien zeigen): diese Ansicht beantwortet, wer an der Debatte teilnahm. Persona wird auf 280 Zeichen gekürzt; vollständiger Text verbleibt in transcript.md.' }) }}
+                    {{ $tr('Per-agent identity export — name, username, bio, persona preview, demographics (age / country / profession / mbti / interested topics), karma, plus final stance and rounds participated. The participants companion to sparklines (which show belief trajectories): this surface answers who was in the debate. Persona is previewed to 280 chars; full text remains in transcript.md.', '单智能体身份导出 — 姓名、用户名、简介、persona 预览、人口属性(年龄 / 国家 / 职业 / mbti / 关注话题)、karma,加上最终立场与参与回合数。迷你趋势图的参与者侧补充(迷你趋势图展示信念轨迹):此界面回答”辩论中有谁”。Persona 预览截至 280 字符;完整文本保留在 transcript.md。', { de: 'Identitätsexport pro Agent — Name, Benutzername, Bio, Persona-Vorschau, Demografik (Alter/Land/Beruf/MBTI/Interessenthemen), Karma sowie Endstance und teilgenommene Runden. Die Teilnehmer-Ergänzung zu Sparklines (die die Überzeugungstrajektorien zeigen): diese Ansicht beantwortet, wer an der Debatte teilnahm. Persona wird auf 280 Zeichen gekürzt; vollständiger Text verbleibt in transcript.md.' , fr: 'Export d\'identité par agent — nom, bio, données démographiques, karma, position finale et tours participés.'}) }}
                   </div>
                 </div>
               </div>
@@ -1089,25 +1089,25 @@
                   </div>
                 </div>
                 <div v-if="agentsPayload.agents.length > 12" class="agents-overflow-note">
-                  {{ $tr('Showing top 12 by final stance — full roster in the JSON payload.', '按最终立场显示前 12 位 — 完整名册见 JSON。', { de: 'Top 12 nach Endstance — vollständige Liste im JSON-Payload.' }) }}
+                  {{ $tr('Showing top 12 by final stance — full roster in the JSON payload.', '按最终立场显示前 12 位 — 完整名册见 JSON。', { de: 'Top 12 nach Endstance — vollständige Liste im JSON-Payload.' , fr: 'Top 12 par position finale — registre complet dans le JSON.'}) }}
                 </div>
                 <div v-if="!agentsPayload.has_trajectory_data" class="sparkline-note">
-                  {{ $tr('No trajectory data yet — every agent shows the profile-only neutral default.', '尚无轨迹数据 — 每位智能体显示仅画像的中性默认值。', { de: 'Noch keine Trajektoriendaten — jeder Agent zeigt den profilbasierten neutralen Standardwert.' }) }}
+                  {{ $tr('No trajectory data yet — every agent shows the profile-only neutral default.', '尚无轨迹数据 — 每位智能体显示仅画像的中性默认值。', { de: 'Noch keine Trajektoriendaten — jeder Agent zeigt den profilbasierten neutralen Standardwert.' , fr: 'Pas encore de données de trajectoire — profil neutre par défaut.'}) }}
                 </div>
               </div>
               <div v-else-if="isPublic && agentsLoading" class="signal-loading">
-                {{ $tr('Loading agent roster…', '加载智能体名册中…', { de: 'Agentenliste wird geladen…' }) }}
+                {{ $tr('Loading agent roster…', '加载智能体名册中…', { de: 'Agentenliste wird geladen…' , fr: 'Chargement du registre des agents…'}) }}
               </div>
               <div v-else-if="isPublic && agentsError" class="signal-empty">
                 {{ agentsError }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable the agent roster.', '发布模拟以启用智能体名册。', { de: 'Veröffentliche die Simulation, um die Agentenliste zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the agent roster.', '发布模拟以启用智能体名册。', { de: 'Veröffentliche die Simulation, um die Agentenliste zu aktivieren.' , fr: 'Publiez la simulation pour activer le registre des agents.'}) }}
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Agents JSON URL', '智能体 JSON URL', { de: 'Agenten-JSON-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Agents JSON URL', '智能体 JSON URL', { de: 'Agenten-JSON-URL' , fr: 'URL JSON des agents'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('agentsUrl')"
@@ -1156,26 +1156,26 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Binary YES / NO probability shape a Polymarket trading bot expects — one curl call between "simulation result" and "actionable market signal". Direction-aware: a Bullish swarm emits high yes_probability; Bearish swarm emits low; Neutral lands exactly at 0.5. Confidence tier (speculative / moderate / confident / high-conviction) for position-sizing logic.', '为 Polymarket 交易机器人量身的二元 YES / NO 概率结构 —「模拟结果」与「可执行市场信号」之间的一次 curl 调用。方向感知:看涨群体输出高 yes_probability;看跌输出低;中性恰好为 0.5。置信度等级(speculative / moderate / confident / high-conviction)用于仓位规模逻辑。', { de: 'Binäre JA/NEIN-Wahrscheinlichkeitsform, die ein Polymarket-Handelsbot erwartet — ein curl-Aufruf zwischen „Simulationsergebnis" und „handelbarem Marktsignal". Richtungsbewusst: ein Bullish-Schwarm gibt hohe yes_probability aus; Bearish niedrig; Neutral genau 0,5. Konfidenzklasse (spekulativ/moderat/zuversichtlich/high-conviction) für Positionsgrößenlogik.' }) }}
+                    {{ $tr('Binary YES / NO probability shape a Polymarket trading bot expects — one curl call between "simulation result" and "actionable market signal". Direction-aware: a Bullish swarm emits high yes_probability; Bearish swarm emits low; Neutral lands exactly at 0.5. Confidence tier (speculative / moderate / confident / high-conviction) for position-sizing logic.', '为 Polymarket 交易机器人量身的二元 YES / NO 概率结构 —「模拟结果」与「可执行市场信号」之间的一次 curl 调用。方向感知:看涨群体输出高 yes_probability;看跌输出低;中性恰好为 0.5。置信度等级(speculative / moderate / confident / high-conviction)用于仓位规模逻辑。', { de: 'Binäre JA/NEIN-Wahrscheinlichkeitsform, die ein Polymarket-Handelsbot erwartet — ein curl-Aufruf zwischen „Simulationsergebnis" und „handelbarem Marktsignal". Richtungsbewusst: ein Bullish-Schwarm gibt hohe yes_probability aus; Bearish niedrig; Neutral genau 0,5. Konfidenzklasse (spekulativ/moderat/zuversichtlich/high-conviction) für Positionsgrößenlogik.' , fr: 'Format binaire OUI/NON attendu par un bot Polymarket. Directionnel : haussier = OUI élevé ; baissier = faible ; neutre = 0.5.'}) }}
                   </div>
                 </div>
               </div>
 
               <div v-if="isPublic && polymarketPayload" class="signal-preview polymarket-preview">
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('YES probability', 'YES 概率', { de: 'JA-Wahrscheinlichkeit' }) }}</span>
+                  <span class="signal-label">{{ $tr('YES probability', 'YES 概率', { de: 'JA-Wahrscheinlichkeit' , fr: 'Probabilité OUI'}) }}</span>
                   <span class="signal-value signal-direction-bullish">
                     {{ polymarketYesPct }}%
                   </span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('NO probability', 'NO 概率', { de: 'NEIN-Wahrscheinlichkeit' }) }}</span>
+                  <span class="signal-label">{{ $tr('NO probability', 'NO 概率', { de: 'NEIN-Wahrscheinlichkeit' , fr: 'Probabilité NON'}) }}</span>
                   <span class="signal-value signal-direction-bearish">
                     {{ polymarketNoPct }}%
                   </span>
                 </div>
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Confidence tier', '置信度等级', { de: 'Konfidenzklasse' }) }}</span>
+                  <span class="signal-label">{{ $tr('Confidence tier', '置信度等级', { de: 'Konfidenzklasse' , fr: 'Niveau de confiance'}) }}</span>
                   <span :class="['signal-value', `polymarket-tier-${polymarketPayload.confidence_tier}`]">
                     {{ polymarketPayload.confidence_tier }}
                   </span>
@@ -1187,20 +1187,20 @@
                   </span>
                 </div>
                 <div class="signal-row signal-row-breakdown">
-                  <span class="signal-label">{{ $tr('Suggested title', '建议标题', { de: 'Vorgeschlagener Titel' }) }}</span>
+                  <span class="signal-label">{{ $tr('Suggested title', '建议标题', { de: 'Vorgeschlagener Titel' , fr: 'Titre suggéré'}) }}</span>
                   <span class="signal-value polymarket-title-value">
                     {{ polymarketPayload.suggested_market_title }}
                   </span>
                 </div>
               </div>
               <div v-else-if="isPublic && polymarketLoading" class="signal-loading">
-                {{ $tr('Loading Polymarket prediction…', '加载 Polymarket 预测中…', { de: 'Polymarket-Prognose wird geladen…' }) }}
+                {{ $tr('Loading Polymarket prediction…', '加载 Polymarket 预测中…', { de: 'Polymarket-Prognose wird geladen…' , fr: 'Chargement de la prédiction Polymarket…'}) }}
               </div>
               <div v-else-if="isPublic && polymarketError" class="signal-empty">
                 {{ polymarketError }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable the Polymarket prediction.', '发布模拟以启用 Polymarket 预测。', { de: 'Veröffentliche die Simulation, um die Polymarket-Prognose zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the Polymarket prediction.', '发布模拟以启用 Polymarket 预测。', { de: 'Veröffentliche die Simulation, um die Polymarket-Prognose zu aktivieren.' , fr: 'Publiez la simulation pour activer la prédiction Polymarket.'}) }}
               </div>
 
               <div class="transcript-actions">
@@ -1210,13 +1210,13 @@
                   :href="polymarketJsonUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-polymarket.json`"
                 >
-                  ↓ {{ $tr('Download polymarket.json', '下载 polymarket.json', { de: 'polymarket.json herunterladen' }) }}
+                  ↓ {{ $tr('Download polymarket.json', '下载 polymarket.json', { de: 'polymarket.json herunterladen' , fr: 'Télécharger polymarket.json'}) }}
                 </a>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Polymarket URL', 'Polymarket URL', { de: 'Polymarket-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Polymarket URL', 'Polymarket URL', { de: 'Polymarket-URL' , fr: 'URL Polymarket'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('polymarketUrl')"
@@ -1264,14 +1264,14 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('The first share surface that returns inputs rather than outputs. clone_payload is wire-compatible with POST /api/simulation/create — fork the sim with one curl, or swap a knob (agent count, polymarket markets, demographic country) and POST a variant. simulation_requirement is echoed alongside for context; the create body itself does not accept the scenario text (that lives on the project).', '首个返回输入而非输出的共享表面。clone_payload 与 POST /api/simulation/create 完全兼容 —— 一条 curl 即可分叉模拟,或替换某个参数(智能体数量、Polymarket 市场数、人口学国家)再 POST 变体。simulation_requirement 在外层一并回显作为上下文;create 请求体本身不接收场景文本(它属于项目层)。', { de: 'Die erste Freigabeansicht, die Eingaben statt Ausgaben zurückgibt. clone_payload ist wire-kompatibel mit POST /api/simulation/create — simuliere mit einem curl oder tausche einen Parameter (Agentenanzahl, Polymarket-Märkte, demografisches Land) aus und poste eine Variante. simulation_requirement wird für den Kontext daneben angezeigt; der create-Body selbst akzeptiert den Szenariotext nicht (der liegt auf Projektebene).' }) }}
+                    {{ $tr('The first share surface that returns inputs rather than outputs. clone_payload is wire-compatible with POST /api/simulation/create — fork the sim with one curl, or swap a knob (agent count, polymarket markets, demographic country) and POST a variant. simulation_requirement is echoed alongside for context; the create body itself does not accept the scenario text (that lives on the project).', '首个返回输入而非输出的共享表面。clone_payload 与 POST /api/simulation/create 完全兼容 —— 一条 curl 即可分叉模拟,或替换某个参数(智能体数量、Polymarket 市场数、人口学国家)再 POST 变体。simulation_requirement 在外层一并回显作为上下文;create 请求体本身不接收场景文本(它属于项目层)。', { de: 'Die erste Freigabeansicht, die Eingaben statt Ausgaben zurückgibt. clone_payload ist wire-kompatibel mit POST /api/simulation/create — simuliere mit einem curl oder tausche einen Parameter (Agentenanzahl, Polymarket-Märkte, demografisches Land) aus und poste eine Variante. simulation_requirement wird für den Kontext daneben angezeigt; der create-Body selbst akzeptiert den Szenariotext nicht (der liegt auf Projektebene).' , fr: 'La première surface de partage qui retourne des entrées plutôt que des sorties.'}) }}
                   </div>
                 </div>
               </div>
 
               <div v-if="isPublic && clonePayload" class="signal-preview clone-preview">
                 <div class="signal-row">
-                  <span class="signal-label">{{ $tr('Project', '项目', { de: 'Projekt' }) }}</span>
+                  <span class="signal-label">{{ $tr('Project', '项目', { de: 'Projekt' , fr: 'Projet'}) }}</span>
                   <span class="signal-value">{{ clonePayload.project_id || '—' }}</span>
                 </div>
                 <div class="signal-row">
@@ -1287,22 +1287,22 @@
                   </span>
                 </div>
                 <div class="signal-row" v-if="clonePayload.clone_payload?.country">
-                  <span class="signal-label">{{ $tr('Country pack', '国家包', { de: 'Länderpaket' }) }}</span>
+                  <span class="signal-label">{{ $tr('Country pack', '国家包', { de: 'Länderpaket' , fr: 'Pack de pays'}) }}</span>
                   <span class="signal-value">{{ clonePayload.clone_payload.country }}</span>
                 </div>
                 <div class="signal-row signal-row-breakdown" v-if="clonePayload.scenario_preview">
-                  <span class="signal-label">{{ $tr('Scenario', '场景', { de: 'Szenario' }) }}</span>
+                  <span class="signal-label">{{ $tr('Scenario', '场景', { de: 'Szenario' , fr: 'Scénario'}) }}</span>
                   <span class="signal-value">{{ clonePayload.scenario_preview }}</span>
                 </div>
               </div>
               <div v-else-if="isPublic && cloneLoading" class="signal-loading">
-                {{ $tr('Loading clone configuration…', '加载克隆配置中…', { de: 'Klon-Konfiguration wird geladen…' }) }}
+                {{ $tr('Loading clone configuration…', '加载克隆配置中…', { de: 'Klon-Konfiguration wird geladen…' , fr: 'Chargement de la configuration clone…'}) }}
               </div>
               <div v-else-if="isPublic && cloneError" class="signal-empty">
                 {{ cloneError }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable the clone configuration.', '发布模拟以启用克隆配置。', { de: 'Veröffentliche die Simulation, um die Klon-Konfiguration zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the clone configuration.', '发布模拟以启用克隆配置。', { de: 'Veröffentliche die Simulation, um die Klon-Konfiguration zu aktivieren.' , fr: 'Publiez la simulation pour activer la configuration clone.'}) }}
               </div>
 
               <div class="transcript-actions">
@@ -1312,13 +1312,13 @@
                   :href="cloneJsonUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-clone.json`"
                 >
-                  ↓ {{ $tr('Download clone.json', '下载 clone.json', { de: 'clone.json herunterladen' }) }}
+                  ↓ {{ $tr('Download clone.json', '下载 clone.json', { de: 'clone.json herunterladen' , fr: 'Télécharger clone.json'}) }}
                 </a>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Clone URL', '克隆 URL', { de: 'Klon-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Clone URL', '克隆 URL', { de: 'Klon-URL' , fr: 'URL du clone'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('cloneUrl')"
@@ -1390,22 +1390,22 @@
                   <span class="archive-value">{{ archiveFileCount }}</span>
                 </div>
                 <div class="archive-summary-row">
-                  <span class="archive-label">{{ $tr('Format', '格式', { de: 'Format' }) }}</span>
-                  <span class="archive-value">application/zip · {{ $tr('deflate-compressed', 'deflate 压缩', { de: 'deflate-komprimiert' }) }}</span>
+                  <span class="archive-label">{{ $tr('Format', '格式', { de: 'Format' , fr: 'Format'}) }}</span>
+                  <span class="archive-value">application/zip · {{ $tr('deflate-compressed', 'deflate 压缩', { de: 'deflate-komprimiert' , fr: 'compressé (deflate)'}) }}</span>
                 </div>
                 <div class="archive-summary-row">
-                  <span class="archive-label">{{ $tr('Citation', '引用', { de: 'Zitation' }) }}</span>
-                  <span class="archive-value">{{ $tr('manifest.json with per-file SHA-256', 'manifest.json 含逐文件 SHA-256', { de: 'manifest.json mit SHA-256 pro Datei' }) }}</span>
+                  <span class="archive-label">{{ $tr('Citation', '引用', { de: 'Zitation' , fr: 'Citation'}) }}</span>
+                  <span class="archive-value">{{ $tr('manifest.json with per-file SHA-256', 'manifest.json 含逐文件 SHA-256', { de: 'manifest.json mit SHA-256 pro Datei' , fr: 'manifest.json avec SHA-256 par fichier'}) }}</span>
                 </div>
               </div>
               <div v-else-if="isPublic && archiveLoading" class="signal-loading">
-                {{ $tr('Loading archive…', '加载归档中…', { de: 'Archiv wird geladen…' }) }}
+                {{ $tr('Loading archive…', '加载归档中…', { de: 'Archiv wird geladen…' , fr: 'Chargement de l\'archive…'}) }}
               </div>
               <div v-else-if="isPublic && !archiveAvailable" class="signal-empty">
-                {{ $tr(`Archive not available yet — the simulation hasn't recorded any exportable surfaces.`, '尚无可用的归档 — 模拟还没有记录任何可导出的内容。', { de: 'Archiv noch nicht verfügbar — die Simulation hat noch keine exportierbaren Inhalte aufgezeichnet.' }) }}
+                {{ $tr(`Archive not available yet — the simulation hasn't recorded any exportable surfaces.`, '尚无可用的归档 — 模拟还没有记录任何可导出的内容。', { de: 'Archiv noch nicht verfügbar — die Simulation hat noch keine exportierbaren Inhalte aufgezeichnet.' , fr: 'Archive pas encore disponible — la simulation n\'a pas encore enregistré de surface exportable.'}) }}
               </div>
               <div v-else-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable the archive bundle.', '发布模拟以启用归档包。', { de: 'Veröffentliche die Simulation, um das Archiv-Bundle zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the archive bundle.', '发布模拟以启用归档包。', { de: 'Veröffentliche die Simulation, um das Archiv-Bundle zu aktivieren.' , fr: 'Publiez la simulation pour activer le bundle d\'archive.'}) }}
               </div>
 
               <div class="transcript-actions">
@@ -1415,13 +1415,13 @@
                   :href="archiveZipUrl"
                   :download="`miroshark-${simulationId.slice(0, 12)}-archive.zip`"
                 >
-                  ↓ {{ $tr('Download archive.zip', '下载 archive.zip', { de: 'archive.zip herunterladen' }) }}
+                  ↓ {{ $tr('Download archive.zip', '下载 archive.zip', { de: 'archive.zip herunterladen' , fr: 'Télécharger archive.zip'}) }}
                 </a>
               </div>
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Archive URL', '归档 URL', { de: 'Archiv-URL' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Archive URL', '归档 URL', { de: 'Archiv-URL' , fr: 'URL de l\'archive'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('archiveUrl')"
@@ -1525,7 +1525,7 @@
 
               <div class="snippet-block transcript-snippet">
                 <div class="snippet-head">
-                  <span class="snippet-label">{{ $tr('Thread .txt URL (paste into a tweet scheduler)', '推文串 .txt URL(粘贴至推文排程工具)', { de: 'Thread-.txt-URL (in einen Tweet-Scheduler einfügen)' }) }}</span>
+                  <span class="snippet-label">{{ $tr('Thread .txt URL (paste into a tweet scheduler)', '推文串 .txt URL(粘贴至推文排程工具)', { de: 'Thread-.txt-URL (in einen Tweet-Scheduler einfügen)' , fr: 'URL du thread .txt (à coller dans un planificateur)'}) }}</span>
                   <button
                     class="snippet-copy-btn"
                     @click="copy('threadTxt')"
@@ -1574,13 +1574,13 @@
                   {{ $tr('Publish the simulation to see distribution stats.', '发布模拟以查看分发统计。', { de: 'Veröffentliche die Simulation, um Verteilungsstatistiken anzuzeigen.', fr: 'Publiez la simulation pour voir les statistiques de distribution.' }) }}
                 </div>
                 <div v-else-if="surfaceStatsLoading" class="surface-stats-loading">
-                  {{ $tr('Loading distribution data…', '加载分发数据…', { de: 'Verteilungsdaten werden geladen…' }) }}
+                  {{ $tr('Loading distribution data…', '加载分发数据…', { de: 'Verteilungsdaten werden geladen…' , fr: 'Chargement des données de distribution…'}) }}
                 </div>
                 <div v-else-if="surfaceStatsError" class="transcript-empty surface-stats-error">
                   {{ surfaceStatsError }}
                 </div>
                 <div v-else-if="surfaceStatsAllZero" class="transcript-empty">
-                  {{ $tr('No surface serves recorded yet — share this simulation to see distribution data appear here.', '尚未记录任何分享面服务 — 分享此模拟即可在此查看分发数据。', { de: 'Noch keine Freigabeauslieferungen aufgezeichnet — teile diese Simulation, damit hier Verteilungsdaten erscheinen.' }) }}
+                  {{ $tr('No surface serves recorded yet — share this simulation to see distribution data appear here.', '尚未记录任何分享面服务 — 分享此模拟即可在此查看分发数据。', { de: 'Noch keine Freigabeauslieferungen aufgezeichnet — teile diese Simulation, damit hier Verteilungsdaten erscheinen.' , fr: 'Aucune consultation — partagez cette simulation pour voir les données de distribution.'}) }}
                 </div>
                 <div v-else class="surface-stats-table">
                   <div
@@ -1593,13 +1593,13 @@
                     <span class="surface-stats-count">{{ row.count }}</span>
                   </div>
                   <div class="surface-stats-row surface-stats-row-total">
-                    <span class="surface-stats-label">{{ $tr('Total serves', '总服务数', { de: 'Gesamtauslieferungen' }) }}</span>
+                    <span class="surface-stats-label">{{ $tr('Total serves', '总服务数', { de: 'Gesamtauslieferungen' , fr: 'Consultations totales'}) }}</span>
                     <span class="surface-stats-count">{{ surfaceStatsTotal }}</span>
                   </div>
                 </div>
 
                 <div v-if="!surfaceStatsAllZero" class="surface-stats-caveat">
-                  {{ $tr('Counts origin hits only — CDN and browser caches are not counted, so true audience reach is higher.', '仅统计源服务器命中 — 不计入 CDN 与浏览器缓存,实际受众覆盖更高。', { de: 'Zählt nur Ursprungsserver-Treffer — CDN- und Browser-Caches werden nicht gezählt, sodass die tatsächliche Reichweite höher ist.' }) }}
+                  {{ $tr('Counts origin hits only — CDN and browser caches are not counted, so true audience reach is higher.', '仅统计源服务器命中 — 不计入 CDN 与浏览器缓存,实际受众覆盖更高。', { de: 'Zählt nur Ursprungsserver-Treffer — CDN- und Browser-Caches werden nicht gezählt, sodass die tatsächliche Reichweite höher ist.' , fr: 'Compte uniquement les hits d\'origine — la portée réelle est donc plus élevée.'}) }}
                 </div>
 
                 <div v-if="isPublic" class="surface-stats-actions">
@@ -1609,7 +1609,7 @@
                     :disabled="surfaceStatsLoading"
                     @click="loadSurfaceStats"
                   >
-                    <span v-if="surfaceStatsLoading">{{ $tr('Refreshing…', '刷新中…', { de: 'Wird aktualisiert…' }) }}</span>
+                    <span v-if="surfaceStatsLoading">{{ $tr('Refreshing…', '刷新中…', { de: 'Wird aktualisiert…' , fr: 'Actualisation…'}) }}</span>
                     <span v-else>↻ {{ $tr('Refresh', '刷新', { de: 'Aktualisieren', fr: 'Actualiser' }) }}</span>
                   </button>
                 </div>
@@ -1666,7 +1666,7 @@
                 <div v-else-if="reproBlob" class="repro-detail">
                   <div class="repro-summary-grid">
                     <div class="repro-summary-row">
-                      <span class="repro-summary-key">{{ $tr('Schema', 'Schema', { de: 'Schema' }) }}</span>
+                      <span class="repro-summary-key">{{ $tr('Schema', 'Schema', { de: 'Schema' , fr: 'Schéma'}) }}</span>
                       <span class="repro-summary-value">v{{ reproBlob.schema_version }}</span>
                     </div>
                     <div class="repro-summary-row">
@@ -1819,7 +1819,7 @@
                 <span class="transcript-icon">📖</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('BibTeX citation (.bib)', 'BibTeX 引用(.bib)', { de: 'BibTeX-Zitation (.bib)' }) }}
+                    {{ $tr('BibTeX citation (.bib)', 'BibTeX 引用(.bib)', { de: 'BibTeX-Zitation (.bib)' , fr: 'Citation BibTeX (.bib)'}) }}
                   </div>
                   <div class="transcript-sub">
                     {{ $tr('Drop-in @misc{…} entry for a LaTeX paper, Zotero library, or Mendeley collection. The note field carries the reproduce.json SHA-256 (verifiable via sha256sum --check); the annote field carries the OriginTrail DKG UAL when the sim has been anchored on-chain. Zotero + Mendeley both import this URL directly via "Import from URL".', '可直接放入 LaTeX 论文、Zotero 文献库或 Mendeley 集合的 @misc{…} 条目。note 字段携带 reproduce.json 的 SHA-256(可用 sha256sum --check 校验);annote 字段在模拟已上链时携带 OriginTrail DKG UAL。Zotero 与 Mendeley 都可通过"从 URL 导入"直接导入此 URL。', { de: 'Einbettbarer @misc{…}-Eintrag für ein LaTeX-Papier, eine Zotero-Bibliothek oder eine Mendeley-Sammlung. Das note-Feld enthält den SHA-256 von reproduce.json (überprüfbar via sha256sum --check); das annote-Feld enthält den OriginTrail-DKG-UAL, wenn die Simulation on-chain verankert wurde. Zotero und Mendeley importieren diese URL direkt über „Von URL importieren".' }) }}
@@ -1828,13 +1828,13 @@
               </div>
 
               <div v-if="!isPublic" class="signal-empty">
-                {{ $tr('Publish the simulation to enable the BibTeX citation.', '发布模拟以启用 BibTeX 引用。', { de: 'Veröffentliche die Simulation, um die BibTeX-Zitation zu aktivieren.' }) }}
+                {{ $tr('Publish the simulation to enable the BibTeX citation.', '发布模拟以启用 BibTeX 引用。', { de: 'Veröffentliche die Simulation, um die BibTeX-Zitation zu aktivieren.' , fr: 'Publiez la simulation pour activer la citation BibTeX.'}) }}
               </div>
 
               <template v-else>
                 <div class="snippet-block transcript-snippet">
                   <div class="snippet-head">
-                    <span class="snippet-label">{{ $tr('cite.bib URL', 'cite.bib URL', { de: 'cite.bib URL' }) }}</span>
+                    <span class="snippet-label">{{ $tr('cite.bib URL', 'cite.bib URL', { de: 'cite.bib URL' , fr: 'URL cite.bib'}) }}</span>
                     <button
                       class="snippet-copy-btn"
                       @click="copy('citeBibUrl')"
@@ -1912,12 +1912,12 @@
                       :class="`dkg-network-chip-${notifConfig.dkg_network}`"
                     >
                       {{ notifConfig.dkg_network === 'mainnet'
-                          ? $tr('mainnet', '主网', { de: 'Mainnet' })
-                          : $tr('testnet', '测试网', { de: 'Testnet' }) }}
+                          ? $tr('mainnet', '主网', { de: 'Mainnet' , fr: 'mainnet'})
+                          : $tr('testnet', '测试网', { de: 'Testnet' , fr: 'testnet'}) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Anchor the scenario, agent count, consensus, quality, and reproduce.json hash on the OriginTrail DKG as a cryptographically verifiable Knowledge Asset. The returned UAL + Merkle root + transaction hash become a permanent citation key — same provenance property a DOI gives a paper.', '将情景、智能体数、共识、质量与 reproduce.json 哈希作为可加密验证的知识资产锚定到 OriginTrail DKG。返回的 UAL + Merkle 根 + 交易哈希就是永久引用键 — 提供与论文 DOI 同等的来源证明。', { de: 'Verankere Szenario, Agentenanzahl, Konsens, Qualität und reproduce.json-Hash auf dem OriginTrail DKG als kryptografisch verifizierbares Wissens-Asset. Der zurückgegebene UAL + Merkle-Root + Transaktions-Hash werden zum permanenten Zitierschlüssel — dieselbe Herkunftseigenschaft, die ein DOI einem Paper gibt.' }) }}
+                    {{ $tr('Anchor the scenario, agent count, consensus, quality, and reproduce.json hash on the OriginTrail DKG as a cryptographically verifiable Knowledge Asset. The returned UAL + Merkle root + transaction hash become a permanent citation key — same provenance property a DOI gives a paper.', '将情景、智能体数、共识、质量与 reproduce.json 哈希作为可加密验证的知识资产锚定到 OriginTrail DKG。返回的 UAL + Merkle 根 + 交易哈希就是永久引用键 — 提供与论文 DOI 同等的来源证明。', { de: 'Verankere Szenario, Agentenanzahl, Konsens, Qualität und reproduce.json-Hash auf dem OriginTrail DKG als kryptografisch verifizierbares Wissens-Asset. Der zurückgegebene UAL + Merkle-Root + Transaktions-Hash werden zum permanenten Zitierschlüssel — dieselbe Herkunftseigenschaft, die ein DOI einem Paper gibt.' , fr: 'Ancrez le scénario, le nombre d\'agents, le consensus, la qualité et le hash reproduce.json sur l\'OriginTrail DKG en tant que Knowledge Asset vérifiable. L\'UAL + racine Merkle + hash de transaction retournés deviennent une clé de citation permanente.'}) }}
                   </div>
                 </div>
               </div>
@@ -1960,11 +1960,11 @@
                       :title="dkgCitation.transaction_hash"
                     >{{ formatHashShort(dkgCitation.transaction_hash) }}</code>
                     <span v-if="typeof dkgCitation.block_number === 'number'" class="dkg-row-meta">
-                      {{ $tr('block', '区块', { de: 'Block' }) }} #{{ dkgCitation.block_number }}
+                      {{ $tr('block', '区块', { de: 'Block' , fr: 'bloc'}) }} #{{ dkgCitation.block_number }}
                     </span>
                   </div>
                   <div v-if="dkgCitation.reproduce_config_sha256" class="dkg-row">
-                    <span class="dkg-row-label">{{ $tr('Config hash', '配置哈希', { de: 'Konfigurations-Hash' }) }}</span>
+                    <span class="dkg-row-label">{{ $tr('Config hash', '配置哈希', { de: 'Konfigurations-Hash' , fr: 'Hash de configuration'}) }}</span>
                     <code
                       class="dkg-row-value dkg-row-mono"
                       :title="dkgCitation.reproduce_config_sha256"
@@ -1978,21 +1978,21 @@
                       target="_blank"
                       rel="noopener"
                     >
-                      {{ $tr('Open on DKG explorer ↗', '在 DKG 浏览器中打开 ↗', { de: 'Im DKG-Explorer öffnen ↗' }) }}
+                      {{ $tr('Open on DKG explorer ↗', '在 DKG 浏览器中打开 ↗', { de: 'Im DKG-Explorer öffnen ↗' , fr: 'Ouvrir sur l\'explorateur DKG ↗'}) }}
                     </a>
                     <span v-if="dkgCitation.finalized" class="dkg-finalized-badge">
-                      ✓ {{ $tr('Finalized', '已最终确认', { de: 'Abgeschlossen' }) }}
+                      ✓ {{ $tr('Finalized', '已最终确认', { de: 'Abgeschlossen' , fr: 'Finalisé'}) }}
                     </span>
                   </div>
                   <div class="repro-note">
-                    {{ $tr('A verifier fetches reproduce.json, SHA-256s the bytes, and compares to the on-chain config hash. Match = the simulation parameters have not been altered since anchoring.', '验证者获取 reproduce.json,计算 SHA-256 后与链上配置哈希比对。匹配则证明该模拟参数自锚定后未被篡改。', { de: 'Ein Prüfer lädt reproduce.json herunter, berechnet den SHA-256 der Bytes und vergleicht ihn mit dem On-Chain-Konfigurations-Hash. Übereinstimmung = die Simulationsparameter wurden seit der Verankerung nicht verändert.' }) }}
+                    {{ $tr('A verifier fetches reproduce.json, SHA-256s the bytes, and compares to the on-chain config hash. Match = the simulation parameters have not been altered since anchoring.', '验证者获取 reproduce.json,计算 SHA-256 后与链上配置哈希比对。匹配则证明该模拟参数自锚定后未被篡改。', { de: 'Ein Prüfer lädt reproduce.json herunter, berechnet den SHA-256 der Bytes und vergleicht ihn mit dem On-Chain-Konfigurations-Hash. Übereinstimmung = die Simulationsparameter wurden seit der Verankerung nicht verändert.' , fr: 'Un vérificateur récupère reproduce.json, en calcule le SHA-256 et le compare au hash de configuration on-chain. Correspondance = les paramètres n\'ont pas été modifiés depuis l\'ancrage.'}) }}
                   </div>
                 </div>
 
                 <!-- Not yet anchored — show the publish CTA -->
                 <div v-else-if="!dkgLoading" class="dkg-card dkg-card-empty">
                   <div class="dkg-empty-text">
-                    {{ $tr('No on-chain citation yet for this simulation.', '该模拟尚未生成链上引用。', { de: 'Noch keine On-Chain-Zitation für diese Simulation.' }) }}
+                    {{ $tr('No on-chain citation yet for this simulation.', '该模拟尚未生成链上引用。', { de: 'Noch keine On-Chain-Zitation für diese Simulation.' , fr: 'Pas encore de citation on-chain.'}) }}
                   </div>
                   <div class="dkg-actions">
                     <button
@@ -2002,15 +2002,15 @@
                       @click="publishDkg"
                     >
                       <span v-if="dkgPublishing">
-                        {{ $tr('Anchoring on-chain…', '正在上链…', { de: 'Wird on-chain verankert…' }) }}
+                        {{ $tr('Anchoring on-chain…', '正在上链…', { de: 'Wird on-chain verankert…' , fr: 'Ancrage on-chain…'}) }}
                       </span>
                       <span v-else>
-                        ⛓️ {{ $tr('Publish to DKG', '发布至 DKG', { de: 'Auf DKG veröffentlichen' }) }}
+                        ⛓️ {{ $tr('Publish to DKG', '发布至 DKG', { de: 'Auf DKG veröffentlichen' , fr: 'Publier sur le DKG'}) }}
                       </span>
                     </button>
                   </div>
                   <div class="repro-note">
-                    {{ $tr('Requires the local DKG daemon to be running (dkg start) and a funded wallet. Anchoring costs TRAC + gas on the configured chain.', '需要本地 DKG 守护进程已启动(dkg start)及一个已充值的钱包。上链需消耗所选链的 TRAC 与 gas 费。', { de: 'Erfordert, dass der lokale DKG-Daemon läuft (dkg start) und eine finanzierte Wallet vorhanden ist. Die Verankerung kostet TRAC + Gas auf der konfigurierten Chain.' }) }}
+                    {{ $tr('Requires the local DKG daemon to be running (dkg start) and a funded wallet. Anchoring costs TRAC + gas on the configured chain.', '需要本地 DKG 守护进程已启动(dkg start)及一个已充值的钱包。上链需消耗所选链的 TRAC 与 gas 费。', { de: 'Erfordert, dass der lokale DKG-Daemon läuft (dkg start) und eine finanzierte Wallet vorhanden ist. Die Verankerung kostet TRAC + Gas auf der konfigurierten Chain.' , fr: 'Nécessite le démon DKG local et un portefeuille financé. L\'ancrage coûte du TRAC + gas.'}) }}
                   </div>
                 </div>
 
@@ -2039,13 +2039,13 @@
                 <span class="transcript-icon">🗄️</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('WaybackClaw archive', 'WaybackClaw 归档', { de: 'WaybackClaw-Archiv' }) }}
+                    {{ $tr('WaybackClaw archive', 'WaybackClaw 归档', { de: 'WaybackClaw-Archiv' , fr: 'Archive WaybackClaw'}) }}
                     <span class="lineage-count-chip dkg-network-chip-testnet">
-                      {{ $tr('IPFS + Nostr', 'IPFS + Nostr', { de: 'IPFS + Nostr' }) }}
+                      {{ $tr('IPFS + Nostr', 'IPFS + Nostr', { de: 'IPFS + Nostr' , fr: 'IPFS + Nostr'}) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Submit the snapshot (scenario, agent count, consensus, quality, reproduce.json hash) to the WaybackClaw AI Agent Archive. The archive pins the record to IPFS for content-addressed storage and broadcasts it to Nostr relays for real-time distribution — an open, agent-readable history of this MiroShark deployment.', '将快照(情景、智能体数、共识、质量、reproduce.json 哈希)提交至 WaybackClaw AI Agent 归档。归档会将记录固定到 IPFS 以实现内容寻址存储,并广播到 Nostr 中继以实现实时分发 — 为该 MiroShark 部署构建一份开放、可被其他智能体读取的历史记录。', { de: 'Sende den Snapshot (Szenario, Agentenanzahl, Konsens, Qualität, reproduce.json-Hash) an das WaybackClaw AI Agent Archive. Das Archiv pinnt den Eintrag auf IPFS für inhaltsadressierte Speicherung und sendet ihn an Nostr-Relays zur Echtzeit-Verteilung — eine offene, von anderen Agenten lesbare Geschichte dieses MiroShark-Deployments.' }) }}
+                    {{ $tr('Submit the snapshot (scenario, agent count, consensus, quality, reproduce.json hash) to the WaybackClaw AI Agent Archive. The archive pins the record to IPFS for content-addressed storage and broadcasts it to Nostr relays for real-time distribution — an open, agent-readable history of this MiroShark deployment.', '将快照(情景、智能体数、共识、质量、reproduce.json 哈希)提交至 WaybackClaw AI Agent 归档。归档会将记录固定到 IPFS 以实现内容寻址存储,并广播到 Nostr 中继以实现实时分发 — 为该 MiroShark 部署构建一份开放、可被其他智能体读取的历史记录。', { de: 'Sende den Snapshot (Szenario, Agentenanzahl, Konsens, Qualität, reproduce.json-Hash) an das WaybackClaw AI Agent Archive. Das Archiv pinnt den Eintrag auf IPFS für inhaltsadressierte Speicherung und sendet ihn an Nostr-Relays zur Echtzeit-Verteilung — eine offene, von anderen Agenten lesbare Geschichte dieses MiroShark-Deployments.' , fr: 'Soumettez l\'instantané (scénario, agents, consensus, qualité, hash reproduce.json) au WaybackClaw AI Agent Archive.'}) }}
                   </div>
                 </div>
               </div>
@@ -2054,7 +2054,7 @@
                 <!-- Already submitted — show the snapshot primitives -->
                 <div v-if="wbcRecord && wbcRecord.id" class="dkg-card">
                   <div class="dkg-row">
-                    <span class="dkg-row-label">{{ $tr('Snapshot', '快照', { de: 'Snapshot' }) }}</span>
+                    <span class="dkg-row-label">{{ $tr('Snapshot', '快照', { de: 'Snapshot' , fr: 'Instantané'}) }}</span>
                     <code
                       class="dkg-row-value dkg-row-mono"
                       :title="wbcRecord.id"
@@ -2136,7 +2136,7 @@
                 <!-- Not yet submitted — show the submit CTA -->
                 <div v-else-if="!wbcLoading" class="dkg-card dkg-card-empty">
                   <div class="dkg-empty-text">
-                    {{ $tr('Not yet submitted to the WaybackClaw archive.', '尚未提交至 WaybackClaw 归档。', { de: 'Noch nicht an das WaybackClaw-Archiv übermittelt.' }) }}
+                    {{ $tr('Not yet submitted to the WaybackClaw archive.', '尚未提交至 WaybackClaw 归档。', { de: 'Noch nicht an das WaybackClaw-Archiv übermittelt.' , fr: 'Pas encore soumis à l\'archive WaybackClaw.'}) }}
                   </div>
                   <div class="dkg-actions">
                     <button
@@ -2146,15 +2146,15 @@
                       @click="publishWaybackclaw"
                     >
                       <span v-if="wbcSubmitting">
-                        {{ $tr('Submitting…', '正在提交…', { de: 'Wird übermittelt…' }) }}
+                        {{ $tr('Submitting…', '正在提交…', { de: 'Wird übermittelt…' , fr: 'Soumission en cours…'}) }}
                       </span>
                       <span v-else>
-                        🗄️ {{ $tr('Submit to WaybackClaw', '提交至 WaybackClaw', { de: 'An WaybackClaw übermitteln' }) }}
+                        🗄️ {{ $tr('Submit to WaybackClaw', '提交至 WaybackClaw', { de: 'An WaybackClaw übermitteln' , fr: 'Soumettre à WaybackClaw'}) }}
                       </span>
                     </button>
                   </div>
                   <div class="repro-note">
-                    {{ $tr('Free for agents — no on-chain cost. The archive pins the snapshot to IPFS and broadcasts to Nostr.', '智能体提交免费 — 无链上费用。归档会将快照固定到 IPFS 并广播到 Nostr。', { de: 'Für Agenten kostenlos — keine On-Chain-Kosten. Das Archiv pinnt den Snapshot auf IPFS und sendet ihn an Nostr.' }) }}
+                    {{ $tr('Free for agents — no on-chain cost. The archive pins the snapshot to IPFS and broadcasts to Nostr.', '智能体提交免费 — 无链上费用。归档会将快照固定到 IPFS 并广播到 Nostr。', { de: 'Für Agenten kostenlos — keine On-Chain-Kosten. Das Archiv pinnt den Snapshot auf IPFS und sendet ihn an Nostr.' , fr: 'Gratuit — aucun coût on-chain. L\'archive épingle l\'instantané sur IPFS et le diffuse sur Nostr.'}) }}
                   </div>
                 </div>
 
@@ -2182,16 +2182,16 @@
                 <span class="transcript-icon">🌳</span>
                 <div class="transcript-head-body">
                   <div class="transcript-title">
-                    {{ $tr('Lineage', '谱系', { de: 'Abstammung' }) }}
+                    {{ $tr('Lineage', '谱系', { de: 'Abstammung' , fr: 'Lignée'}) }}
                     <span class="lineage-count-chip" v-if="lineageTotalChildren > 0">
                       {{ lineageTotalChildren }}
                       {{ lineageTotalChildren === 1
-                          ? $tr('branch', '分支', { de: 'Verzweigung' })
+                          ? $tr('branch', '分支', { de: 'Verzweigung' , fr: 'branche'})
                           : $tr('branches', '分支', { de: 'Verzweigungen', fr: 'branches' }) }}
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr('Navigate the fork / counterfactual graph this simulation belongs to. Click a row to open that sim in a new tab.', '浏览此模拟所属的派生 / 反事实分支图。点击任意行可在新标签页中打开对应模拟。', { de: 'Navigiere im Fork-/Kontrafaktual-Graphen, zu dem diese Simulation gehört. Klicke auf eine Zeile, um diese Simulation in einem neuen Tab zu öffnen.' }) }}
+                    {{ $tr('Navigate the fork / counterfactual graph this simulation belongs to. Click a row to open that sim in a new tab.', '浏览此模拟所属的派生 / 反事实分支图。点击任意行可在新标签页中打开对应模拟。', { de: 'Navigiere im Fork-/Kontrafaktual-Graphen, zu dem diese Simulation gehört. Klicke auf eine Zeile, um diese Simulation in einem neuen Tab zu öffnen.' , fr: 'Naviguez dans le graphe de fork / contrefactuel de cette simulation. Cliquez sur une ligne pour l\'ouvrir dans un nouvel onglet.'}) }}
                   </div>
                 </div>
                 <button
@@ -2206,7 +2206,7 @@
 
               <div v-if="lineageExpanded" class="lineage-body">
                 <div v-if="lineageLoading" class="repro-loading">
-                  {{ $tr('Loading lineage…', '加载谱系中…', { de: 'Abstammung wird geladen…' }) }}
+                  {{ $tr('Loading lineage…', '加载谱系中…', { de: 'Abstammung wird geladen…' , fr: 'Chargement de la lignée…'}) }}
                 </div>
                 <div v-else-if="lineageError" class="transcript-empty repro-error">
                   {{ lineageError }}
@@ -2220,7 +2220,7 @@
                     <div class="lineage-row-arrow">↑</div>
                     <div class="lineage-row-body">
                       <div class="lineage-row-head">
-                        <span class="lineage-row-tag">{{ $tr('Parent', '父级', { de: 'Übergeordnet' }) }}</span>
+                        <span class="lineage-row-tag">{{ $tr('Parent', '父级', { de: 'Übergeordnet' , fr: 'Parent'}) }}</span>
                         <span
                           class="lineage-row-id"
                           :title="lineageParent.simulation_id"
@@ -2235,7 +2235,7 @@
                         {{ lineageParent.scenario_preview }}
                       </div>
                       <div v-else class="lineage-row-private">
-                        {{ $tr('Parent simulation is unpublished.', '父级模拟未发布。', { de: 'Übergeordnete Simulation ist nicht veröffentlicht.' }) }}
+                        {{ $tr('Parent simulation is unpublished.', '父级模拟未发布。', { de: 'Übergeordnete Simulation ist nicht veröffentlicht.' , fr: 'La simulation parente n\'est pas publiée.'}) }}
                       </div>
                       <a
                         v-if="parentWatchUrl"
@@ -2244,7 +2244,7 @@
                         rel="noopener"
                         class="lineage-row-link"
                       >
-                        {{ $tr('Open parent ↗', '打开父级 ↗', { de: 'Übergeordnete öffnen ↗' }) }}
+                        {{ $tr('Open parent ↗', '打开父级 ↗', { de: 'Übergeordnete öffnen ↗' , fr: 'Ouvrir le parent ↗'}) }}
                       </a>
                     </div>
                   </div>
@@ -2257,14 +2257,14 @@
                       <span class="lineage-row-arrow">↓</span>
                       <span class="lineage-row-tag">
                         {{ lineageTotalChildren === 1
-                            ? $tr('Child', '子级', { de: 'Untergeordnet' })
-                            : $tr('Children', '子级', { de: 'Untergeordnete' }) }}
+                            ? $tr('Child', '子级', { de: 'Untergeordnet' , fr: 'Enfant'})
+                            : $tr('Children', '子级', { de: 'Untergeordnete' , fr: 'Enfants'}) }}
                       </span>
                       <span
                         v-if="lineageChildren.length < lineageTotalChildren"
                         class="lineage-truncated-note"
                       >
-                        {{ $tr('Showing first', '显示前', { de: 'Zeige erste' }) }}
+                        {{ $tr('Showing first', '显示前', { de: 'Zeige erste' , fr: 'Affichage des premiers'}) }}
                         {{ lineageChildren.length }}
                         {{ $tr('of', '/共', { de: 'von', fr: 'de' }) }}
                         {{ lineageTotalChildren }}
@@ -2367,7 +2367,7 @@
                 />
                 <textarea
                   v-model="outcomeForm.outcome_summary"
-                  :placeholder="$tr('What happened, in one or two sentences (max 280 chars)', '用一两句话描述发生了什么(最多 280 字符)', { de: 'Was ist passiert, in ein oder zwei Sätzen (max. 280 Zeichen)' })"
+                  :placeholder="$tr('What happened, in one or two sentences (max 280 chars)', '用一两句话描述发生了什么(最多 280 字符)', { de: 'Was ist passiert, in ein oder zwei Sätzen (max. 280 Zeichen)' , fr: 'En une ou deux phrases (max 280 car.)'})"
                   class="outcome-textarea"
                   :disabled="!isPublic"
                   maxlength="280"
@@ -2383,9 +2383,9 @@
                     @click="submitOutcome"
                     :disabled="!isPublic || !outcomeForm.label || outcomeSubmitting"
                   >
-                    <span v-if="outcomeSubmitting">{{ $tr('Saving…', '保存中…', { de: 'Wird gespeichert…' }) }}</span>
-                    <span v-else-if="outcome">{{ $tr('Update outcome', '更新结果', { de: 'Ergebnis aktualisieren' }) }}</span>
-                    <span v-else>{{ $tr('Save outcome', '保存结果', { de: 'Ergebnis speichern' }) }}</span>
+                    <span v-if="outcomeSubmitting">{{ $tr('Saving…', '保存中…', { de: 'Wird gespeichert…' , fr: 'Enregistrement…'}) }}</span>
+                    <span v-else-if="outcome">{{ $tr('Update outcome', '更新结果', { de: 'Ergebnis aktualisieren' , fr: 'Mettre à jour le résultat'}) }}</span>
+                    <span v-else>{{ $tr('Save outcome', '保存结果', { de: 'Ergebnis speichern' , fr: 'Enregistrer le résultat'}) }}</span>
                   </button>
                   <a
                     v-if="outcome"
@@ -2394,7 +2394,7 @@
                     rel="noopener"
                     class="outcome-link"
                   >
-                    {{ $tr('View on /verified ↗', '在 /verified 查看 ↗', { de: 'Auf /verified ansehen ↗' }) }}
+                    {{ $tr('View on /verified ↗', '在 /verified 查看 ↗', { de: 'Auf /verified ansehen ↗' , fr: 'Voir sur /verified ↗'}) }}
                   </a>
                 </div>
 
@@ -2416,19 +2416,19 @@
                 <span class="webhook-log-icon">📡</span>
                 <div class="webhook-log-head-body">
                   <div class="webhook-log-title">
-                    {{ $tr('Webhook delivery history', 'Webhook 投递历史', { de: 'Webhook-Auslieferungsverlauf' }) }}
+                    {{ $tr('Webhook delivery history', 'Webhook 投递历史', { de: 'Webhook-Auslieferungsverlauf' , fr: 'Historique de livraison du webhook'}) }}
                     <span v-if="webhookLogTotal > 0" class="webhook-log-count">
-                      {{ webhookLogTotal }} {{ webhookLogTotal === 1 ? $tr('attempt', '次', { de: 'Versuch' }) : $tr('attempts', '次', { de: 'Versuche' }) }}
+                      {{ webhookLogTotal }} {{ webhookLogTotal === 1 ? $tr('attempt', '次', { de: 'Versuch' , fr: 'tentative'}) : $tr('attempts', '次', { de: 'Versuche' }) }}
                     </span>
                   </div>
                   <div class="webhook-log-sub">
-                    {{ $tr('Auto-fires on simulation completion. Records the last 50 attempts on disk so a delivery failure is visible without checking server logs.', '在模拟完成时自动触发。最多在磁盘上保留 50 次投递记录,无需查看服务器日志即可发现失败。', { de: 'Wird bei Simulationsabschluss automatisch ausgelöst. Speichert die letzten 50 Versuche auf der Festplatte, sodass ein Auslieferungsfehler ohne Serverprotokoll-Prüfung sichtbar ist.' }) }}
+                    {{ $tr('Auto-fires on simulation completion. Records the last 50 attempts on disk so a delivery failure is visible without checking server logs.', '在模拟完成时自动触发。最多在磁盘上保留 50 次投递记录,无需查看服务器日志即可发现失败。', { de: 'Wird bei Simulationsabschluss automatisch ausgelöst. Speichert die letzten 50 Versuche auf der Festplatte, sodass ein Auslieferungsfehler ohne Serverprotokoll-Prüfung sichtbar ist.' , fr: 'Se déclenche automatiquement à la fin de la simulation. Enregistre les 50 dernières tentatives sur le disque.'}) }}
                   </div>
                 </div>
                 <button
                   class="webhook-log-toggle"
                   @click="toggleWebhookLog"
-                  :title="webhookLogExpanded ? $tr('Hide history', '隐藏历史', { de: 'Verlauf ausblenden' }) : $tr('Show history', '显示历史', { de: 'Verlauf anzeigen' })"
+                  :title="webhookLogExpanded ? $tr('Hide history', '隐藏历史', { de: 'Verlauf ausblenden' , fr: 'Masquer l\'historique'}) : $tr('Show history', '显示历史', { de: 'Verlauf anzeigen' })"
                 >
                   {{ webhookLogExpanded ? '▾' : '▸' }}
                 </button>
@@ -2436,11 +2436,11 @@
 
               <div v-if="webhookLogExpanded" class="webhook-log-body">
                 <div v-if="webhookLogLoading" class="webhook-log-loading">
-                  {{ $tr('Loading delivery history…', '正在加载投递历史…', { de: 'Auslieferungsverlauf wird geladen…' }) }}
+                  {{ $tr('Loading delivery history…', '正在加载投递历史…', { de: 'Auslieferungsverlauf wird geladen…' , fr: 'Chargement de l\'historique de livraison…'}) }}
                 </div>
 
                 <div v-else-if="webhookLogConfigError" class="webhook-log-config-hint">
-                  {{ $tr('Admin authentication is not configured on this deployment. Set MIROSHARK_ADMIN_TOKEN to enable the delivery log.', '此部署未配置管理员身份验证。设置 MIROSHARK_ADMIN_TOKEN 以启用投递日志。', { de: 'Admin-Authentifizierung ist auf diesem Deployment nicht konfiguriert. Setze MIROSHARK_ADMIN_TOKEN, um das Auslieferungsprotokoll zu aktivieren.' }) }}
+                  {{ $tr('Admin authentication is not configured on this deployment. Set MIROSHARK_ADMIN_TOKEN to enable the delivery log.', '此部署未配置管理员身份验证。设置 MIROSHARK_ADMIN_TOKEN 以启用投递日志。', { de: 'Admin-Authentifizierung ist auf diesem Deployment nicht konfiguriert. Setze MIROSHARK_ADMIN_TOKEN, um das Auslieferungsprotokoll zu aktivieren.' , fr: 'L\'authentification admin n\'est pas configurée. Définissez MIROSHARK_ADMIN_TOKEN pour activer le journal de livraison.'}) }}
                 </div>
 
                 <div v-else-if="webhookLogError" class="webhook-log-error">
@@ -2448,7 +2448,7 @@
                 </div>
 
                 <div v-else-if="webhookLogEntries.length === 0" class="webhook-log-empty">
-                  {{ $tr('No deliveries recorded yet. The webhook fires automatically on simulation completion.', '暂无投递记录。Webhook 会在模拟完成时自动触发。', { de: 'Noch keine Auslieferungen aufgezeichnet. Der Webhook wird bei Simulationsabschluss automatisch ausgelöst.' }) }}
+                  {{ $tr('No deliveries recorded yet. The webhook fires automatically on simulation completion.', '暂无投递记录。Webhook 会在模拟完成时自动触发。', { de: 'Noch keine Auslieferungen aufgezeichnet. Der Webhook wird bei Simulationsabschluss automatisch ausgelöst.' , fr: 'Aucune livraison enregistrée. Le webhook se déclenche automatiquement.'}) }}
                 </div>
 
                 <ul v-else class="webhook-log-list">
@@ -2507,11 +2507,11 @@
                   <button
                     class="signature-hint-toggle"
                     @click="toggleSignatureHint"
-                    :title="signatureHintExpanded ? $tr('Hide signature verification hint', '隐藏签名验证提示', { de: 'Signaturverifizierungshinweis ausblenden' }) : $tr('Show signature verification hint', '显示签名验证提示', { de: 'Signaturverifizierungshinweis anzeigen' })"
+                    :title="signatureHintExpanded ? $tr('Hide signature verification hint', '隐藏签名验证提示', { de: 'Signaturverifizierungshinweis ausblenden' , fr: 'Masquer l\'indice de vérification de signature'}) : $tr('Show signature verification hint', '显示签名验证提示', { de: 'Signaturverifizierungshinweis anzeigen' })"
                   >
                     <span class="signature-hint-icon">🔐</span>
                     <span class="signature-hint-title">
-                      {{ $tr('Verify webhook signatures', '验证 webhook 签名', { de: 'Webhook-Signaturen verifizieren' }) }}
+                      {{ $tr('Verify webhook signatures', '验证 webhook 签名', { de: 'Webhook-Signaturen verifizieren' , fr: 'Vérifier les signatures webhook'}) }}
                     </span>
                     <span class="signature-hint-chevron">{{ signatureHintExpanded ? '▾' : '▸' }}</span>
                   </button>
@@ -2519,7 +2519,7 @@
                     <p class="signature-hint-line">
                       {{ $tr('Set the WEBHOOK_SECRET environment variable on this MiroShark instance and MiroShark will HMAC-sign every dispatch with an X-MiroShark-Signature header. Recipients verify with three lines of stdlib hmac — same scheme Stripe and GitHub use.',
                         '在这台 MiroShark 实例上设置 WEBHOOK_SECRET 环境变量,MiroShark 就会用 HMAC 对每一次投递签名,并通过 X-MiroShark-Signature 头部送出。消费方用三行 stdlib hmac 即可校验 — Stripe 和 GitHub 用的就是同一套。',
-                        { de: 'Setze die Umgebungsvariable WEBHOOK_SECRET auf dieser MiroShark-Instanz und MiroShark signiert jede Auslieferung per HMAC mit einem X-MiroShark-Signature-Header. Empfänger verifizieren mit drei Zeilen stdlib hmac — dasselbe Schema wie Stripe und GitHub.' }
+                        { de: 'Setze die Umgebungsvariable WEBHOOK_SECRET auf dieser MiroShark-Instanz und MiroShark signiert jede Auslieferung per HMAC mit einem X-MiroShark-Signature-Header. Empfänger verifizieren mit drei Zeilen stdlib hmac — dasselbe Schema wie Stripe und GitHub.' , fr: 'Définissez WEBHOOK_SECRET et MiroShark signera chaque envoi avec un HMAC via X-MiroShark-Signature.'}
                       ) }}
                     </p>
                     <code class="signature-hint-code">WEBHOOK_SECRET=&lt;your 32+ char secret&gt;</code>
@@ -2528,7 +2528,7 @@
                         href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md#verifying-webhook-signatures"
                         target="_blank"
                         rel="noopener"
-                      >{{ $tr('Verification snippets (Python / Node.js / curl)', '验证示例(Python / Node.js / curl)', { de: 'Verifizierungs-Snippets (Python / Node.js / curl)' }) }} ↗</a>
+                      >{{ $tr('Verification snippets (Python / Node.js / curl)', '验证示例(Python / Node.js / curl)', { de: 'Verifizierungs-Snippets (Python / Node.js / curl)' , fr: 'Extraits de vérification (Python / Node.js / curl)'}) }} ↗</a>
                     </p>
                   </div>
                 </div>
@@ -2542,18 +2542,18 @@
               <div class="gallery-callout-icon">◎</div>
               <div class="gallery-callout-body">
                 <div class="gallery-callout-title">
-                  {{ isPublic ? $tr('Live on the public gallery', '已发布到公开画廊', { de: 'Live in der öffentlichen Galerie' }) : $tr('Submit to the public gallery', '提交到公开画廊', { de: 'In die öffentliche Galerie einreichen' }) }}
+                  {{ isPublic ? $tr('Live on the public gallery', '已发布到公开画廊', { de: 'Live in der öffentlichen Galerie' , fr: 'En direct sur la galerie publique'}) : $tr('Submit to the public gallery', '提交到公开画廊', { de: 'In die öffentliche Galerie einreichen' }) }}
                 </div>
                 <div class="gallery-callout-desc">
                   <template v-if="isPublic">
-                    {{ $tr('This simulation is now visible on', '此模拟现可在以下页面查看', { de: 'Diese Simulation ist jetzt sichtbar auf' }) }}
+                    {{ $tr('This simulation is now visible on', '此模拟现可在以下页面查看', { de: 'Diese Simulation ist jetzt sichtbar auf' , fr: 'Cette simulation est maintenant visible sur'}) }}
                     <a href="/explore" target="_blank" rel="noopener">/explore</a> —
-                    {{ $tr('the public gallery where anyone can browse published runs and fork them into their own simulations.', '公开画廊,任何人都可浏览已发布运行并派生为自己的模拟。', { de: 'der öffentlichen Galerie, wo jeder veröffentlichte Läufe durchsuchen und sie in eigene Simulationen forken kann.' }) }}
+                    {{ $tr('the public gallery where anyone can browse published runs and fork them into their own simulations.', '公开画廊,任何人都可浏览已发布运行并派生为自己的模拟。', { de: 'der öffentlichen Galerie, wo jeder veröffentlichte Läufe durchsuchen und sie in eigene Simulationen forken kann.' , fr: 'la galerie publique où chacun peut parcourir les runs publiés et les forker dans leurs propres simulations.'}) }}
                   </template>
                   <template v-else>
-                    {{ $tr(`Toggle "Public" above and this run joins the community gallery at`, '将上方切换为「公开」,该运行将加入社区画廊', { de: 'Schalte oben auf „Öffentlich" um und dieser Lauf erscheint in der Community-Galerie bei' }) }}
+                    {{ $tr(`Toggle "Public" above and this run joins the community gallery at`, '将上方切换为「公开」,该运行将加入社区画廊', { de: 'Schalte oben auf „Öffentlich" um und dieser Lauf erscheint in der Community-Galerie bei' , fr: 'Activez « Public » ci-dessus et ce run rejoint la galerie communautaire sur'}) }}
                     <a href="/explore" target="_blank" rel="noopener">/explore</a>.
-                    {{ $tr('Others can browse it, view the full belief drift, and fork your agents into their own scenarios.', '其他人可以浏览、查看完整的信念漂移,并将你的智能体派生到他们自己的情景中。', { de: 'Andere können ihn durchsuchen, den gesamten Überzeugungsdrift einsehen und deine Agenten in ihre eigenen Szenarien forken.' }) }}
+                    {{ $tr('Others can browse it, view the full belief drift, and fork your agents into their own scenarios.', '其他人可以浏览、查看完整的信念漂移,并将你的智能体派生到他们自己的情景中。', { de: 'Andere können ihn durchsuchen, den gesamten Überzeugungsdrift einsehen und deine Agenten in ihre eigenen Szenarien forken.' , fr: 'D\'autres peuvent la parcourir et forker vos agents dans leurs propres scénarios.'}) }}
                   </template>
                 </div>
               </div>
@@ -2564,7 +2564,7 @@
                 rel="noopener"
                 class="gallery-callout-link"
               >
-                {{ $tr('Open gallery ↗', '打开画廊 ↗', { de: 'Galerie öffnen ↗' }) }}
+                {{ $tr('Open gallery ↗', '打开画廊 ↗', { de: 'Galerie öffnen ↗' , fr: 'Ouvrir la galerie ↗'}) }}
               </a>
             </div>
 
@@ -2578,10 +2578,10 @@
                 <span class="feed-callout-icon">📡</span>
                 <div class="feed-callout-body">
                   <div class="feed-callout-title">
-                    {{ $tr('Follow the gallery via RSS', '通过 RSS 关注画廊', { de: 'Galerie per RSS verfolgen' }) }}
+                    {{ $tr('Follow the gallery via RSS', '通过 RSS 关注画廊', { de: 'Galerie per RSS verfolgen' , fr: 'Suivre la galerie via RSS'}) }}
                   </div>
                   <div class="feed-callout-desc">
-                    {{ $tr('Every newly published MiroShark simulation appears in your reader (Feedly, Readwise, Inoreader, Obsidian RSS, NetNewsWire, …). No login, no account.', '每个新发布的 MiroShark 模拟都会出现在你的阅读器中(Feedly、Readwise、Inoreader、Obsidian RSS、NetNewsWire 等)。无需登录,无需账户。', { de: 'Jede neu veröffentlichte MiroShark-Simulation erscheint in deinem Reader (Feedly, Readwise, Inoreader, Obsidian RSS, NetNewsWire, …). Kein Login, kein Konto.' }) }}
+                    {{ $tr('Every newly published MiroShark simulation appears in your reader (Feedly, Readwise, Inoreader, Obsidian RSS, NetNewsWire, …). No login, no account.', '每个新发布的 MiroShark 模拟都会出现在你的阅读器中(Feedly、Readwise、Inoreader、Obsidian RSS、NetNewsWire 等)。无需登录,无需账户。', { de: 'Jede neu veröffentlichte MiroShark-Simulation erscheint in deinem Reader (Feedly, Readwise, Inoreader, Obsidian RSS, NetNewsWire, …). Kein Login, kein Konto.' , fr: 'Chaque nouvelle simulation publiée apparaît dans votre lecteur RSS. Sans connexion, sans compte.'}) }}
                   </div>
                 </div>
               </div>
@@ -2591,16 +2591,16 @@
                   :href="feedAtomUrl"
                   target="_blank"
                   rel="noopener"
-                  :title="$tr('Atom 1.0 feed of the public gallery', '公开画廊的 Atom 1.0 源', { de: 'Atom-1.0-Feed der öffentlichen Galerie' })"
+                  :title="$tr('Atom 1.0 feed of the public gallery', '公开画廊的 Atom 1.0 源', { de: 'Atom-1.0-Feed der öffentlichen Galerie' , fr: 'Flux Atom 1.0 de la galerie publique'})"
                 >
-                  {{ $tr('Atom feed ↗', 'Atom 源 ↗', { de: 'Atom-Feed ↗' }) }}
+                  {{ $tr('Atom feed ↗', 'Atom 源 ↗', { de: 'Atom-Feed ↗' , fr: 'Flux Atom ↗'}) }}
                 </a>
                 <a
                   class="feed-callout-link feed-callout-link-secondary"
                   :href="feedRssUrl"
                   target="_blank"
                   rel="noopener"
-                  :title="$tr('RSS 2.0 feed of the public gallery', '公开画廊的 RSS 2.0 源', { de: 'RSS-2.0-Feed der öffentlichen Galerie' })"
+                  :title="$tr('RSS 2.0 feed of the public gallery', '公开画廊的 RSS 2.0 源', { de: 'RSS-2.0-Feed der öffentlichen Galerie' , fr: 'Flux RSS 2.0 de la galerie publique'})"
                 >
                   RSS 2.0 ↗
                 </a>
@@ -2609,9 +2609,9 @@
                   :href="feedVerifiedAtomUrl"
                   target="_blank"
                   rel="noopener"
-                  :title="$tr('Atom feed restricted to verified predictions only', '仅限已验证预测的 Atom 源', { de: 'Atom-Feed nur für verifizierte Prognosen' })"
+                  :title="$tr('Atom feed restricted to verified predictions only', '仅限已验证预测的 Atom 源', { de: 'Atom-Feed nur für verifizierte Prognosen' , fr: 'Flux Atom limité aux prédictions vérifiées uniquement'})"
                 >
-                  {{ $tr('Verified only ↗', '仅已验证 ↗', { de: 'Nur verifizierte ↗' }) }}
+                  {{ $tr('Verified only ↗', '仅已验证 ↗', { de: 'Nur verifizierte ↗' , fr: 'Vérifiés uniquement ↗'}) }}
                 </a>
               </div>
 
@@ -2624,7 +2624,7 @@
                    original feed URL.  -->
               <div class="feed-filter-builder">
                 <div class="feed-filter-builder-title">
-                  {{ $tr('Build a filtered feed', '构建筛选源', { de: 'Gefilterten Feed erstellen' }) }}
+                  {{ $tr('Build a filtered feed', '构建筛选源', { de: 'Gefilterten Feed erstellen' , fr: 'Construire un flux filtré'}) }}
                 </div>
                 <div class="feed-filter-builder-controls">
                   <label class="feed-filter-control">
@@ -2632,7 +2632,7 @@
                       {{ $tr('Consensus', '共识', { de: 'Konsens', fr: 'Consensus' }) }}
                     </span>
                     <select v-model="feedFilters.consensus" class="feed-filter-select">
-                      <option value="">{{ $tr('Any', '全部', { de: 'Alle' }) }}</option>
+                      <option value="">{{ $tr('Any', '全部', { de: 'Alle' , fr: 'Tout'}) }}</option>
                       <option value="bullish">{{ $tr('Bullish', '看涨', { de: 'Bullish', fr: 'Haussier' }) }}</option>
                       <option value="neutral">{{ $tr('Neutral', '中性', { de: 'Neutral', fr: 'Neutre' }) }}</option>
                       <option value="bearish">{{ $tr('Bearish', '看跌', { de: 'Bearish', fr: 'Baissier' }) }}</option>
@@ -2701,13 +2701,13 @@
                 <div class="feed-callout-body">
                   <div class="feed-callout-title">
                     {{ sitemapEnabled
-                        ? $tr('Discoverable in web search', '可在网页搜索中发现', { de: 'In der Websuche auffindbar' })
-                        : $tr('Search indexing disabled', '已禁用搜索索引', { de: 'Suchindexierung deaktiviert' }) }}
+                        ? $tr('Discoverable in web search', '可在网页搜索中发现', { de: 'In der Websuche auffindbar' , fr: 'Découvrable dans la recherche web'})
+                        : $tr('Search indexing disabled', '已禁用搜索索引', { de: 'Suchindexierung deaktiviert' , fr: 'Indexation de recherche désactivée'}) }}
                   </div>
                   <div class="feed-callout-desc">
                     {{ sitemapEnabled
-                        ? $tr(`Auto-generated /sitemap.xml lists every published simulation's share + watch URLs. /robots.txt advertises it via the standard Sitemap: directive — submit once to Google Search Console and every newly published sim becomes searchable.`, '自动生成的 /sitemap.xml 列出每个已发布模拟的 share 与 watch URL。/robots.txt 通过标准 Sitemap: 指令通告 — 在 Google Search Console 提交一次后,每个新发布的模拟即可被搜索到。', { de: 'Automatisch generierte /sitemap.xml listet die Share- und Watch-URLs jeder veröffentlichten Simulation auf. /robots.txt bewirbt sie über die Standard-Sitemap:-Direktive — einmal in der Google Search Console einreichen und jede neu veröffentlichte Simulation wird auffindbar.' })
-                        : $tr(`Sitemap disabled — set ENABLE_SITEMAP=true in your environment to surface this deployment's public simulations to search engines.`, '已禁用 Sitemap — 在环境中设置 ENABLE_SITEMAP=true,即可让此部署的公开模拟被搜索引擎收录。', { de: 'Sitemap deaktiviert — setze ENABLE_SITEMAP=true in deiner Umgebung, um die öffentlichen Simulationen dieses Deployments für Suchmaschinen sichtbar zu machen.' }) }}
+                        ? $tr(`Auto-generated /sitemap.xml lists every published simulation's share + watch URLs. /robots.txt advertises it via the standard Sitemap: directive — submit once to Google Search Console and every newly published sim becomes searchable.`, '自动生成的 /sitemap.xml 列出每个已发布模拟的 share 与 watch URL。/robots.txt 通过标准 Sitemap: 指令通告 — 在 Google Search Console 提交一次后,每个新发布的模拟即可被搜索到。', { de: 'Automatisch generierte /sitemap.xml listet die Share- und Watch-URLs jeder veröffentlichten Simulation auf. /robots.txt bewirbt sie über die Standard-Sitemap:-Direktive — einmal in der Google Search Console einreichen und jede neu veröffentlichte Simulation wird auffindbar.' , fr: '/sitemap.xml généré automatiquement liste les URL de partage et de direct de chaque simulation.'})
+                        : $tr(`Sitemap disabled — set ENABLE_SITEMAP=true in your environment to surface this deployment's public simulations to search engines.`, '已禁用 Sitemap — 在环境中设置 ENABLE_SITEMAP=true,即可让此部署的公开模拟被搜索引擎收录。', { de: 'Sitemap deaktiviert — setze ENABLE_SITEMAP=true in deiner Umgebung, um die öffentlichen Simulationen dieses Deployments für Suchmaschinen sichtbar zu machen.' , fr: 'Sitemap désactivé — définissez ENABLE_SITEMAP=true pour exposer les simulations publiques dans la recherche.'}) }}
                   </div>
                 </div>
               </div>
@@ -2717,9 +2717,9 @@
                   :href="sitemapUrl"
                   target="_blank"
                   rel="noopener"
-                  :title="$tr('Open /sitemap.xml in a new tab', '在新标签中打开 /sitemap.xml', { de: '/sitemap.xml in einem neuen Tab öffnen' })"
+                  :title="$tr('Open /sitemap.xml in a new tab', '在新标签中打开 /sitemap.xml', { de: '/sitemap.xml in einem neuen Tab öffnen' , fr: 'Ouvrir /sitemap.xml dans un nouvel onglet'})"
                 >
-                  {{ $tr('View sitemap.xml ↗', '查看 sitemap.xml ↗', { de: 'sitemap.xml anzeigen ↗' }) }}
+                  {{ $tr('View sitemap.xml ↗', '查看 sitemap.xml ↗', { de: 'sitemap.xml anzeigen ↗' , fr: 'Voir sitemap.xml ↗'}) }}
                 </a>
               </div>
             </div>
@@ -2736,18 +2736,18 @@
                 <span class="feed-callout-icon">🔔</span>
                 <div class="feed-callout-body">
                   <div class="feed-callout-title">
-                    {{ $tr('Channel notifications on completion', '完成时的频道通知', { de: 'Kanal-Benachrichtigungen bei Abschluss' }) }}
+                    {{ $tr('Channel notifications on completion', '完成时的频道通知', { de: 'Kanal-Benachrichtigungen bei Abschluss' , fr: 'Notifications de canal à la fin'}) }}
                   </div>
                   <div class="feed-callout-desc">
-                    {{ $tr('MiroShark POSTs a platform-native card to each configured channel the moment a simulation completes or fails — Discord gets a consensus-coloured embed, Slack gets a Block Kit message, Email gets a multipart/alternative message with plain-text belief bars and an HTML CTA, the generic webhook gets the raw JSON. Each channel is opt-in via its own env var.', 'MiroShark 在模拟完成或失败时,会向每个已配置渠道推送对应平台原生的卡片 — Discord 收到按共识着色的 embed,Slack 收到 Block Kit 消息,邮件渠道发出包含纯文本信念条与 HTML CTA 的 multipart/alternative 邮件,通用 Webhook 收到原始 JSON。每个渠道可通过各自的环境变量单独启用。', { de: 'MiroShark sendet beim Abschluss oder Fehlschlag einer Simulation eine plattformspezifische Card an jeden konfigurierten Kanal — Discord erhält ein konsensgebärbtes Embed, Slack eine Block-Kit-Nachricht, E-Mail eine multipart/alternative-Nachricht mit Text-Überzeugungsbalken und HTML-CTA, der generische Webhook die rohe JSON. Jeder Kanal ist per eigener Umgebungsvariable aktivierbar.' }) }}
+                    {{ $tr('MiroShark POSTs a platform-native card to each configured channel the moment a simulation completes or fails — Discord gets a consensus-coloured embed, Slack gets a Block Kit message, Email gets a multipart/alternative message with plain-text belief bars and an HTML CTA, the generic webhook gets the raw JSON. Each channel is opt-in via its own env var.', 'MiroShark 在模拟完成或失败时,会向每个已配置渠道推送对应平台原生的卡片 — Discord 收到按共识着色的 embed,Slack 收到 Block Kit 消息,邮件渠道发出包含纯文本信念条与 HTML CTA 的 multipart/alternative 邮件,通用 Webhook 收到原始 JSON。每个渠道可通过各自的环境变量单独启用。', { de: 'MiroShark sendet beim Abschluss oder Fehlschlag einer Simulation eine plattformspezifische Card an jeden konfigurierten Kanal — Discord erhält ein konsensgebärbtes Embed, Slack eine Block-Kit-Nachricht, E-Mail eine multipart/alternative-Nachricht mit Text-Überzeugungsbalken und HTML-CTA, der generische Webhook die rohe JSON. Jeder Kanal ist per eigener Umgebungsvariable aktivierbar.' , fr: 'MiroShark POSTe une carte native à chaque canal configuré dès la fin ou l\'échec d\'une simulation — Discord reçoit un embed coloré, Slack un Block Kit, Email un multipart/alternative, le webhook le JSON brut.'}) }}
                   </div>
                   <div class="notifications-chips">
                     <span
                       class="notifications-chip"
                       :class="{ 'notifications-chip-on': notifConfig.webhook_configured }"
                       :title="notifConfig.webhook_configured
-                        ? $tr('Generic JSON webhook is wired up — Zapier / Make / n8n / IFTTT / custom listeners', '通用 JSON Webhook 已接入 — Zapier / Make / n8n / IFTTT / 自定义监听端点', { de: 'Generischer JSON-Webhook ist eingerichtet — Zapier / Make / n8n / IFTTT / eigene Listener' })
-                        : $tr('Set WEBHOOK_URL to enable the generic JSON webhook channel', '设置 WEBHOOK_URL 即可启用通用 JSON Webhook 渠道', { de: 'Setze WEBHOOK_URL, um den generischen JSON-Webhook-Kanal zu aktivieren' })"
+                        ? $tr('Generic JSON webhook is wired up — Zapier / Make / n8n / IFTTT / custom listeners', '通用 JSON Webhook 已接入 — Zapier / Make / n8n / IFTTT / 自定义监听端点', { de: 'Generischer JSON-Webhook ist eingerichtet — Zapier / Make / n8n / IFTTT / eigene Listener' , fr: 'Le webhook JSON générique est configuré — Zapier / Make / n8n / IFTTT'})
+                        : $tr('Set WEBHOOK_URL to enable the generic JSON webhook channel', '设置 WEBHOOK_URL 即可启用通用 JSON Webhook 渠道', { de: 'Setze WEBHOOK_URL, um den generischen JSON-Webhook-Kanal zu aktivieren' , fr: 'Définissez WEBHOOK_URL pour le webhook JSON'})"
                     >
                       <span class="notifications-chip-dot">{{ notifConfig.webhook_configured ? '✓' : '○' }}</span>
                       Webhook
@@ -2756,8 +2756,8 @@
                       class="notifications-chip"
                       :class="{ 'notifications-chip-on': notifConfig.discord_configured }"
                       :title="notifConfig.discord_configured
-                        ? $tr('Discord rich embeds are wired up — completed sims land as coloured cards', 'Discord rich embed 已接入 — 模拟完成后会以彩色卡片形式呈现', { de: 'Discord Rich Embeds sind eingerichtet — abgeschlossene Simulationen erscheinen als farbige Cards' })
-                        : $tr('Set DISCORD_WEBHOOK_URL to enable Discord rich-embed cards', '设置 DISCORD_WEBHOOK_URL 即可启用 Discord rich embed 卡片', { de: 'Setze DISCORD_WEBHOOK_URL, um Discord-Rich-Embed-Cards zu aktivieren' })"
+                        ? $tr('Discord rich embeds are wired up — completed sims land as coloured cards', 'Discord rich embed 已接入 — 模拟完成后会以彩色卡片形式呈现', { de: 'Discord Rich Embeds sind eingerichtet — abgeschlossene Simulationen erscheinen als farbige Cards' , fr: 'Les Discord rich embeds sont configurés — les simulations terminées apparaissent en cartes colorées'})
+                        : $tr('Set DISCORD_WEBHOOK_URL to enable Discord rich-embed cards', '设置 DISCORD_WEBHOOK_URL 即可启用 Discord rich embed 卡片', { de: 'Setze DISCORD_WEBHOOK_URL, um Discord-Rich-Embed-Cards zu aktivieren' , fr: 'Définissez DISCORD_WEBHOOK_URL pour les cartes Discord'})"
                     >
                       <span class="notifications-chip-dot">{{ notifConfig.discord_configured ? '✓' : '○' }}</span>
                       Discord
@@ -2766,8 +2766,8 @@
                       class="notifications-chip"
                       :class="{ 'notifications-chip-on': notifConfig.slack_configured }"
                       :title="notifConfig.slack_configured
-                        ? $tr('Slack Block Kit messages are wired up — completed sims land as channel cards', 'Slack Block Kit 已接入 — 模拟完成后会以频道卡片形式呈现', { de: 'Slack-Block-Kit-Nachrichten sind eingerichtet — abgeschlossene Simulationen erscheinen als Kanal-Cards' })
-                        : $tr('Set SLACK_WEBHOOK_URL to enable Slack Block Kit messages', '设置 SLACK_WEBHOOK_URL 即可启用 Slack Block Kit 消息', { de: 'Setze SLACK_WEBHOOK_URL, um Slack-Block-Kit-Nachrichten zu aktivieren' })"
+                        ? $tr('Slack Block Kit messages are wired up — completed sims land as channel cards', 'Slack Block Kit 已接入 — 模拟完成后会以频道卡片形式呈现', { de: 'Slack-Block-Kit-Nachrichten sind eingerichtet — abgeschlossene Simulationen erscheinen als Kanal-Cards' , fr: 'Les messages Slack Block Kit sont configurés'})
+                        : $tr('Set SLACK_WEBHOOK_URL to enable Slack Block Kit messages', '设置 SLACK_WEBHOOK_URL 即可启用 Slack Block Kit 消息', { de: 'Setze SLACK_WEBHOOK_URL, um Slack-Block-Kit-Nachrichten zu aktivieren' , fr: 'Définissez SLACK_WEBHOOK_URL pour les messages Slack'})"
                     >
                       <span class="notifications-chip-dot">{{ notifConfig.slack_configured ? '✓' : '○' }}</span>
                       Slack
@@ -2776,8 +2776,8 @@
                       class="notifications-chip"
                       :class="{ 'notifications-chip-on': notifConfig.email_configured }"
                       :title="notifConfig.email_configured
-                        ? $tr('SMTP completion emails are wired up — every terminal-state transition ships a multipart/alternative message to the configured recipients', 'SMTP 完成邮件已接入 — 每次模拟达到终止状态都会向已配置收件人发出 multipart/alternative 邮件', { de: 'SMTP-Abschluss-E-Mails sind eingerichtet — jeder Terminalzustandsübergang sendet eine multipart/alternative-Nachricht an die konfigurierten Empfänger' })
-                        : $tr('Set SMTP_HOST and SMTP_TO to enable completion emails (SMTP_USER/SMTP_PASSWORD optional)', '设置 SMTP_HOST 与 SMTP_TO 即可启用完成邮件(SMTP_USER/SMTP_PASSWORD 可选)', { de: 'Setze SMTP_HOST und SMTP_TO, um Abschluss-E-Mails zu aktivieren (SMTP_USER/SMTP_PASSWORD optional)' })"
+                        ? $tr('SMTP completion emails are wired up — every terminal-state transition ships a multipart/alternative message to the configured recipients', 'SMTP 完成邮件已接入 — 每次模拟达到终止状态都会向已配置收件人发出 multipart/alternative 邮件', { de: 'SMTP-Abschluss-E-Mails sind eingerichtet — jeder Terminalzustandsübergang sendet eine multipart/alternative-Nachricht an die konfigurierten Empfänger' , fr: 'Les emails de fin SMTP sont configurés — chaque transition envoie un message multipart/alternative'})
+                        : $tr('Set SMTP_HOST and SMTP_TO to enable completion emails (SMTP_USER/SMTP_PASSWORD optional)', '设置 SMTP_HOST 与 SMTP_TO 即可启用完成邮件(SMTP_USER/SMTP_PASSWORD 可选)', { de: 'Setze SMTP_HOST und SMTP_TO, um Abschluss-E-Mails zu aktivieren (SMTP_USER/SMTP_PASSWORD optional)' , fr: 'Définissez SMTP_HOST et SMTP_TO pour les emails de fin'})"
                     >
                       <span class="notifications-chip-dot">{{ notifConfig.email_configured ? '✓' : '○' }}</span>
                       Email
@@ -2791,9 +2791,9 @@
                   href="https://github.com/aaronjmars/MiroShark/blob/main/docs/NOTIFICATIONS.md"
                   target="_blank"
                   rel="noopener"
-                  :title="$tr('Channel setup guide on GitHub', 'GitHub 上的渠道接入指南', { de: 'Kanal-Einrichtungsanleitung auf GitHub' })"
+                  :title="$tr('Channel setup guide on GitHub', 'GitHub 上的渠道接入指南', { de: 'Kanal-Einrichtungsanleitung auf GitHub' , fr: 'Guide de configuration du canal sur GitHub'})"
                 >
-                  {{ $tr('Setup guide ↗', '接入指南 ↗', { de: 'Einrichtungsanleitung ↗' }) }}
+                  {{ $tr('Setup guide ↗', '接入指南 ↗', { de: 'Einrichtungsanleitung ↗' , fr: 'Guide de configuration ↗'}) }}
                 </a>
               </div>
             </div>
@@ -2802,8 +2802,8 @@
           <!-- Hint -->
           <div class="embed-dialog-hint">
             <span class="hint-icon">ⓘ</span>
-            {{ $tr(`The widget reads from this instance's API, so viewers must be able to reach`, '组件读取自当前实例的 API,因此查看者必须能访问', { de: 'Das Widget liest von der API dieser Instanz, daher müssen Betrachter erreichbar sein:' }) }}
-            <code>{{ origin }}</code>. {{ $tr('For public embeds, deploy MiroShark somewhere reachable from the internet.', '若要进行公开嵌入,请将 MiroShark 部署到互联网可访问的位置。', { de: 'Für öffentliche Einbettungen deploye MiroShark an einem vom Internet aus erreichbaren Ort.' }) }}
+            {{ $tr(`The widget reads from this instance's API, so viewers must be able to reach`, '组件读取自当前实例的 API,因此查看者必须能访问', { de: 'Das Widget liest von der API dieser Instanz, daher müssen Betrachter erreichbar sein:' , fr: 'Le widget lit depuis l\'API de cette instance, donc les visiteurs doivent pouvoir atteindre'}) }}
+            <code>{{ origin }}</code>. {{ $tr('For public embeds, deploy MiroShark somewhere reachable from the internet.', '若要进行公开嵌入,请将 MiroShark 部署到互联网可访问的位置。', { de: 'Für öffentliche Einbettungen deploye MiroShark an einem vom Internet aus erreichbaren Ort.' , fr: 'Pour les embeds publics, déployez MiroShark à un endroit accessible depuis internet.'}) }}
           </div>
         </div>
       </div>
@@ -2872,9 +2872,9 @@ import { tr } from '../i18n'
 
 const translatePresetName = (name) => {
   const map = {
-    'Compact': tr('Compact', '紧凑', { de: 'Kompakt' }),
-    'Standard': tr('Standard', '标准', { de: 'Standard' }),
-    'Wide': tr('Wide', '宽屏', { de: 'Breit' }),
+    'Compact': tr('Compact', '紧凑', { de: 'Kompakt' , fr: 'Compact'}),
+    'Standard': tr('Standard', '标准', { de: 'Standard' , fr: 'Standard'}),
+    'Wide': tr('Wide', '宽屏', { de: 'Breit' , fr: 'Large'}),
   }
   return map[name] || name
 }
@@ -2899,7 +2899,7 @@ const togglePublic = async () => {
     const res = await publishSimulation(props.simulationId, next)
     isPublic.value = res?.data?.is_public ?? next
   } catch (err) {
-    publishError.value = err?.response?.data?.error || err?.message || tr('Publish failed', '发布失败', { de: 'Veröffentlichung fehlgeschlagen' })
+    publishError.value = err?.response?.data?.error || err?.message || tr('Publish failed', '发布失败', { de: 'Veröffentlichung fehlgeschlagen' , fr: 'Échec de la publication'})
   } finally {
     publishing.value = false
   }
@@ -2941,7 +2941,7 @@ const mintShareLink = async () => {
     await loadShareLinks()
   } catch (err) {
     shareLinkError.value =
-      err?.response?.data?.error || err?.message || tr('Could not generate link', '无法生成链接', { de: 'Link konnte nicht generiert werden' })
+      err?.response?.data?.error || err?.message || tr('Could not generate link', '无法生成链接', { de: 'Link konnte nicht generiert werden' , fr: 'Impossible de générer le lien'})
   } finally {
     shareLinkBusy.value = false
   }
@@ -2956,7 +2956,7 @@ const revokeShareLinkEntry = async (token) => {
     await loadShareLinks()
   } catch (err) {
     shareLinkError.value =
-      err?.response?.data?.error || err?.message || tr('Could not revoke link', '无法撤销链接', { de: 'Link konnte nicht widerrufen werden' })
+      err?.response?.data?.error || err?.message || tr('Could not revoke link', '无法撤销链接', { de: 'Link konnte nicht widerrufen werden' , fr: 'Impossible de révoquer le lien'})
   } finally {
     shareLinkBusy.value = false
   }
@@ -3173,7 +3173,7 @@ const loadSignal = async () => {
     }
   } catch (err) {
     signalPayload.value = null
-    signalError.value = err?.message || tr('Signal fetch failed', '信号获取失败', { de: 'Signal-Abruf fehlgeschlagen' })
+    signalError.value = err?.message || tr('Signal fetch failed', '信号获取失败', { de: 'Signal-Abruf fehlgeschlagen' , fr: 'Échec de la récupération du signal'})
   } finally {
     signalLoading.value = false
   }
@@ -3213,12 +3213,12 @@ const loadPeakRound = async () => {
       peakPayload.value = null
       peakError.value = tr('Peak-round analytics not available yet — the simulation has no trajectory data.',
         '尚无可用的峰值回合分析 — 模拟还没有轨迹数据。',
-        { de: 'Spitzenrunden-Analyse noch nicht verfügbar — die Simulation hat keine Trajektoriendaten.' },
+        { de: 'Spitzenrunden-Analyse noch nicht verfügbar — die Simulation hat keine Trajektoriendaten.' , fr: 'Analyse de pic pas encore disponible.'},
       )
     }
   } catch (err) {
     peakPayload.value = null
-    peakError.value = err?.message || tr('Peak-round fetch failed', '峰值回合获取失败', { de: 'Spitzenrunden-Abruf fehlgeschlagen' })
+    peakError.value = err?.message || tr('Peak-round fetch failed', '峰值回合获取失败', { de: 'Spitzenrunden-Abruf fehlgeschlagen' , fr: 'Échec de la récupération du pic de tour'})
   } finally {
     peakLoading.value = false
   }
@@ -3262,8 +3262,8 @@ const volatilityIndexBarWidth = (idx) => {
 }
 
 const volatilityTrendLabel = (trend) => {
-  if (trend === 'converging') return tr('Converging', '收敛', { de: 'Konvergierend' })
-  if (trend === 'contested') return tr('Contested', '争议', { de: 'Umstritten' })
+  if (trend === 'converging') return tr('Converging', '收敛', { de: 'Konvergierend' , fr: 'Convergence'})
+  if (trend === 'contested') return tr('Contested', '争议', { de: 'Umstritten' , fr: 'Contesté'})
   return tr('Stable', '稳定', { de: 'Stabil', fr: 'Stable' })
 }
 
@@ -3288,12 +3288,12 @@ const loadVolatility = async () => {
       volatilityPayload.value = null
       volatilityError.value = tr('Volatility analytics not available yet — the simulation needs at least two rounds.',
         '尚无可用的波动率分析 — 模拟至少需要两个回合。',
-        { de: 'Volatilitätsanalyse noch nicht verfügbar — die Simulation benötigt mindestens zwei Runden.' },
+        { de: 'Volatilitätsanalyse noch nicht verfügbar — die Simulation benötigt mindestens zwei Runden.' , fr: 'Analyse de volatilité pas encore disponible — besoin d\'au moins deux tours.'},
       )
     }
   } catch (err) {
     volatilityPayload.value = null
-    volatilityError.value = err?.message || tr('Volatility fetch failed', '波动率获取失败', { de: 'Volatilitäts-Abruf fehlgeschlagen' })
+    volatilityError.value = err?.message || tr('Volatility fetch failed', '波动率获取失败', { de: 'Volatilitäts-Abruf fehlgeschlagen' , fr: 'Échec de la récupération de la volatilité'})
   } finally {
     volatilityLoading.value = false
   }
@@ -3361,12 +3361,12 @@ const loadAgentSparklines = async () => {
       sparklinesPayload.value = null
       sparklinesError.value = tr('Per-agent sparklines not available yet — the simulation has no per-agent trajectory data.',
         '尚无可用的单智能体迷你趋势图 — 模拟还没有单智能体轨迹数据。',
-        { de: 'Sparklines pro Agent noch nicht verfügbar — die Simulation hat keine agentenspezifischen Trajektoriendaten.' },
+        { de: 'Sparklines pro Agent noch nicht verfügbar — die Simulation hat keine agentenspezifischen Trajektoriendaten.' , fr: 'Sparklines par agent pas encore disponibles.'},
       )
     }
   } catch (err) {
     sparklinesPayload.value = null
-    sparklinesError.value = err?.message || tr('Agent sparklines fetch failed', '单智能体迷你趋势图获取失败', { de: 'Agenten-Sparklines-Abruf fehlgeschlagen' })
+    sparklinesError.value = err?.message || tr('Agent sparklines fetch failed', '单智能体迷你趋势图获取失败', { de: 'Agenten-Sparklines-Abruf fehlgeschlagen' , fr: 'Échec de la récupération des sparklines d\'agents'})
   } finally {
     sparklinesLoading.value = false
   }
@@ -3430,12 +3430,12 @@ const loadAgentsJson = async () => {
       agentsPayload.value = null
       agentsError.value = tr('Agent roster not available yet — the simulation has no profile data on disk.',
         '尚无可用的智能体名册 — 模拟还没有磁盘上的画像数据。',
-        { de: 'Agentenliste noch nicht verfügbar — die Simulation hat keine Profildaten auf der Festplatte.' },
+        { de: 'Agentenliste noch nicht verfügbar — die Simulation hat keine Profildaten auf der Festplatte.' , fr: 'Registre des agents pas encore disponible — la simulation n\'a pas de données de profil sur le disque.'},
       )
     }
   } catch (err) {
     agentsPayload.value = null
-    agentsError.value = err?.message || tr('Agent roster fetch failed', '智能体名册获取失败', { de: 'Agentenliste-Abruf fehlgeschlagen' })
+    agentsError.value = err?.message || tr('Agent roster fetch failed', '智能体名册获取失败', { de: 'Agentenliste-Abruf fehlgeschlagen' , fr: 'Échec de la récupération du registre des agents'})
   } finally {
     agentsLoading.value = false
   }
@@ -3485,12 +3485,12 @@ const loadPolymarket = async () => {
       polymarketPayload.value = null
       polymarketError.value = tr('Polymarket prediction not available yet — the simulation is not complete.',
         '尚无可用的 Polymarket 预测 — 模拟尚未完成。',
-        { de: 'Polymarket-Prognose noch nicht verfügbar — die Simulation ist noch nicht abgeschlossen.' },
+        { de: 'Polymarket-Prognose noch nicht verfügbar — die Simulation ist noch nicht abgeschlossen.' , fr: 'Prédiction Polymarket pas encore disponible.'},
       )
     }
   } catch (err) {
     polymarketPayload.value = null
-    polymarketError.value = err?.message || tr('Polymarket fetch failed', 'Polymarket 获取失败', { de: 'Polymarket-Abruf fehlgeschlagen' })
+    polymarketError.value = err?.message || tr('Polymarket fetch failed', 'Polymarket 获取失败', { de: 'Polymarket-Abruf fehlgeschlagen' , fr: 'Échec de la récupération Polymarket'})
   } finally {
     polymarketLoading.value = false
   }
@@ -3538,12 +3538,12 @@ const loadClone = async () => {
       clonePayload.value = null
       cloneError.value = tr('Clone payload not available yet — the simulation has no state on disk.',
         '尚无可用的克隆配置 — 该模拟尚无磁盘状态。',
-        { de: 'Klon-Konfiguration noch nicht verfügbar — die Simulation hat noch keinen Zustand auf der Festplatte.' },
+        { de: 'Klon-Konfiguration noch nicht verfügbar — die Simulation hat noch keinen Zustand auf der Festplatte.' , fr: 'Payload clone pas encore disponible — la simulation n\'a pas d\'état sur le disque.'},
       )
     }
   } catch (err) {
     clonePayload.value = null
-    cloneError.value = err?.message || tr('Clone fetch failed', '克隆配置获取失败', { de: 'Klon-Konfiguration-Abruf fehlgeschlagen' })
+    cloneError.value = err?.message || tr('Clone fetch failed', '克隆配置获取失败', { de: 'Klon-Konfiguration-Abruf fehlgeschlagen' , fr: 'Échec de la récupération du clone'})
   } finally {
     cloneLoading.value = false
   }
@@ -3715,16 +3715,16 @@ const SURFACE_STAT_LABELS = [
   { key: 'replay_gif', label: tr('Replay GIF', '回放 GIF', { de: 'Wiedergabe-GIF', fr: 'GIF de rejeu' }) },
   { key: 'transcript_md', label: tr('Transcript · Markdown', '记录 · Markdown', { de: 'Protokoll · Markdown', fr: 'Transcription · Markdown' }) },
   { key: 'transcript_json', label: tr('Transcript · JSON', '记录 · JSON', { de: 'Protokoll · JSON', fr: 'Transcription · JSON' }) },
-  { key: 'trajectory_csv', label: tr('Trajectory · CSV', '轨迹 · CSV', { de: 'Trajektorie · CSV' }) },
-  { key: 'trajectory_jsonl', label: tr('Trajectory · JSONL', '轨迹 · JSONL', { de: 'Trajektorie · JSONL' }) },
-  { key: 'thread_txt', label: tr('Tweet thread · TXT', '推文串 · TXT', { de: 'Tweet-Thread · TXT' }) },
-  { key: 'thread_json', label: tr('Tweet thread · JSON', '推文串 · JSON', { de: 'Tweet-Thread · JSON' }) },
-  { key: 'watch_page', label: tr('Watch page', '观看页面', { de: 'Watch-Seite' }) },
-  { key: 'feed_atom', label: tr('Atom feed', 'Atom 源', { de: 'Atom-Feed' }) },
-  { key: 'feed_rss', label: tr('RSS feed', 'RSS 源', { de: 'RSS-Feed' }) },
-  { key: 'reproduce_json', label: tr('Reproduce config · JSON', '可复现配置 · JSON', { de: 'Reproduktionskonfiguration · JSON' }) },
-  { key: 'lineage', label: tr('Lineage graph', '谱系图', { de: 'Abstammungsgraph' }) },
-  { key: 'notebook_ipynb', label: tr('Jupyter notebook · IPYNB', 'Jupyter 笔记本 · IPYNB', { de: 'Jupyter Notebook · IPYNB' }) },
+  { key: 'trajectory_csv', label: tr('Trajectory · CSV', '轨迹 · CSV', { de: 'Trajektorie · CSV' , fr: 'Trajectoire · CSV'}) },
+  { key: 'trajectory_jsonl', label: tr('Trajectory · JSONL', '轨迹 · JSONL', { de: 'Trajektorie · JSONL' , fr: 'Trajectoire · JSONL'}) },
+  { key: 'thread_txt', label: tr('Tweet thread · TXT', '推文串 · TXT', { de: 'Tweet-Thread · TXT' , fr: 'Thread tweet · TXT'}) },
+  { key: 'thread_json', label: tr('Tweet thread · JSON', '推文串 · JSON', { de: 'Tweet-Thread · JSON' , fr: 'Thread tweet · JSON'}) },
+  { key: 'watch_page', label: tr('Watch page', '观看页面', { de: 'Watch-Seite' , fr: 'Page de direct'}) },
+  { key: 'feed_atom', label: tr('Atom feed', 'Atom 源', { de: 'Atom-Feed' , fr: 'Flux Atom'}) },
+  { key: 'feed_rss', label: tr('RSS feed', 'RSS 源', { de: 'RSS-Feed' , fr: 'Flux RSS'}) },
+  { key: 'reproduce_json', label: tr('Reproduce config · JSON', '可复现配置 · JSON', { de: 'Reproduktionskonfiguration · JSON' , fr: 'Config de reproduction · JSON'}) },
+  { key: 'lineage', label: tr('Lineage graph', '谱系图', { de: 'Abstammungsgraph' , fr: 'Graphe de lignée'}) },
+  { key: 'notebook_ipynb', label: tr('Jupyter notebook · IPYNB', 'Jupyter 笔记本 · IPYNB', { de: 'Jupyter Notebook · IPYNB' , fr: 'Jupyter notebook · IPYNB'}) },
 ]
 
 const surfaceStatsRows = computed(() => {
@@ -3760,13 +3760,13 @@ const loadSurfaceStats = async () => {
     } else {
       surfaceStats.value = null
       surfaceStatsError.value = res?.error
-        || tr('Could not load distribution stats.', '无法加载分发统计。', { de: 'Verteilungsstatistiken konnten nicht geladen werden.' })
+        || tr('Could not load distribution stats.', '无法加载分发统计。', { de: 'Verteilungsstatistiken konnten nicht geladen werden.' , fr: 'Impossible de charger les statistiques de distribution.'})
     }
   } catch (err) {
     if (err?.response?.status === 403) {
       surfaceStatsError.value = tr('Publish the simulation to see distribution stats.',
         '发布模拟以查看分发统计。',
-        { de: 'Veröffentliche die Simulation, um Verteilungsstatistiken anzuzeigen.' },
+        { de: 'Veröffentliche die Simulation, um Verteilungsstatistiken anzuzeigen.' , fr: 'Publiez la simulation pour voir les stats de distribution.'},
       )
     } else {
       surfaceStatsError.value = err?.response?.data?.error
@@ -3813,15 +3813,15 @@ const reproPlatformsLabel = computed(() => {
   const p = reproBlob.value?.platforms
   if (!p) return ''
   const parts = []
-  if (p.twitter) parts.push(tr('Twitter', 'Twitter', { de: 'Twitter' }))
-  if (p.reddit) parts.push(tr('Reddit', 'Reddit', { de: 'Reddit' }))
+  if (p.twitter) parts.push(tr('Twitter', 'Twitter', { de: 'Twitter' , fr: 'Twitter'}))
+  if (p.reddit) parts.push(tr('Reddit', 'Reddit', { de: 'Reddit' , fr: 'Reddit'}))
   if (p.polymarket) {
     const count = Number(p.polymarket_market_count || 1)
-    parts.push(`${tr('Polymarket', 'Polymarket', { de: 'Polymarket' })} ×${count}`)
+    parts.push(`${tr('Polymarket', 'Polymarket', { de: 'Polymarket' , fr: 'Polymarket'})} ×${count}`)
   }
   return parts.length
     ? parts.join(' · ')
-    : tr('No platforms enabled', '未启用平台', { de: 'Keine Plattformen aktiviert' })
+    : tr('No platforms enabled', '未启用平台', { de: 'Keine Plattformen aktiviert' , fr: 'Aucune plateforme activée'})
 })
 
 const reproDirectorEventCount = computed(() => {
@@ -3832,8 +3832,8 @@ const reproDirectorEventCount = computed(() => {
 const reproLineageBadge = computed(() => {
   const lineage = reproBlob.value?.lineage
   if (!lineage) return ''
-  if (lineage.kind === 'fork') return tr('🪐 Forked', '🪐 派生', { de: '🪐 Geforkt' })
-  if (lineage.kind === 'counterfactual') return tr('🔀 Counterfactual', '🔀 反事实', { de: '🔀 Kontrafaktual' })
+  if (lineage.kind === 'fork') return tr('🪐 Forked', '🪐 派生', { de: '🪐 Geforkt' , fr: '🪐 Forké'})
+  if (lineage.kind === 'counterfactual') return tr('🔀 Counterfactual', '🔀 反事实', { de: '🔀 Kontrafaktual' , fr: '🔀 Contrefactuel'})
   return ''
 })
 
@@ -3870,7 +3870,7 @@ const reproLineageTitle = computed(() => {
   if (!lineage || lineage.kind === 'original') {
     return tr('Original simulation — no parent run.',
       '原始模拟 — 无父运行。',
-      { de: 'Originale Simulation — kein übergeordneter Lauf.' },
+      { de: 'Originale Simulation — kein übergeordneter Lauf.' , fr: 'Simulation originale — aucun run parent.'},
     )
   }
   const parent = lineage.parent_simulation_id || '?'
@@ -3933,24 +3933,24 @@ const loadRepro = async () => {
       reproBlob.value = null
       reproError.value = tr('Could not parse the reproduction config.',
         '无法解析复现配置。',
-        { de: 'Reproduktionskonfiguration konnte nicht geparst werden.' },
+        { de: 'Reproduktionskonfiguration konnte nicht geparst werden.' , fr: 'Impossible d\'analyser la configuration de reproduction.'},
       )
     }
   } catch (err) {
     if (err?.response?.status === 403) {
       reproError.value = tr('Publish the simulation to expose the reproducibility config.',
         '发布模拟以公开可复现配置。',
-        { de: 'Veröffentliche die Simulation, um die Reproduzierbarkeitskonfiguration freizugeben.' },
+        { de: 'Veröffentliche die Simulation, um die Reproduzierbarkeitskonfiguration freizugeben.' , fr: 'Publiez la simulation pour exposer la configuration de reproductibilité.'},
       )
     } else if (err?.response?.status === 404) {
       reproError.value = tr('Simulation not found.',
         '未找到模拟。',
-        { de: 'Simulation nicht gefunden.' },
+        { de: 'Simulation nicht gefunden.' , fr: 'Simulation introuvable.'},
       )
     } else {
       reproError.value = err?.response?.data?.error
         || err?.message
-        || tr('Could not load the reproduction config.', '无法加载复现配置。', { de: 'Reproduktionskonfiguration konnte nicht geladen werden.' })
+        || tr('Could not load the reproduction config.', '无法加载复现配置。', { de: 'Reproduktionskonfiguration konnte nicht geladen werden.' , fr: 'Impossible de charger la configuration de reproduction.'})
     }
     reproBlob.value = null
   } finally {
@@ -4060,14 +4060,14 @@ const loadLineage = async () => {
       lineagePayload.value = null
       lineageError.value = tr('Could not parse the lineage payload.',
         '无法解析谱系数据。',
-        { de: 'Abstammungsdaten konnten nicht geparst werden.' },
+        { de: 'Abstammungsdaten konnten nicht geparst werden.' , fr: 'Impossible d\'analyser le payload de lignée.'},
       )
     }
   } catch (err) {
     if (err?.response?.status === 403) {
       lineageError.value = tr('Publish the simulation to see its lineage.',
         '发布模拟以查看谱系。',
-        { de: 'Veröffentliche die Simulation, um ihre Abstammung zu sehen.' },
+        { de: 'Veröffentliche die Simulation, um ihre Abstammung zu sehen.' , fr: 'Publiez la simulation pour voir sa lignée.'},
       )
     } else if (err?.response?.status === 404) {
       lineageError.value = tr('Simulation not found.',
@@ -4077,7 +4077,7 @@ const loadLineage = async () => {
     } else {
       lineageError.value = err?.response?.data?.error
         || err?.message
-        || tr('Could not load the lineage.', '无法加载谱系。', { de: 'Abstammung konnte nicht geladen werden.' })
+        || tr('Could not load the lineage.', '无法加载谱系。', { de: 'Abstammung konnte nicht geladen werden.' , fr: 'Impossible de charger la lignée.'})
     }
     lineagePayload.value = null
   } finally {
@@ -4366,7 +4366,7 @@ const copy = async (which) => {
 
 // ── Verified-prediction outcome submission ─────────────────────────────
 const outcomeOptions = [
-  { value: 'correct', label: tr('Called it', '命中', { de: 'Richtig gelegen' }), icon: '📍' },
+  { value: 'correct', label: tr('Called it', '命中', { de: 'Richtig gelegen' , fr: 'Réussi'}), icon: '📍' },
   { value: 'partial', label: tr('Partial', '部分命中', { de: 'Teilweise richtig', fr: 'Partielle' }), icon: '◑' },
   { value: 'incorrect', label: tr('Called wrong', '判断错误', { de: 'Falsch gelegen', fr: 'Prédiction erronée' }), icon: '⚠' },
 ]
@@ -4548,7 +4548,7 @@ const loadWebhookLog = async () => {
     } else if (status === 401) {
       webhookLogError.value = tr('Admin token does not match — set Authorization: Bearer $MIROSHARK_ADMIN_TOKEN at your reverse proxy to view the log.',
         '管理员 token 不匹配 — 请在反向代理处设置 Authorization: Bearer $MIROSHARK_ADMIN_TOKEN 以查看日志。',
-        { de: 'Admin-Token stimmt nicht überein — setze Authorization: Bearer $MIROSHARK_ADMIN_TOKEN an deinem Reverse-Proxy, um das Protokoll einzusehen.' },
+        { de: 'Admin-Token stimmt nicht überein — setze Authorization: Bearer $MIROSHARK_ADMIN_TOKEN an deinem Reverse-Proxy, um das Protokoll einzusehen.' , fr: 'Le token admin ne correspond pas — définissez Authorization: Bearer $MIROSHARK_ADMIN_TOKEN sur votre proxy inverse pour voir le journal.'},
       )
     } else {
       webhookLogError.value =
@@ -4578,7 +4578,7 @@ const retryWebhook = async () => {
     if (res?.success && res.data?.queued) {
       webhookRetryMessage.value = tr('Queued — refresh in a moment to see the new attempt.',
         '已排队 — 稍后刷新查看新一次投递。',
-        { de: 'In die Warteschlange gestellt — in einem Moment aktualisieren, um den neuen Versuch zu sehen.' },
+        { de: 'In die Warteschlange gestellt — in einem Moment aktualisieren, um den neuen Versuch zu sehen.' , fr: 'En file d\'attente — actualisez pour voir la nouvelle tentative.'},
       )
       webhookRetryMessageClass.value = 'webhook-log-message-ok'
       // Pull fresh entries after a short delay so the daemon thread has
@@ -4588,21 +4588,21 @@ const retryWebhook = async () => {
       setTimeout(() => loadWebhookLog(), 1200)
     } else {
       webhookRetryMessage.value =
-        res?.error || tr('Could not queue retry.', '无法排队重试。', { de: 'Erneuter Versuch konnte nicht in die Warteschlange gestellt werden.' })
+        res?.error || tr('Could not queue retry.', '无法排队重试。', { de: 'Erneuter Versuch konnte nicht in die Warteschlange gestellt werden.' , fr: 'Impossible de planifier une nouvelle tentative.'})
       webhookRetryMessageClass.value = 'webhook-log-message-error'
     }
   } catch (err) {
     const status = err?.response?.status
     if (status === 400) {
       webhookRetryMessage.value = err?.response?.data?.error
-        || tr('No webhook URL configured.', '未配置 webhook URL。', { de: 'Keine Webhook-URL konfiguriert.' })
+        || tr('No webhook URL configured.', '未配置 webhook URL。', { de: 'Keine Webhook-URL konfiguriert.' , fr: 'Aucune URL de webhook configurée.'})
     } else if (status === 409) {
       webhookRetryMessage.value = err?.response?.data?.error
-        || tr('Simulation has not finished yet.', '模拟尚未完成。', { de: 'Simulation ist noch nicht abgeschlossen.' })
+        || tr('Simulation has not finished yet.', '模拟尚未完成。', { de: 'Simulation ist noch nicht abgeschlossen.' , fr: 'La simulation n\'est pas encore terminée.'})
     } else if (status === 503) {
       webhookRetryMessage.value = tr('Admin authentication not configured.',
         '未配置管理员身份验证。',
-        { de: 'Admin-Authentifizierung nicht konfiguriert.' },
+        { de: 'Admin-Authentifizierung nicht konfiguriert.' , fr: 'Authentification admin non configurée.'},
       )
     } else {
       webhookRetryMessage.value =
@@ -4670,11 +4670,11 @@ const publishDkg = async () => {
     if (res?.success && res.data?.ual) {
       dkgCitation.value = res.data
       dkgError.value = res?.cached
-        ? tr('Already anchored — returned existing citation.', '已锚定 — 返回现有引用。', { de: 'Bereits verankert — vorhandene Zitation zurückgegeben.' })
-        : tr('Published to DKG. Citation anchored on-chain.', '已发布至 DKG,引用已上链。', { de: 'Auf DKG veröffentlicht. Zitation on-chain verankert.' })
+        ? tr('Already anchored — returned existing citation.', '已锚定 — 返回现有引用。', { de: 'Bereits verankert — vorhandene Zitation zurückgegeben.' , fr: 'Déjà ancré — citation existante retournée.'})
+        : tr('Published to DKG. Citation anchored on-chain.', '已发布至 DKG,引用已上链。', { de: 'Auf DKG veröffentlicht. Zitation on-chain verankert.' , fr: 'Publié sur le DKG. Citation ancrée on-chain.'})
       dkgErrorClass.value = 'webhook-log-message-ok'
     } else {
-      dkgError.value = res?.error || tr('Could not publish to DKG.', '无法发布至 DKG。', { de: 'Auf DKG konnte nicht veröffentlicht werden.' })
+      dkgError.value = res?.error || tr('Could not publish to DKG.', '无法发布至 DKG。', { de: 'Auf DKG konnte nicht veröffentlicht werden.' , fr: 'Impossible de publier sur le DKG.'})
       dkgErrorClass.value = 'webhook-log-message-error'
     }
   } catch (err) {
@@ -4683,27 +4683,27 @@ const publishDkg = async () => {
     if (status === 401) {
       dkgError.value = tr('Admin token does not match — set Authorization: Bearer $MIROSHARK_ADMIN_TOKEN at your reverse proxy to publish to DKG.',
         '管理员 token 不匹配 — 请在反向代理处设置 Authorization: Bearer $MIROSHARK_ADMIN_TOKEN 才能发布至 DKG。',
-        { de: 'Admin-Token stimmt nicht überein — setze Authorization: Bearer $MIROSHARK_ADMIN_TOKEN an deinem Reverse-Proxy, um auf DKG zu veröffentlichen.' },
+        { de: 'Admin-Token stimmt nicht überein — setze Authorization: Bearer $MIROSHARK_ADMIN_TOKEN an deinem Reverse-Proxy, um auf DKG zu veröffentlichen.' , fr: 'Le token admin ne correspond pas — définissez Authorization: Bearer $MIROSHARK_ADMIN_TOKEN sur votre proxy inverse pour publier sur le DKG.'},
       )
     } else if (status === 503) {
       dkgError.value = serverErr || tr('DKG publishing is not configured on this deployment.',
         '该部署未配置 DKG 发布。',
-        { de: 'DKG-Veröffentlichung ist auf diesem Deployment nicht konfiguriert.' },
+        { de: 'DKG-Veröffentlichung ist auf diesem Deployment nicht konfiguriert.' , fr: 'La publication DKG n\'est pas configurée sur ce déploiement.'},
       )
     } else if (status === 504) {
       dkgError.value = serverErr || tr('DKG daemon unreachable or publish timed out. Check that the local DKG node is running.',
         '无法访问 DKG 守护进程或发布超时,请确认本地 DKG 节点已运行。',
-        { de: 'DKG-Daemon nicht erreichbar oder Veröffentlichung hat das Zeitlimit überschritten. Überprüfe, ob der lokale DKG-Knoten läuft.' },
+        { de: 'DKG-Daemon nicht erreichbar oder Veröffentlichung hat das Zeitlimit überschritten. Überprüfe, ob der lokale DKG-Knoten läuft.' , fr: 'Démon DKG injoignable — vérifiez que le nœud DKG local est en cours d\'exécution.'},
       )
     } else if (status === 502) {
       dkgError.value = serverErr || tr('DKG daemon returned an error. Check the node logs and TRAC balance.',
         'DKG 守护进程返回错误,请检查节点日志与 TRAC 余额。',
-        { de: 'DKG-Daemon hat einen Fehler zurückgegeben. Überprüfe die Knoten-Logs und den TRAC-Saldo.' },
+        { de: 'DKG-Daemon hat einen Fehler zurückgegeben. Überprüfe die Knoten-Logs und den TRAC-Saldo.' , fr: 'Le démon DKG a retourné une erreur. Vérifiez les logs du nœud et le solde TRAC.'},
       )
     } else if (status === 422) {
       dkgError.value = serverErr || tr('Simulation has not reached the prepared state — nothing to anchor yet.',
         '模拟尚未到达可发布状态,暂无可锚定的数据。',
-        { de: 'Simulation hat den vorbereiteten Zustand noch nicht erreicht — noch nichts zu verankern.' },
+        { de: 'Simulation hat den vorbereiteten Zustand noch nicht erreicht — noch nichts zu verankern.' , fr: 'La simulation n\'est pas prête — rien à ancrer.'},
       )
     } else {
       dkgError.value = serverErr || err?.message || tr('Could not publish to DKG.', '无法发布至 DKG。', { de: 'Auf DKG konnte nicht veröffentlicht werden.' })
@@ -4772,11 +4772,11 @@ const publishWaybackclaw = async () => {
     if (res?.success && res.data?.id) {
       wbcRecord.value = res.data
       wbcError.value = res?.cached
-        ? tr('Already submitted — returned existing record.', '已提交 — 返回现有归档记录。', { de: 'Bereits übermittelt — vorhandenen Eintrag zurückgegeben.' })
-        : tr('Submitted to WaybackClaw. Snapshot archived.', '已提交至 WaybackClaw,快照已归档。', { de: 'An WaybackClaw übermittelt. Snapshot archiviert.' })
+        ? tr('Already submitted — returned existing record.', '已提交 — 返回现有归档记录。', { de: 'Bereits übermittelt — vorhandenen Eintrag zurückgegeben.' , fr: 'Déjà soumis — enregistrement existant retourné.'})
+        : tr('Submitted to WaybackClaw. Snapshot archived.', '已提交至 WaybackClaw,快照已归档。', { de: 'An WaybackClaw übermittelt. Snapshot archiviert.' , fr: 'Soumis à WaybackClaw. Instantané archivé.'})
       wbcErrorClass.value = 'webhook-log-message-ok'
     } else {
-      wbcError.value = res?.error || tr('Could not submit to WaybackClaw.', '无法提交至 WaybackClaw。', { de: 'An WaybackClaw konnte nicht übermittelt werden.' })
+      wbcError.value = res?.error || tr('Could not submit to WaybackClaw.', '无法提交至 WaybackClaw。', { de: 'An WaybackClaw konnte nicht übermittelt werden.' , fr: 'Impossible de soumettre à WaybackClaw.'})
       wbcErrorClass.value = 'webhook-log-message-error'
     }
   } catch (err) {
@@ -4785,35 +4785,35 @@ const publishWaybackclaw = async () => {
     if (status === 401) {
       wbcError.value = tr('Admin token does not match — set Authorization: Bearer $MIROSHARK_ADMIN_TOKEN to submit to WaybackClaw.',
         '管理员 token 不匹配 — 请设置 Authorization: Bearer $MIROSHARK_ADMIN_TOKEN 才能提交至 WaybackClaw。',
-        { de: 'Admin-Token stimmt nicht überein — setze Authorization: Bearer $MIROSHARK_ADMIN_TOKEN, um an WaybackClaw zu übermitteln.' },
+        { de: 'Admin-Token stimmt nicht überein — setze Authorization: Bearer $MIROSHARK_ADMIN_TOKEN, um an WaybackClaw zu übermitteln.' , fr: 'Le token admin ne correspond pas — définissez Authorization: Bearer $MIROSHARK_ADMIN_TOKEN pour soumettre à WaybackClaw.'},
       )
     } else if (status === 503) {
       wbcError.value = serverErr || tr('WaybackClaw publishing is not configured on this deployment.',
         '该部署未配置 WaybackClaw 发布。',
-        { de: 'WaybackClaw-Veröffentlichung ist auf diesem Deployment nicht konfiguriert.' },
+        { de: 'WaybackClaw-Veröffentlichung ist auf diesem Deployment nicht konfiguriert.' , fr: 'WaybackClaw non configuré sur ce déploiement.'},
       )
     } else if (status === 504) {
       wbcError.value = serverErr || tr('WaybackClaw API unreachable or submit timed out.',
         '无法访问 WaybackClaw API 或提交超时。',
-        { de: 'WaybackClaw API nicht erreichbar oder Übermittlung hat das Zeitlimit überschritten.' },
+        { de: 'WaybackClaw API nicht erreichbar oder Übermittlung hat das Zeitlimit überschritten.' , fr: 'API WaybackClaw injoignable.'},
       )
     } else if (status === 502) {
       wbcError.value = serverErr || tr('WaybackClaw API returned an error.',
         'WaybackClaw API 返回错误。',
-        { de: 'WaybackClaw API hat einen Fehler zurückgegeben.' },
+        { de: 'WaybackClaw API hat einen Fehler zurückgegeben.' , fr: 'L\'API WaybackClaw a retourné une erreur.'},
       )
     } else if (status === 429) {
       wbcError.value = serverErr || tr('WaybackClaw rate limit exceeded — back off and retry.',
         'WaybackClaw 速率限制 — 请稍后重试。',
-        { de: 'WaybackClaw-Ratenlimit überschritten — bitte warten und erneut versuchen.' },
+        { de: 'WaybackClaw-Ratenlimit überschritten — bitte warten und erneut versuchen.' , fr: 'Limite de débit WaybackClaw dépassée.'},
       )
     } else if (status === 422) {
       wbcError.value = serverErr || tr('Simulation has not reached the prepared state — nothing to archive yet.',
         '模拟尚未到达可发布状态,暂无可归档的数据。',
-        { de: 'Simulation hat den vorbereiteten Zustand noch nicht erreicht — noch nichts zu archivieren.' },
+        { de: 'Simulation hat den vorbereiteten Zustand noch nicht erreicht — noch nichts zu archivieren.' , fr: 'La simulation n\'est pas prête — rien à archiver.'},
       )
     } else {
-      wbcError.value = serverErr || err?.message || tr('Could not submit to WaybackClaw.', '无法提交至 WaybackClaw。', { de: 'An WaybackClaw konnte nicht übermittelt werden.' })
+      wbcError.value = serverErr || err?.message || tr('Could not submit to WaybackClaw.', '无法提交至 WaybackClaw。', { de: 'An WaybackClaw konnte nicht übermittelt werden.' , fr: 'Impossible de soumettre à WaybackClaw.'})
     }
     wbcErrorClass.value = 'webhook-log-message-error'
   } finally {

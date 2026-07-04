@@ -45,7 +45,7 @@
       <!-- Agent picker row -->
       <div class="wi-picker">
         <div class="wi-picker-header">
-          <span class="wi-picker-title">{{ $tr('Top agents by influence', '影响力排名靠前的智能体', { de: 'Top-Agenten nach Einfluss' }) }}</span>
+          <span class="wi-picker-title">{{ $tr('Top agents by influence', '影响力排名靠前的智能体', { de: 'Top-Agenten nach Einfluss' , fr: 'Agents les plus influents'}) }}</span>
           <button
             v-if="selectedNames.length"
             class="wi-clear"
@@ -193,17 +193,17 @@
               :x="ML + (W - ML - MR) / 2" :y="H - 2"
               fill="rgba(244,241,255,0.3)" font-size="9"
               font-family="'Geist Mono', monospace" text-anchor="middle"
-            >{{ $tr('Round — bullish %', '轮次 — 看涨 %', { de: 'Runde — optimistisch %' }) }}</text>
+            >{{ $tr('Round — bullish %', '轮次 — 看涨 %', { de: 'Runde — optimistisch %' , fr: 'Tour — % haussier'}) }}</text>
           </svg>
 
           <div class="wi-legend">
             <span class="wi-legend-item">
               <span class="wi-legend-swatch orig"></span>
-              {{ $tr('Original', '原始', { de: 'Original' }) }} ({{ origData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }})
+              {{ $tr('Original', '原始', { de: 'Original' , fr: 'Original'}) }} ({{ origData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }})
             </span>
             <span class="wi-legend-item">
               <span class="wi-legend-swatch cf"></span>
-              {{ $tr('Counterfactual', '反事实', { de: 'Kontrafaktisch' }) }} ({{ cfData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }})
+              {{ $tr('Counterfactual', '反事实', { de: 'Kontrafaktisch' , fr: 'Contrefactuel'}) }} ({{ cfData?.agent_count ?? '–' }} {{ $tr('agents', '智能体', { de: 'Agenten', fr: 'agents' }) }})
             </span>
           </div>
         </div>
@@ -211,7 +211,7 @@
         <!-- Impact summary -->
         <div class="wi-impact">
           <div class="wi-impact-row">
-            <span class="wi-impact-label">{{ $tr('Final bullish share', '最终看涨占比', { de: 'Abschließender optimistischer Anteil' }) }}</span>
+            <span class="wi-impact-label">{{ $tr('Final bullish share', '最终看涨占比', { de: 'Abschließender optimistischer Anteil' , fr: 'Part haussière finale'}) }}</span>
             <span class="wi-impact-values">
               <span class="wi-val orig">{{ fmtPct(origData?.final_bullish_pct) }}</span>
               <span class="wi-arrow">→</span>
@@ -224,7 +224,7 @@
             </span>
           </div>
           <div class="wi-impact-row">
-            <span class="wi-impact-label">{{ $tr('Consensus round', '共识轮次', { de: 'Konsensrunde' }) }}</span>
+            <span class="wi-impact-label">{{ $tr('Consensus round', '共识轮次', { de: 'Konsensrunde' , fr: 'Tour de consensus'}) }}</span>
             <span class="wi-impact-values">
               <span class="wi-val orig">{{ fmtRound(origData?.consensus_round) }}</span>
               <span class="wi-arrow">→</span>
@@ -362,7 +362,7 @@ const cfEnd = computed(() => {
 })
 
 const fmtPct = (v) => (v == null ? '–' : `${v}%`)
-const fmtRound = (v) => (v == null ? tr('no consensus', '未达成共识', { de: 'kein Konsens' }) : `r${v}`)
+const fmtRound = (v) => (v == null ? tr('no consensus', '未达成共识', { de: 'kein Konsens' , fr: 'pas de consensus'}) : `r${v}`)
 const fmtDelta = (v) => {
   if (v == null) return '–'
   const sign = v > 0 ? '+' : ''
@@ -377,9 +377,9 @@ const deltaClass = (v, invert = false) => {
   return 'neutral'
 }
 const impactLabel = (kind) => {
-  if (kind === 'strong') return tr('Strong', '强', { de: 'Stark' })
-  if (kind === 'moderate') return tr('Moderate', '中等', { de: 'Mäßig' })
-  return tr('Minimal', '微小', { de: 'Minimal' })
+  if (kind === 'strong') return tr('Strong', '强', { de: 'Stark' , fr: 'Fort'})
+  if (kind === 'moderate') return tr('Moderate', '中等', { de: 'Mäßig' , fr: 'Modéré'})
+  return tr('Minimal', '微小', { de: 'Minimal' , fr: 'Minimal'})
 }
 
 const loadAgents = async () => {
@@ -423,9 +423,9 @@ const compute = async () => {
     if (res?.success && res.data) {
       result.value = res.data
     } else if (res?.success && !res.data) {
-      error.value = res.message || tr('No trajectory data available for this simulation.', '此模拟暂无轨迹数据。', { de: 'Keine Trajektoriendaten für diese Simulation verfügbar.' })
+      error.value = res.message || tr('No trajectory data available for this simulation.', '此模拟暂无轨迹数据。', { de: 'Keine Trajektoriendaten für diese Simulation verfügbar.' , fr: 'Aucune donnée de trajectoire pour cette simulation.'})
     } else {
-      error.value = res?.error || tr('Failed to compute counterfactual.', '反事实计算失败。', { de: 'Kontrafaktische Berechnung fehlgeschlagen.' })
+      error.value = res?.error || tr('Failed to compute counterfactual.', '反事实计算失败。', { de: 'Kontrafaktische Berechnung fehlgeschlagen.' , fr: 'Échec du calcul contrefactuel.'})
     }
   } catch (err) {
     error.value = err?.message || tr('Failed to compute counterfactual.', '反事实计算失败。', { de: 'Kontrafaktische Berechnung fehlgeschlagen.' })
@@ -441,10 +441,10 @@ const _buildExportCanvas = () => {
     throw new Error('No chart to export')
   }
   const removed = selectedNames.value.length
-    ? `${tr('Removed', '已移除', { de: 'Entfernt' })} ${selectedNames.value.join(', ')}`
-    : tr('Counterfactual drift', '反事实漂移', { de: 'Kontrafaktische Drift' })
+    ? `${tr('Removed', '已移除', { de: 'Entfernt' , fr: 'Retiré'})} ${selectedNames.value.join(', ')}`
+    : tr('Counterfactual drift', '反事实漂移', { de: 'Kontrafaktische Drift' , fr: 'Dérive contrefactuelle'})
   const deltaStr = result.value?.delta_final_bullish != null
-    ? `${result.value.delta_final_bullish >= 0 ? '+' : ''}${result.value.delta_final_bullish} ${tr('pts on bullish share', '点看涨占比', { de: 'Pkt. beim optimistischen Anteil' })}`
+    ? `${result.value.delta_final_bullish >= 0 ? '+' : ''}${result.value.delta_final_bullish} ${tr('pts on bullish share', '点看涨占比', { de: 'Pkt. beim optimistischen Anteil' , fr: 'pts sur la part haussière'})}`
     : null
   const { drawHeader, headerHeight } = buildTitledHeader({
     title: `${tr('What If?', '假设性?', { de: 'Was wäre wenn?', fr: 'Et si ?' })} — ${removed}`,

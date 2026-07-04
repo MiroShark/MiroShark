@@ -100,7 +100,7 @@
             <div
               class="stance-seg stance-bearish"
               :style="{ width: segment.bearish_pct + '%' }"
-              :title="$tr('Bearish:', '看跌:', { de: 'Pessimistisch:' }) + ` ${segment.bearish_pct}%`"
+              :title="$tr('Bearish:', '看跌:', { de: 'Pessimistisch:' , fr: 'Baissier :'}) + ` ${segment.bearish_pct}%`"
             ></div>
           </div>
           <div v-else class="stance-bar stance-empty"></div>
@@ -108,7 +108,7 @@
           <!-- Metrics row -->
           <div class="demo-metrics">
             <span class="metric">
-              <span class="metric-label">{{ $tr('mean', '均值', { de: 'Mittelwert' }) }}</span>
+              <span class="metric-label">{{ $tr('mean', '均值', { de: 'Mittelwert' , fr: 'moyenne'}) }}</span>
               <span class="metric-value" :class="stanceClass(segment.final_stance_mean)">
                 {{ formatStance(segment.final_stance_mean) }}
               </span>
@@ -118,11 +118,11 @@
               <span class="metric-value">{{ formatNumber(segment.final_stance_std) }}</span>
             </span>
             <span class="metric">
-              <span class="metric-label">{{ $tr('volatility', '波动率', { de: 'Volatilität' }) }}</span>
+              <span class="metric-label">{{ $tr('volatility', '波动率', { de: 'Volatilität' , fr: 'volatilité'}) }}</span>
               <span class="metric-value">{{ formatNumber(segment.stance_volatility) }}</span>
             </span>
             <span class="metric">
-              <span class="metric-label">{{ $tr('influence', '影响力', { de: 'Einfluss' }) }}</span>
+              <span class="metric-label">{{ $tr('influence', '影响力', { de: 'Einfluss' , fr: 'influence'}) }}</span>
               <span class="metric-value">{{ formatInfluence(segment.influence_mean) }}</span>
             </span>
           </div>
@@ -131,7 +131,7 @@
 
       <!-- Footer hint -->
       <div class="demo-footer-hint">
-        {{ $tr(`Stance values average each agent's final belief across tracked topics (-1 bearish → +1 bullish). Volatility is the mean absolute change from round 0 to the final round.`, '立场值为每个智能体在跟踪话题上的最终信念均值(-1 看跌 → +1 看涨)。波动率为从第 0 轮到最终轮的绝对变化均值。', { de: 'Haltungswerte mitteln den abschließenden Glauben jedes Agenten über verfolgte Themen (-1 pessimistisch → +1 optimistisch). Volatilität ist die mittlere absolute Änderung von Runde 0 bis zur letzten Runde.' }) }}
+        {{ $tr(`Stance values average each agent's final belief across tracked topics (-1 bearish → +1 bullish). Volatility is the mean absolute change from round 0 to the final round.`, '立场值为每个智能体在跟踪话题上的最终信念均值(-1 看跌 → +1 看涨)。波动率为从第 0 轮到最终轮的绝对变化均值。', { de: 'Haltungswerte mitteln den abschließenden Glauben jedes Agenten über verfolgte Themen (-1 pessimistisch → +1 optimistisch). Volatilität ist die mittlere absolute Änderung von Runde 0 bis zur letzten Runde.' , fr: 'Valeurs de position moyennes de chaque agent sur les sujets suivis (-1 baissier à +1 haussier).'}) }}
       </div>
     </div>
   </div>
@@ -188,7 +188,7 @@ const hasStanceData = (segment) =>
   (segment.bullish_pct + segment.neutral_pct + segment.bearish_pct) > 0
 
 const formatSegmentLabel = (raw) => {
-  if (!raw) return tr('unknown', '未知', { de: 'unbekannt' })
+  if (!raw) return tr('unknown', '未知', { de: 'unbekannt' , fr: 'inconnu'})
   const map = {
     unknown: tr('Unknown', '未知', { de: 'Unbekannt', fr: 'Inconnu' }),
     individual: tr('Individual', '个人', { de: 'Einzelperson', fr: 'Individuel' }),
