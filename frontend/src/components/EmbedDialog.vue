@@ -952,7 +952,7 @@
                     </span>
                   </div>
                   <div class="transcript-sub">
-                    {{ $tr(`Per-agent belief sparklines — each agent's position across rounds, colored by final stance (bullish / neutral / bearish). The agent-level layer under chart.svg's aggregate curve: which agent anchored the consensus, which cohort aligned first. Same ±0.2 threshold every surface uses.`, '单智能体信念迷你趋势图 — 每个智能体在各回合的立场,按最终立场着色(看涨 / 中性 / 看跌)。chart.svg 聚合曲线之下的智能体层:哪个智能体锚定了共识,哪个群体最先对齐。与所有界面一致的 ±0.2 阈值。', { de: `Überzeugungssparklines pro Agent — die Position jedes Agenten über die Runden, farblich nach Endstance (bullish/neutral/bearish). Die Agentenebene unter chart.svg's Aggregatkurve: welcher Agent den Konsens verankert hat, welche Gruppe sich zuerst ausgerichtet hat. Gleiche ±0,2-Schwelle wie alle anderen Ansichten.` , fr: `Sparklines par agent — position de chaque agent au fil des tours, colorée par stance finale.`}) }}
+                    {{ $tr(`Per-agent belief sparklines — each agent's position across rounds, colored by final stance (bullish / neutral / bearish). The agent-level layer under chart.svg's aggregate curve: which agent anchored the consensus, which cohort aligned first. Same ±0.2 threshold every surface uses.`, '单智能体信念迷你趋势图 — 每个智能体在各回合的立场,按最终立场着色(看涨 / 中性 / 看跌)。chart.svg 聚合曲线之下的智能体层:哪个智能体锚定了共识,哪个群体最先对齐。与所有界面一致的 ±0.2 阈值。', { de: `Überzeugungssparklines pro Agent — die Position jedes Agenten über die Runden, farblich nach Endstance (bullish/neutral/bearish). Die Agentenebene unter chart.svg's Aggregatkurve: welcher Agent den Konsens verankert hat, welche Gruppe sich zuerst ausgerichtet hat. Gleiche ±0,2-Schwelle wie alle anderen Ansichten.` , fr: `Sparklines par agent — position de chaque agent au fil des tours, colorée par position finale.`}) }}
                   </div>
                 </div>
               </div>
@@ -2548,7 +2548,7 @@
                   <template v-if="isPublic">
                     {{ $tr('This simulation is now visible on', '此模拟现可在以下页面查看', { de: 'Diese Simulation ist jetzt sichtbar auf' , fr: 'Cette simulation est maintenant visible sur'}) }}
                     <a href="/explore" target="_blank" rel="noopener">/explore</a> —
-                    {{ $tr('the public gallery where anyone can browse published runs and fork them into their own simulations.', '公开画廊,任何人都可浏览已发布运行并派生为自己的模拟。', { de: 'der öffentlichen Galerie, wo jeder veröffentlichte Läufe durchsuchen und sie in eigene Simulationen forken kann.' , fr: 'la galerie publique où chacun peut parcourir les runs publiés et les forker dans leurs propres simulations.'}) }}
+                    {{ $tr('the public gallery where anyone can browse published runs and fork them into their own simulations.', '公开画廊,任何人都可浏览已发布运行并派生为自己的模拟。', { de: 'der öffentlichen Galerie, wo jeder veröffentlichte Läufe durchsuchen und sie in eigene Simulationen forken kann.' , fr: 'la galerie publique où chacun peut parcourir les runs publiés et les forker dans ses propres simulations.'}) }}
                   </template>
                   <template v-else>
                     {{ $tr(`Toggle "Public" above and this run joins the community gallery at`, '将上方切换为「公开」,该运行将加入社区画廊', { de: 'Schalte oben auf „Öffentlich" um und dieser Lauf erscheint in der Community-Galerie bei' , fr: 'Activez « Public » ci-dessus et ce run rejoint la galerie communautaire sur'}) }}
