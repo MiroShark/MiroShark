@@ -14,7 +14,7 @@
     {
       "file": "frontend/src/views/Home.vue",
       "en": "01b · URL Import",
-      "fr": "01b · Import d\\"
+      "fr": "01b · Import d'URL"
     },
     {
       "file": "frontend/src/views/Home.vue",
@@ -29,12 +29,12 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "A verifier fetches reproduce.json, SHA-256s the bytes, and compares to the on-chain config hash. Match = the simulation parameters have not been altered since anchoring.",
-      "fr": "Un vérificateur récupère reproduce.json, en calcule le SHA-256 et le compare au hash de configuration on-chain. Correspondance = les paramètres n\\"
+      "fr": "Un vérificateur récupère reproduce.json, en calcule le SHA-256 et le compare au hash de configuration on-chain. Correspondance = les paramètres n'ont pas été modifiés depuis l'ancrage."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Admin authentication is not configured on this deployment. Set MIROSHARK_ADMIN_TOKEN to enable the delivery log.",
-      "fr": "L\\"
+      "fr": "L'authentification admin n'est pas configurée. Définissez MIROSHARK_ADMIN_TOKEN pour activer le journal de livraison."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -44,7 +44,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Agent sparklines fetch failed",
-      "fr": "Échec de la récupération des sparklines d\\"
+      "fr": "Échec de la récupération des sparklines d'agents"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -64,7 +64,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Anchor the scenario, agent count, consensus, quality, and reproduce.json hash on the OriginTrail DKG as a cryptographically verifiable Knowledge Asset. The returned UAL + Merkle root + transaction hash become a permanent citation key — same provenance property a DOI gives a paper.",
-      "fr": "Ancrez le scénario, le nombre d\\"
+      "fr": "Ancrez le scénario, le nombre d'agents, le consensus, la qualité et le hash reproduce.json sur l'OriginTrail DKG en tant que Knowledge Asset vérifiable. L'UAL + racine Merkle + hash de transaction retournés deviennent une clé de citation permanente."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -79,12 +79,12 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Archive URL",
-      "fr": "URL de l\\"
+      "fr": "URL de l'archive"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Archive not available yet — the simulation hasn't recorded any exportable surfaces.",
-      "fr": "Archive pas encore disponible — la simulation n\\"
+      "fr": "Archive pas encore disponible — la simulation n'a pas encore enregistré de surface exportable."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -194,7 +194,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Chart URL (paste into <img src=\"…\">)",
-      "fr": "URL du graphique (à coller dans <img src="
+      "fr": "URL du graphique (à coller dans <img src=\"…\">)"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -239,7 +239,7 @@
     {
       "file": "frontend/src/components/InfluenceLeaderboard.vue",
       "en": "Computing influence scores...",
-      "fr": "Calcul des scores d\\"
+      "fr": "Calcul des scores d'influence..."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -334,12 +334,12 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Counts origin hits only — CDN and browser caches are not counted, so true audience reach is higher.",
-      "fr": "Compte uniquement les hits d\\"
+      "fr": "Compte uniquement les hits d'origine — la portée réelle est donc plus élevée."
     },
     {
       "file": "frontend/src/components/Step3Simulation.vue",
       "en": "Describe the event (e.g. 'Central bank unexpectedly raised rates by 100bps')...",
-      "fr": "Décrire l"
+      "fr": "Décrire l'événement (ex. « La banque centrale a augmenté les taux de 100 points de base »)..."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -359,7 +359,7 @@
     {
       "file": "frontend/src/views/Home.vue",
       "en": "Don't predict the future. Simulate it",
-      "fr": "Ne prédisez pas l\\"
+      "fr": "Ne prédisez pas l'avenir. Simulez-le."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -389,7 +389,7 @@
     {
       "file": "frontend/src/components/InteractionNetwork.vue",
       "en": "Echo Chamber",
-      "fr": "Chambre d\\"
+      "fr": "Chambre d'écho"
     },
     {
       "file": "frontend/src/components/InfluenceLeaderboard.vue",
@@ -399,7 +399,7 @@
     {
       "file": "frontend/src/components/DebugPanel.vue",
       "en": "Environment observation:",
-      "fr": "Observation de l\\"
+      "fr": "Observation de l'environnement :"
     },
     {
       "file": "frontend/src/components/DebugPanel.vue",
@@ -434,17 +434,17 @@
     {
       "file": "frontend/src/components/InfluenceLeaderboard.vue",
       "en": "Failed to get a response.",
-      "fr": "Échec de l\\"
+      "fr": "Échec de l'obtention d'une réponse."
     },
     {
       "file": "frontend/src/components/InfluenceLeaderboard.vue",
       "en": "Failed to load influence data.",
-      "fr": "Échec du chargement des données d\\"
+      "fr": "Échec du chargement des données d'influence."
     },
     {
       "file": "frontend/src/components/InteractionNetwork.vue",
       "en": "Failed to load interaction network.",
-      "fr": "Échec du chargement du réseau d\\"
+      "fr": "Échec du chargement du réseau d'interactions."
     },
     {
       "file": "frontend/src/components/PolymarketChart.vue",
@@ -499,7 +499,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Free for agents — no on-chain cost. The archive pins the snapshot to IPFS and broadcasts to Nostr.",
-      "fr": "Gratuit — aucun coût on-chain. L\\"
+      "fr": "Gratuit — aucun coût on-chain. L'archive épingle l'instantané sur IPFS et le diffuse sur Nostr."
     },
     {
       "file": "frontend/src/components/DebugPanel.vue",
@@ -514,17 +514,17 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Hide history",
-      "fr": "Masquer l\\"
+      "fr": "Masquer l'historique"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Hide signature verification hint",
-      "fr": "Masquer l\\"
+      "fr": "Masquer l'indice de vérification de signature"
     },
     {
       "file": "frontend/src/views/ComparisonView.vue",
       "en": "High divergence — the two simulations produced substantially different influence outcomes.",
-      "fr": "Divergence élevée — les deux simulations ont produit des résultats d\\"
+      "fr": "Divergence élevée — les deux simulations ont produit des résultats d'influence très différents."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -539,7 +539,7 @@
     {
       "file": "frontend/src/components/InteractionNetwork.vue",
       "en": "Interaction Network",
-      "fr": "Réseau d\\"
+      "fr": "Réseau d'interactions"
     },
     {
       "file": "frontend/src/components/InfluenceLeaderboard.vue",
@@ -589,12 +589,12 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Loading agent trajectories…",
-      "fr": "Chargement des trajectoires d\\"
+      "fr": "Chargement des trajectoires d'agents…"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Loading archive…",
-      "fr": "Chargement de l\\"
+      "fr": "Chargement de l'archive…"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -604,7 +604,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Loading delivery history…",
-      "fr": "Chargement de l\\"
+      "fr": "Chargement de l'historique de livraison…"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -624,7 +624,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Loading preview…",
-      "fr": "Chargement de l\\"
+      "fr": "Chargement de l'aperçu…"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -634,7 +634,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Machine-readable inflection points — the round each stance (bullish / neutral / bearish) peaked, the most volatile round, and the maximum round-over-round swing. The analytical summary quant tools need alongside trajectory.csv, in one O(n) pass.",
-      "fr": "Points d\\"
+      "fr": "Points d'inflexion lisibles par machine — le tour de pic de chaque position, le tour le plus volatil, et le swing max entre deux tours. Le résumé analytique pour les outils quant, en un seul passage O(n)."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -659,7 +659,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "MiroShark POSTs a platform-native card to each configured channel the moment a simulation completes or fails — Discord gets a consensus-coloured embed, Slack gets a Block Kit message, Email gets a multipart/alternative message with plain-text belief bars and an HTML CTA, the generic webhook gets the raw JSON. Each channel is opt-in via its own env var.",
-      "fr": "MiroShark POSTe une carte native à chaque canal configuré dès la fin ou l\\"
+      "fr": "MiroShark POSTe une carte native à chaque canal configuré dès la fin ou l'échec d'une simulation — Discord reçoit un embed coloré, Slack un Block Kit, Email un multipart/alternative, le webhook le JSON brut."
     },
     {
       "file": "frontend/src/views/EmbedView.vue",
@@ -674,7 +674,7 @@
     {
       "file": "frontend/src/views/ComparisonView.vue",
       "en": "Moderate divergence — some agents shifted in relative influence between runs.",
-      "fr": "Divergence modérée — certains agents ont changé d\\"
+      "fr": "Divergence modérée — certains agents ont changé d'influence relative."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -689,12 +689,12 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Navigate the fork / counterfactual graph this simulation belongs to. Click a row to open that sim in a new tab.",
-      "fr": "Naviguez dans le graphe de fork / contrefactuel de cette simulation. Cliquez sur une ligne pour l\\"
+      "fr": "Naviguez dans le graphe de fork / contrefactuel de cette simulation. Cliquez sur une ligne pour l'ouvrir dans un nouvel onglet."
     },
     {
       "file": "frontend/src/components/DebugPanel.vue",
       "en": "No agent decisions recorded yet.",
-      "fr": "Aucune décision d\\"
+      "fr": "Aucune décision d'agent enregistrée."
     },
     {
       "file": "frontend/src/views/EmbedView.vue",
@@ -724,7 +724,7 @@
     {
       "file": "frontend/src/components/InfluenceLeaderboard.vue",
       "en": "No simulation data available yet. Run the simulation first.",
-      "fr": "Aucune donnée de simulation. Lancez la simulation d\\"
+      "fr": "Aucune donnée de simulation. Lancez la simulation d'abord."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -754,12 +754,12 @@
     {
       "file": "frontend/src/views/ComparisonView.vue",
       "en": "Not in other simulation\\'s top 10",
-      "fr": "Pas dans le top 10 de l\\"
+      "fr": "Pas dans le top 10 de l'autre simulation"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Not yet submitted to the WaybackClaw archive.",
-      "fr": "Pas encore soumis à l\\"
+      "fr": "Pas encore soumis à l'archive WaybackClaw."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -774,7 +774,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Open on DKG explorer ↗",
-      "fr": "Ouvrir sur l\\"
+      "fr": "Ouvrir sur l'explorateur DKG ↗"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -804,7 +804,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Others can browse it, view the full belief drift, and fork your agents into their own scenarios.",
-      "fr": "D\\"
+      "fr": "D'autres peuvent la parcourir et forker vos agents dans leurs propres scénarios."
     },
     {
       "file": "frontend/src/views/Home.vue",
@@ -824,7 +824,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Parent simulation is unpublished.",
-      "fr": "La simulation parente n\\"
+      "fr": "La simulation parente n'est pas publiée."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -849,7 +849,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Per-agent identity export — name, username, bio, persona preview, demographics (age / country / profession / mbti / interested topics), karma, plus final stance and rounds participated. The participants companion to sparklines (which show belief trajectories): this surface answers who was in the debate. Persona is previewed to 280 chars; full text remains in transcript.md.",
-      "fr": "Export d\\"
+      "fr": "Export d'identité par agent — nom, bio, données démographiques, karma, position finale et tours participés."
     },
     {
       "file": "frontend/src/components/InfluenceLeaderboard.vue",
@@ -889,12 +889,12 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Publish the simulation to enable agent trajectories.",
-      "fr": "Publiez la simulation pour activer les trajectoires d\\"
+      "fr": "Publiez la simulation pour activer les trajectoires d'agents."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Publish the simulation to enable peak-round analytics.",
-      "fr": "Publiez la simulation pour activer l\\"
+      "fr": "Publiez la simulation pour activer l'analyse des pics de tour."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -919,7 +919,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Publish the simulation to enable the archive bundle.",
-      "fr": "Publiez la simulation pour activer le bundle d\\"
+      "fr": "Publiez la simulation pour activer le bundle d'archive."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -949,12 +949,12 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Publish the simulation to enable the trajectory export.",
-      "fr": "Publiez la simulation pour activer l\\"
+      "fr": "Publiez la simulation pour activer l'export de trajectoire."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Publish the simulation to enable volatility analytics.",
-      "fr": "Publiez la simulation pour activer l\\"
+      "fr": "Publiez la simulation pour activer l'analyse de volatilité."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -1019,7 +1019,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Requires the local DKG daemon to be running (dkg start) and a funded wallet. Anchoring costs TRAC + gas on the configured chain.",
-      "fr": "Nécessite le démon DKG local et un portefeuille financé. L\\"
+      "fr": "Nécessite le démon DKG local et un portefeuille financé. L'ancrage coûte du TRAC + gas."
     },
     {
       "file": "frontend/src/components/DebugPanel.vue",
@@ -1129,7 +1129,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Simulation has not finished yet.",
-      "fr": "La simulation n\\"
+      "fr": "La simulation n'est pas encore terminée."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -1174,7 +1174,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "Submit the snapshot (scenario, agent count, consensus, quality, reproduce.json hash) to the WaybackClaw AI Agent Archive. The archive pins the record to IPFS for content-addressed storage and broadcasts it to Nostr relays for real-time distribution — an open, agent-readable history of this MiroShark deployment.",
-      "fr": "Soumettez l\\"
+      "fr": "Soumettez l'instantané (scénario, agents, consensus, qualité, hash reproduce.json) au WaybackClaw AI Agent Archive."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -1199,7 +1199,7 @@
     {
       "file": "frontend/src/components/CounterfactualBranchPanel.vue",
       "en": "The board has just announced the CEO's resignation, effective immediately. The CFO steps in as interim lead.",
-      "fr": "Le conseil vient d\\"
+      "fr": "Le conseil vient d'annoncer la démission du PDG, avec effet immédiat."
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -1209,7 +1209,7 @@
     {
       "file": "frontend/src/components/EmbedDialog.vue",
       "en": "The widget reads from this instance's API, so viewers must be able to reach",
-      "fr": "Le widget lit depuis l\\"
+      "fr": "Le widget lit depuis l'API de cette instance, donc les visiteurs doivent pouvoir atteindre"
     },
     {
       "file": "frontend/src/components/EmbedDialog.vue",
@@ -1229,7 +1229,7 @@
     {
       "file": "frontend/src/components/DebugPanel.vue",
       "en": "Tool calls:",
-      "fr": "Appels d\\"
+      "fr": "Appels d'outils :"
     },
     {
       "file": "frontend/src/components/InteractionNetwork.vue",

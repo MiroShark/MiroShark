@@ -18,6 +18,32 @@ uc = subprocess.check_output(
 )
 diff = wd + '\n' + uc
 
+def _extract_prop(loc, prop):
+    """Walk the { de:…, fr:… } block and pull `prop`'s string value,
+    honouring backslash escapes (\\' \\" \\`) instead of a naive regex
+    that stops at the first apostrophe — French elisions (l', d', n'…)
+    would otherwise be truncated."""
+    m = re.search(r'\b' + prop + r'\s*:\s*', loc)
+    if not m:
+        return None
+    i = m.end()
+    if i >= len(loc) or loc[i] not in '\'"`':
+        return None
+    q = loc[i]; i += 1
+    out = []
+    while i < len(loc):
+        c = loc[i]
+        if c == '\\':
+            if i + 1 < len(loc):
+                out.append(loc[i + 1])  # unescape: \' -> ', \" -> ", \\ -> \
+                i += 2; continue
+            i += 1; continue
+        if c == q:
+            break
+        out.append(c); i += 1
+    return ''.join(out)
+
+
 def extract(line):
     m = re.search(r'\$?tr\s*\(', line)
     if not m:
@@ -77,9 +103,7 @@ def extract(line):
                 elif x == '}': bd -= 1
                 be += 1
             loc = line[pos:be]
-            fm = re.search(r"fr:\s*['\"`]([^'\"`]+?)['\"`]", loc)
-            if fm:
-                fr = fm.group(1)
+            fr = _extract_prop(loc, 'fr')
             pos = be; continue
         pos += 1
     return (en.strip() if en else None, fr)
