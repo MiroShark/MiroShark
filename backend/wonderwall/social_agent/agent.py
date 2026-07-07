@@ -14,6 +14,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 import logging
 import sys
 from datetime import datetime
@@ -250,6 +251,69 @@ class SocialAgent(ChatAgent):
                 self._emit_llm_call_event(filtered, start, error_msg, result)
             except Exception:
                 pass
+
+    def _repair_tool_call_arguments(self, response):
+        """Some providers (observed on DeepSeek-V4-Flash) reliably append
+        stray trailing data after an otherwise-valid ``arguments`` JSON
+        value — e.g. ``'{}""'`` for a zero-arg tool call. CAMEL's
+        ``json.loads`` has no tolerance for that, so drop the trailing
+        garbage here (keeping only the first valid JSON value) before
+        CAMEL ever sees it. Calls that aren't recoverable this way are
+        left untouched and surface via the except-clause below."""
+        try:
+            tool_calls = response.choices[0].message.tool_calls or []
+        except Exception:
+            return
+        decoder = json.JSONDecoder()
+        for tc in tool_calls:
+            args = tc.function.arguments
+            try:
+                json.loads(args)
+                continue  # already valid
+            except json.JSONDecodeError:
+                pass
+            try:
+                obj, end = decoder.raw_decode(args)
+            except json.JSONDecodeError:
+                continue  # unrecoverable; let super() raise on this one
+            agent_log.warning(
+                f"Agent {self.social_agent_id} repaired malformed tool_call "
+                f"arguments for '{tc.function.name}': {args!r} "
+                f"(dropped trailing {args[end:]!r})"
+            )
+            tc.function.arguments = json.dumps(obj)
+
+    def _handle_batch_response(self, response):
+        """Wrap CAMEL's response parsing: repair recoverable malformed
+        tool_call arguments, and surface the raw response when a parse
+        error still isn't recoverable — ``json.loads`` in the base
+        implementation gives no indication of what was actually returned."""
+        self._repair_tool_call_arguments(response)
+        try:
+            return super()._handle_batch_response(response)
+        except json.JSONDecodeError as e:
+            try:
+                choice = response.choices[0]
+                raw_tool_calls = [
+                    {'name': tc.function.name, 'arguments': tc.function.arguments}
+                    for tc in (choice.message.tool_calls or [])
+                ]
+                raw_content = choice.message.content
+                raw_reasoning = getattr(choice.message, 'reasoning_content', None)
+            except Exception:
+                raw_tool_calls, raw_content, raw_reasoning = None, None, None
+
+            agent_log.error(
+                f"Agent {self.social_agent_id} failed to parse tool_call "
+                f"arguments as JSON: {e}\n"
+                f"model={getattr(response, 'model', 'unknown')} "
+                f"raw_tool_calls={raw_tool_calls!r}\n"
+                f"raw_content={raw_content!r}\n"
+                f"raw_reasoning_content={raw_reasoning!r}"
+            )
+            raise json.JSONDecodeError(
+                f"{e.msg} | raw_tool_calls={raw_tool_calls!r}", e.doc, e.pos
+            ) from e
 
     async def perform_action_by_llm(self):
         # Get environment observation:
