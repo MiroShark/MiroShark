@@ -1,6 +1,11 @@
 """Unit tests for Wonderwall SocialAgent OpenAI message filtering."""
 
-from app.utils.llm_message_filter import filter_openai_messages_for_api
+import json
+
+from app.utils.llm_message_filter import (
+    filter_openai_messages_for_api,
+    repair_tool_call_arguments,
+)
 
 
 def test_filter_drops_empty_user_turns():
@@ -54,3 +59,32 @@ def test_filter_empty_context_fallback():
     assert filter_openai_messages_for_api([]) == [
         {"role": "user", "content": "(empty context)"}
     ]
+
+
+def test_repair_leaves_valid_arguments_untouched():
+    """Well-formed arguments need no repair, so the helper reports None."""
+    for valid in ("{}", '{"a": 1}', '{"nested": {"x": [1, 2]}}', "[]"):
+        assert repair_tool_call_arguments(valid) is None
+
+
+def test_repair_drops_trailing_garbage():
+    """Regression: DeepSeek-V4-Flash appends stray data after valid JSON."""
+    repaired = repair_tool_call_arguments('{}""')
+    assert repaired is not None
+    new_args, dropped = repaired
+    assert json.loads(new_args) == {}
+    assert dropped == '""'
+
+
+def test_repair_keeps_first_value_and_reserializes():
+    repaired = repair_tool_call_arguments('{"count": 3}  <trailing>')
+    assert repaired is not None
+    new_args, dropped = repaired
+    assert json.loads(new_args) == {"count": 3}
+    assert dropped == "  <trailing>"
+
+
+def test_repair_returns_none_for_unrecoverable_arguments():
+    """No leading valid JSON value → nothing we can salvage; caller raises."""
+    for bad in ("", "not json at all", "{unquoted: key}"):
+        assert repair_tool_call_arguments(bad) is None

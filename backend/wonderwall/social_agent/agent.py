@@ -28,7 +28,10 @@ from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
 
 from app.utils.i18n import get_active_locale, t as _t
-from app.utils.llm_message_filter import filter_openai_messages_for_api
+from app.utils.llm_message_filter import (
+    filter_openai_messages_for_api,
+    repair_tool_call_arguments,
+)
 from wonderwall.social_agent.agent_action import SocialAction
 from wonderwall.social_agent.agent_environment import SocialEnvironment
 from wonderwall.social_platform import Channel
@@ -259,29 +262,25 @@ class SocialAgent(ChatAgent):
         ``json.loads`` has no tolerance for that, so drop the trailing
         garbage here (keeping only the first valid JSON value) before
         CAMEL ever sees it. Calls that aren't recoverable this way are
-        left untouched and surface via the except-clause below."""
+        left untouched and surface via the except-clause below.
+
+        The recovery itself lives in ``repair_tool_call_arguments`` — a
+        dep-free helper the offline unit-test job can exercise directly."""
         try:
             tool_calls = response.choices[0].message.tool_calls or []
         except Exception:
             return
-        decoder = json.JSONDecoder()
         for tc in tool_calls:
-            args = tc.function.arguments
-            try:
-                json.loads(args)
-                continue  # already valid
-            except json.JSONDecodeError:
-                pass
-            try:
-                obj, end = decoder.raw_decode(args)
-            except json.JSONDecodeError:
-                continue  # unrecoverable; let super() raise on this one
+            repaired = repair_tool_call_arguments(tc.function.arguments)
+            if repaired is None:
+                continue  # already valid, or unrecoverable — leave untouched
+            new_args, dropped = repaired
             agent_log.warning(
                 f"Agent {self.social_agent_id} repaired malformed tool_call "
-                f"arguments for '{tc.function.name}': {args!r} "
-                f"(dropped trailing {args[end:]!r})"
+                f"arguments for '{tc.function.name}': "
+                f"{tc.function.arguments!r} (dropped trailing {dropped!r})"
             )
-            tc.function.arguments = json.dumps(obj)
+            tc.function.arguments = new_args
 
     def _handle_batch_response(self, response):
         """Wrap CAMEL's response parsing: repair recoverable malformed
