@@ -13,7 +13,7 @@
         <router-link to="/explore" class="ms-nav-link" :title="$tr('Browse public simulations', '浏览公开模拟', { de: 'Öffentliche Simulationen durchsuchen', fr: 'Parcourir les simulations publiques' })">
           {{ $tr('Explore', '浏览', { de: 'Entdecken', fr: 'Explorer' }) }}
         </router-link>
-        <a href="https://github.com/aaronjmars/MiroShark" target="_blank" rel="noopener" class="ms-nav-link">
+        <a href="https://github.com/MiroShark/MiroShark" target="_blank" rel="noopener" class="ms-nav-link">
           GitHub <span class="ms-nav-arrow">↗</span>
         </a>
         <LocaleToggle />

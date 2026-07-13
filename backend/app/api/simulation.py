@@ -1044,7 +1044,7 @@ def _trending_fetch_one(feed_url: str) -> "list[dict]":
         req = Request(
             feed_url,
             headers={
-                'User-Agent': 'MiroShark/1.0 (+https://github.com/aaronjmars/MiroShark)',
+                'User-Agent': 'MiroShark/1.0 (+https://github.com/MiroShark/MiroShark)',
                 'Accept': 'application/rss+xml, application/atom+xml, application/xml;q=0.9, */*;q=0.8',
             },
         )

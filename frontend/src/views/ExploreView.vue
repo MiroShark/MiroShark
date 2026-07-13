@@ -11,7 +11,7 @@
           <span class="arrow">←</span> {{ $tr('Home', '首页', { de: 'Startseite', fr: 'Accueil' }) }}
         </router-link>
         <a
-          href="https://github.com/aaronjmars/MiroShark"
+          href="https://github.com/MiroShark/MiroShark"
           target="_blank"
           rel="noopener"
           class="github-link"

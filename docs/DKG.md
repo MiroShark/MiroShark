@@ -233,7 +233,7 @@ public probe reports `dkg_configured: false`, and existing
 
 ## See also
 
-* [OriginTrail/dkg-v9 — official daemon repo](https://github.com/OriginTrail/dkg-v9)
+* [OriginTrail/dkg — official daemon repo](https://github.com/OriginTrail/dkg)
 * [OriginTrail DKG documentation](https://docs.origintrail.io/)
 * [`backend/app/services/dkg_publisher.py`](../backend/app/services/dkg_publisher.py)
 * [`backend/app/services/repro_export.py`](../backend/app/services/repro_export.py) — the reproduce.json builder whose bytes get hashed

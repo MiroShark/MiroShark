@@ -369,7 +369,7 @@ def render_share_card(summary: dict) -> bytes:
 
     # ── Footer band ────────────────────────────────────────────────────────
     draw.rectangle((0, BODY_Y1, CARD_W, CARD_H), fill=INK)
-    repo_text = "github.com/aaronjmars/MiroShark"
+    repo_text = "github.com/MiroShark/MiroShark"
     draw.text((PAD_X, BODY_Y1 + 24), repo_text, fill=(220, 220, 220), font=f_footer)
 
     date_text = _format_date(summary.get("created_date") or "")

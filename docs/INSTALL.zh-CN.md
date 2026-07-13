@@ -60,7 +60,7 @@ neo4j-admin dbms set-initial-password miroshark
 
 ### Railway(推荐 — 持久化存储,免费试用)
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.app/new/template?template=https://github.com/aaronjmars/MiroShark)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.app/new/template?template=https://github.com/MiroShark/MiroShark)
 
 点击之后,在 Railway 控制台中设置以下环境变量:
 
@@ -74,7 +74,7 @@ neo4j-admin dbms set-initial-password miroshark
 
 ### Render(免费套餐 — 750 小时/月,闲置 15 分钟后会自动停机)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/aaronjmars/MiroShark)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/MiroShark/MiroShark)
 
 Render 会自动读取 `render.yaml`。提示时设置上面相同的环境变量即可。
 
@@ -89,7 +89,7 @@ Render 会自动读取 `render.yaml`。提示时设置上面相同的环境变�
 **前置依赖** — Python 3.11+、Node 18+、Neo4j(`brew install neo4j` / `sudo apt install neo4j`),以及一把 OpenRouter 密钥。
 
 ```bash
-git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
+git clone https://github.com/MiroShark/MiroShark.git && cd MiroShark
 cp .env.example .env
 ```
 
@@ -249,7 +249,7 @@ WONDERWALL_MODEL_NAME=your-model-id
 ## 方案 B: Docker — 本地 Ollama
 
 ```bash
-git clone https://github.com/aaronjmars/MiroShark.git
+git clone https://github.com/MiroShark/MiroShark.git
 cd MiroShark
 docker compose up -d
 

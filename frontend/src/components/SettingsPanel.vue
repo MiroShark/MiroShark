@@ -100,7 +100,7 @@
             </div>
             <div class="field-hint">
               {{ $tr('Applies the full set of model slots on save. See', '保存时将应用完整的模型槽配置。请参考', { de: 'Wendet beim Speichern alle Modell-Slots an. Siehe', fr: `Applique l'ensemble des slots de modèles à la sauvegarde. Voir` }) }}
-              <a href="https://github.com/aaronjmars/MiroShark/blob/main/.env.example"
+              <a href="https://github.com/MiroShark/MiroShark/blob/main/.env.example"
                  target="_blank" rel="noopener">.env.example</a>
               {{ $tr('for the exact values each preset uses.', '了解各预设使用的精确值。', { de: 'für die genauen Werte der jeweiligen Voreinstellung.', fr: 'pour les valeurs exactes de chaque préréglage.' }) }}
             </div>
@@ -466,7 +466,7 @@
               {{ $tr('e.g.', '例如', { de: 'z. B.', fr: 'ex.' }) }}
               <code>https://hooks.slack.com/services/T0…/B0…/abc</code>
               {{ $tr('or any URL that accepts a POST.', '或任何接受 POST 的 URL。', { de: 'oder jede URL, die POST akzeptiert.', fr: 'ou toute URL qui accepte un POST.' }) }}
-              {{ $tr('See', '参见', { de: 'Siehe', fr: 'Voir' }) }} <a href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md"
+              {{ $tr('See', '参见', { de: 'Siehe', fr: 'Voir' }) }} <a href="https://github.com/MiroShark/MiroShark/blob/main/docs/WEBHOOKS.md"
                      target="_blank" rel="noopener">{{ $tr('the webhook docs', 'Webhook 文档', { de: 'die Webhook-Dokumentation', fr: 'la doc du webhook' }) }}</a>
               {{ $tr('for the payload schema.', '了解负载结构。', { de: 'für das Payload-Schema.', fr: 'pour le schéma du payload.' }) }}
             </div>

@@ -102,11 +102,11 @@ ECOSYSTEM_CATEGORIES: frozenset[str] = frozenset(
 _CATALOG: List[Dict[str, Any]] = [
     {
         "name": "AntFleet",
-        "url": "https://github.com/AntFleet/miroshark-bench",
+        "url": "https://github.com/AntFleet/bench-miroshark",
         "description": "Security and capability benchmark suite over the MiroShark engine — first integrator-product feedback loop.",
         "category": "benchmark",
         "x_handle": "AntFleetDev",
-        "repo": "https://github.com/AntFleet/miroshark-bench",
+        "repo": "https://github.com/AntFleet/bench-miroshark",
     },
     {
         "name": "Blue Agent",

@@ -275,7 +275,7 @@ def render_atom(
     ET.SubElement(feed, f"{{{_ATOM_NS}}}updated").text = most_recent or _now_z()
 
     generator = ET.SubElement(feed, f"{{{_ATOM_NS}}}generator")
-    generator.set("uri", "https://github.com/aaronjmars/MiroShark")
+    generator.set("uri", "https://github.com/MiroShark/MiroShark")
     generator.text = FEED_GENERATOR_NAME
 
     author = ET.SubElement(feed, f"{{{_ATOM_NS}}}author")
@@ -415,7 +415,7 @@ def render_rss(
     )
 
     ET.SubElement(channel, "generator").text = (
-        f"{FEED_GENERATOR_NAME} (https://github.com/aaronjmars/MiroShark)"
+        f"{FEED_GENERATOR_NAME} (https://github.com/MiroShark/MiroShark)"
     )
     ET.SubElement(channel, "language").text = "zh-CN" if locale == "zh-CN" else "en"
 

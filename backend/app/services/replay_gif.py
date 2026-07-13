@@ -357,7 +357,7 @@ def _render_frame(scenario: str, frame: dict, total_rounds: int, fonts: dict) ->
     draw.rectangle((0, CARD_H - FOOTER_H, CARD_W, CARD_H), fill=PANEL)
     draw.text(
         (PAD_X, CARD_H - FOOTER_H + 24),
-        "github.com/aaronjmars/MiroShark",
+        "github.com/MiroShark/MiroShark",
         fill=INK_MUTED,
         font=fonts["footer"],
     )
@@ -404,7 +404,7 @@ def _render_empty_frame(scenario: str, fonts: dict) -> Image.Image:
     draw.rectangle((0, CARD_H - FOOTER_H, CARD_W, CARD_H), fill=PANEL)
     draw.text(
         (PAD_X, CARD_H - FOOTER_H + 24),
-        "github.com/aaronjmars/MiroShark",
+        "github.com/MiroShark/MiroShark",
         fill=INK_MUTED,
         font=fonts["footer"],
     )
