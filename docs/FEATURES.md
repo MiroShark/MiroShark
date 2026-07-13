@@ -707,11 +707,11 @@ Sits alongside `/api/surfaces.json` on the same blueprint. Together the two endp
     "ecosystem": [
       {
         "name": "AntFleet",
-        "url": "https://github.com/AntFleet/miroshark-bench",
+        "url": "https://github.com/AntFleet/bench-miroshark",
         "description": "Security and capability benchmark suite over the MiroShark engine — first integrator-product feedback loop.",
         "category": "benchmark",
         "x_handle": "AntFleetDev",
-        "repo": "https://github.com/AntFleet/miroshark-bench"
+        "repo": "https://github.com/AntFleet/bench-miroshark"
       },
       {
         "name": "Capacitr",

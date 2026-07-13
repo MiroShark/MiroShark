@@ -288,7 +288,7 @@ def build_status_payload(
             'entity_count': None,
             'error': 'Neo4j probe skipped.',
         },
-        'docs_url': 'https://github.com/aaronjmars/MiroShark/blob/main/docs/MCP.md',
+        'docs_url': 'https://github.com/MiroShark/MiroShark/blob/main/docs/MCP.md',
     }
 
 

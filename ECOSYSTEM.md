@@ -18,7 +18,7 @@ These are the projects we know of that run MiroShark, extend it, or integrate wi
 
 | Logo | Project | Links |
 |------|---------|-------|
-| <img src="https://pbs.twimg.com/profile_images/2055896281751633920/NeawiT3G_400x400.png" alt="AntFleet" width="40" /> | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) · [miroshark-bench](https://github.com/AntFleet/miroshark-bench) |
+| <img src="https://pbs.twimg.com/profile_images/2055896281751633920/NeawiT3G_400x400.png" alt="AntFleet" width="40" /> | AntFleet | [@AntFleetDev](https://x.com/AntFleetDev) · [bench-miroshark](https://github.com/AntFleet/bench-miroshark) |
 | <img src="https://pbs.twimg.com/profile_images/2047719472455438336/CFrEyoNZ_400x400.jpg" alt="Blue Agent" width="40" /> | Blue Agent | [@blueagent_](https://x.com/blueagent_) · [blue-agent](https://github.com/madebyshun/blue-agent) |
 | <img src="https://pbs.twimg.com/profile_images/2040249335284387840/hIisggkp_400x400.png" alt="Capacitr" width="40" /> | Capacitr | [capacitr.xyz](https://capacitr.xyz/) · [MiroShark integration spec](https://spec.capacitr.xyz/#miroshark) · [@capacitr_xyz](https://x.com/capacitr_xyz) |
 | <img src="https://upload.wikimedia.org/wikipedia/en/2/2e/Tianjin_Normal_University_logo_2.png" alt="Crucible Sim" width="40" /> | Crucible Sim | [crucible-sim](https://github.com/wshuyi/crucible-sim) |

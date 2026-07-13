@@ -170,8 +170,8 @@ def _swagger_ui_html(spec_url: str) -> str:
     <nav>
       <a href="/api/openapi.yaml">openapi.yaml</a>
       <a href="/api/openapi.json">openapi.json</a>
-      <a href="https://github.com/aaronjmars/MiroShark/blob/main/docs/API.md" target="_blank" rel="noopener">docs/API.md</a>
-      <a href="https://github.com/aaronjmars/MiroShark" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/MiroShark/MiroShark/blob/main/docs/API.md" target="_blank" rel="noopener">docs/API.md</a>
+      <a href="https://github.com/MiroShark/MiroShark" target="_blank" rel="noopener">GitHub</a>
     </nav>
   </header>
   <div id="swagger-ui"></div>

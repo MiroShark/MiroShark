@@ -2525,7 +2525,7 @@
                     <code class="signature-hint-code">WEBHOOK_SECRET=&lt;your 32+ char secret&gt;</code>
                     <p class="signature-hint-line">
                       <a
-                        href="https://github.com/aaronjmars/MiroShark/blob/main/docs/WEBHOOKS.md#verifying-webhook-signatures"
+                        href="https://github.com/MiroShark/MiroShark/blob/main/docs/WEBHOOKS.md#verifying-webhook-signatures"
                         target="_blank"
                         rel="noopener"
                       >{{ $tr('Verification snippets (Python / Node.js / curl)', '验证示例(Python / Node.js / curl)', { de: 'Verifizierungs-Snippets (Python / Node.js / curl)' , fr: 'Extraits de vérification (Python / Node.js / curl)'}) }} ↗</a>
@@ -2788,7 +2788,7 @@
               <div class="feed-callout-actions">
                 <a
                   class="feed-callout-link feed-callout-link-secondary"
-                  href="https://github.com/aaronjmars/MiroShark/blob/main/docs/NOTIFICATIONS.md"
+                  href="https://github.com/MiroShark/MiroShark/blob/main/docs/NOTIFICATIONS.md"
                   target="_blank"
                   rel="noopener"
                   :title="$tr('Channel setup guide on GitHub', 'GitHub 上的渠道接入指南', { de: 'Kanal-Einrichtungsanleitung auf GitHub' , fr: 'Guide de configuration du canal sur GitHub'})"

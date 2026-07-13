@@ -6,7 +6,7 @@
     <nav class="site-footer-nav">
       <a href="https://miroshark.xyz/docs" target="_blank" rel="noopener noreferrer">Docs</a>
       <span class="site-footer-sep" aria-hidden="true">·</span>
-      <a href="https://github.com/aaronjmars/MiroShark" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://github.com/MiroShark/MiroShark" target="_blank" rel="noopener noreferrer">GitHub</a>
       <span class="site-footer-sep" aria-hidden="true">·</span>
       <a href="https://x.com/miroshark_" target="_blank" rel="noopener noreferrer">X</a>
       <span class="site-footer-sep" aria-hidden="true">·</span>
