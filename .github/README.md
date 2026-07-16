@@ -136,7 +136,3 @@ A few of the highlights:
 AGPL-3.0. See [LICENSE](../LICENSE).
 
 Support the project: `0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3`
-
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=aaronjmars/miroshark&type=Date)](https://www.star-history.com/#aaronjmars/miroshark&Date)
