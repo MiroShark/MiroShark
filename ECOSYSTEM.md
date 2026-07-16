@@ -29,7 +29,6 @@ These are the projects we know of that run MiroShark, extend it, or integrate wi
 | <img src="https://pbs.twimg.com/profile_images/2070604629688070144/xNwUGHgX_400x400.jpg" alt="RootAI" width="40" /> | RootAI | [@Root_Edge](https://x.com/Root_Edge) · [rootai.wtf](https://rootai.wtf) |
 | <img src="https://pbs.twimg.com/profile_images/2056291951084032000/QJiBIXV-_400x400.jpg" alt="Signa" width="40" /> | Signa | [@Signa_Agent](https://x.com/Signa_Agent) · [signa-miroshark-skills](https://github.com/codexvritra/signa-miroshark-skills) |
 | <img src="https://sparkleware.fun/logo.png" alt="Sparkleware" width="40" /> | Sparkleware | [@sparklewarefun](https://x.com/sparklewarefun) · [miroshark kit](https://sparkleware.fun/kits/miroshark/) · [sparkleware.fun](https://sparkleware.fun) |
-| <img src="https://pbs.twimg.com/profile_images/2056876942385664001/Z-aV7MzX_400x400.jpg" alt="SyntheticsAI" width="40" /> | SyntheticsAI | [@SyntheticsAI_](https://x.com/SyntheticsAI_) · [syntheticuser.org](https://syntheticuser.org) |
 | <img src="https://pbs.twimg.com/profile_images/2048455587537768448/Xm5di5kf_400x400.jpg" alt="Xerg" width="40" /> | Xerg | [@xerg_AI](https://x.com/xerg_AI) · [xerg.ai](https://xerg.ai/) |
 | <img src="https://pbs.twimg.com/profile_images/2057305586904023040/jaDCPSZQ_400x400.jpg" alt="ZER0" width="40" /> | ZER0 | [@atzer0_BOT](https://x.com/atzer0_BOT) · [atzer0.xyz](https://www.atzer0.xyz/) |
 ---

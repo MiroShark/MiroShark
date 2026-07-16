@@ -42,7 +42,7 @@ Design notes
   HivemindOS), ``tool`` (operator-facing utilities — Crucible Sim),
   ``integration`` (services that wire MiroShark into another system
   — Monitor), ``agent`` (autonomous bots running MiroShark sims —
-  Blue Agent, SyntheticsAI), ``benchmark`` (test / evaluation
+  Blue Agent), ``benchmark`` (test / evaluation
   pipelines over the engine — AntFleet). MCP servers and Aeon skill
   packs that wrap MiroShark surfaces fall under ``integration``
   (Noelclaw mcp, Signa signa-miroshark-skills).
@@ -186,14 +186,6 @@ _CATALOG: List[Dict[str, Any]] = [
         "description": "Discovery registry that indexes MiroShark-on-Aeon skill packs and bundles them into an installable kit.",
         "category": "integration",
         "x_handle": "sparklewarefun",
-        "repo": None,
-    },
-    {
-        "name": "SyntheticsAI",
-        "url": "https://syntheticuser.org",
-        "description": "Synthetic-user pipeline that runs MiroShark sims as the underlying behavioural engine.",
-        "category": "agent",
-        "x_handle": "SyntheticsAI_",
         "repo": None,
     },
     {
