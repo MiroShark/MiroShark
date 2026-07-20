@@ -5,6 +5,7 @@
 <h1 align="center">MiroShark</h1>
 
 <p align="center">
+  <a href="https://www.miroshark.xyz/docs"><img src="https://img.shields.io/badge/Documentation-miroshark.xyz-blue?style=flat-square&logo=gitbook&logoColor=white&labelColor=1a1a2e" alt="Documentation"></a>
   <a href="https://github.com/MiroShark/MiroShark/stargazers"><img src="https://img.shields.io/github/stars/MiroShark/MiroShark?style=flat-square&logo=github" alt="GitHub stars"></a>
   <a href="https://github.com/MiroShark/MiroShark/network/members"><img src="https://img.shields.io/github/forks/MiroShark/MiroShark?style=flat-square&logo=github" alt="GitHub forks"></a>
   <a href="https://x.com/miroshark_"><img src="https://img.shields.io/badge/Follow-%40miroshark__-black?style=flat-square&logo=x&labelColor=000000" alt="Follow on X"></a>
