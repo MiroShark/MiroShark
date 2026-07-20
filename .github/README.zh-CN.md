@@ -5,11 +5,11 @@
 <h1 align="center">MiroShark</h1>
 
 <p align="center">
-  <a href="https://www.miroshark.xyz/docs"><img src="https://img.shields.io/badge/Documentation-miroshark.xyz-blue?style=flat-square&logo=gitbook&logoColor=white&labelColor=1a1a2e" alt="文档"></a>
+  <a href="https://www.miroshark.xyz/docs"><img src="https://img.shields.io/badge/Docs-miroshark.xyz-blue?style=flat-square&logo=gitbook&logoColor=white&labelColor=1a1a2e" alt="文档"></a>
   <a href="https://github.com/aaronjmars/MiroShark/stargazers"><img src="https://img.shields.io/github/stars/aaronjmars/MiroShark?style=flat-square&logo=github" alt="GitHub stars"></a>
   <a href="https://github.com/aaronjmars/MiroShark/network/members"><img src="https://img.shields.io/github/forks/aaronjmars/MiroShark?style=flat-square&logo=github" alt="GitHub forks"></a>
-  <a href="https://x.com/miroshark_"><img src="https://img.shields.io/badge/Follow-%40miroshark__-black?style=flat-square&logo=x&labelColor=000000" alt="Follow on X"></a>
-  <a href="https://bankr.bot/discover/0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3"><img src="https://img.shields.io/badge/MiroShark%20on-Bankr-orange?style=flat-square&labelColor=1a1a2e" alt="MiroShark on Bankr"></a>
+  <a href="https://x.com/miroshark_"><img src="https://img.shields.io/badge/%40miroshark__-black?style=flat-square&logo=x&labelColor=000000" alt="@miroshark_ on X"></a>
+  <a href="https://bankr.bot/discover/0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3"><img src="https://img.shields.io/badge/%24miroshark%20on-Bankr-orange?style=flat-square&labelColor=1a1a2e" alt="$miroshark on Bankr"></a>
 </p>
 
 <p align="center">
