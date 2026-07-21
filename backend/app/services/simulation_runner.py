@@ -1032,17 +1032,6 @@ class SimulationRunner:
                 round_num=round_num
             ))
 
-        # If per-platform files do not exist, try reading old single file format
-        if not actions:
-            actions_log = os.path.join(sim_dir, "actions.jsonl")
-            actions = cls._read_actions_from_file(
-                actions_log,
-                default_platform=None,  # Old format files should have platform field
-                platform_filter=platform,
-                agent_id=agent_id,
-                round_num=round_num
-            )
-        
         # Sort by timestamp (newest first)
         actions.sort(key=lambda x: x.timestamp, reverse=True)
         
@@ -1095,11 +1084,9 @@ class SimulationRunner:
             ("reddit",      os.path.join(sim_dir, "reddit",      "actions.jsonl")),
             ("polymarket",  os.path.join(sim_dir, "polymarket",  "actions.jsonl")),
         ]
-        found_any = False
         for plat, path in platform_files:
             if not os.path.exists(path):
                 continue
-            found_any = True
             with open(path, 'r', encoding='utf-8') as fh:
                 for line in fh:
                     line = line.strip()
@@ -1113,23 +1100,6 @@ class SimulationRunner:
                         continue
                     data['_platform'] = data.get('platform') or plat
                     yield data
-        # Fallback: legacy single file
-        if not found_any:
-            legacy = os.path.join(sim_dir, "actions.jsonl")
-            if os.path.exists(legacy):
-                with open(legacy, 'r', encoding='utf-8') as fh:
-                    for line in fh:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        try:
-                            data = json.loads(line)
-                        except json.JSONDecodeError:
-                            continue
-                        if "event_type" in data or "agent_id" not in data:
-                            continue
-                        data['_platform'] = data.get('platform', '')
-                        yield data
 
     @classmethod
     def get_timeline(

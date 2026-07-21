@@ -3135,7 +3135,7 @@ def start_simulation():
 
     About the force parameter:
         - When enabled, if simulation is running or completed, it will first stop and clean up run logs
-        - Cleanup includes: run_state.json, actions.jsonl, simulation.log, etc.
+        - Cleanup includes: run_state.json, per-platform <platform>/actions.jsonl files, simulation.log, etc.
         - Will not clean up configuration files (simulation_config.json) and profile files
         - Suitable for scenarios requiring simulation re-run
 

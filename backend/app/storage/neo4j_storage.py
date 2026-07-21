@@ -464,16 +464,6 @@ class Neo4jStorage(GraphStorage):
         logger.info(f"[add_text] Chunk done: episode={episode_id}")
         return episode_id
 
-    def wait_for_processing(
-        self,
-        episode_ids: List[str],
-        progress_callback: Optional[Callable[[float], None]] = None,
-        timeout: int = 600,
-    ) -> None:
-        """No-op — processing is synchronous in Neo4j."""
-        if progress_callback:
-            progress_callback(1.0)
-
     # ----------------------------------------------------------------
     # Read nodes
     # ----------------------------------------------------------------

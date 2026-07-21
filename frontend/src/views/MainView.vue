@@ -100,7 +100,6 @@ const currentStep = ref(1) // 1: Graph Construction, 2: Agent Setup, 3: Start Si
 const stepNamesEn = ['Graph Construction', 'Agent Setup', 'Start Simulation', 'Report Generation']
 const stepNamesZh = ['图谱构建', '智能体配置', '启动模拟', '生成报告']
 const stepNamesDe = ['Graph-Aufbau', 'Agenten-Einrichtung', 'Simulation starten', 'Bericht generieren']
-const stepNames = stepNamesEn // legacy ref kept for handlers below
 const stepName = (i) => tr(stepNamesEn[i] || '', stepNamesZh[i] || '', stepNamesDe[i] || '')
 const viewModeLabel = (mode) => {
   const en = { graph: 'Graph', split: 'Split', workbench: 'Workbench' }
@@ -176,7 +175,7 @@ const toggleMaximize = (target) => {
 const handleNextStep = (params = {}) => {
   if (currentStep.value < 4) {
     currentStep.value++
-    addLog(`Entering Step ${currentStep.value}: ${stepNames[currentStep.value - 1]}`)
+    addLog(`Entering Step ${currentStep.value}: ${stepName(currentStep.value - 1)}`)
     
     // If entering Step 3 from Step 2, log the simulation round configuration
     if (currentStep.value === 3 && params.maxRounds) {
@@ -188,7 +187,7 @@ const handleNextStep = (params = {}) => {
 const handleGoBack = () => {
   if (currentStep.value > 1) {
     currentStep.value--
-    addLog(`Returning to Step ${currentStep.value}: ${stepNames[currentStep.value - 1]}`)
+    addLog(`Returning to Step ${currentStep.value}: ${stepName(currentStep.value - 1)}`)
   }
 }
 
