@@ -72,12 +72,13 @@ from __future__ import annotations
 import os
 import threading
 import time
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 from . import signal_service
 from ..utils.json_io import safe_load_json as _safe_load_json
 from ..utils.belief import bucket_snapshots
 from ..utils.timeutils import utc_iso8601 as _iso_utc_now
+from ..utils.sim_corpus import iter_sim_dirs as _iter_sim_dirs
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -110,28 +111,6 @@ _cache_lock = threading.Lock()
 # ── Internal helpers ──────────────────────────────────────────────────────
 
 
-def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:
-    """Yield ``(simulation_id, sim_dir_path)`` for every directory under
-    ``sim_root`` that looks like a simulation folder.
-
-    Same posture as ``platform_stats._iter_sim_dirs`` — skips dotfiles
-    and non-directories so a stray ``.DS_Store`` doesn't trip the scan.
-    """
-    if not sim_root or not os.path.isdir(sim_root):
-        return
-    try:
-        entries = sorted(os.listdir(sim_root))
-    except OSError:
-        return
-    for sim_id in entries:
-        if sim_id.startswith("."):
-            continue
-        sim_dir = os.path.join(sim_root, sim_id)
-        if not os.path.isdir(sim_dir):
-            continue
-        yield sim_id, sim_dir
-
-
 def _trajectory_snapshots(sim_dir: str) -> Optional[list]:
     """Return the list of trajectory snapshots, or ``None`` when the
     trajectory file is missing / unparsable / shaped wrong."""
@@ -149,9 +128,9 @@ def _final_belief_from_snapshots(snapshots: list) -> Optional[Tuple[float, float
     round in ``snapshots``, or ``None`` if the list is empty or carries
     no parseable belief positions.
 
-    Mirrors ``platform_stats._final_belief_from_trajectory`` exactly —
-    same ±0.2 stance threshold, same one-decimal rounding — so a sim's
-    direction here matches its per-sim signal.json byte-for-byte.
+    Same ±0.2 stance threshold and one-decimal rounding as
+    ``sim_corpus.final_belief_from_trajectory``, so a sim's direction
+    here matches its per-sim signal.json byte-for-byte.
     """
     final, _ = bucket_snapshots(snapshots)
     return final

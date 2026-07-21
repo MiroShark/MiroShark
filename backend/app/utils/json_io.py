@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 
 def safe_load_json(path: str) -> Optional[Any]:
@@ -35,3 +35,23 @@ def safe_load_json(path: str) -> Optional[Any]:
             return json.load(fh)
     except Exception:
         return None
+
+
+def load_state(sim_dir: str) -> Optional[Dict[str, Any]]:
+    """Load ``<sim_dir>/state.json`` defensively. Missing/corrupt → ``None``.
+
+    Narrower than :func:`safe_load_json`: a state file that parses to
+    anything other than an object is treated as unusable, so callers can
+    assume a mapping without re-checking.
+    """
+    if not sim_dir:
+        return None
+    state_path = os.path.join(sim_dir, "state.json")
+    if not os.path.exists(state_path):
+        return None
+    try:
+        with open(state_path, "r", encoding="utf-8") as fh:
+            data = json.load(fh)
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None

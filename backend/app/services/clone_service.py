@@ -77,6 +77,9 @@ import json
 import os
 from typing import Any, Dict, Optional
 
+from ..utils.json_io import load_state as _load_state
+from ..utils.text import safe_str as _safe_str
+
 
 SCHEMA_VERSION = "1"
 
@@ -85,18 +88,6 @@ SCHEMA_VERSION = "1"
 # about. 200 chars matches the cap the embed-summary uses for
 # ``scenario_truncated`` so the two views stay consistent.
 SCENARIO_PREVIEW_CHARS = 200
-
-
-def _safe_str(value: Any) -> str:
-    """Coerce ``value`` to a stripped string; ``None`` ⇒ empty."""
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value.strip()
-    try:
-        return str(value).strip()
-    except Exception:
-        return ""
 
 
 def _safe_bool(value: Any, default: bool) -> bool:
@@ -130,21 +121,6 @@ def _truncate_scenario(text: str, limit: int = SCENARIO_PREVIEW_CHARS) -> str:
     if len(text) <= limit:
         return text
     return text[: max(1, limit - 1)].rstrip() + "…"
-
-
-def _load_state(sim_dir: str) -> Optional[Dict[str, Any]]:
-    """Load ``<sim_dir>/state.json`` defensively. Missing/corrupt → ``None``."""
-    if not sim_dir:
-        return None
-    state_path = os.path.join(sim_dir, "state.json")
-    if not os.path.exists(state_path):
-        return None
-    try:
-        with open(state_path, "r", encoding="utf-8") as fh:
-            data = json.load(fh)
-    except Exception:
-        return None
-    return data if isinstance(data, dict) else None
 
 
 def _load_config(sim_dir: str) -> Dict[str, Any]:

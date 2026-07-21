@@ -7,6 +7,24 @@ from typing import Any, List, Optional, Tuple
 STANCE_THRESHOLD = 0.2
 
 
+def classify_stance(value: float) -> str:
+    """Bucket a continuous belief position into bullish/neutral/bearish.
+
+    Applies the ±:data:`STANCE_THRESHOLD` cutoff so an agent tagged
+    "bullish" on one surface is the same agent tagged "bullish" on every
+    other. Unparseable input degrades to ``"neutral"``.
+    """
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return "neutral"
+    if v > STANCE_THRESHOLD:
+        return "bullish"
+    if v < -STANCE_THRESHOLD:
+        return "bearish"
+    return "neutral"
+
+
 def bucket_snapshots(
     snapshots: Any,
 ) -> Tuple[Optional[Tuple[float, float, float]], int]:

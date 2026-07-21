@@ -62,6 +62,9 @@ import json
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
+from ..utils.json_io import load_state as _load_state
+from ..utils.text import safe_str as _safe_str
+
 
 # Cap the children list at 50 entries so the response never balloons
 # even on a sim that someone pathologically forked dozens of times.
@@ -72,18 +75,6 @@ MAX_CHILDREN: int = 50
 # so the EmbedDialog row stays one line on common viewports. 80 chars
 # matches the YAML front-matter shape the transcript export uses.
 SCENARIO_PREVIEW_CHARS: int = 80
-
-
-def _safe_str(value: Any) -> str:
-    """Coerce ``value`` to a stripped string; ``None`` ⇒ empty."""
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value.strip()
-    try:
-        return str(value).strip()
-    except Exception:
-        return ""
 
 
 def _safe_int(value: Any, default: int = 0) -> int:
@@ -101,21 +92,6 @@ def _truncate_scenario(text: str, limit: int = SCENARIO_PREVIEW_CHARS) -> str:
     if len(text) <= limit:
         return text
     return text[: max(1, limit - 1)].rstrip() + "…"
-
-
-def _load_state(sim_dir: str) -> Optional[Dict[str, Any]]:
-    """Load ``<sim_dir>/state.json`` defensively. Missing/corrupt → ``None``."""
-    if not sim_dir:
-        return None
-    state_path = os.path.join(sim_dir, "state.json")
-    if not os.path.exists(state_path):
-        return None
-    try:
-        with open(state_path, "r", encoding="utf-8") as fh:
-            data = json.load(fh)
-    except Exception:
-        return None
-    return data if isinstance(data, dict) else None
 
 
 def _load_config_scenario(sim_dir: str) -> str:

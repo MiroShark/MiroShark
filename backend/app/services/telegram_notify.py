@@ -57,7 +57,13 @@ from typing import Any, Dict, Optional, Tuple
 
 from ..utils.logger import get_logger
 from .simulation_run_state import SimulationRunState
-from ._notify_base import Dedup
+from ._notify_base import (
+    Dedup,
+    consensus_direction as _consensus_direction,
+    resolve_share_url as _resolve_share_url,
+    status_verb as _status_verb,
+    truncate as _truncate,
+)
 
 logger = get_logger("miroshark.telegram_notify")
 
@@ -134,14 +140,6 @@ def _escape(value: Any) -> str:
     return html.escape(str(value), quote=False)
 
 
-def _truncate(value: str, limit: int) -> str:
-    if not isinstance(value, str):
-        return ""
-    if len(value) <= limit:
-        return value
-    return value[: max(limit - 1, 0)].rstrip() + "…"
-
-
 def belief_bar(pct: Any, width: int = BAR_WIDTH) -> str:
     """Render a horizontal block-bar for ``pct`` (a value in [0, 100])."""
     try:
@@ -167,57 +165,6 @@ def _format_pct(value: Any) -> str:
         return f"{float(value):.1f}%"
     except (TypeError, ValueError):
         return "—"
-
-
-def _consensus_direction(payload: Dict[str, Any]) -> str:
-    """Return ``"Bullish"`` / ``"Neutral"`` / ``"Bearish"`` / ``"Failed"``.
-
-    Same bucket logic as :func:`email_notify._consensus_direction` so
-    the channels stay aligned on "what just happened."
-    """
-    if (payload.get("status") or "") == "failed":
-        return "Failed"
-
-    consensus = payload.get("final_consensus") or {}
-    if not isinstance(consensus, dict):
-        return "Neutral"
-
-    try:
-        b = float(consensus.get("bullish") or 0.0)
-        n = float(consensus.get("neutral") or 0.0)
-        r = float(consensus.get("bearish") or 0.0)
-    except (TypeError, ValueError):
-        return "Neutral"
-
-    if b == 0.0 and n == 0.0 and r == 0.0:
-        return "Neutral"
-
-    if b >= r and b >= n:
-        return "Bullish"
-    if r >= b and r >= n:
-        return "Bearish"
-    return "Neutral"
-
-
-def _status_verb(status: str) -> str:
-    if status == "completed":
-        return "Completed"
-    if status == "failed":
-        return "Failed"
-    if status == "test":
-        return "Test event"
-    return status.title() or "Unknown"
-
-
-def _resolve_share_url(payload: Dict[str, Any]) -> Optional[str]:
-    """Prefer the absolute ``share_url`` — Telegram inline-keyboard
-    buttons require an absolute ``http(s)://`` URL."""
-    abs_url = payload.get("share_url")
-    if isinstance(abs_url, str) and abs_url.strip():
-        s = abs_url.strip()
-        if s.startswith("http://") or s.startswith("https://"):
-            return s
-    return None
 
 
 def build_telegram_message(payload: Dict[str, Any]) -> Dict[str, Any]:

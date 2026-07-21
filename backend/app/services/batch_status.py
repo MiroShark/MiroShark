@@ -45,10 +45,9 @@ Design notes
 * **Signal fields are derived, not stored.** ``direction``,
   ``confidence_pct``, ``quality_health`` come from
   :mod:`signal_service.compute_signal` over the same final-round
-  belief split the per-sim ``signal.json`` surface uses. Helpers
-  duplicate the trajectory-walk pattern from ``platform_stats`` /
-  ``project_stats`` byte-for-byte so a sim's batch entry matches its
-  per-sim signal entry for the same simulation.
+  belief split the per-sim ``signal.json`` surface uses, so a sim's
+  batch entry matches its per-sim signal entry for the same
+  simulation.
 
 * **``total_rounds`` is the trajectory length.** A completed sim's
   ``total_rounds`` is ``len(trajectory.snapshots)`` — the same value
@@ -87,6 +86,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from . import signal_service
 from ..utils.json_io import safe_load_json as _safe_load_json
 from ..utils.belief import bucket_snapshots
+from ..utils.sim_corpus import normalise_completed_at as _normalise_completed_at
 
 
 # ── Configuration ────────────────────────────────────────────────────────
@@ -121,9 +121,8 @@ def _final_belief_from_trajectory(
     for the final round of ``trajectory.json``, or ``None`` if the
     trajectory is missing / empty / unparsable.
 
-    Mirrors ``platform_stats._final_belief_from_trajectory`` /
-    ``project_stats._final_belief_from_trajectory`` exactly — same
-    ±0.2 stance threshold, same one-decimal rounding — so a sim's
+    Same ±0.2 stance threshold and one-decimal rounding as
+    ``sim_corpus.final_belief_from_trajectory``, so a sim's
     batch-status entry matches its platform / project / per-sim
     contribution byte-for-byte. ``total_rounds`` is appended so the
     caller doesn't have to walk the snapshots a second time.
@@ -188,22 +187,6 @@ def _empty_entry(sim_id: str) -> Dict[str, Any]:
         "quality_health": None,
         "completed_at": None,
     }
-
-
-def _normalise_completed_at(state: Dict[str, Any]) -> Optional[str]:
-    """Pick the completion timestamp for a completed sim.
-
-    ``state.json.updated_at`` is what ``simulation_runner`` writes on
-    the terminal-state transition. Falls back to ``created_at`` when
-    ``updated_at`` is missing (older sims written before completion
-    timestamps were instrumented) so a completed-but-undated sim still
-    registers a heartbeat.
-    """
-    for key in ("updated_at", "created_at"):
-        value = state.get(key)
-        if isinstance(value, str) and value.strip():
-            return value
-    return None
 
 
 def _coerce_int_or_none(value: Any) -> Optional[int]:

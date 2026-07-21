@@ -1,9 +1,12 @@
 """Shared infrastructure for the completion-notification channels.
 
-Stdlib-only leaf module. Holds the per-channel dedup primitive and the plain
-JSON POST helper reused by the Slack and Discord webhook dispatchers. Each
-channel keeps its OWN :class:`Dedup` instance, so a send on one channel never
-suppresses another channel's send for the same ``(sim_id, status)``.
+Stdlib-only leaf module. Holds the per-channel dedup primitive, the plain
+JSON POST helper reused by the Slack and Discord webhook dispatchers, and
+the payload-formatting helpers every channel applies identically so a sim's
+direction, status verb, and link read the same in Slack, Discord, Telegram,
+and email. Each channel keeps its OWN :class:`Dedup` instance, so a send on
+one channel never suppresses another channel's send for the same
+``(sim_id, status)``.
 """
 
 from __future__ import annotations
@@ -12,7 +15,7 @@ import json
 import threading
 import urllib.error
 import urllib.request
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 
 class Dedup:
@@ -80,3 +83,69 @@ def post_json(
         return False, f"URL error: {reason}"
     except Exception as exc:
         return False, f"{type(exc).__name__}: {exc}"
+
+
+def truncate(value: str, limit: int) -> str:
+    """Clip ``value`` to ``limit`` chars with a trailing ellipsis."""
+    if not isinstance(value, str):
+        return ""
+    if len(value) <= limit:
+        return value
+    return value[: max(limit - 1, 0)].rstrip() + "…"
+
+
+def status_verb(status: str) -> str:
+    """Render a terminal status as the human phrase channels headline with."""
+    if status == "completed":
+        return "Completed"
+    if status == "failed":
+        return "Failed"
+    if status == "test":
+        return "Test event"
+    return status.title() or "Unknown"
+
+
+def resolve_share_url(payload: Dict[str, Any]) -> Optional[str]:
+    """Return the payload's absolute ``share_url``, or ``None``.
+
+    Chat clients render a link button only for an absolute
+    ``http(s)://`` value, so a relative ``share_path`` is not a usable
+    fallback here.
+    """
+    abs_url = payload.get("share_url")
+    if isinstance(abs_url, str) and abs_url.strip():
+        s = abs_url.strip()
+        if s.startswith("http://") or s.startswith("https://"):
+            return s
+    return None
+
+
+def consensus_direction(payload: Dict[str, Any]) -> str:
+    """Return ``"Bullish"`` / ``"Neutral"`` / ``"Bearish"`` / ``"Failed"``.
+
+    Drives the subject-line prefix and body header — same bucket logic
+    as :func:`discord_notify._consensus_color` so every notification
+    channel stays aligned on "what just happened."
+    """
+    if (payload.get("status") or "") == "failed":
+        return "Failed"
+
+    consensus = payload.get("final_consensus") or {}
+    if not isinstance(consensus, dict):
+        return "Neutral"
+
+    try:
+        b = float(consensus.get("bullish") or 0.0)
+        n = float(consensus.get("neutral") or 0.0)
+        r = float(consensus.get("bearish") or 0.0)
+    except (TypeError, ValueError):
+        return "Neutral"
+
+    if b == 0.0 and n == 0.0 and r == 0.0:
+        return "Neutral"
+
+    if b >= r and b >= n:
+        return "Bullish"
+    if r >= b and r >= n:
+        return "Bearish"
+    return "Neutral"

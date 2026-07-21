@@ -23,15 +23,12 @@ import json
 import os
 from typing import Any, Optional
 
-from ..utils.belief import avg_position as _avg_position
+from ..utils.belief import (
+    STANCE_THRESHOLD,
+    avg_position as _avg_position,
+    classify_stance as _classify_stance,
+)
 from ..utils.json_io import safe_load_json as _safe_load_json
-
-
-# Same threshold the embed-summary, share card, replay GIF, gallery
-# card, and webhook all use — keep these surfaces in sync so an agent
-# tagged "bullish" on the gallery is the same agent tagged "bullish"
-# in the transcript.
-STANCE_THRESHOLD = 0.2
 
 # Per-post excerpt cap. Agent posts in MiroShark can be a few hundred
 # characters. 400 keeps the round sections quotable as pull-quotes
@@ -43,27 +40,6 @@ POST_EXCERPT_CHARS = 400
 # md keeps the first/last set + a "skipped N rounds" note so the
 # document still reads cleanly. The JSON form keeps every round.
 MAX_MD_ROUNDS = 80
-
-
-# ── Stance helpers ─────────────────────────────────────────────────────────
-
-
-def _classify_stance(value: float) -> str:
-    """Bucket a continuous belief position into bullish/neutral/bearish.
-
-    Mirrors the ±0.2 threshold used elsewhere — keeps the transcript's
-    per-agent labels consistent with the gallery, share card, and
-    webhook payloads.
-    """
-    try:
-        v = float(value)
-    except (TypeError, ValueError):
-        return "neutral"
-    if v > STANCE_THRESHOLD:
-        return "bullish"
-    if v < -STANCE_THRESHOLD:
-        return "bearish"
-    return "neutral"
 
 
 # ── On-disk artifact loaders ──────────────────────────────────────────────

@@ -74,12 +74,15 @@ import os
 import re
 import threading
 import time
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
-from . import signal_service
-from .surface_stats import SURFACE_STATS_FILENAME, SURFACE_KEYS
 from ..utils.json_io import safe_load_json as _safe_load_json
-from ..utils.belief import bucket_snapshots
+from ..utils.sim_corpus import (
+    empty_distribution as _empty_distribution,
+    iter_sim_dirs as _iter_sim_dirs,
+    signal_for_sim as _signal_for_sim,
+    surface_views_for_sim as _surface_views_for_sim,
+)
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -108,91 +111,6 @@ _cache_lock = threading.Lock()
 # ── Internal helpers ──────────────────────────────────────────────────────
 
 
-def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:
-    """Yield ``(simulation_id, sim_dir_path)`` for every directory under
-    ``sim_root`` that looks like a simulation folder.
-
-    Skips dotfiles and non-directories — same posture as
-    ``platform_stats._iter_sim_dirs``.
-    """
-    if not sim_root or not os.path.isdir(sim_root):
-        return
-    try:
-        entries = sorted(os.listdir(sim_root))
-    except OSError:
-        return
-    for sim_id in entries:
-        if sim_id.startswith("."):
-            continue
-        sim_dir = os.path.join(sim_root, sim_id)
-        if not os.path.isdir(sim_dir):
-            continue
-        yield sim_id, sim_dir
-
-
-def _final_belief_from_trajectory(sim_dir: str) -> Optional[Tuple[float, float, float]]:
-    """Return ``(bullish_pct, neutral_pct, bearish_pct)`` for the final
-    round in ``trajectory.json``, or ``None`` if the trajectory is
-    missing / empty / unparsable.
-
-    Mirrors ``platform_stats._final_belief_from_trajectory`` exactly —
-    same ±0.2 stance threshold, same one-decimal rounding — so a sim's
-    contribution to its project aggregate matches its contribution to
-    the platform aggregate byte-for-byte.
-    """
-    traj = _safe_load_json(os.path.join(sim_dir, "trajectory.json"))
-    if not isinstance(traj, dict):
-        return None
-    snapshots = traj.get("snapshots")
-    if not isinstance(snapshots, list):
-        return None
-
-    final, _ = bucket_snapshots(snapshots)
-    return final
-
-
-def _signal_for_sim(sim_dir: str) -> Optional[Dict[str, Any]]:
-    """Derive the same signal payload ``signal_service.compute_signal``
-    would emit for this sim, or ``None`` if the trajectory is empty.
-    """
-    final = _final_belief_from_trajectory(sim_dir)
-    if final is None:
-        return None
-    bullish, neutral, bearish = final
-
-    quality_path = os.path.join(sim_dir, "quality.json")
-    quality_doc = _safe_load_json(quality_path) or {}
-    health = quality_doc.get("health") if isinstance(quality_doc, dict) else None
-
-    summary = {
-        "belief": {
-            "final": {"bullish": bullish, "neutral": neutral, "bearish": bearish},
-        },
-        "quality": {"health": health} if health else {},
-    }
-    return signal_service.compute_signal(summary)
-
-
-def _surface_views_for_sim(sim_dir: str) -> int:
-    """Sum every recognised key in this sim's ``surface-stats.json``.
-
-    Ignores unknown keys — same posture as ``platform_stats``. Returns
-    ``0`` when the counter file is missing.
-    """
-    payload = _safe_load_json(os.path.join(sim_dir, SURFACE_STATS_FILENAME))
-    if not isinstance(payload, dict):
-        return 0
-    total = 0
-    for key in SURFACE_KEYS:
-        value = payload.get(key, 0)
-        try:
-            ivalue = int(value)
-        except (TypeError, ValueError):
-            ivalue = 0
-        total += max(0, ivalue)
-    return total
-
-
 def _quality_health_for_sim(sim_dir: str) -> Optional[str]:
     """Return the normalised ``quality.health`` value for a sim, or
     ``None`` if the quality file is missing / unparsable / carries an
@@ -212,17 +130,6 @@ def _quality_health_for_sim(sim_dir: str) -> Optional[str]:
     if normalised in _QUALITY_BUCKETS:
         return normalised
     return None
-
-
-def _empty_distribution() -> Dict[str, Any]:
-    return {
-        "bullish": 0,
-        "neutral": 0,
-        "bearish": 0,
-        "bullish_pct": 0.0,
-        "neutral_pct": 0.0,
-        "bearish_pct": 0.0,
-    }
 
 
 def _empty_quality_distribution() -> Dict[str, int]:

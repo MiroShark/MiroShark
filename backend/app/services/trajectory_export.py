@@ -29,17 +29,8 @@ import json
 import os
 from typing import Any, Optional
 
-from ..utils.belief import avg_position as _avg_position
+from ..utils.belief import STANCE_THRESHOLD, avg_position as _avg_position
 from ..utils.json_io import safe_load_json as _safe_load_json
-
-
-# Same threshold the embed-summary, share card, replay GIF, gallery
-# card, webhook, transcript, and feed renderers all use. Per-round
-# bullish/neutral/bearish percentages here MUST stay consistent with
-# what those surfaces report for the same simulation, otherwise an
-# analyst comparing the CSV to the share card would see drift.
-STANCE_THRESHOLD = 0.2
-
 
 # Field order for the CSV header + JSONL key order. Locked because
 # ``pandas.read_csv()`` consumers index by column name and downstream

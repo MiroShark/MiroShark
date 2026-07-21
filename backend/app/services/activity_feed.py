@@ -42,9 +42,8 @@ Design notes
   :mod:`signal_service.compute_signal` over the same final-round
   belief split the per-sim ``signal.json`` surface uses. A sim's
   ``direction`` here matches its per-sim signal byte-for-byte. The
-  trajectory walk mirrors ``platform_stats`` / ``project_stats`` /
-  ``batch_status`` so all four surfaces report the same answer for
-  the same sim.
+  trajectory walk mirrors ``batch_status`` so all these surfaces
+  report the same answer for the same sim.
 
 * **``total_rounds`` is the trajectory length** — the same value
   ``peak_round.total_rounds`` and ``batch_status.total_rounds`` use.
@@ -80,11 +79,15 @@ Design notes
 from __future__ import annotations
 
 import os
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from . import signal_service
 from ..utils.json_io import safe_load_json as _safe_load_json
 from ..utils.belief import bucket_snapshots
+from ..utils.sim_corpus import (
+    iter_sim_dirs as _iter_sim_dirs,
+    normalise_completed_at as _normalise_completed_at,
+)
 
 
 # ── Configuration ────────────────────────────────────────────────────────
@@ -111,29 +114,6 @@ SCENARIO_TITLE_MAX_CHARS = 100
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
-
-
-def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:
-    """Yield ``(simulation_id, sim_dir_path)`` for every simulation-shaped
-    directory under ``sim_root``.
-
-    Skips dotfiles + non-directories — same posture as
-    ``platform_stats._iter_sim_dirs`` and ``platform_status._iter_sim_dirs``
-    so a sim counted by one platform surface is counted by the others.
-    """
-    if not sim_root or not os.path.isdir(sim_root):
-        return
-    try:
-        entries = sorted(os.listdir(sim_root))
-    except OSError:
-        return
-    for sim_id in entries:
-        if sim_id.startswith("."):
-            continue
-        sim_dir = os.path.join(sim_root, sim_id)
-        if not os.path.isdir(sim_dir):
-            continue
-        yield sim_id, sim_dir
 
 
 def _final_belief_and_rounds(
@@ -214,22 +194,6 @@ def _scenario_title(sim_dir: str) -> str:
     if len(cleaned) <= SCENARIO_TITLE_MAX_CHARS:
         return cleaned
     return cleaned[: SCENARIO_TITLE_MAX_CHARS - 1].rstrip() + "…"
-
-
-def _normalise_completed_at(state: Dict[str, Any]) -> Optional[str]:
-    """Pick the completion timestamp for a completed sim.
-
-    ``state.json.updated_at`` is what ``simulation_runner`` writes on
-    the terminal-state transition. Falls back to ``created_at`` for
-    older sims written before the completion-timestamp field was
-    instrumented so a completed-but-undated sim still appears in the
-    feed.
-    """
-    for key in ("updated_at", "created_at"):
-        value = state.get(key)
-        if isinstance(value, str) and value.strip():
-            return value
-    return None
 
 
 # ── Public API ────────────────────────────────────────────────────────────

@@ -86,6 +86,7 @@ import os
 from typing import Any, Dict, List, Optional
 
 from . import agent_sparklines_service
+from ..utils.belief import classify_stance as _classify_stance
 from ..utils.json_io import safe_load_json as _safe_load_json
 
 
@@ -106,12 +107,6 @@ BIO_PREVIEW_CHARS = 280
 # one-line "roster of sim <X> on scenario <Y>" line without a second
 # round-trip to embed-summary. Matches the clone_service truncation cap.
 SCENARIO_PREVIEW_CHARS = 200
-
-# Same ±0.2 stance threshold the embed-summary, share card, transcript,
-# trajectory.csv, chart.svg, peak-round, volatility, and sparklines
-# surfaces all use.
-STANCE_THRESHOLD = 0.2
-
 
 # ── On-disk readers ────────────────────────────────────────────────────────
 
@@ -210,19 +205,6 @@ def _normalize_topics(value: Any) -> List[str]:
         seen.add(s)
         out.append(s)
     return out
-
-
-def _classify_stance(value: float) -> str:
-    """Bucket a continuous belief position into bullish/neutral/bearish."""
-    try:
-        v = float(value)
-    except (TypeError, ValueError):
-        return "neutral"
-    if v > STANCE_THRESHOLD:
-        return "bullish"
-    if v < -STANCE_THRESHOLD:
-        return "bearish"
-    return "neutral"
 
 
 # ── Belief layer ──────────────────────────────────────────────────────────

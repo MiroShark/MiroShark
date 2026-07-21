@@ -57,6 +57,8 @@ from datetime import datetime, timezone
 from typing import Any, Iterable, List, Optional, Tuple
 from xml.etree import ElementTree as ET
 
+from ..utils.text import safe_str as _safe_str
+
 
 # Sitemap protocol version 0.9 — the only version major search engines
 # read. The namespace string is part of the spec; renderers that omit
@@ -86,22 +88,6 @@ WATCH_PRIORITY: str = "0.7"
 # stable artifacts so ``weekly`` matches their actual change rate.
 RUNNING_CHANGEFREQ: str = "always"
 COMPLETED_CHANGEFREQ: str = "weekly"
-
-
-def _safe_str(value: Any) -> str:
-    """Coerce ``value`` to a stripped string; ``None`` ⇒ empty.
-
-    Mirrors the same helper ``lineage_service`` keeps so the two
-    renderers share a posture: trust nothing on disk, never raise.
-    """
-    if value is None:
-        return ""
-    if isinstance(value, str):
-        return value.strip()
-    try:
-        return str(value).strip()
-    except Exception:
-        return ""
 
 
 def _safe_iso_date(value: Any) -> Optional[str]:
