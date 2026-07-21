@@ -15,6 +15,9 @@
   "devDependencies": {
     "concurrently": "^10.0.3"
   },
+  "overrides": {
+    "shell-quote@<1.9.0": "^1.9.0"
+  },
   "engines": {
     "node": ">=22.0.0"
   },
