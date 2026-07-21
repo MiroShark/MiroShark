@@ -16,7 +16,6 @@ thread's context and re-applies it inside the worker.
 
 import functools
 import threading
-import uuid
 from typing import Callable, TypeVar
 
 _context = threading.local()
@@ -42,13 +41,6 @@ class TraceContext:
     def get_all() -> dict[str, object]:
         """Return all context fields as a dict."""
         return {k: v for k, v in _context.__dict__.items() if not k.startswith('_')}
-
-    @staticmethod
-    def new_trace() -> str:
-        """Generate and set a new trace_id, returning it."""
-        trace_id = f"trc_{uuid.uuid4().hex[:12]}"
-        _context.trace_id = trace_id
-        return trace_id
 
     @staticmethod
     def clear() -> None:

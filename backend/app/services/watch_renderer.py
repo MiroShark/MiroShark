@@ -36,13 +36,7 @@ import html
 import json
 from typing import Any, Mapping
 
-
-# Matches the ±0.2 stance threshold every other surface uses (gallery
-# card, share card, replay GIF, transcript, webhook, RSS / Atom feed,
-# trajectory CSV / JSONL). Kept here as a constant so the watch page
-# never disagrees with the share card a spectator might see in their
-# Twitter / Discord client moments earlier.
-STANCE_THRESHOLD = 0.2
+from ..utils.belief import STANCE_THRESHOLD
 
 _TITLE_MAX_LEN = 200
 _DESC_MAX_LEN = 280

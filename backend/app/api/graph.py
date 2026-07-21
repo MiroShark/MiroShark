@@ -472,16 +472,13 @@ def build_graph():
                     progress=15
                 )
                 
-                episode_uuids = builder.add_text_batches(
+                builder.add_text_batches(
                     graph_id,
                     chunks,
                     max_workers=6,
                     progress_callback=add_progress_callback
                 )
-                
-                # Wait for processing (no-op for Neo4j — synchronous)
-                storage.wait_for_processing(episode_uuids)
-                
+
                 # Get graph data
                 task_manager.update_task(
                     task_id,

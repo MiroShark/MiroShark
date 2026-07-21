@@ -114,11 +114,6 @@ class ReasoningTraceRecorder:
         self._current_section_uuid = None
         self._buffer = []
 
-    def cancel_section(self) -> None:
-        """Discard buffered steps without flushing (e.g., on error)."""
-        self._buffer = []
-        self._current_section_uuid = None
-
     # ----------------------------------------------------------------
     # Internals
     # ----------------------------------------------------------------

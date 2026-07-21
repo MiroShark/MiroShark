@@ -74,7 +74,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from ..utils.logger import get_logger
 from .simulation_run_state import SimulationRunState
-from ._notify_base import Dedup
+from ._notify_base import (
+    Dedup,
+    consensus_direction as _consensus_direction,
+    status_verb as _status_verb,
+    truncate as _truncate,
+)
 
 logger = get_logger("miroshark.email_notify")
 
@@ -200,45 +205,6 @@ def is_configured() -> bool:
 # ── payload → MIME builders ───────────────────────────────────────────
 
 
-def _truncate(value: str, limit: int) -> str:
-    if not isinstance(value, str):
-        return ""
-    if len(value) <= limit:
-        return value
-    return value[: max(limit - 1, 0)].rstrip() + "…"
-
-
-def _consensus_direction(payload: Dict[str, Any]) -> str:
-    """Return ``"Bullish"`` / ``"Neutral"`` / ``"Bearish"`` / ``"Failed"``.
-
-    Used for the subject-line prefix and the email body header — same
-    bucket logic as :func:`discord_notify._consensus_color` so the
-    three notification channels stay aligned on "what just happened."
-    """
-    if (payload.get("status") or "") == "failed":
-        return "Failed"
-
-    consensus = payload.get("final_consensus") or {}
-    if not isinstance(consensus, dict):
-        return "Neutral"
-
-    try:
-        b = float(consensus.get("bullish") or 0.0)
-        n = float(consensus.get("neutral") or 0.0)
-        r = float(consensus.get("bearish") or 0.0)
-    except (TypeError, ValueError):
-        return "Neutral"
-
-    if b == 0.0 and n == 0.0 and r == 0.0:
-        return "Neutral"
-
-    if b >= r and b >= n:
-        return "Bullish"
-    if r >= b and r >= n:
-        return "Bearish"
-    return "Neutral"
-
-
 def _belief_bar(pct: Any) -> str:
     """Same renderer as :func:`slack_notify.belief_bar`.
 
@@ -295,16 +261,6 @@ def build_subject(payload: Dict[str, Any]) -> str:
         sim_id = str(payload.get("sim_id") or "").strip()
         scenario = f"Simulation {sim_id}" if sim_id else "MiroShark simulation"
     return f"[MiroShark] {direction}: {_truncate(scenario, SUBJECT_SCENARIO_MAX_CHARS)}"
-
-
-def _status_verb(status: str) -> str:
-    if status == "completed":
-        return "Completed"
-    if status == "failed":
-        return "Failed"
-    if status == "test":
-        return "Test event"
-    return status.title() or "Unknown"
 
 
 def build_plain_body(payload: Dict[str, Any]) -> str:

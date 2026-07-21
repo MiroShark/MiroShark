@@ -47,17 +47,14 @@ from __future__ import annotations
 import os
 from typing import Any, Optional
 
-from ..utils.belief import avg_position as _avg_position
+from ..utils.belief import (
+    avg_position as _avg_position,
+    classify_stance as _classify_stance,
+)
 from ..utils.json_io import safe_load_json as _safe_load_json
 
 
 TRAJECTORY_FILENAME = "trajectory.json"
-
-# Same ±0.2 stance threshold the embed-summary, share card, transcript,
-# trajectory.csv, chart.svg, and peak-round surfaces all use. A per-agent
-# final position bucketed here MUST match how the same agent is labelled
-# everywhere else, so the constant is pinned rather than configurable.
-STANCE_THRESHOLD = 0.2
 
 # Canonical stance colors — identical to chart_svg.py / badge_service.py
 # so a "bullish" sparkline is the same green as a "bullish" chart line.
@@ -96,26 +93,6 @@ def _load_profile_names(sim_dir: str) -> dict[int, str]:
                 continue
             out.setdefault(uid, name)
     return out
-
-
-# ── Stance helpers ─────────────────────────────────────────────────────────
-
-
-def _classify_stance(value: float) -> str:
-    """Bucket a continuous belief position into bullish/neutral/bearish.
-
-    Mirrors the ±0.2 threshold every other surface uses so the per-agent
-    label here matches the agent's label in the transcript and gallery.
-    """
-    try:
-        v = float(value)
-    except (TypeError, ValueError):
-        return "neutral"
-    if v > STANCE_THRESHOLD:
-        return "bullish"
-    if v < -STANCE_THRESHOLD:
-        return "bearish"
-    return "neutral"
 
 
 # ── Trajectory assembly ────────────────────────────────────────────────────

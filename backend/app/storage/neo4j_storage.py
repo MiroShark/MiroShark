@@ -464,41 +464,6 @@ class Neo4jStorage(GraphStorage):
         logger.info(f"[add_text] Chunk done: episode={episode_id}")
         return episode_id
 
-    def add_text_batch(
-        self,
-        graph_id: str,
-        chunks: List[str],
-        batch_size: int = 3,
-        progress_callback: Optional[Callable[[float], None]] = None,
-    ) -> List[str]:
-        """Batch-add text chunks with progress reporting."""
-        episode_ids = []
-        total = len(chunks)
-
-        for i, chunk in enumerate(chunks):
-            if not chunk or not chunk.strip():
-                continue
-            episode_id = self.add_text(graph_id, chunk)
-            episode_ids.append(episode_id)
-
-            if progress_callback:
-                progress = (i + 1) / total
-                progress_callback(progress)
-
-            logger.info(f"Processed chunk {i + 1}/{total}")
-
-        return episode_ids
-
-    def wait_for_processing(
-        self,
-        episode_ids: List[str],
-        progress_callback: Optional[Callable[[float], None]] = None,
-        timeout: int = 600,
-    ) -> None:
-        """No-op — processing is synchronous in Neo4j."""
-        if progress_callback:
-            progress_callback(1.0)
-
     # ----------------------------------------------------------------
     # Read nodes
     # ----------------------------------------------------------------
@@ -1150,31 +1115,3 @@ class Neo4jStorage(GraphStorage):
                 })
 
         return contradictions
-
-    def get_temporal_evolution(self, graph_id: str) -> Dict[str, List[Dict[str, Any]]]:
-        """Group edges by creation time to show how the graph evolved."""
-        def _read(tx):
-            result = tx.run(
-                """
-                MATCH (src:Entity {graph_id: $gid})-[r:RELATION {graph_id: $gid}]->(tgt:Entity)
-                WHERE r.created_at IS NOT NULL
-                RETURN r.created_at AS created_at, r.fact AS fact, r.name AS relation,
-                       src.name AS source_name, tgt.name AS target_name
-                ORDER BY r.created_at
-                """,
-                gid=graph_id,
-            )
-            return [dict(record) for record in result]
-
-        with self._driver.session() as session:
-            edges = self._call_with_retry(session.execute_read, _read)
-
-        # Group into time buckets (by episode/created_at)
-        buckets: Dict[str, list] = {}
-        for edge in edges:
-            ts = str(edge.get("created_at", "unknown"))
-            # Group by date portion if it's a datetime string
-            date_key = ts[:10] if len(ts) >= 10 else ts
-            buckets.setdefault(date_key, []).append(edge)
-
-        return buckets

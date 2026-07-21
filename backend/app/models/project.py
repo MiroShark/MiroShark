@@ -213,30 +213,6 @@ class ProjectManager:
         return Project.from_dict(data)
 
     @classmethod
-    def list_projects(cls, limit: int = 50) -> List[Project]:
-        """
-        List all projects
-
-        Args:
-            limit: Return count limit
-
-        Returns:
-            List of projects, sorted by creation time descending
-        """
-        cls._ensure_projects_dir()
-
-        projects = []
-        for project_id in os.listdir(cls.PROJECTS_DIR):
-            project = cls.get_project(project_id)
-            if project:
-                projects.append(project)
-
-        # Sort by creation time descending
-        projects.sort(key=lambda p: p.created_at, reverse=True)
-
-        return projects[:limit]
-
-    @classmethod
     def delete_project(cls, project_id: str) -> bool:
         """
         Delete project and all its files
@@ -303,17 +279,3 @@ class ProjectManager:
 
         with open(text_path, 'r', encoding='utf-8') as f:
             return f.read()
-
-    @classmethod
-    def get_project_files(cls, project_id: str) -> List[str]:
-        """Get all file paths for a project"""
-        files_dir = cls._get_project_files_dir(project_id)
-
-        if not os.path.exists(files_dir):
-            return []
-
-        return [
-            os.path.join(files_dir, f)
-            for f in os.listdir(files_dir)
-            if os.path.isfile(os.path.join(files_dir, f))
-        ]

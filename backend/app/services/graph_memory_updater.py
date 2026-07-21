@@ -389,24 +389,6 @@ class GraphMemoryUpdater:
             for platform in self._platform_buffers:
                 self._platform_buffers[platform] = []
 
-    def get_stats(self) -> Dict[str, Any]:
-        """Get statistics"""
-        with self._buffer_lock:
-            buffer_sizes = {p: len(b) for p, b in self._platform_buffers.items()}
-
-        return {
-            "graph_id": self.graph_id,
-            "batch_size": self.BATCH_SIZE,
-            "total_activities": self._total_activities,
-            "batches_sent": self._total_sent,
-            "items_sent": self._total_items_sent,
-            "failed_count": self._failed_count,
-            "skipped_count": self._skipped_count,
-            "queue_size": self._activity_queue.qsize(),
-            "buffer_sizes": buffer_sizes,
-            "running": self._running,
-        }
-
 
 class GraphMemoryManager:
     """

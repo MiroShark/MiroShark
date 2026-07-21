@@ -91,7 +91,7 @@ def _parse_model_json(raw: str) -> dict:
     raise ValueError(f"Model did not return valid JSON: {raw[:200]}")
 
 
-def _fetch_via_firecrawl(url: str, timeout: int) -> tuple:
+def _fetch_via_firecrawl(url: str, timeout: int) -> tuple[str, str]:
     """Scrape a URL via Firecrawl-for-agents. Returns (title, text).
 
     Raises ValueError on HTTP errors or unusable responses.
@@ -123,7 +123,7 @@ def _fetch_via_firecrawl(url: str, timeout: int) -> tuple:
     return title, text
 
 
-def _fetch_via_llm(url: str, timeout: int) -> tuple:
+def _fetch_via_llm(url: str, timeout: int) -> tuple[str, str]:
     """Extract a URL's content via the web-search LLM. Returns (title, text).
 
     Raises ValueError when no model is configured or the model fails.

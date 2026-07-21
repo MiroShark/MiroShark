@@ -61,7 +61,7 @@ from typing import Any, Dict, Optional, Tuple
 
 from ..utils.logger import get_logger
 from .simulation_run_state import SimulationRunState
-from ._notify_base import Dedup, post_json
+from ._notify_base import Dedup, post_json, truncate as _truncate
 
 logger = get_logger('miroshark.discord_notify')
 
@@ -139,14 +139,6 @@ def _consensus_color(payload: Dict[str, Any]) -> int:
     if bearish >= bullish and bearish >= neutral:
         return COLOR_BEARISH
     return COLOR_NEUTRAL
-
-
-def _truncate(value: str, limit: int) -> str:
-    if not isinstance(value, str):
-        return ""
-    if len(value) <= limit:
-        return value
-    return value[: max(limit - 1, 0)].rstrip() + "…"
 
 
 def _resolve_share_url(payload: Dict[str, Any]) -> Optional[str]:

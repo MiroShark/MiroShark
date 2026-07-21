@@ -1032,17 +1032,6 @@ class SimulationRunner:
                 round_num=round_num
             ))
 
-        # If per-platform files do not exist, try reading old single file format
-        if not actions:
-            actions_log = os.path.join(sim_dir, "actions.jsonl")
-            actions = cls._read_actions_from_file(
-                actions_log,
-                default_platform=None,  # Old format files should have platform field
-                platform_filter=platform,
-                agent_id=agent_id,
-                round_num=round_num
-            )
-        
         # Sort by timestamp (newest first)
         actions.sort(key=lambda x: x.timestamp, reverse=True)
         
@@ -1095,11 +1084,9 @@ class SimulationRunner:
             ("reddit",      os.path.join(sim_dir, "reddit",      "actions.jsonl")),
             ("polymarket",  os.path.join(sim_dir, "polymarket",  "actions.jsonl")),
         ]
-        found_any = False
         for plat, path in platform_files:
             if not os.path.exists(path):
                 continue
-            found_any = True
             with open(path, 'r', encoding='utf-8') as fh:
                 for line in fh:
                     line = line.strip()
@@ -1113,23 +1100,6 @@ class SimulationRunner:
                         continue
                     data['_platform'] = data.get('platform') or plat
                     yield data
-        # Fallback: legacy single file
-        if not found_any:
-            legacy = os.path.join(sim_dir, "actions.jsonl")
-            if os.path.exists(legacy):
-                with open(legacy, 'r', encoding='utf-8') as fh:
-                    for line in fh:
-                        line = line.strip()
-                        if not line:
-                            continue
-                        try:
-                            data = json.loads(line)
-                        except json.JSONDecodeError:
-                            continue
-                        if "event_type" in data or "agent_id" not in data:
-                            continue
-                        data['_platform'] = data.get('platform', '')
-                        yield data
 
     @classmethod
     def get_timeline(
@@ -1498,17 +1468,6 @@ class SimulationRunner:
         
         _cleanup_registered = True
     
-    @classmethod
-    def get_running_simulations(cls) -> List[str]:
-        """
-        Get list of all running simulation IDs
-        """
-        running = []
-        for sim_id, process in cls._processes.items():
-            if process.poll() is None:
-                running.append(sim_id)
-        return running
-    
     # ============== Interview Features ==============
     
     @classmethod
@@ -1687,66 +1646,6 @@ class SimulationRunner:
                 "error": response.error,
                 "timestamp": response.timestamp
             }
-    
-    @classmethod
-    def interview_all_agents(
-        cls,
-        simulation_id: str,
-        prompt: str,
-        platform: str = None,
-        timeout: float = 180.0
-    ) -> Dict[str, Any]:
-        """
-        Interview all Agents (global interview)
-
-        Interview all Agents in the simulation with the same question
-
-        Args:
-            simulation_id: Simulation ID
-            prompt: Interview question (same question for all Agents)
-            platform: Specify platform (optional)
-                - "twitter": Interview on Twitter platform only
-                - "reddit": Interview on Reddit platform only
-                - None: Interview each Agent on both platforms in dual-platform mode
-            timeout: Timeout in seconds
-
-        Returns:
-            Global interview result dict
-        """
-        sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
-        if not os.path.exists(sim_dir):
-            raise ValueError(f"Simulation does not exist: {simulation_id}")
-
-        # Get all Agent info from config file
-        config_path = os.path.join(sim_dir, "simulation_config.json")
-        if not os.path.exists(config_path):
-            raise ValueError(f"Simulation config does not exist: {simulation_id}")
-
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-
-        agent_configs = config.get("agent_configs", [])
-        if not agent_configs:
-            raise ValueError(f"No Agents in simulation config: {simulation_id}")
-
-        # Build batch interview list
-        interviews = []
-        for agent_config in agent_configs:
-            agent_id = agent_config.get("agent_id")
-            if agent_id is not None:
-                interviews.append({
-                    "agent_id": agent_id,
-                    "prompt": prompt
-                })
-
-        logger.info(f"Sending global Interview command: simulation_id={simulation_id}, agent_count={len(interviews)}, platform={platform}")
-
-        return cls.interview_agents_batch(
-            simulation_id=simulation_id,
-            interviews=interviews,
-            platform=platform,
-            timeout=timeout
-        )
     
     @classmethod
     def close_simulation_env(

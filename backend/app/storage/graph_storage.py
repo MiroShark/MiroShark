@@ -6,7 +6,7 @@ Current implementation: Neo4jStorage (neo4j_storage.py).
 """
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional
 
 
 class GraphStorage(ABC):
@@ -37,29 +37,6 @@ class GraphStorage(ABC):
         """
         Process text: NER/RE → create nodes/edges → return episode_id.
         This is synchronous (unlike Zep Cloud's async episodes).
-        """
-
-    @abstractmethod
-    def add_text_batch(
-        self,
-        graph_id: str,
-        chunks: List[str],
-        batch_size: int = 3,
-        progress_callback: Optional[Callable[[float], None]] = None,
-    ) -> List[str]:
-        """Batch-add text chunks. Returns list of episode_ids."""
-
-    @abstractmethod
-    def wait_for_processing(
-        self,
-        episode_ids: List[str],
-        progress_callback: Optional[Callable[[float], None]] = None,
-        timeout: int = 600,
-    ) -> None:
-        """
-        Wait for episodes to be processed.
-        For Neo4j: no-op (synchronous processing).
-        Kept for API compatibility with Zep-era callers.
         """
 
     # --- Read nodes ---

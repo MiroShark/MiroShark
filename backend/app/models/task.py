@@ -7,7 +7,7 @@ import uuid
 import threading
 from datetime import datetime
 from enum import Enum
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, Optional
 from dataclasses import dataclass, field
 
 
@@ -160,24 +160,3 @@ class TaskManager:
             message="Task failed",
             error=error
         )
-
-    def list_tasks(self, task_type: Optional[str] = None) -> List[Dict[str, Any]]:
-        """List tasks"""
-        with self._task_lock:
-            tasks = list(self._tasks.values())
-            if task_type:
-                tasks = [t for t in tasks if t.task_type == task_type]
-            return [t.to_dict() for t in sorted(tasks, key=lambda x: x.created_at, reverse=True)]
-
-    def cleanup_old_tasks(self, max_age_hours: int = 24) -> None:
-        """Clean up old tasks"""
-        from datetime import timedelta
-        cutoff = datetime.now() - timedelta(hours=max_age_hours)
-
-        with self._task_lock:
-            old_ids = [
-                tid for tid, task in self._tasks.items()
-                if task.created_at < cutoff and task.status in [TaskStatus.COMPLETED, TaskStatus.FAILED]
-            ]
-            for tid in old_ids:
-                del self._tasks[tid]

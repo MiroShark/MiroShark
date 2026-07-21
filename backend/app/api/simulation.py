@@ -11,7 +11,7 @@ import json
 import traceback
 from datetime import datetime, timezone
 from functools import wraps
-from flask import request, jsonify, send_file, current_app
+from flask import request, jsonify, send_file, current_app, Response
 
 from . import simulation_bp
 from ..utils.llm_client import create_smart_llm_client, create_llm_client
@@ -152,7 +152,9 @@ def require_admin_token(view_func):
     return _wrapper
 
 
-def _get_simulation_id_or_400(data: dict, locale: str = "en") -> tuple:
+def _get_simulation_id_or_400(
+    data: dict, locale: str = "en"
+) -> tuple[str | None, tuple[Response, int] | None]:
     """Extract and validate simulation_id from POST body.
 
     Returns (simulation_id, None) on success or (None, error_response) on failure.
@@ -3135,7 +3137,7 @@ def start_simulation():
 
     About the force parameter:
         - When enabled, if simulation is running or completed, it will first stop and clean up run logs
-        - Cleanup includes: run_state.json, actions.jsonl, simulation.log, etc.
+        - Cleanup includes: run_state.json, per-platform <platform>/actions.jsonl files, simulation.log, etc.
         - Will not clean up configuration files (simulation_config.json) and profile files
         - Suitable for scenarios requiring simulation re-run
 
@@ -5070,6 +5072,26 @@ def _build_embed_summary_payload(simulation_id: str) -> dict:
     }
 
 
+def _load_public_summary(simulation_id: str, locale: str):
+    """Return ``(summary, None)`` or ``(None, (response, status))``."""
+    try:
+        summary = _build_embed_summary_payload(simulation_id)
+    except LookupError as exc:
+        return None, (jsonify({"success": False, "error": str(exc)}), 404)
+
+    if not summary.get("is_public"):
+        return None, (jsonify({
+            "success": False,
+            "error": _t(
+                "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
+                "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
+                locale,
+            ),
+        }), 403)
+
+    return summary, None
+
+
 @simulation_bp.route('/<simulation_id>/embed-summary', methods=['GET'])
 def get_embed_summary(simulation_id: str):
     """
@@ -5129,20 +5151,9 @@ def get_share_card(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         cache_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id, "share-cards")
         os.makedirs(cache_dir, exist_ok=True)
@@ -5199,20 +5210,9 @@ def get_replay_gif(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         cache_dir = os.path.join(
             Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id, "replay-gifs"
@@ -5266,20 +5266,9 @@ def _serve_transcript(simulation_id: str, fmt: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         data = transcript_renderer.build_transcript_data(summary, sim_dir)
@@ -5361,20 +5350,9 @@ def _serve_trajectory(simulation_id: str, fmt: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         rows = trajectory_export.build_rows(sim_dir)
@@ -5470,20 +5448,9 @@ def get_chart_svg(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         scenario = summary.get("scenario") or ""
@@ -5554,20 +5521,9 @@ def get_frame_metadata(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         base_url = _resolve_share_base_url()
@@ -5625,20 +5581,9 @@ def get_signal_json(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         signal = signal_service.compute_signal(summary)
         if signal is None:
@@ -5734,20 +5679,9 @@ def get_signed_result_json(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         signal = signal_service.compute_signal(summary)
         if signal is None:
@@ -5823,20 +5757,9 @@ def get_peak_round(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         rounds = peak_round_service.load_trajectory_rounds(sim_dir)
@@ -5909,20 +5832,9 @@ def get_volatility(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         payload = volatility_service.compute_volatility_for_sim(sim_dir)
@@ -5995,20 +5907,9 @@ def get_cost_json(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         payload = cost_service.build_cost_payload(sim_dir, simulation_id)
@@ -6078,20 +5979,9 @@ def get_clone_json(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         payload = clone_service.build_clone_payload(simulation_id, sim_dir)
@@ -6174,20 +6064,9 @@ def get_agents_json(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         payload = agent_export.build_agent_export(simulation_id, sim_dir)
@@ -6258,20 +6137,9 @@ def get_agent_sparklines(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         payload = agent_sparklines_service.build_agent_sparklines(sim_dir)
@@ -6342,20 +6210,9 @@ def get_polymarket_json(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         payload = polymarket_service.compute_polymarket(summary, simulation_id)
         if payload is None:
@@ -6423,20 +6280,9 @@ def get_status_badge_svg(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         signal = signal_service.compute_signal(summary)
         if signal is None:
@@ -6519,20 +6365,9 @@ def get_cite_bib(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
@@ -6642,20 +6477,9 @@ def get_archive_zip(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
@@ -6759,20 +6583,9 @@ def _serve_thread(simulation_id: str, fmt: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         base = _resolve_share_base_url()
@@ -6885,20 +6698,9 @@ def get_surface_stats(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         sim_dir = os.path.join(Config.WONDERWALL_SIMULATION_DATA_DIR, simulation_id)
         stats = surface_stats.read_surface_stats(sim_dir)
@@ -6966,20 +6768,9 @@ def get_reproduce_config(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
@@ -7058,20 +6849,9 @@ def get_notebook_ipynb(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)
@@ -7194,20 +6974,9 @@ def get_simulation_lineage(simulation_id: str):
 
     locale = get_locale(request)
     try:
-        try:
-            summary = _build_embed_summary_payload(simulation_id)
-        except LookupError as exc:
-            return jsonify({"success": False, "error": str(exc)}), 404
-
-        if not summary.get("is_public"):
-            return jsonify({
-                "success": False,
-                "error": _t(
-                    "Simulation is not published. POST /api/simulation/<id>/publish to enable.",
-                    "该模拟未发布,请通过 POST /api/simulation/<id>/publish 启用。",
-                    locale,
-                ),
-            }), 403
+        summary, error = _load_public_summary(simulation_id, locale)
+        if error:
+            return error
 
         manager = SimulationManager()
         state = manager.get_simulation(simulation_id)

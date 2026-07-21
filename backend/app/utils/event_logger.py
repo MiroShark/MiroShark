@@ -72,46 +72,6 @@ def _build_event(
 
 
 # ---------------------------------------------------------------------------
-# Standalone helper for subprocess usage (no singleton, no SSE bus)
-# ---------------------------------------------------------------------------
-def write_simulation_event(
-    sim_dir: str,
-    event_type: str,
-    data: Dict[str, Any],
-    *,
-    simulation_id: Optional[str] = None,
-    round_num: Optional[int] = None,
-    agent_id: Optional[int] = None,
-    agent_name: Optional[str] = None,
-    platform: Optional[str] = None,
-    trace_id: Optional[str] = None,
-    level: str = 'info',
-) -> None:
-    """Append one event to {sim_dir}/events.jsonl.  Safe to call from any process."""
-    if not should_log(level):
-        return
-
-    event = _build_event(
-        event_type,
-        data,
-        simulation_id=simulation_id,
-        round_num=round_num,
-        agent_id=agent_id,
-        agent_name=agent_name,
-        platform=platform,
-        trace_id=trace_id,
-    )
-
-    path = os.path.join(sim_dir, 'events.jsonl')
-    os.makedirs(sim_dir, exist_ok=True)
-    try:
-        with open(path, 'a', encoding='utf-8') as f:
-            f.write(json.dumps(event, ensure_ascii=False, default=str) + '\n')
-    except Exception:
-        pass  # never break the simulation for a logging failure
-
-
-# ---------------------------------------------------------------------------
 # EventLogger singleton (Flask process)
 # ---------------------------------------------------------------------------
 class EventLogger:
@@ -209,11 +169,6 @@ class EventLogger:
                 self._subscribers.remove(sub)
             except ValueError:
                 pass
-
-    def get_recent(self, limit: int = 100) -> List[Dict[str, Any]]:
-        """Return the last N events from the ring buffer."""
-        items = list(self._ring)
-        return items[-limit:]
 
     # ------------------------------------------------------------------
     # Background writer

@@ -28,16 +28,8 @@ import json
 import os
 from typing import Optional
 
-from ..utils.belief import avg_position as _avg_position
+from ..utils.belief import STANCE_THRESHOLD, avg_position as _avg_position
 from ..utils.json_io import safe_load_json as _safe_load_json
-
-
-# Same threshold the embed-summary, share card, replay GIF, gallery
-# card, webhook, transcript, trajectory CSV, and feed renderers all
-# use. The inflection-point detection here applies the same rule —
-# otherwise the thread's "stance shifted" tweets wouldn't line up with
-# the bars a viewer sees on the share card unfurl moments earlier.
-STANCE_THRESHOLD = 0.2
 
 # X/Twitter's hard cap — every tweet in the thread must fit under this
 # or the operator can't paste it directly. The composer kept just under

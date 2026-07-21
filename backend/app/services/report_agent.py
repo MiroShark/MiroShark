@@ -141,17 +141,6 @@ class ReportLogger:
             details={"message": "Starting report outline planning"}
         )
     
-    def log_planning_context(self, context: Dict[str, Any]):
-        """Record context information obtained during planning"""
-        self.log(
-            action="planning_context",
-            stage="planning",
-            details={
-                "message": "Getting simulation context information",
-                "context": context
-            }
-        )
-    
     def log_planning_complete(self, outline_dict: Dict[str, Any]):
         """Record outline planning complete"""
         self.log(
@@ -171,20 +160,6 @@ class ReportLogger:
             section_title=section_title,
             section_index=section_index,
             details={"message": f"Starting section generation: {section_title}"}
-        )
-    
-    def log_react_thought(self, section_title: str, section_index: int, iteration: int, thought: str):
-        """Record ReACT thinking process"""
-        self.log(
-            action="react_thought",
-            stage="generating",
-            section_title=section_title,
-            section_index=section_index,
-            details={
-                "iteration": iteration,
-                "thought": thought,
-                "message": f"ReACT round {iteration} thinking"
-            }
         )
     
     def log_tool_call(
@@ -1117,11 +1092,6 @@ class ReportAgent:
 
     # Maximum tool calls per section
     MAX_TOOL_CALLS_PER_SECTION = 6
-
-    # Maximum reflection rounds
-    # Reduced from 3 to 1: each extra reflection round added ~30% latency + cost
-    # with marginal quality gain. Set to 0 to disable reflection entirely.
-    MAX_REFLECTION_ROUNDS = 1
 
     # Maximum tool calls per chat
     MAX_TOOL_CALLS_PER_CHAT = 2
@@ -3042,11 +3012,6 @@ class ReportManager:
         return os.path.join(cls._get_report_folder(report_id), "progress.json")
     
     @classmethod
-    def _get_section_path(cls, report_id: str, section_index: int) -> str:
-        """Get section Markdown file path"""
-        return os.path.join(cls._get_report_folder(report_id), f"section_{section_index:02d}.md")
-    
-    @classmethod
     def _get_agent_log_path(cls, report_id: str) -> str:
         """Get Agent log file path"""
         return os.path.join(cls._get_report_folder(report_id), "agent_log.jsonl")
@@ -3325,17 +3290,6 @@ class ReportManager:
         
         with open(cls._get_progress_path(report_id), 'w', encoding='utf-8') as f:
             json.dump(progress_data, f, ensure_ascii=False, indent=2)
-    
-    @classmethod
-    def get_progress(cls, report_id: str) -> Optional[Dict[str, Any]]:
-        """Get report generation progress"""
-        path = cls._get_progress_path(report_id)
-        
-        if not os.path.exists(path):
-            return None
-        
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
     
     @classmethod
     def get_generated_sections(cls, report_id: str) -> List[Dict[str, Any]]:

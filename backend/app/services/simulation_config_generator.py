@@ -26,28 +26,6 @@ from .entity_reader import EntityNode
 
 logger = get_logger('miroshark.simulation_config')
 
-# China timezone activity configuration (Beijing Time)
-CHINA_TIMEZONE_CONFIG = {
-    # Late night hours (almost no activity)
-    "dead_hours": [0, 1, 2, 3, 4, 5],
-    # Morning hours (gradually waking up)
-    "morning_hours": [6, 7, 8],
-    # Work hours
-    "work_hours": [9, 10, 11, 12, 13, 14, 15, 16, 17, 18],
-    # Evening peak (most active)
-    "peak_hours": [19, 20, 21, 22],
-    # Night hours (activity declining)
-    "night_hours": [23],
-    # Activity multipliers
-    "activity_multipliers": {
-        "dead": 0.05,      # Almost nobody in the early hours
-        "morning": 0.4,    # Gradually active in the morning
-        "work": 0.7,       # Moderate during work hours
-        "peak": 1.5,       # Evening peak
-        "night": 0.5       # Declining at night
-    }
-}
-
 
 @dataclass
 class AgentActivityConfig:

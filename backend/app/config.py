@@ -124,23 +124,8 @@ class Config:
     DEFAULT_CHUNK_OVERLAP = 100  # More overlap prevents splitting entities at boundaries
     
     # Wonderwall simulation configuration
-    WONDERWALL_DEFAULT_MAX_ROUNDS = int(os.environ.get('WONDERWALL_DEFAULT_MAX_ROUNDS', '10'))
     WONDERWALL_SIMULATION_DATA_DIR = os.path.join(os.path.dirname(__file__), '../uploads/simulations')
 
-    # Wonderwall platform available actions configuration
-    WONDERWALL_TWITTER_ACTIONS = [
-        'CREATE_POST', 'LIKE_POST', 'REPOST', 'FOLLOW', 'DO_NOTHING', 'QUOTE_POST'
-    ]
-    WONDERWALL_REDDIT_ACTIONS = [
-        'LIKE_POST', 'DISLIKE_POST', 'CREATE_POST', 'CREATE_COMMENT',
-        'LIKE_COMMENT', 'DISLIKE_COMMENT', 'SEARCH_POSTS', 'SEARCH_USER',
-        'TREND', 'REFRESH', 'DO_NOTHING', 'FOLLOW', 'MUTE'
-    ]
-    WONDERWALL_POLYMARKET_ACTIONS = [
-        'browse_markets', 'buy_shares', 'sell_shares',
-        'view_portfolio', 'create_market', 'comment_on_market', 'do_nothing'
-    ]
-    
     # Web Enrichment — LLM-powered research for persona generation
     # Triggers for notable figures (politicians, CEOs, etc.) or when graph context is thin
     WEB_ENRICHMENT_ENABLED = os.environ.get('WEB_ENRICHMENT_ENABLED', 'true').lower() == 'true'
@@ -210,8 +195,6 @@ class Config:
 
     # Report Agent configuration
     REPORT_AGENT_MAX_TOOL_CALLS = int(os.environ.get('REPORT_AGENT_MAX_TOOL_CALLS', '5'))
-    REPORT_AGENT_MAX_REFLECTION_ROUNDS = int(os.environ.get('REPORT_AGENT_MAX_REFLECTION_ROUNDS', '2'))
-    REPORT_AGENT_TEMPERATURE = float(os.environ.get('REPORT_AGENT_TEMPERATURE', '0.5'))
 
     # Outbound webhook fired when a simulation reaches a terminal state.
     # When set, MiroShark POSTs a JSON summary (scenario, final consensus,

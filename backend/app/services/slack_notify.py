@@ -54,7 +54,13 @@ from typing import Any, Dict, Optional, Tuple
 
 from ..utils.logger import get_logger
 from .simulation_run_state import SimulationRunState
-from ._notify_base import Dedup, post_json
+from ._notify_base import (
+    Dedup,
+    post_json,
+    resolve_share_url as _resolve_share_url,
+    status_verb as _status_verb,
+    truncate as _truncate,
+)
 
 logger = get_logger('miroshark.slack_notify')
 
@@ -115,36 +121,6 @@ def belief_bar(pct: float, width: int = BAR_WIDTH) -> str:
     empty_count = width - filled_count
     bar = (BAR_FILLED * filled_count) + (BAR_EMPTY * empty_count)
     return f"{bar} {value:.1f}%"
-
-
-def _truncate(value: str, limit: int) -> str:
-    if not isinstance(value, str):
-        return ""
-    if len(value) <= limit:
-        return value
-    return value[: max(limit - 1, 0)].rstrip() + "…"
-
-
-def _resolve_share_url(payload: Dict[str, Any]) -> Optional[str]:
-    """Prefer the absolute ``share_url`` — Slack only renders button URLs
-    for absolute ``http(s)://`` values.
-    """
-    abs_url = payload.get("share_url")
-    if isinstance(abs_url, str) and abs_url.strip():
-        s = abs_url.strip()
-        if s.startswith("http://") or s.startswith("https://"):
-            return s
-    return None
-
-
-def _status_verb(status: str) -> str:
-    if status == "completed":
-        return "Completed"
-    if status == "failed":
-        return "Failed"
-    if status == "test":
-        return "Test event"
-    return status.title() or "Unknown"
 
 
 def build_slack_message(payload: Dict[str, Any]) -> Dict[str, Any]:

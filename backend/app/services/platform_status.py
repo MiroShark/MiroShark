@@ -23,8 +23,8 @@ Design notes
 
 * **No long-lived cache.** A 30-second HTTP ``Cache-Control`` is the
   only smoothing — this surface is meant to be live, so an in-process
-  cache would make the freshness number a lie. The scan is the same
-  shape as ``platform_stats._iter_sim_dirs``; on a corpus large enough
+  cache would make the freshness number a lie. The scan is the shared
+  ``sim_corpus.iter_sim_dirs`` walk; on a corpus large enough
   for the per-scan cost to matter, the HTTP cache absorbs the polling
   load anyway.
 
@@ -66,9 +66,10 @@ from __future__ import annotations
 import os
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, Iterable, Optional, Tuple
+from typing import Any, Dict, Optional
 
 from ..utils.json_io import safe_load_json as _safe_load_json
+from ..utils.sim_corpus import iter_sim_dirs as _iter_sim_dirs
 
 
 # ── Configuration ─────────────────────────────────────────────────────────
@@ -85,30 +86,6 @@ RECENT_WINDOW_SECONDS = 24 * 60 * 60
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────
-
-
-def _iter_sim_dirs(sim_root: str) -> Iterable[Tuple[str, str]]:
-    """Yield ``(simulation_id, sim_dir_path)`` for every simulation-shaped
-    directory under ``sim_root``.
-
-    Skips dotfiles + non-directories so a stray ``.DS_Store`` or
-    leftover marker file doesn't trip the scan. Matches the posture of
-    ``platform_stats._iter_sim_dirs`` byte-for-byte so a sim counted
-    by one platform surface is counted by the other.
-    """
-    if not sim_root or not os.path.isdir(sim_root):
-        return
-    try:
-        entries = sorted(os.listdir(sim_root))
-    except OSError:
-        return
-    for sim_id in entries:
-        if sim_id.startswith("."):
-            continue
-        sim_dir = os.path.join(sim_root, sim_id)
-        if not os.path.isdir(sim_dir):
-            continue
-        yield sim_id, sim_dir
 
 
 def _iso_to_epoch(iso_value: Any) -> Optional[float]:

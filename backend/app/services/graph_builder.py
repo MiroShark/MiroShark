@@ -122,16 +122,6 @@ class GraphBuilderService:
         logger.info(f"[graph_build] All {total_chunks} chunks processed successfully")
         return episode_uuids
 
-    def _get_graph_info(self, graph_id: str) -> GraphInfo:
-        """Get graph information"""
-        info = self.storage.get_graph_info(graph_id)
-        return GraphInfo(
-            graph_id=info["graph_id"],
-            node_count=info["node_count"],
-            edge_count=info["edge_count"],
-            entity_types=info.get("entity_types", []),
-        )
-
     def get_graph_data(self, graph_id: str) -> Dict[str, Any]:
         """Get complete graph data (including details)"""
         return self.storage.get_graph_data(graph_id)
