@@ -974,10 +974,6 @@ IMPORTANT: Do NOT include karma, friend_count, follower_count, or statuses_count
                 "interested_topics": ["General", "Social Issues"],
             }
     
-    def set_graph_id(self, graph_id: str):
-        """Set knowledge graph ID for knowledge graph search"""
-        self.graph_id = graph_id
-
     @staticmethod
     def _interleave_by_type(entities: list) -> list:
         """Reorder entities to interleave types for diverse early results.

@@ -395,19 +395,6 @@ def _post_send_message(
     return _post_json(_send_message_url(token), payload, timeout)
 
 
-def send_telegram_message(
-    token: str,
-    chat_id: str,
-    body: Dict[str, Any],
-) -> Tuple[bool, str]:
-    """Synchronously POST one ``sendMessage`` body. Never raises.
-
-    Exposed so the "Send test event" path can surface the result
-    immediately without going through the daemon-thread dispatch.
-    """
-    return _post_send_message(token, chat_id, body)
-
-
 def _start_dispatch_thread(
     *,
     token: str,

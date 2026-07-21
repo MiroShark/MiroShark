@@ -1498,17 +1498,6 @@ class SimulationRunner:
         
         _cleanup_registered = True
     
-    @classmethod
-    def get_running_simulations(cls) -> List[str]:
-        """
-        Get list of all running simulation IDs
-        """
-        running = []
-        for sim_id, process in cls._processes.items():
-            if process.poll() is None:
-                running.append(sim_id)
-        return running
-    
     # ============== Interview Features ==============
     
     @classmethod
@@ -1687,66 +1676,6 @@ class SimulationRunner:
                 "error": response.error,
                 "timestamp": response.timestamp
             }
-    
-    @classmethod
-    def interview_all_agents(
-        cls,
-        simulation_id: str,
-        prompt: str,
-        platform: str = None,
-        timeout: float = 180.0
-    ) -> Dict[str, Any]:
-        """
-        Interview all Agents (global interview)
-
-        Interview all Agents in the simulation with the same question
-
-        Args:
-            simulation_id: Simulation ID
-            prompt: Interview question (same question for all Agents)
-            platform: Specify platform (optional)
-                - "twitter": Interview on Twitter platform only
-                - "reddit": Interview on Reddit platform only
-                - None: Interview each Agent on both platforms in dual-platform mode
-            timeout: Timeout in seconds
-
-        Returns:
-            Global interview result dict
-        """
-        sim_dir = os.path.join(cls.RUN_STATE_DIR, simulation_id)
-        if not os.path.exists(sim_dir):
-            raise ValueError(f"Simulation does not exist: {simulation_id}")
-
-        # Get all Agent info from config file
-        config_path = os.path.join(sim_dir, "simulation_config.json")
-        if not os.path.exists(config_path):
-            raise ValueError(f"Simulation config does not exist: {simulation_id}")
-
-        with open(config_path, 'r', encoding='utf-8') as f:
-            config = json.load(f)
-
-        agent_configs = config.get("agent_configs", [])
-        if not agent_configs:
-            raise ValueError(f"No Agents in simulation config: {simulation_id}")
-
-        # Build batch interview list
-        interviews = []
-        for agent_config in agent_configs:
-            agent_id = agent_config.get("agent_id")
-            if agent_id is not None:
-                interviews.append({
-                    "agent_id": agent_id,
-                    "prompt": prompt
-                })
-
-        logger.info(f"Sending global Interview command: simulation_id={simulation_id}, agent_count={len(interviews)}, platform={platform}")
-
-        return cls.interview_agents_batch(
-            simulation_id=simulation_id,
-            interviews=interviews,
-            platform=platform,
-            timeout=timeout
-        )
     
     @classmethod
     def close_simulation_env(

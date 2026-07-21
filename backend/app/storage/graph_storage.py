@@ -40,16 +40,6 @@ class GraphStorage(ABC):
         """
 
     @abstractmethod
-    def add_text_batch(
-        self,
-        graph_id: str,
-        chunks: List[str],
-        batch_size: int = 3,
-        progress_callback: Optional[Callable[[float], None]] = None,
-    ) -> List[str]:
-        """Batch-add text chunks. Returns list of episode_ids."""
-
-    @abstractmethod
     def wait_for_processing(
         self,
         episode_ids: List[str],

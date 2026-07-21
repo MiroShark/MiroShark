@@ -3,16 +3,11 @@ Text Processing Service
 """
 
 from typing import List
-from ..utils.file_parser import FileParser, split_text_into_chunks
+from ..utils.file_parser import split_text_into_chunks
 
 
 class TextProcessor:
     """Text Processor"""
-
-    @staticmethod
-    def extract_from_files(file_paths: List[str]) -> str:
-        """Extract text from multiple files"""
-        return FileParser.extract_from_multiple(file_paths)
 
     @staticmethod
     def split_text(
@@ -171,12 +166,3 @@ class TextProcessor:
         text = '\n'.join(lines)
 
         return text.strip()
-
-    @staticmethod
-    def get_text_stats(text: str) -> dict:
-        """Get text statistics"""
-        return {
-            "total_chars": len(text),
-            "total_lines": text.count('\n') + 1,
-            "total_words": len(text.split()),
-        }

@@ -37,7 +37,6 @@ INK = (10, 10, 10)              # #0a0a0a — header/footer band, primary text
 INK_SOFT = (75, 75, 75)         # #4b4b4b — secondary text
 INK_MUTED = (107, 107, 107)     # #6b6b6b — labels
 PAPER = (250, 250, 250)         # #fafafa — body background
-PAPER_LINE = (228, 228, 228)    # subtle dividers
 BULLISH = (14, 165, 160)        # teal — high-bull consensus / "correct" badge
 NEUTRAL = (154, 160, 166)       # slate — split / mixed
 BEARISH = (240, 120, 103)       # coral — high-bear / "wrong"
