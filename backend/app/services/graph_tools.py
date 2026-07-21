@@ -8,7 +8,7 @@ Core retrieval tools:
 
 import json
 import os
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from dataclasses import dataclass, field
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -1615,7 +1615,7 @@ class GraphToolsService:
         interview_requirement: str,
         simulation_requirement: str,
         max_agents: int
-    ) -> tuple:
+    ) -> Tuple[List[Dict[str, Any]], List[int], str]:
         """Use LLM to select Agents for interview"""
 
         agent_summaries = []
@@ -1685,7 +1685,7 @@ class GraphToolsService:
         profiles: List[Dict[str, Any]],
         agent_names: List[str],
         max_agents: int,
-    ) -> tuple:
+    ) -> Tuple[List[Dict[str, Any]], List[int], str]:
         """
         Select agents by name without an LLM call.
         Matches against realname and username fields (case-insensitive, substring match).

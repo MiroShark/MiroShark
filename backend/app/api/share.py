@@ -296,7 +296,7 @@ def share_landing(simulation_id: str):
     return response
 
 
-def _oembed_allowed_hosts(base_url: str) -> set:
+def _oembed_allowed_hosts(base_url: str) -> set[str]:
     """Hosts an inbound oEmbed ``url`` is allowed to belong to.
 
     A consumer hands us the canonical share URL it scraped the discovery
@@ -306,7 +306,7 @@ def _oembed_allowed_hosts(base_url: str) -> set:
     bare ``PUBLIC_BASE_URL``-less dev server alike, but a foreign domain
     is rejected (the endpoint can't be aimed at another site).
     """
-    hosts: set = set()
+    hosts: set[str] = set()
     for candidate in (base_url, request.host_url):
         if candidate:
             netloc = urlparse(candidate).netloc.lower()

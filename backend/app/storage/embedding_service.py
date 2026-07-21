@@ -11,7 +11,7 @@ Vector dimensions are configurable via EMBEDDING_DIMENSIONS (default: 768).
 
 import time
 import logging
-from typing import List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import requests
 
@@ -134,7 +134,12 @@ class EmbeddingService:
                 results[idx] = vec
                 self._cache_put(text, vec)
 
-        return results  # type: ignore
+        # Every slot is non-None by construction: empty texts get a zero
+        # vector above, cached texts get their cached vector, and each
+        # uncached index is filled by the zip because both parsers raise
+        # ``EmbeddingError`` unless the provider returned exactly
+        # ``expected_count`` embeddings per batch.
+        return results  # type: ignore[return-value]
 
     def _request_embeddings(self, texts: List[str]) -> List[List[float]]:
         """Dispatch to the correct provider backend."""
@@ -160,7 +165,11 @@ class EmbeddingService:
             payload["dimensions"] = self.dimensions
         return self._do_request(payload, self._parse_openai_response)
 
-    def _do_request(self, payload: dict, parser) -> List[List[float]]:
+    def _do_request(
+        self,
+        payload: Dict[str, Any],
+        parser: Callable[[dict, int], List[List[float]]],
+    ) -> List[List[float]]:
         """HTTP POST with retry logic."""
         headers = {
             "Content-Type": "application/json",

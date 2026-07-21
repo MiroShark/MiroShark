@@ -11,7 +11,7 @@ import json
 import traceback
 from datetime import datetime, timezone
 from functools import wraps
-from flask import request, jsonify, send_file, current_app
+from flask import request, jsonify, send_file, current_app, Response
 
 from . import simulation_bp
 from ..utils.llm_client import create_smart_llm_client, create_llm_client
@@ -152,7 +152,9 @@ def require_admin_token(view_func):
     return _wrapper
 
 
-def _get_simulation_id_or_400(data: dict, locale: str = "en") -> tuple:
+def _get_simulation_id_or_400(
+    data: dict, locale: str = "en"
+) -> tuple[str | None, tuple[Response, int] | None]:
     """Extract and validate simulation_id from POST body.
 
     Returns (simulation_id, None) on success or (None, error_response) on failure.

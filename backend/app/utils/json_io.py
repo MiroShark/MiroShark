@@ -21,7 +21,7 @@ import os
 from typing import Any, Dict, Optional
 
 
-def safe_load_json(path: str) -> Optional[Any]:
+def safe_load_json(path: str) -> Any:
     """Read a JSON file, returning ``None`` on missing / corrupt input.
 
     Never raises: an empty/falsy ``path`` or a file that is missing,

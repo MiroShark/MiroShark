@@ -667,8 +667,8 @@ def select_public_cards(
     sims: Iterable[Any],
     *,
     sim_data_dir: str,
-    card_builder,
-    outcome_reader,
+    card_builder: Callable[[Any, str], dict],
+    outcome_reader: Callable[[str], Optional[dict]],
     limit: int = DEFAULT_FEED_LIMIT,
     verified_only: bool = False,
     q: str = "",
@@ -780,7 +780,7 @@ def select_public_cards(
 def _has_outcome_record(
     card: dict,
     sim_data_dir: str,
-    outcome_reader: Callable[[str], Any],
+    outcome_reader: Callable[[str], Optional[dict]],
 ) -> bool:
     """Return True iff the card already carries an outcome OR the
     on-disk reader confirms one for the sim. Belt-and-suspenders so the
