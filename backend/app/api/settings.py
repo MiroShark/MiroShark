@@ -53,6 +53,30 @@ _PRESETS = {
         },
         'key_slots': ['LLM_API_KEY', 'SMART_API_KEY', 'NER_API_KEY', 'EMBEDDING_API_KEY'],
     },
+    'atlascloud': {
+        'label': 'Atlas Cloud — OpenAI-compatible cloud',
+        'fields': {
+            'LLM_PROVIDER': 'openai',
+            'LLM_BASE_URL': 'https://api.atlascloud.ai/v1',
+            'LLM_MODEL_NAME': 'deepseek-ai/deepseek-v4-pro',
+            'SMART_PROVIDER': 'openai',
+            'SMART_BASE_URL': 'https://api.atlascloud.ai/v1',
+            'SMART_MODEL_NAME': 'deepseek-ai/deepseek-v4-pro',
+            'NER_BASE_URL': 'https://api.atlascloud.ai/v1',
+            'NER_MODEL_NAME': 'qwen/qwen3.5-flash',
+            'WONDERWALL_BASE_URL': 'https://api.atlascloud.ai/v1',
+            'WONDERWALL_MODEL_NAME': 'deepseek-ai/deepseek-v4-flash',
+            # Atlas text models do not provide provider-side web browsing.
+            # An operator can still enable grounded enrichment with SearXNG.
+            'WEB_SEARCH_MODEL': '',
+        },
+        'key_slots': [
+            'LLM_API_KEY',
+            'SMART_API_KEY',
+            'NER_API_KEY',
+            'WONDERWALL_API_KEY',
+        ],
+    },
     'local': {
         'label': 'Local — Ollama (free, self-hosted)',
         'fields': {
@@ -136,7 +160,12 @@ def _current_snapshot() -> dict:
             },
         },
         'available_presets': [
-            {'id': k, 'label': v['label']} for k, v in _PRESETS.items()
+            {
+                'id': k,
+                'label': v['label'],
+                'needs_api_key': bool(v['key_slots']),
+            }
+            for k, v in _PRESETS.items()
         ],
     }
 
@@ -163,7 +192,7 @@ def update_settings():
     Update configuration at runtime. All fields optional.
 
     Body fields:
-      preset: "cheap" | "local"                              — apply a full preset
+      preset: "cheap" | "atlascloud" | "local"               — apply a full preset
       preset_api_key: str                                    — key filled into every preset slot
       llm: { provider, base_url, model_name, api_key }
       smart: { provider, base_url, model_name, api_key }

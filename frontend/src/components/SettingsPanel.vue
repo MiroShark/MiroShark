@@ -107,13 +107,13 @@
           </div>
 
           <div v-if="presetNeedsKey" class="field-row">
-            <label class="field-label">{{ $tr('OpenRouter API key', 'OpenRouter API 密钥', { de: 'OpenRouter API-Schlüssel', fr: 'Clé API OpenRouter' }) }}</label>
+            <label class="field-label">{{ $tr('Provider API key', '提供商 API 密钥', { de: 'Provider-API-Schlüssel', fr: 'Clé API du fournisseur' }) }}</label>
             <div class="key-input-group">
               <input
                 v-model="form.presetApiKey"
                 class="field-input"
                 :type="showKey ? 'text' : 'password'"
-                placeholder="sk-or-v1-..."
+                placeholder="sk-..."
               />
               <button class="toggle-key-btn" @click="showKey = !showKey">
                 {{ showKey ? '◉' : '◎' }}
@@ -762,9 +762,8 @@ const loadCurrentSettings = async () => {
 
 const presetOptions = computed(() => currentSettings.value.available_presets || [])
 
-// `local` preset doesn't need an API key — the cloud preset does.
 const presetNeedsKey = computed(() =>
-  form.preset === 'cheap'
+  presetOptions.value.find(p => p.id === form.preset)?.needs_api_key === true
 )
 
 // Whether current base URL is OpenRouter
@@ -964,31 +963,32 @@ const saveSettings = async () => {
   try {
     const payload = {}
 
-    // Preset is applied server-side first; explicit field overrides apply on top.
+    // A preset owns the model fields it defines. Sending stale form values
+    // alongside it would overwrite the server-side preset with the old config.
     if (form.preset) {
       payload.preset = form.preset
       if (form.presetApiKey) payload.preset_api_key = form.presetApiKey
-    }
+    } else {
+      payload.llm = {
+        provider: form.llm.provider,
+        base_url: form.llm.base_url,
+        model_name: form.llm.model_name,
+      }
+      if (form.llm.api_key) payload.llm.api_key = form.llm.api_key
 
-    payload.llm = {
-      provider: form.llm.provider,
-      base_url: form.llm.base_url,
-      model_name: form.llm.model_name,
+      payload.smart = { model_name: form.smart.model_name }
+      payload.ner = { model_name: form.ner.model_name }
+      payload.wonderwall = {
+        model_name: form.wonderwall.model_name,
+        base_url: form.wonderwall.base_url,
+      }
+      if (form.wonderwall.api_key) payload.wonderwall.api_key = form.wonderwall.api_key
+      payload.embedding = {
+        provider: form.embedding.provider,
+        model_name: form.embedding.model_name,
+      }
+      payload.web_search_model = form.web_search_model
     }
-    if (form.llm.api_key) payload.llm.api_key = form.llm.api_key
-
-    payload.smart = { model_name: form.smart.model_name }
-    payload.ner = { model_name: form.ner.model_name }
-    payload.wonderwall = {
-      model_name: form.wonderwall.model_name,
-      base_url: form.wonderwall.base_url,
-    }
-    if (form.wonderwall.api_key) payload.wonderwall.api_key = form.wonderwall.api_key
-    payload.embedding = {
-      provider: form.embedding.provider,
-      model_name: form.embedding.model_name,
-    }
-    payload.web_search_model = form.web_search_model
     payload.searxng_base_url = form.searxng_base_url?.trim() || ''
     payload.firecrawl = { base_url: form.firecrawl.base_url?.trim() || '' }
     if (form.firecrawl.api_key) payload.firecrawl.api_key = form.firecrawl.api_key

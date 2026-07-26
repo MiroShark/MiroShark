@@ -14,7 +14,7 @@ export const getSettings = () => {
  * Update settings at runtime. Every field is optional.
  *
  * @param {Object} data
- *   - preset:             "cheap" | "local"             (apply full preset)
+ *   - preset:             "cheap" | "atlascloud" | "local" (apply full preset)
  *   - preset_api_key:     string                        (filled into every preset key slot)
  *   - llm:                { provider, base_url, model_name, api_key }
  *   - smart:              { provider, base_url, model_name, api_key }

@@ -8669,7 +8669,7 @@ components:
       properties:
         preset:
           type: string
-          enum: [cheap, best, local]
+          enum: [cheap, atlascloud, local]
         preset_api_key: { type: string }
         llm:
           type: object
