@@ -44,6 +44,7 @@ _PRESETS = {
             'SMART_MODEL_NAME': 'google/gemini-3-flash-preview',
             'NER_BASE_URL': 'https://openrouter.ai/api/v1',
             'NER_MODEL_NAME': 'google/gemini-3-flash-preview',
+            'WONDERWALL_BASE_URL': '',
             'WONDERWALL_MODEL_NAME': 'deepseek/deepseek-v4-flash:nitro',
             'EMBEDDING_PROVIDER': 'openai',
             'EMBEDDING_BASE_URL': 'https://openrouter.ai/api',
@@ -55,6 +56,10 @@ _PRESETS = {
     },
     'atlascloud': {
         'label': 'Atlas Cloud — OpenAI-compatible cloud',
+        'note': (
+            'Atlas Cloud does not provide embedding models. Existing embedding '
+            'settings are preserved and must be configured separately.'
+        ),
         'fields': {
             'LLM_PROVIDER': 'openai',
             'LLM_BASE_URL': 'https://api.atlascloud.ai/v1',
@@ -91,6 +96,7 @@ _PRESETS = {
             'NER_BASE_URL': '',
             'NER_MODEL_NAME': '',
             'NER_API_KEY': '',
+            'WONDERWALL_BASE_URL': '',
             'WONDERWALL_MODEL_NAME': '',
             'EMBEDDING_PROVIDER': 'ollama',
             'EMBEDDING_BASE_URL': 'http://localhost:11434',
@@ -164,6 +170,7 @@ def _current_snapshot() -> dict:
                 'id': k,
                 'label': v['label'],
                 'needs_api_key': bool(v['key_slots']),
+                'note': v.get('note', ''),
             }
             for k, v in _PRESETS.items()
         ],

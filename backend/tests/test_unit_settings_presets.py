@@ -31,6 +31,11 @@ def test_atlascloud_preset_configures_openai_compatible_text_slots(monkeypatch):
         "WONDERWALL_BASE_URL": "",
         "WONDERWALL_MODEL_NAME": "",
         "WONDERWALL_API_KEY": "",
+        "EMBEDDING_PROVIDER": "ollama",
+        "EMBEDDING_BASE_URL": "http://localhost:11434",
+        "EMBEDDING_MODEL": "nomic-embed-text",
+        "EMBEDDING_API_KEY": "embedding-test-key",
+        "EMBEDDING_DIMENSIONS": 1024,
         "WEB_SEARCH_MODEL": "previous-search-model",
     }
     for name, value in tracked.items():
@@ -56,6 +61,11 @@ def test_atlascloud_preset_configures_openai_compatible_text_slots(monkeypatch):
     assert data["wonderwall"]["model_name"] == "deepseek-ai/deepseek-v4-flash"
     assert Config.WONDERWALL_BASE_URL == "https://api.atlascloud.ai/v1"
     assert Config.WONDERWALL_API_KEY == "atlas-test-key"
+    assert Config.EMBEDDING_PROVIDER == "ollama"
+    assert Config.EMBEDDING_BASE_URL == "http://localhost:11434"
+    assert Config.EMBEDDING_MODEL == "nomic-embed-text"
+    assert Config.EMBEDDING_API_KEY == "embedding-test-key"
+    assert Config.EMBEDDING_DIMENSIONS == 1024
     assert Config.WEB_SEARCH_MODEL == ""
 
 
@@ -69,5 +79,21 @@ def test_settings_snapshot_marks_cloud_presets_as_requiring_keys():
         for preset in response.get_json()["data"]["available_presets"]
     }
     assert presets["atlascloud"]["needs_api_key"] is True
+    assert "does not provide embedding models" in presets["atlascloud"]["note"]
     assert presets["cheap"]["needs_api_key"] is True
     assert presets["local"]["needs_api_key"] is False
+
+
+def test_switching_from_atlascloud_clears_wonderwall_base_url(monkeypatch):
+    monkeypatch.setattr(Config, "WONDERWALL_BASE_URL", "")
+
+    with _make_app().test_client() as client:
+        assert client.post("/api/settings", json={"preset": "atlascloud"}).status_code == 200
+        assert Config.WONDERWALL_BASE_URL == "https://api.atlascloud.ai/v1"
+
+        assert client.post("/api/settings", json={"preset": "cheap"}).status_code == 200
+        assert Config.WONDERWALL_BASE_URL == ""
+
+        assert client.post("/api/settings", json={"preset": "atlascloud"}).status_code == 200
+        assert client.post("/api/settings", json={"preset": "local"}).status_code == 200
+        assert Config.WONDERWALL_BASE_URL == ""
