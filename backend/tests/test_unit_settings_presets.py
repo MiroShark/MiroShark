@@ -84,16 +84,29 @@ def test_settings_snapshot_marks_cloud_presets_as_requiring_keys():
     assert presets["local"]["needs_api_key"] is False
 
 
-def test_switching_from_atlascloud_clears_wonderwall_base_url(monkeypatch):
+def test_switching_from_atlascloud_clears_wonderwall_credentials(monkeypatch):
     monkeypatch.setattr(Config, "WONDERWALL_BASE_URL", "")
+    monkeypatch.setattr(Config, "WONDERWALL_API_KEY", "")
 
     with _make_app().test_client() as client:
-        assert client.post("/api/settings", json={"preset": "atlascloud"}).status_code == 200
+        assert client.post(
+            "/api/settings",
+            json={"preset": "atlascloud", "preset_api_key": "atlas-test-key"},
+        ).status_code == 200
         assert Config.WONDERWALL_BASE_URL == "https://api.atlascloud.ai/v1"
+        assert Config.WONDERWALL_API_KEY == "atlas-test-key"
 
-        assert client.post("/api/settings", json={"preset": "cheap"}).status_code == 200
+        assert client.post(
+            "/api/settings",
+            json={"preset": "cheap", "preset_api_key": "openrouter-test-key"},
+        ).status_code == 200
         assert Config.WONDERWALL_BASE_URL == ""
+        assert Config.WONDERWALL_API_KEY == ""
 
-        assert client.post("/api/settings", json={"preset": "atlascloud"}).status_code == 200
+        assert client.post(
+            "/api/settings",
+            json={"preset": "atlascloud", "preset_api_key": "atlas-test-key"},
+        ).status_code == 200
         assert client.post("/api/settings", json={"preset": "local"}).status_code == 200
         assert Config.WONDERWALL_BASE_URL == ""
+        assert Config.WONDERWALL_API_KEY == ""
