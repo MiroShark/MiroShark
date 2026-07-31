@@ -186,13 +186,28 @@ def get_settings():
 
 
 def _apply_preset(preset_id: str, preset_api_key: str) -> None:
-    """Mutate Config in-place to match the named preset."""
+    """Mutate Config in-place to match the named preset.
+
+    When `preset_api_key` is supplied it fills every key slot. When it is left
+    blank the caller means "keep my existing keys" — but a key slot whose base
+    URL the preset moves to a different provider must be cleared, not kept, or
+    the previous provider's key would be sent as the bearer token to the new
+    endpoint. Slots whose provider is unchanged keep their key.
+    """
     preset = _PRESETS[preset_id]
+    # Capture base URLs before the preset overwrites them, so we can tell which
+    # slots are switching provider.
+    prior_base_urls = {
+        slot: getattr(Config, slot.replace('_API_KEY', '_BASE_URL'), None)
+        for slot in preset['key_slots']
+    }
     for attr, value in preset['fields'].items():
         setattr(Config, attr, value)
-    if preset_api_key:
-        for slot in preset['key_slots']:
+    for slot in preset['key_slots']:
+        if preset_api_key:
             setattr(Config, slot, preset_api_key)
+        elif getattr(Config, slot.replace('_API_KEY', '_BASE_URL'), None) != prior_base_urls[slot]:
+            setattr(Config, slot, '')
 
 
 @settings_bp.route('', methods=['POST'])

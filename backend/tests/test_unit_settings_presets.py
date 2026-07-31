@@ -110,3 +110,44 @@ def test_switching_from_atlascloud_clears_wonderwall_credentials(monkeypatch):
         assert client.post("/api/settings", json={"preset": "local"}).status_code == 200
         assert Config.WONDERWALL_BASE_URL == ""
         assert Config.WONDERWALL_API_KEY == ""
+
+
+def test_switching_provider_with_blank_key_clears_stale_keys(monkeypatch):
+    """A blank key on a provider switch must not carry the old provider's key
+    over to the new endpoint (would leak it as the new bearer token)."""
+    for slot in ("LLM_API_KEY", "SMART_API_KEY", "NER_API_KEY", "WONDERWALL_API_KEY"):
+        monkeypatch.setattr(Config, slot, "openrouter-secret")
+    monkeypatch.setattr(Config, "LLM_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setattr(Config, "SMART_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setattr(Config, "NER_BASE_URL", "https://openrouter.ai/api/v1")
+    monkeypatch.setattr(Config, "WONDERWALL_BASE_URL", "")
+
+    with _make_app().test_client() as client:
+        # Switch to Atlas Cloud, leaving the key field blank.
+        assert client.post(
+            "/api/settings", json={"preset": "atlascloud", "preset_api_key": ""}
+        ).status_code == 200
+
+    # Base URLs moved to Atlas; the stale OpenRouter key must be gone from every slot.
+    assert Config.LLM_BASE_URL == "https://api.atlascloud.ai/v1"
+    for slot in ("LLM_API_KEY", "SMART_API_KEY", "NER_API_KEY", "WONDERWALL_API_KEY"):
+        assert getattr(Config, slot) == "", f"{slot} leaked the previous provider's key"
+
+
+def test_reapplying_same_preset_with_blank_key_keeps_existing_key(monkeypatch):
+    """Re-applying the current provider with a blank key keeps the working key
+    (base URL unchanged, so nothing is switching)."""
+    monkeypatch.setattr(Config, "LLM_BASE_URL", "https://api.atlascloud.ai/v1")
+    monkeypatch.setattr(Config, "SMART_BASE_URL", "https://api.atlascloud.ai/v1")
+    monkeypatch.setattr(Config, "NER_BASE_URL", "https://api.atlascloud.ai/v1")
+    monkeypatch.setattr(Config, "WONDERWALL_BASE_URL", "https://api.atlascloud.ai/v1")
+    for slot in ("LLM_API_KEY", "SMART_API_KEY", "NER_API_KEY", "WONDERWALL_API_KEY"):
+        monkeypatch.setattr(Config, slot, "atlas-secret")
+
+    with _make_app().test_client() as client:
+        assert client.post(
+            "/api/settings", json={"preset": "atlascloud", "preset_api_key": ""}
+        ).status_code == 200
+
+    for slot in ("LLM_API_KEY", "SMART_API_KEY", "NER_API_KEY", "WONDERWALL_API_KEY"):
+        assert getattr(Config, slot) == "atlas-secret"
