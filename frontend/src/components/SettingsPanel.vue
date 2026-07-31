@@ -104,23 +104,24 @@
                  target="_blank" rel="noopener">.env.example</a>
               {{ $tr('for the exact values each preset uses.', '了解各预设使用的精确值。', { de: 'für die genauen Werte der jeweiligen Voreinstellung.', fr: 'pour les valeurs exactes de chaque préréglage.' }) }}
             </div>
+            <div v-if="selectedPresetNote" class="field-hint">{{ selectedPresetNote }}</div>
           </div>
 
           <div v-if="presetNeedsKey" class="field-row">
-            <label class="field-label">{{ $tr('OpenRouter API key', 'OpenRouter API 密钥', { de: 'OpenRouter API-Schlüssel', fr: 'Clé API OpenRouter' }) }}</label>
+            <label class="field-label">{{ $tr('Provider API key', '提供商 API 密钥', { de: 'Provider-API-Schlüssel', fr: 'Clé API du fournisseur' }) }}</label>
             <div class="key-input-group">
               <input
                 v-model="form.presetApiKey"
                 class="field-input"
                 :type="showKey ? 'text' : 'password'"
-                placeholder="sk-or-v1-..."
+                placeholder="sk-..."
               />
               <button class="toggle-key-btn" @click="showKey = !showKey">
                 {{ showKey ? '◉' : '◎' }}
               </button>
             </div>
             <div class="field-hint">
-              {{ $tr('Filled into every slot the preset needs (default, smart, NER, embedding). Leave blank to keep your existing keys.', '将填入预设所需的每个槽(default、smart、NER、embedding)。留空则保留现有密钥。', { de: 'Wird in alle vom Preset benötigten Slots eingetragen (default, smart, NER, embedding). Leer lassen, um vorhandene Schlüssel zu behalten.', fr: 'Renseignée dans tous les slots dont le préréglage a besoin (default, smart, NER, embedding). Laissez vide pour conserver vos clés existantes.' }) }}
+              {{ $tr('Filled into the text slots the preset needs (default, smart, NER, Wonderwall). Embeddings may require separate configuration. Leave blank to keep your existing keys.', '将填入预设所需的文本槽(default、smart、NER、Wonderwall)。Embedding 可能需要单独配置。留空则保留现有密钥。', { de: 'Wird in die benötigten Text-Slots eingetragen (default, smart, NER, Wonderwall). Embeddings müssen möglicherweise separat konfiguriert werden. Leer lassen, um vorhandene Schlüssel zu behalten.', fr: 'Renseignée dans les slots texte requis (default, smart, NER, Wonderwall). Les embeddings peuvent nécessiter une configuration séparée. Laissez vide pour conserver vos clés existantes.' }) }}
             </div>
           </div>
         </section>
@@ -723,37 +724,40 @@ watch(() => props.open, async (isOpen) => {
   }
 })
 
+const syncFormFromSettings = (d) => {
+  currentSettings.value = d
+  form.preset = ''
+  form.presetApiKey = ''
+  form.llm.provider = d.llm.provider || 'openai'
+  form.llm.base_url = d.llm.base_url || ''
+  form.llm.model_name = d.llm.model_name || ''
+  form.llm.api_key = '' // never pre-fill
+  form.smart.model_name = d.smart?.model_name || ''
+  form.ner.model_name = d.ner?.model_name || ''
+  form.wonderwall.model_name = d.wonderwall?.model_name || ''
+  form.wonderwall.base_url = d.wonderwall?.base_url || ''
+  form.wonderwall.api_key = '' // never pre-fill
+  form.embedding.provider = d.embedding?.provider || 'ollama'
+  form.embedding.model_name = d.embedding?.model_name || ''
+  form.web_search_model = d.web_search_model || ''
+  form.searxng_base_url = d.searxng_base_url || ''
+  form.firecrawl.base_url = d.firecrawl?.base_url || ''
+  form.firecrawl.api_key = '' // never pre-fill
+  form.neo4j.uri = d.neo4j?.uri || ''
+  form.neo4j.user = d.neo4j?.user || ''
+  form.neo4j.password = ''
+  // Webhook URL is masked server-side, so editing it is always explicit.
+  form.integrations.webhook.url = ''
+  form.integrations.webhook.public_base_url = d.integrations?.webhook?.public_base_url || ''
+}
+
 const loadCurrentSettings = async () => {
   try {
     // Axios response interceptor already unwraps to the body, so `res`
     // is `{ success, data }` — not the raw axios response.
     const res = await getSettings()
     if (res?.success && res.data) {
-      const d = res.data
-      currentSettings.value = d
-      form.llm.provider = d.llm.provider || 'openai'
-      form.llm.base_url = d.llm.base_url || ''
-      form.llm.model_name = d.llm.model_name || ''
-      form.llm.api_key = '' // never pre-fill
-      form.smart.model_name = d.smart?.model_name || ''
-      form.ner.model_name = d.ner?.model_name || ''
-      form.wonderwall.model_name = d.wonderwall?.model_name || ''
-      form.wonderwall.base_url = d.wonderwall?.base_url || ''
-      form.wonderwall.api_key = '' // never pre-fill
-      form.embedding.provider = d.embedding?.provider || 'ollama'
-      form.embedding.model_name = d.embedding?.model_name || ''
-      form.web_search_model = d.web_search_model || ''
-      form.searxng_base_url = d.searxng_base_url || ''
-      form.firecrawl.base_url = d.firecrawl?.base_url || ''
-      form.firecrawl.api_key = '' // never pre-fill
-      form.neo4j.uri = d.neo4j?.uri || ''
-      form.neo4j.user = d.neo4j?.user || ''
-      form.neo4j.password = ''
-      // Webhook URL is masked server-side — never round-trip the masked
-      // form back as a value the user could accidentally save. Leave the
-      // input blank when configured so editing is explicit.
-      form.integrations.webhook.url = ''
-      form.integrations.webhook.public_base_url = d.integrations?.webhook?.public_base_url || ''
+      syncFormFromSettings(res.data)
     }
   } catch (_) {
     // Non-fatal
@@ -762,9 +766,12 @@ const loadCurrentSettings = async () => {
 
 const presetOptions = computed(() => currentSettings.value.available_presets || [])
 
-// `local` preset doesn't need an API key — the cloud preset does.
 const presetNeedsKey = computed(() =>
-  form.preset === 'cheap'
+  presetOptions.value.find(p => p.id === form.preset)?.needs_api_key === true
+)
+
+const selectedPresetNote = computed(() =>
+  presetOptions.value.find(p => p.id === form.preset)?.note || ''
 )
 
 // Whether current base URL is OpenRouter
@@ -964,31 +971,32 @@ const saveSettings = async () => {
   try {
     const payload = {}
 
-    // Preset is applied server-side first; explicit field overrides apply on top.
+    // A preset owns the model fields it defines. Sending stale form values
+    // alongside it would overwrite the server-side preset with the old config.
     if (form.preset) {
       payload.preset = form.preset
       if (form.presetApiKey) payload.preset_api_key = form.presetApiKey
-    }
+    } else {
+      payload.llm = {
+        provider: form.llm.provider,
+        base_url: form.llm.base_url,
+        model_name: form.llm.model_name,
+      }
+      if (form.llm.api_key) payload.llm.api_key = form.llm.api_key
 
-    payload.llm = {
-      provider: form.llm.provider,
-      base_url: form.llm.base_url,
-      model_name: form.llm.model_name,
+      payload.smart = { model_name: form.smart.model_name }
+      payload.ner = { model_name: form.ner.model_name }
+      payload.wonderwall = {
+        model_name: form.wonderwall.model_name,
+        base_url: form.wonderwall.base_url,
+      }
+      if (form.wonderwall.api_key) payload.wonderwall.api_key = form.wonderwall.api_key
+      payload.embedding = {
+        provider: form.embedding.provider,
+        model_name: form.embedding.model_name,
+      }
+      payload.web_search_model = form.web_search_model
     }
-    if (form.llm.api_key) payload.llm.api_key = form.llm.api_key
-
-    payload.smart = { model_name: form.smart.model_name }
-    payload.ner = { model_name: form.ner.model_name }
-    payload.wonderwall = {
-      model_name: form.wonderwall.model_name,
-      base_url: form.wonderwall.base_url,
-    }
-    if (form.wonderwall.api_key) payload.wonderwall.api_key = form.wonderwall.api_key
-    payload.embedding = {
-      provider: form.embedding.provider,
-      model_name: form.embedding.model_name,
-    }
-    payload.web_search_model = form.web_search_model
     payload.searxng_base_url = form.searxng_base_url?.trim() || ''
     payload.firecrawl = { base_url: form.firecrawl.base_url?.trim() || '' }
     if (form.firecrawl.api_key) payload.firecrawl.api_key = form.firecrawl.api_key
@@ -1013,14 +1021,7 @@ const saveSettings = async () => {
     const res = await updateSettings(payload)
     if (res?.success && res.data) {
       saveSuccess.value = true
-      currentSettings.value = res.data
-      form.llm.api_key = ''
-      form.presetApiKey = ''
-      form.firecrawl.api_key = ''
-      form.neo4j.password = ''
-      // Reset the webhook URL input so the placeholder shows the new
-      // masked value and we don't accidentally re-save the same string.
-      form.integrations.webhook.url = ''
+      syncFormFromSettings(res.data)
       setTimeout(() => { saveSuccess.value = false }, 4000)
     } else {
       saveError.value = res?.error || tr('Save failed', '保存失败', { de: 'Speichern fehlgeschlagen', fr: `Échec de l'enregistrement` })
