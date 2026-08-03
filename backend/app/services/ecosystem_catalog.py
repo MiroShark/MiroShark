@@ -45,7 +45,7 @@ Design notes
   Blue Agent), ``benchmark`` (test / evaluation
   pipelines over the engine — AntFleet). MCP servers and Aeon skill
   packs that wrap MiroShark surfaces fall under ``integration``
-  (Noelclaw mcp, Signa signa-miroshark-skills).
+  (Signa signa-miroshark-skills).
 
 * **Alphabetised by ``name``.** Matches the ECOSYSTEM.md ordering
   convention. Order is part of the published contract — a consumer
@@ -155,14 +155,6 @@ _CATALOG: List[Dict[str, Any]] = [
         "category": "integration",
         "x_handle": None,
         "repo": "https://github.com/Zoidberg-eternal/monitor-the-situation-bags",
-    },
-    {
-        "name": "Noelclaw",
-        "url": "https://noelclaw.com",
-        "description": "MCP server exposing MiroShark surfaces to MCP-aware assistants and agents.",
-        "category": "integration",
-        "x_handle": "noelclawfun",
-        "repo": "https://github.com/noelclaw/mcp",
     },
     {
         "name": "RootAI",

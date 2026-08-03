@@ -622,7 +622,7 @@ oEmbed 添加的是一套*协议*,而非一个渲染器 — 缩略图和 iframe 
 
 与 `/api/surfaces.json` 共用同一个蓝图。两个端点合起来回答每位集成者第一天都会碰到的两个元问题 — *「我可以调用哪些分享面?」*(surfaces.json)与 *「还有谁在这之上构建?」*(ecosystem.json)。
 
-- **五个类别。** `product`(在 MiroShark 之上构建的面向公众的应用 — Capacitr、Echo Oracle、HivemindOS、RootAI、Xerg、ZER0)、`tool`(面向操作者的工具 — Crucible Sim)、`integration`(把 MiroShark 接入其他系统的 MCP 服务器、Aeon 技能包、Bags 风格的监视器 — Monitor、Noelclaw、Signa)、`agent`(运行 MiroShark 模拟的自主机器人 — Blue Agent、SyntheticsAI)、`benchmark`(在引擎之上构建的测试 / 评估流水线 — AntFleet)。消费方可以通过对 `category` 过滤来把工作范围限定在某个类别。
+- **五个类别。** `product`(在 MiroShark 之上构建的面向公众的应用 — Capacitr、Echo Oracle、HivemindOS、RootAI、Xerg、ZER0)、`tool`(面向操作者的工具 — Crucible Sim)、`integration`(把 MiroShark 接入其他系统的 MCP 服务器、Aeon 技能包、Bags 风格的监视器 — Monitor、Signa)、`agent`(运行 MiroShark 模拟的自主机器人 — Blue Agent、SyntheticsAI)、`benchmark`(在引擎之上构建的测试 / 评估流水线 — AntFleet)。消费方可以通过对 `category` 过滤来把工作范围限定在某个类别。
 - **静态硬编码 — 出于设计。** 目录是 `services/ecosystem_catalog.py` 模块作用域内的字面列表;它 **不** 通过解析 `ECOSYSTEM.md` 自动派生 — Markdown 形状(单元格内含徽标、链接和自由文本)非常脆弱,解析器的悄然漂移会损害公开契约。新增一位集成者会落在两个文件里:`ECOSYSTEM.md` 的一行与本目录中的一条记录。`test_unit_ecosystem_catalog.py` 中的漂移守护测试会在两个来源之间交叉校验项目 `name` 集合,因此任何一侧都无法悄然漂移。
 - **按 `name` 字母排序。** 与 `ECOSYSTEM.md` 的排序约定一致。消费方迭代该列表时看到的顺序与人类读者浏览 Markdown 表格时一致。顺序是公开契约的一部分 — 追加是非破坏性变更;重排现有条目是破坏性的。
 - **`x_handle` 不带前导 `@`。** 消费方拼接 `https://x.com/<x_handle>` URL(信息流、批量关注脚本、情感监视器)时可直接得到干净的 URL,无需字符串裁剪。若集成者没有公开 X 账号,该值为 `null`。
