@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="162" height="40" viewBox="0 0 162 40" role="img" aria-label="miroshark.xyz">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#241640"/>
+      <stop offset="1" stop-color="#160d2a"/>
+    </linearGradient>
+  </defs>
+  <rect x="0.5" y="0.5" width="161" height="39" rx="19.5" fill="url(#g)" stroke="#8B5CF6" stroke-opacity="0.5"/>
+  <rect x="2" y="1.5" width="158" height="15" rx="12" fill="#ffffff" opacity="0.05"/>
+  <g stroke="#A78BFA" stroke-width="1.5" fill="none">
+    <circle cx="25" cy="20" r="8"/>
+    <ellipse cx="25" cy="20" rx="3.4" ry="8"/>
+    <line x1="17" y1="20" x2="33" y2="20"/>
+    <line x1="18.5" y1="15" x2="31.5" y2="15"/>
+    <line x1="18.5" y1="25" x2="31.5" y2="25"/>
+  </g>
+  <text x="42" y="25.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#E8E6F5">miroshark.xyz</text>
+</svg>
