@@ -5,12 +5,12 @@
 <h1 align="center">Simulate <em>anything.</em></h1>
 
 <p align="center">
-  <strong>Star us&nbsp;❤️&nbsp;→</strong>&nbsp;
-  <a href="https://github.com/MiroShark/MiroShark/stargazers"><img src="../docs/images/btn-star.svg" alt="Star MiroShark on GitHub" height="34"></a> &nbsp;·&nbsp;
-  <a href="https://www.miroshark.xyz"><img src="../docs/images/btn-site.svg" alt="miroshark.xyz" height="34"></a> &nbsp;·&nbsp;
-  <a href="https://www.miroshark.xyz/docs"><img src="../docs/images/btn-docs.svg" alt="MiroShark docs" height="34"></a> &nbsp;·&nbsp;
-  <a href="https://x.com/miroshark_"><img src="../docs/images/btn-x.svg" alt="@miroshark_ on X" height="34"></a> &nbsp;·&nbsp;
-  <a href="https://bankr.bot/discover/0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3"><img src="../docs/images/btn-bankr.svg" alt="$miroshark on Bankr" height="34"></a>
+  <strong>Star us&nbsp;❤️&nbsp;→</strong>&nbsp;&nbsp;
+  <a href="https://github.com/MiroShark/MiroShark/stargazers"><img src="../docs/images/btn-star.svg" alt="Star MiroShark on GitHub" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://www.miroshark.xyz"><img src="../docs/images/btn-site.svg" alt="miroshark.xyz" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://www.miroshark.xyz/docs"><img src="../docs/images/btn-docs.svg" alt="MiroShark docs" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://x.com/miroshark_"><img src="../docs/images/btn-x.svg" alt="@miroshark_ on X" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://bankr.bot/discover/0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3"><img src="../docs/images/btn-bankr.svg" alt="$miroshark on Bankr" height="34" align="absmiddle"></a>
 </p>
 
 <p align="center">
@@ -130,15 +130,15 @@ cp .env.example .env    # paste one OpenRouter key
 <h2 align="center">Docs</h2>
 
 <p align="center">
-  <a href="../docs/INSTALL.md"><img src="https://img.shields.io/badge/Install-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="Install"></a>
-  <a href="../docs/CONFIGURATION.md"><img src="https://img.shields.io/badge/Configuration-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="Configuration"></a>
-  <a href="../docs/MODELS.md"><img src="https://img.shields.io/badge/Models-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="Models"></a>
-  <a href="../docs/ARCHITECTURE.md"><img src="https://img.shields.io/badge/Architecture-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="Architecture"></a>
-  <a href="../docs/API.md"><img src="https://img.shields.io/badge/HTTP%20API-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="HTTP API"></a>
-  <a href="../docs/CLI.md"><img src="https://img.shields.io/badge/CLI-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="CLI"></a>
-  <a href="../docs/MCP.md"><img src="https://img.shields.io/badge/MCP-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="MCP"></a>
-  <a href="../docs/WEBHOOKS.md"><img src="https://img.shields.io/badge/Webhooks-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="Webhooks"></a>
-  <a href="../ECOSYSTEM.md"><img src="https://img.shields.io/badge/Ecosystem-16A534?style=flat-square&labelColor=1a1a2e" alt="Ecosystem"></a>
+  <a href="../docs/INSTALL.md"><img src="../docs/images/doc-install.svg" alt="Install" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/CONFIGURATION.md"><img src="../docs/images/doc-config.svg" alt="Configuration" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/MODELS.md"><img src="../docs/images/doc-models.svg" alt="Models" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/ARCHITECTURE.md"><img src="../docs/images/doc-arch.svg" alt="Architecture" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/API.md"><img src="../docs/images/doc-api.svg" alt="HTTP API" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/CLI.md"><img src="../docs/images/doc-cli.svg" alt="CLI" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/MCP.md"><img src="../docs/images/doc-mcp.svg" alt="MCP" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/WEBHOOKS.md"><img src="../docs/images/doc-webhooks.svg" alt="Webhooks" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../ECOSYSTEM.md"><img src="../docs/images/doc-ecosystem.svg" alt="Ecosystem" height="30" align="absmiddle"></a>
 </p>
 
 <br/><br/>
