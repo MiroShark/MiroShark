@@ -1,9 +1,5 @@
 <p align="center">
-  <img src="../docs/images/simulate-anything-hero-v2.jpg" alt="MiroShark — Simulate anything for $1 in under 10 minutes. Drop in a document, headline, policy draft, or a what-if question and MiroShark spawns 100+ grounded AI agents that post, argue, and trade across Twitter, Reddit, and a prediction market hour by hour, then writes a report citing the actual posts and trades. Pipeline: input, build world, swarm, report. Keywords: multi-agent simulation, social simulation, swarm intelligence, agent-based modeling, LLM agents, prediction market, scenario testing." width="100%" />
-</p>
-
-<p align="center">
-  <img src="../docs/images/hero-animated.svg" alt="Animated overview — Simulate anything for $1, 10 min first result, 100 agents. The pipeline flows input → build world → swarm → report." width="100%" />
+  <img src="../docs/images/hero-animated.svg" alt="MiroShark — Simulate anything for $1 in under 10 minutes with 100+ grounded agents. The pipeline flows input → build world → swarm → report. Keywords: multi-agent simulation, social simulation, swarm intelligence, agent-based modeling, LLM agents, prediction market, scenario testing." width="100%" />
 </p>
 
 <h1 align="center">Simulate <em>anything.</em></h1>
