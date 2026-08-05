@@ -7,20 +7,22 @@
     </radialGradient>
     <linearGradient id="chrome" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="46%" stop-color="#d3d4e0"/>
-      <stop offset="56%" stop-color="#9a9bad"/>
-      <stop offset="100%" stop-color="#eceef8"/>
+      <stop offset="42%" stop-color="#cccdd9"/>
+      <stop offset="50%" stop-color="#8d8fa4"/>
+      <stop offset="51%" stop-color="#83859a"/>
+      <stop offset="66%" stop-color="#c6c8d6"/>
+      <stop offset="100%" stop-color="#f3f4fb"/>
     </linearGradient>
     <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#2a1a48"/>
       <stop offset="100%" stop-color="#140b28"/>
     </linearGradient>
     <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="7" result="b"/>
+      <feGaussianBlur stdDeviation="3.5" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
     <filter id="softblur" x="-80%" y="-80%" width="260%" height="260%">
-      <feGaussianBlur stdDeviation="18"/>
+      <feGaussianBlur stdDeviation="13"/>
     </filter>
     <filter id="copperglow" x="-120%" y="-120%" width="340%" height="340%">
       <feGaussianBlur stdDeviation="3" result="b"/>
@@ -57,10 +59,11 @@
 
   <!-- header -->
   <text x="70" y="58" class="title" font-size="30" fill="url(#chrome)">MiroShark</text>
+  <path transform="translate(233,35)" d="M0 21 C 5 8 17 -2 31 -5 C 23 6 19 15 9 21 Z" fill="url(#chrome)" stroke="#8a6bd0" stroke-width="0.7" stroke-opacity="0.45"/>
   <text x="1530" y="56" class="cap" font-size="22" fill="#b9a9e0" text-anchor="end" opacity="0.85">Universal Swarm Intelligence Engine</text>
 
   <!-- title with purple glow behind -->
-  <text x="800" y="212" class="title" font-size="112" fill="#7c3aed" text-anchor="middle" filter="url(#softblur)" opacity="0.6">Simulate anything.</text>
+  <text x="800" y="212" class="title" font-size="112" fill="#7c3aed" text-anchor="middle" filter="url(#softblur)" opacity="0.55">Simulate anything.<animate attributeName="opacity" values="0.4;0.72;0.4" dur="3.6s" repeatCount="indefinite"/></text>
   <text x="800" y="212" class="title" font-size="112" fill="url(#chrome)" text-anchor="middle" filter="url(#glow)">Simulate anything.</text>
 
   <!-- stats -->

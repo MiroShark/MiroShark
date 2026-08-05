@@ -4,10 +4,13 @@
       <stop offset="0" stop-color="#241640"/>
       <stop offset="1" stop-color="#160d2a"/>
     </linearGradient>
+    <style>@keyframes rock{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}.bk{transform-box:fill-box;transform-origin:center;animation:rock 3.2s ease-in-out infinite}</style>
   </defs>
   <rect x="0.5" y="0.5" width="101" height="39" rx="19.5" fill="url(#g)" stroke="#8B5CF6" stroke-opacity="0.5"/>
   <rect x="2" y="1.5" width="98" height="15" rx="12" fill="#ffffff" opacity="0.05"/>
+  <g class="bk">
   <path d="M17 13.5c-2 0-3.4.5-4 1v11c.6-.5 2-1 4-1s3.4.5 4 1c.6-.5 2-1 4-1s3.4.5 4 1v-11c-.6-.5-2-1-4-1s-3.4.5-4 1c-.6-.5-2-1-4-1z" fill="none" stroke="#A78BFA" stroke-width="1.5" stroke-linejoin="round"/>
   <line x1="25" y1="14.5" x2="25" y2="25.5" stroke="#A78BFA" stroke-width="1.5"/>
+  </g>
   <text x="42" y="25.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#E8E6F5">Docs</text>
 </svg>
