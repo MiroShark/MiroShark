@@ -9,7 +9,7 @@
   <rect x="2" y="1.5" width="158" height="15" rx="12" fill="#ffffff" opacity="0.05"/>
   <g stroke="#A78BFA" stroke-width="1.5" fill="none">
     <circle cx="25" cy="20" r="8"/>
-    <ellipse cx="25" cy="20" rx="3.4" ry="8"/>
+    <ellipse cx="25" cy="20" rx="3.4" ry="8"><animate attributeName="rx" values="3.4;0.5;3.4" dur="3.4s" repeatCount="indefinite"/></ellipse>
     <line x1="17" y1="20" x2="33" y2="20"/>
     <line x1="18.5" y1="15" x2="31.5" y2="15"/>
     <line x1="18.5" y1="25" x2="31.5" y2="25"/>

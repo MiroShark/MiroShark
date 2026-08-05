@@ -4,10 +4,13 @@
       <stop offset="0" stop-color="#241640"/>
       <stop offset="1" stop-color="#160d2a"/>
     </linearGradient>
+    <style>@keyframes flip{0%,100%{transform:scaleX(1)}50%{transform:scaleX(0.16)}}.coin{transform-box:fill-box;transform-origin:center;animation:flip 3.4s ease-in-out infinite}</style>
   </defs>
   <rect x="0.5" y="0.5" width="145" height="39" rx="19.5" fill="url(#g)" stroke="#8B5CF6" stroke-opacity="0.5"/>
   <rect x="2" y="1.5" width="142" height="15" rx="12" fill="#ffffff" opacity="0.05"/>
+  <g class="coin">
   <circle cx="25" cy="20" r="8" fill="#2a2140" stroke="#F97316" stroke-width="1.6"/>
   <text x="25" y="24.5" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="12" font-weight="700" fill="#F97316">$</text>
+  </g>
   <text x="42" y="25.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="15" font-weight="600" fill="#E8E6F5">$miroshark</text>
 </svg>
