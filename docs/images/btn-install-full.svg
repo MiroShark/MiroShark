@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="588" height="46" viewBox="0 0 588 46" role="img" aria-label="Full install — Cloud, Docker, Ollama, Claude Code">
+  <defs>
+    <linearGradient id="dk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#241640"/><stop offset="1" stop-color="#160d2a"/></linearGradient>
+    <linearGradient id="vi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9F7AEA"/><stop offset="1" stop-color="#7C3AED"/></linearGradient>
+    <clipPath id="pill"><rect x="0" y="0" width="588" height="46" rx="23"/></clipPath>
+  </defs>
+  <g clip-path="url(#pill)">
+    <rect x="0" y="0" width="196" height="46" fill="url(#dk)"/>
+    <rect x="196" y="0" width="392" height="46" fill="url(#vi)"/>
+    <rect x="0" y="0" width="588" height="16" fill="#ffffff" opacity="0.10"/>
+  </g>
+  <rect x="0.5" y="0.5" width="587" height="45" rx="22.5" fill="none" stroke="#8B5CF6" stroke-opacity="0.55"/>
+  <g stroke="#CFC9EA" stroke-width="1.9" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M26 13v12"/><path d="M20 20l6 6 6-6"/><path d="M19 31h14"/>
+  </g>
+  <text x="48" y="28.5" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="14.5" font-weight="700" letter-spacing="1.6" fill="#E8E6F5">FULL INSTALL</text>
+  <text x="392" y="28.5" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif" font-size="14.5" font-weight="700" letter-spacing="1.2" fill="#FFFFFF">CLOUD · DOCKER · OLLAMA · CLAUDE CODE</text>
+</svg>
