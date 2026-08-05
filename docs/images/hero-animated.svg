@@ -135,10 +135,10 @@
 
     <!-- labels -->
     <g text-anchor="middle" class="cap" font-size="19" fill="#c9c2e4">
-      <text x="485" y="614">input</text>
-      <text x="695" y="614">build world</text>
-      <text x="905" y="614">swarm</text>
-      <text x="1115" y="614">report</text>
+      <text x="485" y="626">input</text>
+      <text x="695" y="626">build world</text>
+      <text x="905" y="626">swarm</text>
+      <text x="1115" y="626">report</text>
     </g>
 
     <!-- arrows + comet dots -->
