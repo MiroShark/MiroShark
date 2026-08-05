@@ -57,7 +57,7 @@ cp .env.example .env    # paste one OpenRouter key
 ```
 
 <p align="center">
-  <a href="../docs/INSTALL.md"><img src="https://img.shields.io/badge/%F0%9F%93%96%20Full%20install-cloud%20·%20Docker%20·%20Ollama%20·%20Claude%20Code-8B5CF6?style=for-the-badge&labelColor=1a1a2e" alt="Full install guide"></a>
+  <a href="../docs/INSTALL.md"><img src="../docs/images/btn-install-full.svg" alt="Full install — cloud, Docker, Ollama, Claude Code" height="42"></a>
 </p>
 
 <br/><br/>
@@ -80,14 +80,6 @@ cp .env.example .env    # paste one OpenRouter key
 
 <p align="center">
   <img src="../docs/images/agent-grounding-v2.jpg" alt="Five layers of grounding per MiroShark agent: demographic seed, web enrichment, semantic search, relationships, and graph attributes." width="100%" />
-</p>
-
-<br/><br/>
-
-<h2 align="center">Graph memory</h2>
-
-<p align="center">
-  <img src="../docs/images/graph-memory-pipeline-v2.jpg" alt="MiroShark graph-memory pipeline. Ingestion: NER, embed, entity resolution, contradiction check, temporal edges. Retrieval: vector plus BM25 plus BFS, fused and reranked." width="100%" />
 </p>
 
 <br/><br/>
@@ -133,7 +125,10 @@ cp .env.example .env    # paste one OpenRouter key
   <a href="../docs/INSTALL.md"><img src="../docs/images/doc-install.svg" alt="Install" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/CONFIGURATION.md"><img src="../docs/images/doc-config.svg" alt="Configuration" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/MODELS.md"><img src="../docs/images/doc-models.svg" alt="Models" height="30" align="absmiddle"></a>&nbsp;
-  <a href="../docs/ARCHITECTURE.md"><img src="../docs/images/doc-arch.svg" alt="Architecture" height="30" align="absmiddle"></a>&nbsp;
+  <a href="../docs/ARCHITECTURE.md"><img src="../docs/images/doc-arch.svg" alt="Architecture" height="30" align="absmiddle"></a>
+</p>
+
+<p align="center">
   <a href="../docs/API.md"><img src="../docs/images/doc-api.svg" alt="HTTP API" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/CLI.md"><img src="../docs/images/doc-cli.svg" alt="CLI" height="30" align="absmiddle"></a>&nbsp;
   <a href="../docs/MCP.md"><img src="../docs/images/doc-mcp.svg" alt="MCP" height="30" align="absmiddle"></a>&nbsp;
