@@ -6,10 +6,11 @@
 
 <p align="center">
   <strong>Star us&nbsp;❤️&nbsp;→</strong>&nbsp;
-  <a href="https://github.com/MiroShark/MiroShark/stargazers"><img src="https://img.shields.io/github/stars/MiroShark/MiroShark?style=flat-square&logo=github&label=star&color=8B5CF6&labelColor=1a1a2e" alt="Star MiroShark on GitHub"></a> &nbsp;·&nbsp;
-  <a href="https://www.miroshark.xyz/docs"><img src="https://img.shields.io/badge/Docs-miroshark.xyz-8B5CF6?style=flat-square&logo=gitbook&logoColor=white&labelColor=1a1a2e" alt="Documentation"></a> &nbsp;·&nbsp;
-  <a href="https://x.com/miroshark_"><img src="https://img.shields.io/badge/%40miroshark__-black?style=flat-square&logo=x&labelColor=000000" alt="@miroshark_ on X"></a> &nbsp;·&nbsp;
-  <a href="https://bankr.bot/discover/0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3"><img src="https://img.shields.io/badge/%24miroshark-Bankr-F97316?style=flat-square&labelColor=1a1a2e" alt="$miroshark on Bankr"></a>
+  <a href="https://github.com/MiroShark/MiroShark/stargazers"><img src="../docs/images/btn-star.svg" alt="Star MiroShark on GitHub" height="34"></a> &nbsp;·&nbsp;
+  <a href="https://www.miroshark.xyz"><img src="../docs/images/btn-site.svg" alt="miroshark.xyz" height="34"></a> &nbsp;·&nbsp;
+  <a href="https://www.miroshark.xyz/docs"><img src="../docs/images/btn-docs.svg" alt="MiroShark docs" height="34"></a> &nbsp;·&nbsp;
+  <a href="https://x.com/miroshark_"><img src="../docs/images/btn-x.svg" alt="@miroshark_ on X" height="34"></a> &nbsp;·&nbsp;
+  <a href="https://bankr.bot/discover/0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3"><img src="../docs/images/btn-bankr.svg" alt="$miroshark on Bankr" height="34"></a>
 </p>
 
 <p align="center">
@@ -137,8 +138,6 @@ cp .env.example .env    # paste one OpenRouter key
   <a href="../docs/CLI.md"><img src="https://img.shields.io/badge/CLI-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="CLI"></a>
   <a href="../docs/MCP.md"><img src="https://img.shields.io/badge/MCP-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="MCP"></a>
   <a href="../docs/WEBHOOKS.md"><img src="https://img.shields.io/badge/Webhooks-8B5CF6?style=flat-square&labelColor=1a1a2e" alt="Webhooks"></a>
-  <a href="../docs/DKG.md"><img src="https://img.shields.io/badge/DKG%20citation-F97316?style=flat-square&labelColor=1a1a2e" alt="DKG citation"></a>
-  <a href="../docs/WAYBACKCLAW.md"><img src="https://img.shields.io/badge/WaybackClaw-F97316?style=flat-square&labelColor=1a1a2e" alt="WaybackClaw archive"></a>
   <a href="../ECOSYSTEM.md"><img src="https://img.shields.io/badge/Ecosystem-16A534?style=flat-square&labelColor=1a1a2e" alt="Ecosystem"></a>
 </p>
 
@@ -159,6 +158,25 @@ cp .env.example .env    # paste one OpenRouter key
     </td>
   </tr>
 </table>
+
+<br/><br/>
+
+<h2 align="center">We love <em>contributors</em></h2>
+
+<p align="center">
+  <img src="../docs/images/we-love-contributors.jpg" alt="We love contributors — every bug fix, new agent, and doc tweak makes MiroShark better. Big PRs and small ones, both welcome." width="100%" />
+</p>
+
+<p align="center">
+  <b>We're excited to meet you.</b><br/>
+  Every bug fix, new agent, or doc tweak makes MiroShark better. Big PRs and small ones, both welcome.
+</p>
+
+<p align="center">
+  📝 <a href="CONTRIBUTING.md"><b>Contributing guide</b></a> &nbsp;·&nbsp;
+  🐛 <a href="https://github.com/MiroShark/MiroShark/labels/good%20first%20issue"><b>good first issues</b></a> &nbsp;·&nbsp;
+  💬 <a href="https://x.com/miroshark_"><b>Say hi on X</b></a>
+</p>
 
 <br/><br/>
 
