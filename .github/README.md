@@ -16,6 +16,9 @@
 <p align="center">
   <b>$1</b> · per simulation &nbsp;·&nbsp; <b>10 min</b> · first result &nbsp;·&nbsp; <b>100+</b> · grounded agents
 </p>
+<p align="center">
+  <b>Grounded</b> · real personas &nbsp;·&nbsp; <b>Cross-platform</b> · X, Reddit, markets &nbsp;·&nbsp; <b>Cited</b> · real posts &amp; trades
+</p>
 
 <div align="center">
 
