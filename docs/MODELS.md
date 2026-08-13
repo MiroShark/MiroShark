@@ -44,6 +44,21 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 Either field can be omitted — a blank `WONDERWALL_BASE_URL` reuses `LLM_BASE_URL`, a blank `WONDERWALL_API_KEY` reuses `LLM_API_KEY`. Useful for routing the 850+ agent-action calls per run to a vLLM / Modal / Ollama-on-a-server deployment while keeping the report and graph-build slots on a hosted provider.
 
+### OrcaRouter preset
+
+[OrcaRouter](https://www.orcarouter.ai) is an OpenAI-compatible gateway with namespaced model IDs — one key covers every slot plus embeddings, and you can mix vendors per slot (e.g. Anthropic for the report slot, OpenAI for the high-volume sim loop). A ready-made block ships in [`.env.example`](../.env.example) and `docs/INSTALL.md` → [Option A.4](INSTALL.md#option-a4-orcarouter). All models below were verified live against the OrcaRouter API.
+
+| Slot | Model | Notes |
+|---|---|---|
+| Default | `openai/gpt-5.5` | Persona generation, sim config, memory compaction |
+| Smart | `anthropic/claude-sonnet-5` | Report ReACT loop; OrcaRouter accepts Anthropic `cache_control` blocks |
+| NER | `google/gemini-3.5-flash` | Deterministic JSON with no hidden CoT |
+| Wonderwall | `openai/gpt-4o-mini` | 850+ agent-action calls/run; keep verbosity low |
+
+Embeddings use `openai/text-embedding-3-large` at `https://api.orcarouter.ai` (truncated to 768 dims via Matryoshka — OrcaRouter honors the `dimensions` param). OrcaRouter has no `:online` web-search variants — leave `WEB_SEARCH_MODEL=` blank and use `MIROSHARK_SEARXNG_BASE_URL` for web enrichment, or the default model is used as a fallback.
+
+> **Latency note** — the OpenRouter-only `reasoning: {enabled: false}` injection does not apply to OrcaRouter base URLs, so keep the high-volume slots on the fast picks above (Wonderwall → `openai/gpt-4o-mini`, Default → `openai/gpt-5.5`).
+
 ## Local mode (Ollama)
 
 > **Context override required.** Ollama defaults to 4096 tokens, but MiroShark prompts need 10–30k. Create a custom Modelfile:

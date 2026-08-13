@@ -11,6 +11,7 @@
 | [云端 API — OpenRouter](#方案-a1openrouter) | 否 | 一把密钥覆盖所有槽位与嵌入 |
 | [云端 API — OpenAI](#方案-a2openai) | 否 | 已有 OpenAI 密钥 |
 | [云端 API — Anthropic](#方案-a3anthropic) | 否 | 已有 Anthropic 密钥 |
+| [云端 API — OrcaRouter](#方案-a4orcarouter) | 否 | 一把密钥覆盖所有槽位与嵌入 |
 | [Docker + Ollama](#方案-bdocker--本地-ollama) | 是 | 完全自部署,一行命令 |
 | [手动 + Ollama](#方案-c手动--本地-ollama) | 是 | 完全自部署,手动控制 |
 | [Claude Code CLI](#方案-dclaude-code无需-api-密钥) | 否 | 使用你的 Claude Pro/Max 订阅 |
@@ -118,10 +119,10 @@ cp .env.example .env
 
 ## 方案 A: 云端 API(无需 GPU)
 
-只有 Neo4j 跑在本地。LLM 与嵌入都走云端提供商。下面三个口味 — 选一个匹配你已有密钥的。
+只有 Neo4j 跑在本地。LLM 与嵌入都走云端提供商。下面四个口味 — 选一个匹配你已有密钥的。
 
 ```bash
-# 三个口味通用的准备步骤
+# 四个口味通用的准备步骤
 brew install neo4j       # macOS  (Linux: sudo apt install neo4j)
 cp .env.example .env
 ```
@@ -219,7 +220,43 @@ EMBEDDING_DIMENSIONS=768
 
 > 提示词缓存(`LLM_PROMPT_CACHING_ENABLED=true`)在这条路径上收益最大 — ReACT 报告循环会在多轮迭代之间复用同一个系统提示词,所以缓存能显著降低 Sonnet 账单。
 
-### 方案 A.4:为 Wonderwall 配置自定义端点
+### 方案 A.4:OrcaRouter
+
+一把密钥覆盖所有槽位,包括嵌入。[OrcaRouter](https://www.orcarouter.ai) 是一个 OpenAI 兼容网关,模型 ID 带命名空间(`openai/…`、`anthropic/…`、`google/…`、`deepseek/…`),一个目录覆盖 190+ 模型 — 所以你可以按槽位混搭厂商(比如 smart/报告槽位用 Anthropic,高频模拟循环用 OpenAI)。下面所有模型都已在 OrcaRouter API 上实测可用。
+
+```bash
+LLM_API_KEY=sk-orca-YOUR_KEY
+LLM_BASE_URL=https://api.orcarouter.ai/v1
+LLM_MODEL_NAME=openai/gpt-5.5
+
+SMART_PROVIDER=openai
+SMART_API_KEY=sk-orca-YOUR_KEY
+SMART_BASE_URL=https://api.orcarouter.ai/v1
+SMART_MODEL_NAME=anthropic/claude-sonnet-5
+
+NER_MODEL_NAME=google/gemini-3.5-flash
+NER_BASE_URL=https://api.orcarouter.ai/v1
+NER_API_KEY=sk-orca-YOUR_KEY
+
+WONDERWALL_MODEL_NAME=openai/gpt-4o-mini
+
+# OrcaRouter 没有 ":online" 网络检索变体 — 留空并使用 SearXNG
+# (MIROSHARK_SEARXNG_BASE_URL) 做网络增强,或回退到默认模型。
+WEB_SEARCH_MODEL=
+
+OPENAI_API_KEY=sk-orca-YOUR_KEY
+OPENAI_API_BASE_URL=https://api.orcarouter.ai/v1
+
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=openai/text-embedding-3-large
+EMBEDDING_BASE_URL=https://api.orcarouter.ai
+EMBEDDING_API_KEY=sk-orca-YOUR_KEY
+EMBEDDING_DIMENSIONS=768
+```
+
+注意嵌入基址是 `https://api.orcarouter.ai` — 不带 `/v1` — 因为 MiroShark 会自己拼上 `/v1/embeddings`(与上面 OpenRouter 的布局一致)。提示词缓存在这里同样生效:OrcaRouter 接受 `anthropic/claude-sonnet-5` smart 模型上的 Anthropic 风格 `cache_control` 块。
+
+### 方案 A.5:为 Wonderwall 配置自定义端点
 
 Wonderwall 槽位(每个智能体的模拟循环,每次运行约 850–1650 次调用)允许独立的端点覆盖,这样你可以把高频调用路由到自部署的 vLLM、Modal/Replicate 部署、微调模型,或另一台主机上的 Ollama —— 同时把图谱构建、报告和 NER 留在托管提供商上。
 
