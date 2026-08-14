@@ -52,7 +52,7 @@ Either field can be omitted — a blank `WONDERWALL_BASE_URL` reuses `LLM_BASE_U
 |---|---|---|
 | Default | `openai/gpt-5.5` | Persona generation, sim config, memory compaction |
 | Smart | `anthropic/claude-sonnet-5` | Report ReACT loop; OrcaRouter accepts Anthropic `cache_control` blocks |
-| NER | `google/gemini-3.5-flash` | Deterministic JSON with no hidden CoT |
+| NER | `google/gemini-3.5-flash` | Deterministic JSON; reasoning is not force-disabled on OrcaRouter, so `LLMClient` strips any `<think>` blocks client-side |
 | Wonderwall | `openai/gpt-4o-mini` | 850+ agent-action calls/run; keep verbosity low |
 
 Embeddings use `openai/text-embedding-3-large` at `https://api.orcarouter.ai` (truncated to 768 dims via Matryoshka — OrcaRouter honors the `dimensions` param). OrcaRouter has no `:online` web-search variants — leave `WEB_SEARCH_MODEL=` blank and use `MIROSHARK_SEARXNG_BASE_URL` for web enrichment, or the default model is used as a fallback.

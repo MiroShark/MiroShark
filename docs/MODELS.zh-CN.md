@@ -52,7 +52,7 @@ WONDERWALL_MODEL_NAME=your-model-id
 |---|---|---|
 | Default | `openai/gpt-5.5` | 画像生成、模拟配置、记忆压缩 |
 | Smart | `anthropic/claude-sonnet-5` | 报告 ReACT 循环;OrcaRouter 接受 Anthropic 风格的 `cache_control` 块 |
-| NER | `google/gemini-3.5-flash` | 确定性 JSON,无隐藏 CoT |
+| NER | `google/gemini-3.5-flash` | 确定性 JSON;OrcaRouter 上不强制关闭 reasoning,因此 `LLMClient` 会在客户端剥离任何 `<think>` 块 |
 | Wonderwall | `openai/gpt-4o-mini` | 每次运行 850+ 次智能体动作调用;保持低冗长度 |
 
 嵌入用 `openai/text-embedding-3-large`(基址 `https://api.orcarouter.ai`,通过 Matryoshka 截断到 768 维 — OrcaRouter 支持 `dimensions` 参数)。OrcaRouter 没有 `:online` 网络检索变体 — 把 `WEB_SEARCH_MODEL=` 留空并配置 `MIROSHARK_SEARXNG_BASE_URL` 做网络增强,或回退到默认模型。
