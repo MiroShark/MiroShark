@@ -44,6 +44,21 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 任意一个字段都可以省略 — `WONDERWALL_BASE_URL` 留空则复用 `LLM_BASE_URL`,`WONDERWALL_API_KEY` 留空则复用 `LLM_API_KEY`。适合把每次运行 850+ 次智能体动作调用路由到 vLLM / Modal / 服务器上的 Ollama 部署,同时把报告和图谱构建槽位留在托管提供商上。
 
+### OrcaRouter 预设
+
+[OrcaRouter](https://www.orcarouter.ai) 是一个 OpenAI 兼容网关,模型 ID 带命名空间 — 一把密钥覆盖所有槽位与嵌入,还能按槽位混搭厂商(比如报告槽位用 Anthropic,高频模拟循环用 OpenAI)。现成配置块已随 [`.env.example`](../.env.example) 与 `docs/INSTALL.md` → [方案 A.4](INSTALL.zh-CN.md#方案-a4orcarouter) 提供。下面所有模型都已在 OrcaRouter API 上实测可用。
+
+| 槽位 | 模型 | 备注 |
+|---|---|---|
+| Default | `openai/gpt-5.5` | 画像生成、模拟配置、记忆压缩 |
+| Smart | `anthropic/claude-sonnet-5` | 报告 ReACT 循环;OrcaRouter 接受 Anthropic 风格的 `cache_control` 块 |
+| NER | `google/gemini-3.5-flash` | 确定性 JSON;OrcaRouter 上不强制关闭 reasoning,因此 `LLMClient` 会在客户端剥离任何 `<think>` 块 |
+| Wonderwall | `openai/gpt-4o-mini` | 每次运行 850+ 次智能体动作调用;保持低冗长度 |
+
+嵌入用 `openai/text-embedding-3-large`(基址 `https://api.orcarouter.ai`,通过 Matryoshka 截断到 768 维 — OrcaRouter 支持 `dimensions` 参数)。OrcaRouter 没有 `:online` 网络检索变体 — 把 `WEB_SEARCH_MODEL=` 留空并配置 `MIROSHARK_SEARXNG_BASE_URL` 做网络增强,或回退到默认模型。
+
+> **延迟提示** — OpenRouter 专属的 `reasoning: {enabled: false}` 注入对 OrcaRouter 基址不生效,所以高频槽位请保持上面的快速选择(Wonderwall → `openai/gpt-4o-mini`,Default → `openai/gpt-5.5`)。
+
 ## 本地模式(Ollama)
 
 > **必须覆盖上下文长度。** Ollama 默认是 4096 tokens,但 MiroShark 的提示词需要 10–30k。创建一个自定义 Modelfile:

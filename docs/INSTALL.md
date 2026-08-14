@@ -11,6 +11,7 @@ Pick one of the paths below.
 | [Cloud API — OpenRouter](#option-a1-openrouter) | No | One key covers every slot + embeddings |
 | [Cloud API — OpenAI](#option-a2-openai) | No | You already have an OpenAI key |
 | [Cloud API — Anthropic](#option-a3-anthropic) | No | You already have an Anthropic key |
+| [Cloud API — OrcaRouter](#option-a4-orcarouter) | No | One key covers every slot + embeddings |
 | [Docker + Ollama](#option-b-docker--local-ollama) | Yes | Fully self-hosted, one command |
 | [Manual + Ollama](#option-c-manual--local-ollama) | Yes | Fully self-hosted, manual control |
 | [Claude Code CLI](#option-d-claude-code-no-api-key) | No | Uses your Claude Pro/Max subscription |
@@ -118,10 +119,10 @@ Open `http://localhost:3000`. First simulation in ~10 min, ~$1. See [Models](MOD
 
 ## Option A: Cloud API (no GPU)
 
-Only Neo4j runs locally. LLM and embeddings use a cloud provider. Three flavours below — pick the one that matches the key you already have.
+Only Neo4j runs locally. LLM and embeddings use a cloud provider. Four flavours below — pick the one that matches the key you already have.
 
 ```bash
-# Common prep for all three flavours
+# Common prep for all four flavours
 brew install neo4j       # macOS  (Linux: sudo apt install neo4j)
 cp .env.example .env
 ```
@@ -219,7 +220,44 @@ EMBEDDING_DIMENSIONS=768
 
 > Prompt caching (`LLM_PROMPT_CACHING_ENABLED=true`) hits its sweet spot here — the ReACT report loop reuses the same system prompt across iterations, so caching meaningfully reduces the Sonnet bill.
 
-### Option A.4: Custom endpoint for Wonderwall
+### Option A.4: OrcaRouter
+
+One key covers every slot, including embeddings. [OrcaRouter](https://www.orcarouter.ai) is an OpenAI-compatible gateway with namespaced model IDs (`openai/…`, `anthropic/…`, `google/…`, `deepseek/…`) covering 190+ models in one catalog — so you can mix vendors per slot (e.g. Anthropic for the smart/report slot, OpenAI for the high-volume simulation loop). All models below were verified live against the OrcaRouter API.
+
+```bash
+LLM_API_KEY=sk-orca-YOUR_KEY
+LLM_BASE_URL=https://api.orcarouter.ai/v1
+LLM_MODEL_NAME=openai/gpt-5.5
+
+SMART_PROVIDER=openai
+SMART_API_KEY=sk-orca-YOUR_KEY
+SMART_BASE_URL=https://api.orcarouter.ai/v1
+SMART_MODEL_NAME=anthropic/claude-sonnet-5
+
+NER_MODEL_NAME=google/gemini-3.5-flash
+NER_BASE_URL=https://api.orcarouter.ai/v1
+NER_API_KEY=sk-orca-YOUR_KEY
+
+WONDERWALL_MODEL_NAME=openai/gpt-4o-mini
+
+# OrcaRouter has no ":online" web-search variants — leave blank and use
+# SearXNG (MIROSHARK_SEARXNG_BASE_URL) for web enrichment, or the default
+# model is used as a fallback.
+WEB_SEARCH_MODEL=
+
+OPENAI_API_KEY=sk-orca-YOUR_KEY
+OPENAI_API_BASE_URL=https://api.orcarouter.ai/v1
+
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=openai/text-embedding-3-large
+EMBEDDING_BASE_URL=https://api.orcarouter.ai
+EMBEDDING_API_KEY=sk-orca-YOUR_KEY
+EMBEDDING_DIMENSIONS=768
+```
+
+Note the embeddings base URL is `https://api.orcarouter.ai` — without `/v1` — because MiroShark appends `/v1/embeddings` itself (matching the OpenRouter layout above). Prompt caching also works here: OrcaRouter accepts Anthropic-style `cache_control` blocks on the `anthropic/claude-sonnet-5` smart model.
+
+### Option A.5: Custom endpoint for Wonderwall
 
 The Wonderwall slot (the per-agent simulation loop, ~850–1650 calls/run) accepts an independent endpoint override so you can route the volume hits to a self-hosted vLLM, Modal/Replicate deployment, fine-tuned model, or Ollama on a different host — while keeping graph build, reports, and NER on a hosted provider.
 
