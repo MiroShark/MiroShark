@@ -13,6 +13,9 @@ flask-compress>=1.17
 # ============= LLM Related =============
 # OpenAI SDK (unified LLM calls using OpenAI format)
 openai>=1.0.0
+# HTTP client used directly by oracle_seed.py. openai 3.0 switched its own
+# transitive dep to httpx2, so pin classic httpx explicitly (matches camel-ai/mcp).
+httpx>=0.28,<1.0
 
 # ============= Neo4j =============
 neo4j>=5.26.0
