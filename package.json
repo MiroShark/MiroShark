@@ -13,7 +13,7 @@
     "build": "cd frontend && npm run build"
   },
   "devDependencies": {
-    "concurrently": "^10.0.4"
+    "concurrently": "^10.0.5"
   },
   "overrides": {
     "shell-quote@<1.9.0": "^1.9.0"
