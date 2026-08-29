@@ -178,3 +178,7 @@ cp .env.example .env    # paste one OpenRouter key
 <br/><br/>
 
 <p align="center"><sub>AGPL-3.0 · Support the project: <code>0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3</code> 🦈</sub></p>
+
+---
+
+Built by [Aaron Elijah Mars](https://aaronjmars.com), founder of Aeon and MiroShark · [@aaronjmars](https://github.com/aaronjmars)
