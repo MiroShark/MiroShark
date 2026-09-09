@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from ..models.task import TaskManager
 from ..storage import GraphStorage
 from ..utils.event_logger import EventLogger
+from ..utils.i18n import get_active_locale, use_locale
 from ..utils.trace_context import TraceContext
 
 logger = logging.getLogger('miroshark.graph_builder')
@@ -70,6 +71,8 @@ class GraphBuilderService:
 
         logger.info(f"[graph_build] Starting: {total_chunks} chunks, {max_workers} concurrent workers")
 
+        _locale = get_active_locale()  # ThreadPoolExecutor doesn't inherit ContextVar
+
         def _process_chunk(chunk_idx: int, chunk: str) -> str:
             chunk_preview = chunk[:80].replace('\n', ' ')
             logger.info(
@@ -77,7 +80,8 @@ class GraphBuilderService:
                 f"({len(chunk)} chars): \"{chunk_preview}...\""
             )
             t0 = time.time()
-            episode_id = self.storage.add_text(graph_id, chunk)
+            with use_locale(_locale):
+                episode_id = self.storage.add_text(graph_id, chunk)
             elapsed = time.time() - t0
             logger.info(
                 f"[graph_build] Chunk {chunk_idx}/{total_chunks} done in {elapsed:.1f}s"
