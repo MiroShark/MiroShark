@@ -27,6 +27,7 @@
 [![license](https://img.shields.io/badge/license-AGPL--3.0-8B5CF6?style=flat-square)](../LICENSE)
 [![python](https://img.shields.io/badge/python-3.11+-3572A5?style=flat-square)](https://www.python.org/)
 [![node](https://img.shields.io/badge/node-18+-16A534?style=flat-square)](https://nodejs.org/)
+[![dataset](https://img.shields.io/badge/dataset-social--prediction--market--sim-FFD21E?style=flat-square&logo=huggingface&logoColor=black)](https://huggingface.co/datasets/MiroShark/social-prediction-market-sim)
 
 </div>
 
