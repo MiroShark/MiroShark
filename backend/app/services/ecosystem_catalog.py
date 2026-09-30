@@ -39,7 +39,8 @@ Design notes
 
 * **Five categories.** ``product`` (a public-facing app or service
   built on MiroShark — Echo Oracle, RootAI, Xerg, ZER0, Capacitr,
-  HivemindOS), ``tool`` (operator-facing utilities — Crucible Sim),
+  HivemindOS), ``tool`` (operator-facing utilities — Crucible Sim,
+  x402aff),
   ``integration`` (services that wire MiroShark into another system
   — Monitor), ``agent`` (autonomous bots running MiroShark sims —
   Blue Agent), ``benchmark`` (test / evaluation
@@ -179,6 +180,14 @@ _CATALOG: List[Dict[str, Any]] = [
         "category": "integration",
         "x_handle": "sparklewarefun",
         "repo": None,
+    },
+    {
+        "name": "x402aff",
+        "url": "https://www.x402aff.xyz",
+        "description": "Open-source builder-code affiliation kit behind MiroShark's x402 API: on-chain affiliate splits for any x402 seller.",
+        "category": "tool",
+        "x_handle": None,
+        "repo": "https://github.com/MiroShark/x402aff",
     },
     {
         "name": "Xerg",
