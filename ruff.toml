@@ -1,0 +1,8 @@
+# Python lint for the whole repo (backend/ and scripts/).
+# Only rules that catch real bugs for now: syntax errors, undefined names,
+# unused imports and unused variables. Formatting is not enforced.
+target-version = "py311"
+extend-exclude = ["frontend"]
+
+[lint]
+select = ["E9", "F63", "F7", "F82", "F401", "F841"]

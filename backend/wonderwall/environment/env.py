@@ -17,7 +17,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime
-from typing import List, Union
+from typing import TYPE_CHECKING, List, Union
 
 from wonderwall.environment.env_action import LLMAction, ManualAction
 from wonderwall.social_agent.agent import SocialAgent
@@ -27,6 +27,9 @@ from wonderwall.social_platform.channel import Channel
 from wonderwall.social_platform.platform import Platform
 from wonderwall.social_platform.typing import (ActionType, DefaultPlatformType,
                                           RecsysType)
+
+if TYPE_CHECKING:
+    from wonderwall.simulations.base import BasePlatform, SimulationConfig
 
 # Create log directory if it doesn't exist
 log_dir = "./log"
