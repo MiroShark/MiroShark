@@ -42,7 +42,6 @@ import re
 import sys
 import os
 import glob
-import ast
 from collections import defaultdict
 
 ROOT = r"frontend/src"
@@ -140,7 +139,6 @@ def scan(frontend_root):
         for m in pattern.finditer(text):
             op_idx = m.end() - 1
             end_idx = find_call_end(text, op_idx)
-            call_text = text[op_idx - 2 : end_idx] if op_idx >= 2 else text[op_idx:end_idx]
             line = text.count("\n", 0, op_idx) + 1
             parsed = parse_tr_call(text[op_idx:end_idx])
             if not parsed:

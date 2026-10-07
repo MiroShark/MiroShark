@@ -127,3 +127,22 @@ jobs:
       - name: Run camel agent smoke test
         run: pytest tests/test_smoke_camel_agent.py -v
 
+
+  lint:
+    name: Python lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+
+      # Rules live in ruff.toml at the repo root (bug-catching rules only,
+      # no formatting). Pinned so a new ruff release can't turn CI red.
+      - name: Install ruff
+        run: pip install ruff==0.15.11
+
+      - name: Run ruff
+        run: ruff check .
