@@ -195,18 +195,18 @@ EMBEDDING_DIMENSIONS=768                  # OpenAI truncates to this via the dim
 ```bash
 LLM_API_KEY=sk-ant-YOUR_KEY
 LLM_BASE_URL=https://api.anthropic.com/v1/
-LLM_MODEL_NAME=claude-haiku-4-5
+LLM_MODEL_NAME=claude-haiku-5-5
 
 SMART_PROVIDER=openai
 SMART_API_KEY=sk-ant-YOUR_KEY
 SMART_BASE_URL=https://api.anthropic.com/v1/
 SMART_MODEL_NAME=claude-sonnet-4-6
 
-NER_MODEL_NAME=claude-haiku-4-5
+NER_MODEL_NAME=claude-haiku-5-5
 NER_BASE_URL=https://api.anthropic.com/v1/
 NER_API_KEY=sk-ant-YOUR_KEY
 
-WONDERWALL_MODEL_NAME=claude-haiku-4-5
+WONDERWALL_MODEL_NAME=claude-haiku-5-5
 
 OPENAI_API_KEY=sk-ant-YOUR_KEY
 OPENAI_API_BASE_URL=https://api.anthropic.com/v1/
