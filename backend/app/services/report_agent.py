@@ -2866,7 +2866,9 @@ class ReportAgent:
         # Get generated report content
         report_content = ""
         try:
-            report = ReportManager.get_report_by_simulation(self.simulation_id)
+            report = ReportManager.get_report_by_simulation(
+                self.simulation_id, prefer_completed=True
+            )
             if report and report.markdown_content:
                 # Limit report length to avoid excessive context
                 report_content = report.markdown_content[:15000]
@@ -3549,26 +3551,63 @@ class ReportManager:
             error=data.get('error')
         )
     
+    @staticmethod
+    def _created_at_sort_key(report: Report) -> str:
+        """Newest-first sort key. A missing or non-string created_at sorts
+        as oldest instead of raising."""
+        created_at = report.created_at
+        return created_at if isinstance(created_at, str) else ""
+
     @classmethod
-    def get_report_by_simulation(cls, simulation_id: str) -> Optional[Report]:
-        """Get report by simulation ID"""
+    def get_report_by_simulation(
+        cls, simulation_id: str, prefer_completed: bool = False
+    ) -> Optional[Report]:
+        """Get the newest report for a simulation.
+
+        A simulation can own several reports (force_regenerate writes a new
+        folder and keeps the old one), so this returns the one with the
+        latest created_at, the same order list_reports uses. Without this
+        the result depended on os.listdir order, so an old report could
+        shadow a newer one.
+
+        With prefer_completed=True the newest COMPLETED report wins, and the
+        newest report of any status is returned only when none has
+        completed. Use it for callers that need finished content (report
+        chat, the generate skip-if-exists check).
+        """
         cls._ensure_reports_dir()
-        
+
+        matches: List[Report] = []
         for item in os.listdir(cls.REPORTS_DIR):
             item_path = os.path.join(cls.REPORTS_DIR, item)
             # New format: folder
             if os.path.isdir(item_path):
-                report = cls.get_report(item)
-                if report and report.simulation_id == simulation_id:
-                    return report
+                report_id = item
             # Backward compatibility: JSON file
             elif item.endswith('.json'):
                 report_id = item[:-5]
+            else:
+                continue
+            try:
                 report = cls.get_report(report_id)
-                if report and report.simulation_id == simulation_id:
-                    return report
-        
-        return None
+            except Exception as e:
+                # A meta.json being rewritten by a running generation, or a
+                # corrupt one, must not hide the other reports.
+                logger.warning(f"Skipping unreadable report {report_id}: {e}")
+                continue
+            if report and report.simulation_id == simulation_id:
+                matches.append(report)
+
+        if not matches:
+            return None
+
+        if prefer_completed:
+            completed = [r for r in matches if r.status == ReportStatus.COMPLETED]
+            if completed:
+                matches = completed
+
+        # report_id breaks created_at ties so the result is deterministic.
+        return max(matches, key=lambda r: (cls._created_at_sort_key(r), r.report_id))
     
     @classmethod
     def list_reports(cls, simulation_id: Optional[str] = None, limit: int = 50) -> List[Report]:
