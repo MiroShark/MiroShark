@@ -16,7 +16,7 @@
     "concurrently": "^10.0.5"
   },
   "overrides": {
-    "shell-quote@<1.9.0": "^1.9.0"
+    "shell-quote@<1.11.0": "^1.11.0"
   },
   "engines": {
     "node": ">=22.0.0"
