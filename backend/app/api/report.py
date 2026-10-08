@@ -87,9 +87,12 @@ def generate_report():
                 "error": _t(f"Simulation not found: {simulation_id}", f"未找到模拟:{simulation_id}", locale)
             }), 404
 
-        # Check if a report already exists
+        # Check if a report already exists. prefer_completed so a newer
+        # failed or in-progress report does not hide an older finished one.
         if not force_regenerate:
-            existing_report = ReportManager.get_report_by_simulation(simulation_id)
+            existing_report = ReportManager.get_report_by_simulation(
+                simulation_id, prefer_completed=True
+            )
             if existing_report and existing_report.status == ReportStatus.COMPLETED:
                 return jsonify({
                     "success": True,
