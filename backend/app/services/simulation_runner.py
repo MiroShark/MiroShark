@@ -200,6 +200,22 @@ class SimulationRunner:
         
         cls._run_states[state.simulation_id] = state
     
+    @staticmethod
+    def _seed_resumed_progress(
+        state: SimulationRunState,
+        previous: Optional[SimulationRunState],
+        start_round: int,
+    ) -> None:
+        """Seed a fresh run state with the progress of the run being resumed."""
+        state.current_round = start_round
+        if previous is None:
+            return
+        state.simulated_hours = previous.simulated_hours
+        for platform in ("twitter", "reddit", "polymarket"):
+            for suffix in ("current_round", "simulated_hours", "actions_count"):
+                attr = f"{platform}_{suffix}"
+                setattr(state, attr, getattr(previous, attr))
+
     @classmethod
     def start_simulation(
         cls,
@@ -272,7 +288,13 @@ class SimulationRunner:
             total_simulation_hours=total_hours,
             started_at=datetime.now().isoformat(),
         )
-        
+
+        # On resume, carry the prior progress into the new state so a resume
+        # that dies before its first round does not save current_round=0
+        # (which would turn the next start into a fresh run that wipes the DBs).
+        if start_round > 0:
+            cls._seed_resumed_progress(state, existing, start_round)
+
         cls._save_run_state(state)
         
         # If graph memory update is enabled, create updater

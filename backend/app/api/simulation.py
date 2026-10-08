@@ -3183,6 +3183,17 @@ def start_simulation():
             if existing_state and existing_state.current_round > 0:
                 start_round = existing_state.current_round
                 logger.info(f"Resuming simulation {simulation_id} from round {start_round}")
+            else:
+                # Refuse rather than silently falling back to a fresh start:
+                # start_round=0 makes the run scripts delete the platform DBs.
+                return jsonify({
+                    "success": False,
+                    "error": _t(
+                        "Nothing to resume: no completed rounds found for this simulation. Use Restart to run it from scratch.",
+                        "无法继续:此模拟没有已完成的轮次。请使用重启从头运行。",
+                        locale,
+                    )
+                }), 409
 
         # Validate max_rounds parameter
         if max_rounds is not None:
