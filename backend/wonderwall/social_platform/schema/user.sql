@@ -1,5 +1,5 @@
 -- This is the schema definition for the user table
-CREATE TABLE user (
+CREATE TABLE IF NOT EXISTS user (
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     agent_id INTEGER,
     user_name TEXT,

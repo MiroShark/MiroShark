@@ -523,7 +523,7 @@ paths:
                     resume:
                       type: boolean
                       default: false
-                      description: Resume from the last completed round if a run_state exists.
+                      description: Resume from the last completed round. Returns 409 when no completed rounds are recorded.
       responses:
         "200":
           description: Subprocess started.
@@ -545,6 +545,11 @@ paths:
                           started_at: { type: string, format: date-time }
                           graph_memory_update_enabled: { type: boolean }
                           force_restarted: { type: boolean }
+        "409":
+          description: resume=true but no completed rounds were found to resume from.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ErrorEnvelope" }
 
   /api/simulation/stop:
     post:
