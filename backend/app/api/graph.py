@@ -486,13 +486,31 @@ def build_graph():
                     progress=95
                 )
                 graph_data = builder.get_graph_data(graph_id)
-                
+
+                node_count = graph_data.get("node_count", 0)
+                edge_count = graph_data.get("edge_count", 0)
+
+                # An empty graph means NER extracted nothing (e.g. every
+                # chunk's LLM call failed). Fail loudly here instead of
+                # reporting success and letting prepare stall later.
+                if node_count == 0:
+                    error_msg = "0 entities extracted - check LLM/NER config and logs"
+                    build_logger.error(f"[{task_id}] Graph build failed: graph_id={graph_id}, {error_msg}")
+                    project.status = ProjectStatus.FAILED
+                    project.error = error_msg
+                    ProjectManager.save_project(project)
+                    task_manager.update_task(
+                        task_id,
+                        status=TaskStatus.FAILED,
+                        message=f"Build failed: {error_msg}",
+                        error=error_msg
+                    )
+                    return
+
                 # Update project status
                 project.status = ProjectStatus.GRAPH_COMPLETED
                 ProjectManager.save_project(project)
-                
-                node_count = graph_data.get("node_count", 0)
-                edge_count = graph_data.get("edge_count", 0)
+
                 build_logger.info(f"[{task_id}] Graph build complete: graph_id={graph_id}, nodes={node_count}, edges={edge_count}")
                 
                 # Complete

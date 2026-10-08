@@ -184,7 +184,8 @@ class ClaudeCodeClient:
         self,
         messages: List[Dict[str, str]],
         temperature: float = 0.3,
-        max_tokens: int = 4096
+        max_tokens: int = 4096,
+        repair_truncated: bool = False
     ) -> Dict[str, Any]:
         """
         Send a chat request and return parsed JSON.
@@ -193,6 +194,9 @@ class ClaudeCodeClient:
             messages: List of messages
             temperature: Ignored
             max_tokens: Max tokens for response
+            repair_truncated: When True, attempt a best-effort salvage of a
+                malformed/truncated response before giving up. Mirrors
+                LLMClient.chat_json so callers can pass it to either client.
 
         Returns:
             Parsed JSON object
@@ -212,4 +216,10 @@ class ClaudeCodeClient:
         try:
             return json.loads(cleaned)
         except json.JSONDecodeError:
+            if repair_truncated:
+                from .json_repair import repair_json
+                try:
+                    return repair_json(cleaned)
+                except ValueError:
+                    pass
             raise ValueError(f"Invalid JSON from Claude Code: {cleaned[:200]}")
