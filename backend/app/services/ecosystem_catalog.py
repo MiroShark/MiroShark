@@ -159,7 +159,7 @@ _CATALOG: List[Dict[str, Any]] = [
     },
     {
         "name": "RootAI",
-        "url": "https://rootai.wtf",
+        "url": "https://x.com/Root_Edge",
         "description": "Edge-AI product built on MiroShark agent-debate primitives.",
         "category": "product",
         "x_handle": "Root_Edge",
