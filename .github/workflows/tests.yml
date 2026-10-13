@@ -39,6 +39,10 @@ jobs:
       # The full ``requirements.txt`` pulls in torch/transformers etc., which
       # are not required for the offline unit tests and slow CI cold-start.
       - name: Install unit-test dependencies
+        # Compile .pyc at install like pip does, else the first imports in the
+        # tests pay for it.
+        env:
+          UV_COMPILE_BYTECODE: "1"
         run: |
           uv pip install --system --no-config \
             "pytest>=8.0.0" \
@@ -136,6 +140,10 @@ jobs:
       # breaks the agent loop (see #181) then fails here instead of silently
       # shipping a simulation that produces zero actions.
       - name: Install camel + wonderwall runtime deps
+        # Compile .pyc at install like pip does, else the first imports in the
+        # tests pay for it.
+        env:
+          UV_COMPILE_BYTECODE: "1"
         # torch goes in first, alone, from the CPU-only index; the later installs
         # see it already satisfied and keep it (no CUDA wheels from PyPI).
         # --no-config: skip pyproject's [tool.uv] overrides (pillow, tiktoken), so
