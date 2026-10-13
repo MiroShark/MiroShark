@@ -40,7 +40,7 @@ jobs:
       # are not required for the offline unit tests and slow CI cold-start.
       - name: Install unit-test dependencies
         run: |
-          uv pip install --system \
+          uv pip install --system --no-config \
             "pytest>=8.0.0" \
             pyyaml \
             "openai>=1.0.0" \
@@ -138,10 +138,12 @@ jobs:
       - name: Install camel + wonderwall runtime deps
         # torch goes in first, alone, from the CPU-only index; the later installs
         # see it already satisfied and keep it (no CUDA wheels from PyPI).
+        # --no-config: skip pyproject's [tool.uv] overrides (pillow, tiktoken), so
+        # this resolves the same versions as the pip install it replaces.
         run: |
-          uv pip install --system torch --index-url https://download.pytorch.org/whl/cpu
-          uv pip install --system -r requirements.txt
-          uv pip install --system \
+          uv pip install --system --no-config torch --index-url https://download.pytorch.org/whl/cpu
+          uv pip install --system --no-config -r requirements.txt
+          uv pip install --system --no-config \
             "numpy>=1.26.0" \
             "pandas>=2.0.0" \
             "scikit-learn>=1.3.0" \
