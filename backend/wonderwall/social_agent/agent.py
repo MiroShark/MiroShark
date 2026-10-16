@@ -28,6 +28,7 @@ from camel.toolkits import FunctionTool
 from camel.types import OpenAIBackendRole
 
 from app.utils.i18n import get_active_locale, t as _t
+from app.utils.broadcast_trace import apply_wonderwall_broadcast
 from app.utils.llm_message_filter import (
     filter_openai_messages_for_api,
     repair_tool_call_arguments,
@@ -183,53 +184,29 @@ class SocialAgent(ChatAgent):
 
         filtered = filter_openai_messages_for_api(openai_messages)
 
-        # Inject OpenRouter metadata per-call so each generation is tagged.
-        # Structured for Langfuse: `user` becomes the Langfuse sessionId,
-        # `metadata` lands on the trace, `tags` powers the filter sidebar.
+        # OpenRouter -> Langfuse Broadcast pass-through.
+        # Spec: https://openrouter.ai/docs/guides/features/broadcast/langfuse
+        # Broadcast forwards only top-level `user`, `session_id` and `trace`;
+        # `metadata`, `tags` and `name` are dropped, so all per-call context
+        # goes inside `trace` (see app/utils/broadcast_trace.py).
         base_url = _os.environ.get('OPENAI_API_BASE_URL', '')
         if 'openrouter' in base_url:
             try:
-                sim_id = _os.environ.get('MIROSHARK_SIMULATION_ID', '') or ''
-                run_id = _os.environ.get('MIROSHARK_RUN_ID', '') or ''
-                round_env = _os.environ.get('MIROSHARK_ROUND_NUM', '')
-                round_num: Optional[int]
-                try:
-                    round_num = int(round_env) if round_env else None
-                except (TypeError, ValueError):
-                    round_num = None
-                agent_name = str(getattr(self.user_info, 'name', ''))[:64]
-                prompt_type = 'agent_action'
-                sim_phase = 'round'
                 config = self.model_backend.model_config_dict
-                extra = config.get('extra_body', {})
-                metadata = {
-                    'caller': 'SocialAgent.perform_action_by_llm',
-                    'prompt_type': prompt_type,
-                    'sim_phase': sim_phase,
-                    'run_id': run_id,
-                    'simulation_id': sim_id,
-                    'agent_name': agent_name,
-                    'agent_id': str(self.social_agent_id or ''),
-                    'round': round_num,
-                }
-                extra['metadata'] = {k: v for k, v in metadata.items()
-                                     if v not in ('', None)}
-                if sim_id:
-                    extra['user'] = sim_id  # OpenRouter → Langfuse sessionId
-                tags = ['miroshark', prompt_type, f'phase:{sim_phase}']
-                if run_id:
-                    tags.append(f'run:{run_id}')
-                extra['tags'] = tags
-                extra['name'] = prompt_type
+                extra = apply_wonderwall_broadcast(
+                    config.get('extra_body'),
+                    _os.environ,
+                    agent_name=str(getattr(self.user_info, 'name', '')),
+                    agent_id=self.social_agent_id,
+                )
                 config['extra_body'] = extra
                 if not getattr(SocialAgent, '_extra_body_logged', False):
                     logging.getLogger(__name__).warning(
                         "[langfuse-debug] extra_body sample (first call only): "
-                        "user=%r metadata_keys=%r tags=%r name=%r",
+                        "user=%r session_id=%r trace_keys=%r",
                         extra.get('user'),
-                        sorted((extra.get('metadata') or {}).keys()),
-                        extra.get('tags'),
-                        extra.get('name'),
+                        extra.get('session_id'),
+                        sorted((extra.get('trace') or {}).keys()),
                     )
                     SocialAgent._extra_body_logged = True
             except Exception:
