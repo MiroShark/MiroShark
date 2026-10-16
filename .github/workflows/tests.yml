@@ -9,7 +9,7 @@ on:
 jobs:
   unit:
     name: Backend unit tests
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: backend
@@ -59,7 +59,7 @@ jobs:
 
   frontend:
     name: Frontend build
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: frontend
@@ -81,7 +81,7 @@ jobs:
 
   i18n-scan:
     name: i18n FR scan (no copy-paste bugs)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v7
 
@@ -102,7 +102,7 @@ jobs:
 
   camel-smoke:
     name: Camel agent smoke test
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
       run:
         working-directory: backend
@@ -158,7 +158,7 @@ jobs:
 
   lint:
     name: Python lint (ruff)
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v7
 
