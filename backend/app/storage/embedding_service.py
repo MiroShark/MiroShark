@@ -171,12 +171,10 @@ class EmbeddingService:
         parser: Callable[[dict, int], List[List[float]]],
     ) -> List[List[float]]:
         """HTTP POST with retry logic."""
+        from ..utils.llm_client import openrouter_headers
         headers = {
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://www.miroshark.xyz/",
-            "X-OpenRouter-Title": "MiroShark - Simulate anything, for $1 & less than 10 min.",
-            "X-OpenRouter-Categories": "roleplay,personal-agent",
-            "User-Agent": "MiroShark/1.0 (EmbeddingService)",
+            **openrouter_headers("MiroShark/1.0 (EmbeddingService)"),
         }
         if self.api_key:
             headers["Authorization"] = f"Bearer {self.api_key}"
