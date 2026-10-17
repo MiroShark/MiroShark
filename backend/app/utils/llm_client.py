@@ -127,6 +127,21 @@ def create_ner_llm_client(timeout: float = 120.0) -> "LLMClient | ClaudeCodeClie
     )
 
 
+# Shared OpenRouter attribution headers (drives app-ranking + support routing
+# on openrouter.ai). Same values on every MiroShark caller; only the
+# per-caller User-Agent differs, so it's appended by openrouter_headers().
+OPENROUTER_BASE_HEADERS: Dict[str, str] = {
+    'HTTP-Referer': 'https://www.miroshark.xyz/',
+    'X-OpenRouter-Title': 'MiroShark - Simulate anything, for $1 & less than 10 min.',
+    'X-OpenRouter-Categories': 'roleplay,personal-agent',
+}
+
+
+def openrouter_headers(user_agent: str) -> Dict[str, str]:
+    """OpenRouter attribution headers with a caller-specific ``User-Agent``."""
+    return {**OPENROUTER_BASE_HEADERS, 'User-Agent': user_agent}
+
+
 class LLMClient:
     """LLM client using OpenAI-compatible APIs"""
 
@@ -148,12 +163,8 @@ class LLMClient:
             api_key=self.api_key,
             base_url=self.base_url,
             timeout=timeout,
-            default_headers={
-                'HTTP-Referer': 'https://www.miroshark.xyz/',
-                'X-OpenRouter-Title': 'MiroShark - Simulate anything, for $1 & less than 10 min.',
-                'X-OpenRouter-Categories': 'roleplay,personal-agent',
-                'User-Agent': f'MiroShark/1.0 (LLMClient; model={self.model})',
-            },
+            default_headers=openrouter_headers(
+                f'MiroShark/1.0 (LLMClient; model={self.model})'),
         )
 
         # Ollama context window size — prevents prompt truncation.

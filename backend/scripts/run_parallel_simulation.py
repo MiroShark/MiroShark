@@ -1144,16 +1144,13 @@ def create_model(config: Dict[str, Any], use_boost: bool = False):
 
     print(f"{config_label} model={llm_model}, base_url={llm_base_url[:40] if llm_base_url else 'default'}, max_tokens={model_config_dict.get('max_tokens', 'default')}...")
 
+    from app.utils.llm_client import openrouter_headers
     return ModelFactory.create(
         model_platform=ModelPlatformType.OPENAI,
         model_type=llm_model,
         model_config_dict=model_config_dict or None,
-        default_headers={
-            'HTTP-Referer': 'https://www.miroshark.xyz/',
-            'X-OpenRouter-Title': 'MiroShark - Simulate anything, for $1 & less than 10 min.',
-            'X-OpenRouter-Categories': 'roleplay,personal-agent',
-            'User-Agent': f'MiroShark/1.0 (Wonderwall-Simulation; model={llm_model})',
-        },
+        default_headers=openrouter_headers(
+            f'MiroShark/1.0 (Wonderwall-Simulation; model={llm_model})'),
     )
 
 
