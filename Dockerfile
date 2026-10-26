@@ -1,4 +1,4 @@
-FROM python:3.14
+FROM python:3.15
 
 # Install Node.js 22 (Vite 8 requires Node >=20.19/22.12) and necessary tools.
 # Debian's apt nodejs is too old (18.x), so use NodeSource.
