@@ -59,6 +59,21 @@ Embeddings use `openai/text-embedding-3-large` at `https://api.orcarouter.ai` (t
 
 > **Latency note** — the OpenRouter-only `reasoning: {enabled: false}` injection does not apply to OrcaRouter base URLs, so keep the high-volume slots on the fast picks above (Wonderwall → `openai/gpt-4o-mini`, Default → `openai/gpt-5.5`).
 
+### Cheaper Inference preset
+
+[Cheaper Inference](https://cheaperinference.com) is an OpenAI-compatible LLM gateway with bare model IDs — one key covers every slot plus embeddings, and you can mix vendors per slot. A ready-made block ships in [`.env.example`](../.env.example) and `docs/INSTALL.md` → [Option A.5](INSTALL.md#option-a5-cheaper-inference).
+
+| Slot | Model | Notes |
+|---|---|---|
+| Default | `gpt-5.4-mini` | Persona generation, sim config, memory compaction |
+| Smart | `claude-sonnet-5` | Report ReACT loop |
+| NER | `gemini-3.5-flash` | Deterministic JSON; reasoning is not force-disabled on Cheaper Inference, so `LLMClient` strips any `<think>` blocks client-side |
+| Wonderwall | `gpt-4o-mini` | 850+ agent-action calls/run; keep verbosity low |
+
+Embeddings use `text-embedding-3-small` at `https://api.cheaperinference.com` (1536 dims). Cheaper Inference has no `:online` web-search variants — leave `WEB_SEARCH_MODEL=` blank and use `MIROSHARK_SEARXNG_BASE_URL` for web enrichment, or the default model is used as a fallback.
+
+> **Latency note** — the OpenRouter-only `reasoning: {enabled: false}` injection does not apply to Cheaper Inference base URLs, so keep the high-volume Wonderwall slot on a non-reasoning model such as `gpt-4o-mini`.
+
 ## Local mode (Ollama)
 
 > **Context override required.** Ollama defaults to 4096 tokens, but MiroShark prompts need 10–30k. Create a custom Modelfile:

@@ -12,6 +12,7 @@ Pick one of the paths below.
 | [Cloud API — OpenAI](#option-a2-openai) | No | You already have an OpenAI key |
 | [Cloud API — Anthropic](#option-a3-anthropic) | No | You already have an Anthropic key |
 | [Cloud API — OrcaRouter](#option-a4-orcarouter) | No | One key covers every slot + embeddings |
+| [Cloud API — Cheaper Inference](#option-a5-cheaper-inference) | No | One key covers every slot + embeddings |
 | [Docker + Ollama](#option-b-docker--local-ollama) | Yes | Fully self-hosted, one command |
 | [Manual + Ollama](#option-c-manual--local-ollama) | Yes | Fully self-hosted, manual control |
 | [Claude Code CLI](#option-d-claude-code-no-api-key) | No | Uses your Claude Pro/Max subscription |
@@ -119,10 +120,10 @@ Open `http://localhost:3000`. First simulation in ~10 min, ~$1. See [Models](MOD
 
 ## Option A: Cloud API (no GPU)
 
-Only Neo4j runs locally. LLM and embeddings use a cloud provider. Four flavours below — pick the one that matches the key you already have.
+Only Neo4j runs locally. LLM and embeddings use a cloud provider. Five flavours below — pick the one that matches the key you already have.
 
 ```bash
-# Common prep for all four flavours
+# Common prep for all five flavours
 brew install neo4j       # macOS  (Linux: sudo apt install neo4j)
 cp .env.example .env
 ```
@@ -257,7 +258,44 @@ EMBEDDING_DIMENSIONS=768
 
 Note the embeddings base URL is `https://api.orcarouter.ai` — without `/v1` — because MiroShark appends `/v1/embeddings` itself (matching the OpenRouter layout above). Prompt caching also works here: OrcaRouter accepts Anthropic-style `cache_control` blocks on the `anthropic/claude-sonnet-5` smart model.
 
-### Option A.5: Custom endpoint for Wonderwall
+### Option A.5: Cheaper Inference
+
+One key covers every slot, including embeddings. [Cheaper Inference](https://cheaperinference.com) is an OpenAI-compatible LLM gateway with bare model IDs (`gpt-5.4-mini`, `claude-sonnet-5`, `gemini-3.5-flash`, `deepseek-v4-flash`) from several labs in one catalog — so you can mix vendors per slot. The full list is at `https://api.cheaperinference.com/public/models`.
+
+```bash
+LLM_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+LLM_BASE_URL=https://api.cheaperinference.com/v1
+LLM_MODEL_NAME=gpt-5.4-mini
+
+SMART_PROVIDER=openai
+SMART_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+SMART_BASE_URL=https://api.cheaperinference.com/v1
+SMART_MODEL_NAME=claude-sonnet-5
+
+NER_MODEL_NAME=gemini-3.5-flash
+NER_BASE_URL=https://api.cheaperinference.com/v1
+NER_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+
+WONDERWALL_MODEL_NAME=gpt-4o-mini
+
+# Cheaper Inference has no ":online" web-search variants — leave blank and use
+# SearXNG (MIROSHARK_SEARXNG_BASE_URL) for web enrichment, or the default
+# model is used as a fallback.
+WEB_SEARCH_MODEL=
+
+OPENAI_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+OPENAI_API_BASE_URL=https://api.cheaperinference.com/v1
+
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_BASE_URL=https://api.cheaperinference.com
+EMBEDDING_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+EMBEDDING_DIMENSIONS=1536
+```
+
+Note the embeddings base URL is `https://api.cheaperinference.com` — without `/v1` — because MiroShark appends `/v1/embeddings` itself (matching the OpenRouter layout above). `text-embedding-3-small` returns 1536-dim vectors, so `EMBEDDING_DIMENSIONS=1536`.
+
+### Option A.6: Custom endpoint for Wonderwall
 
 The Wonderwall slot (the per-agent simulation loop, ~850–1650 calls/run) accepts an independent endpoint override so you can route the volume hits to a self-hosted vLLM, Modal/Replicate deployment, fine-tuned model, or Ollama on a different host — while keeping graph build, reports, and NER on a hosted provider.
 

@@ -59,6 +59,21 @@ WONDERWALL_MODEL_NAME=your-model-id
 
 > **延迟提示** — OpenRouter 专属的 `reasoning: {enabled: false}` 注入对 OrcaRouter 基址不生效,所以高频槽位请保持上面的快速选择(Wonderwall → `openai/gpt-4o-mini`,Default → `openai/gpt-5.5`)。
 
+### Cheaper Inference 预设
+
+[Cheaper Inference](https://cheaperinference.com) 是一个 OpenAI 兼容的 LLM 网关,模型 ID 不带命名空间 — 一把密钥覆盖所有槽位与嵌入,还能按槽位混搭厂商。现成配置块已随 [`.env.example`](../.env.example) 与 `docs/INSTALL.md` → [方案 A.5](INSTALL.zh-CN.md#方案-a5cheaper-inference) 提供。
+
+| 槽位 | 模型 | 备注 |
+|---|---|---|
+| Default | `gpt-5.4-mini` | 画像生成、模拟配置、记忆压缩 |
+| Smart | `claude-sonnet-5` | 报告 ReACT 循环 |
+| NER | `gemini-3.5-flash` | 确定性 JSON;Cheaper Inference 上不强制关闭 reasoning,因此 `LLMClient` 会在客户端剥离任何 `<think>` 块 |
+| Wonderwall | `gpt-4o-mini` | 每次运行 850+ 次智能体动作调用;保持低冗长度 |
+
+嵌入用 `text-embedding-3-small`(基址 `https://api.cheaperinference.com`,1536 维)。Cheaper Inference 没有 `:online` 网络检索变体 — 把 `WEB_SEARCH_MODEL=` 留空并配置 `MIROSHARK_SEARXNG_BASE_URL` 做网络增强,或回退到默认模型。
+
+> **延迟提示** — OpenRouter 专属的 `reasoning: {enabled: false}` 注入对 Cheaper Inference 基址不生效,所以高频的 Wonderwall 槽位请使用非推理模型,比如 `gpt-4o-mini`。
+
 ## 本地模式(Ollama)
 
 > **必须覆盖上下文长度。** Ollama 默认是 4096 tokens,但 MiroShark 的提示词需要 10–30k。创建一个自定义 Modelfile:

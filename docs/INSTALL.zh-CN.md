@@ -12,6 +12,7 @@
 | [云端 API — OpenAI](#方案-a2openai) | 否 | 已有 OpenAI 密钥 |
 | [云端 API — Anthropic](#方案-a3anthropic) | 否 | 已有 Anthropic 密钥 |
 | [云端 API — OrcaRouter](#方案-a4orcarouter) | 否 | 一把密钥覆盖所有槽位与嵌入 |
+| [云端 API — Cheaper Inference](#方案-a5cheaper-inference) | 否 | 一把密钥覆盖所有槽位与嵌入 |
 | [Docker + Ollama](#方案-bdocker--本地-ollama) | 是 | 完全自部署,一行命令 |
 | [手动 + Ollama](#方案-c手动--本地-ollama) | 是 | 完全自部署,手动控制 |
 | [Claude Code CLI](#方案-dclaude-code无需-api-密钥) | 否 | 使用你的 Claude Pro/Max 订阅 |
@@ -119,10 +120,10 @@ cp .env.example .env
 
 ## 方案 A: 云端 API(无需 GPU)
 
-只有 Neo4j 跑在本地。LLM 与嵌入都走云端提供商。下面四个口味 — 选一个匹配你已有密钥的。
+只有 Neo4j 跑在本地。LLM 与嵌入都走云端提供商。下面五个口味 — 选一个匹配你已有密钥的。
 
 ```bash
-# 四个口味通用的准备步骤
+# 五个口味通用的准备步骤
 brew install neo4j       # macOS  (Linux: sudo apt install neo4j)
 cp .env.example .env
 ```
@@ -256,7 +257,43 @@ EMBEDDING_DIMENSIONS=768
 
 注意嵌入基址是 `https://api.orcarouter.ai` — 不带 `/v1` — 因为 MiroShark 会自己拼上 `/v1/embeddings`(与上面 OpenRouter 的布局一致)。提示词缓存在这里同样生效:OrcaRouter 接受 `anthropic/claude-sonnet-5` smart 模型上的 Anthropic 风格 `cache_control` 块。
 
-### 方案 A.5:为 Wonderwall 配置自定义端点
+### 方案 A.5:Cheaper Inference
+
+一把密钥覆盖所有槽位,包括嵌入。[Cheaper Inference](https://cheaperinference.com) 是一个 OpenAI 兼容的 LLM 网关,模型 ID 不带命名空间(`gpt-5.4-mini`、`claude-sonnet-5`、`gemini-3.5-flash`、`deepseek-v4-flash`),一个目录覆盖多家厂商的模型 — 所以你可以按槽位混搭厂商。完整列表见 `https://api.cheaperinference.com/public/models`。
+
+```bash
+LLM_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+LLM_BASE_URL=https://api.cheaperinference.com/v1
+LLM_MODEL_NAME=gpt-5.4-mini
+
+SMART_PROVIDER=openai
+SMART_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+SMART_BASE_URL=https://api.cheaperinference.com/v1
+SMART_MODEL_NAME=claude-sonnet-5
+
+NER_MODEL_NAME=gemini-3.5-flash
+NER_BASE_URL=https://api.cheaperinference.com/v1
+NER_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+
+WONDERWALL_MODEL_NAME=gpt-4o-mini
+
+# Cheaper Inference 没有 ":online" 网络检索变体 — 留空并使用 SearXNG
+# (MIROSHARK_SEARXNG_BASE_URL) 做网络增强,或回退到默认模型。
+WEB_SEARCH_MODEL=
+
+OPENAI_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+OPENAI_API_BASE_URL=https://api.cheaperinference.com/v1
+
+EMBEDDING_PROVIDER=openai
+EMBEDDING_MODEL=text-embedding-3-small
+EMBEDDING_BASE_URL=https://api.cheaperinference.com
+EMBEDDING_API_KEY=YOUR_CHEAPER_INFERENCE_KEY
+EMBEDDING_DIMENSIONS=1536
+```
+
+注意嵌入基址是 `https://api.cheaperinference.com` — 不带 `/v1` — 因为 MiroShark 会自己拼上 `/v1/embeddings`(与上面 OpenRouter 的布局一致)。`text-embedding-3-small` 输出 1536 维向量,所以 `EMBEDDING_DIMENSIONS=1536`。
+
+### 方案 A.6:为 Wonderwall 配置自定义端点
 
 Wonderwall 槽位(每个智能体的模拟循环,每次运行约 850–1650 次调用)允许独立的端点覆盖,这样你可以把高频调用路由到自部署的 vLLM、Modal/Replicate 部署、微调模型,或另一台主机上的 Ollama —— 同时把图谱构建、报告和 NER 留在托管提供商上。
 
