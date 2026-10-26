@@ -76,3 +76,8 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "chore"
+    # torch 2.13 has no Python 3.15 wheel (and no sdist), so `uv sync --frozen`
+    # in the images fails on 3.15 (#343). Drop this once torch ships 3.15 wheels.
+    ignore:
+      - dependency-name: "python"
+        versions: [">=3.15"]
