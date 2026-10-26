@@ -25,7 +25,7 @@ jobs:
       # the downloaded wheels across runs. prune-cache off keeps the pre-built
       # wheels (torch included) in the saved cache; uv's default prunes them.
       - name: Set up uv
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: true
           prune-cache: false
@@ -97,7 +97,7 @@ jobs:
       # the downloaded wheels across runs. prune-cache off keeps the pre-built
       # wheels (torch included) in the saved cache; uv's default prunes them.
       - name: Set up uv
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.2
         with:
           enable-cache: true
           prune-cache: false
