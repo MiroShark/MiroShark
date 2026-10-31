@@ -6,8 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   unit:
+    timeout-minutes: 15
     name: Backend unit tests
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
@@ -58,6 +63,7 @@ jobs:
         run: pytest -m "not integration"
 
   frontend:
+    timeout-minutes: 15
     name: Frontend build
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
@@ -80,6 +86,7 @@ jobs:
         run: npm run build
 
   camel-smoke:
+    timeout-minutes: 15
     name: Camel agent smoke test
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
@@ -138,6 +145,7 @@ jobs:
   # ruff and the i18n scan share one job: each job bills at least a full minute,
   # and both take seconds.
   lint:
+    timeout-minutes: 15
     name: Lint (ruff + i18n)
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     steps:

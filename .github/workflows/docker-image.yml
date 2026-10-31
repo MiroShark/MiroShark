@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   build-and-push:
+    timeout-minutes: 30
     # The Blacksmith Docker actions only run on Blacksmith, so forks skip this.
     if: github.repository_owner == 'MiroShark'
     runs-on: blacksmith-4vcpu-ubuntu-2404
