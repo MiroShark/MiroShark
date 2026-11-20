@@ -2,10 +2,25 @@
 
 from __future__ import annotations
 
+import pytest
 from flask import Flask
 
 from app.api.settings import settings_bp
 from app.config import Config
+
+
+@pytest.fixture(autouse=True)
+def _restore_config(monkeypatch):
+    """Snapshot every Config setting and restore it after each test.
+
+    POST /api/settings writes provider, model, base URL and key slots straight
+    onto the Config class, far more than any single test patches. Without this
+    fixture the preset keys leak into later tests: a set LLM_API_KEY lets
+    create_app() reach Neo4j's schema retry loop (15s per app with no Neo4j).
+    """
+    for name, value in vars(Config).items():
+        if name.isupper():
+            monkeypatch.setattr(Config, name, value)
 
 
 def _make_app() -> Flask:
