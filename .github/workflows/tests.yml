@@ -10,9 +10,13 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+# Each job's time limit is about 2x its p95 job time (queue wait included)
+# over the runs since the uv switch, rounded up to whole minutes, min 2. A
+# slowdown then turns the job red instead of quietly eating CI minutes.
+# Re-measure and raise a limit when a job legitimately grows.
 jobs:
   unit:
-    timeout-minutes: 15
+    timeout-minutes: 2
     name: Backend unit tests
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
@@ -63,7 +67,7 @@ jobs:
         run: pytest -m "not integration"
 
   frontend:
-    timeout-minutes: 15
+    timeout-minutes: 2
     name: Frontend build
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
@@ -86,7 +90,7 @@ jobs:
         run: npm run build
 
   camel-smoke:
-    timeout-minutes: 15
+    timeout-minutes: 3
     name: Camel agent smoke test
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     defaults:
@@ -145,7 +149,7 @@ jobs:
   # ruff and the i18n scan share one job: each job bills at least a full minute,
   # and both take seconds.
   lint:
-    timeout-minutes: 15
+    timeout-minutes: 2
     name: Lint (ruff + i18n)
     runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     steps:
