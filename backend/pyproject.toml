@@ -62,6 +62,7 @@ dependencies = [
 dev = [
     "pytest>=9.0.3",
     "pytest-asyncio>=0.23.0",
+    "pytest-randomly>=3.16.0",
     "pipreqs>=0.5.0",
 ]
 
@@ -84,6 +85,7 @@ build-backend = "hatchling.build"
 dev = [
     "pytest>=9.0.3",
     "pytest-asyncio>=0.23.0",
+    "pytest-randomly>=3.16.0",
 ]
 
 [tool.hatch.build.targets.wheel]

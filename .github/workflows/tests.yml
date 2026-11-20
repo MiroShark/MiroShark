@@ -43,10 +43,15 @@ jobs:
       # Install only the thin dependencies the unit suite needs.
       # The full ``requirements.txt`` pulls in torch/transformers etc., which
       # are not required for the offline unit tests and slow CI cold-start.
+      # pytest-randomly shuffles test order on every run, so a test that leaks
+      # state into another fails here instead of hiding behind file order.
+      # Reproduce a failure locally with the seed it prints:
+      #   pytest -m "not integration" --randomly-seed=<seed>
       - name: Install unit-test dependencies
         run: |
           uv pip install --system --no-config \
             "pytest>=8.0.0" \
+            "pytest-randomly>=3.16.0" \
             pyyaml \
             "openai>=1.0.0" \
             "flask>=3.0.0" \
