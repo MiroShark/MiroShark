@@ -1,9 +1,24 @@
 name: Build and push Docker image
 
+# Publishes ghcr.io/miroshark/miroshark:latest from main (so docker-compose.yml
+# has an image to pull) and a versioned image on every tag.
 on:
   push:
+    branches: [main]
     tags: ["*"]
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - backend/**
+      - frontend/**
+      - package.json
+      - package-lock.json
+      - .github/workflows/docker-image.yml
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
