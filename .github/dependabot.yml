@@ -1,8 +1,9 @@
 # Dependabot keeps MiroShark's dependencies current across every ecosystem in
-# the repo. Minor and patch updates are grouped into a single PR per ecosystem
-# each week to keep review noise low; major updates open as individual PRs so
-# breaking changes get scrutinised on their own. Commit messages use the repo's
-# existing `chore:` prefix for dependency bumps.
+# the repo. Every version update (major included) is grouped into a single PR
+# per ecosystem each week, so CI runs once per ecosystem instead of once per
+# bump (single-bump PRs were mostly closed and re-batched by hand). Security
+# updates still open on their own. Commit messages use the repo's existing
+# `chore:` prefix for dependency bumps.
 version: 2
 updates:
   # Python backend (requirements.txt + pyproject.toml). camel-ai is exact-pinned
@@ -17,10 +18,9 @@ updates:
     commit-message:
       prefix: "chore"
     groups:
-      backend-minor-patch:
-        update-types:
-          - "minor"
-          - "patch"
+      backend-weekly:
+        patterns:
+          - "*"
 
   # Root npm package (dev tooling — concurrently).
   - package-ecosystem: "npm"
@@ -32,10 +32,9 @@ updates:
     commit-message:
       prefix: "chore"
     groups:
-      root-npm-minor-patch:
-        update-types:
-          - "minor"
-          - "patch"
+      root-npm-weekly:
+        patterns:
+          - "*"
 
   # Frontend npm package (Vue 3 + Vite app).
   - package-ecosystem: "npm"
@@ -47,10 +46,9 @@ updates:
     commit-message:
       prefix: "chore"
     groups:
-      frontend-minor-patch:
-        update-types:
-          - "minor"
-          - "patch"
+      frontend-weekly:
+        patterns:
+          - "*"
 
   # GitHub Actions used by tests.yml and docker-image.yml.
   - package-ecosystem: "github-actions"
@@ -62,10 +60,9 @@ updates:
     commit-message:
       prefix: "chore"
     groups:
-      actions-minor-patch:
-        update-types:
-          - "minor"
-          - "patch"
+      actions-weekly:
+        patterns:
+          - "*"
 
   # Docker base image (python:3.11) used by the published container.
   - package-ecosystem: "docker"
@@ -76,6 +73,10 @@ updates:
     open-pull-requests-limit: 2
     commit-message:
       prefix: "chore"
+    groups:
+      docker-weekly:
+        patterns:
+          - "*"
     # torch 2.13 has no Python 3.15 wheel (and no sdist), so `uv sync --frozen`
     # in the images fails on 3.15 (#343). Drop this once torch ships 3.15 wheels.
     ignore:

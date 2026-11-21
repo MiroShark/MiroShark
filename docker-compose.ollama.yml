@@ -30,9 +30,10 @@ services:
     restart: unless-stopped
 
   miroshark:
-    image: ghcr.io/aaronjmars/miroshark:latest
-    # Mirror image (replace the address above if pulling is slow)
-    # image: ghcr.nju.edu.cn/aaronjmars/miroshark:latest
+    # Pulls the image docker-image.yml publishes from main; with no image
+    # (or `docker compose up --build`) it builds from the local Dockerfile.
+    image: ghcr.io/miroshark/miroshark:latest
+    build: .
     container_name: miroshark
     environment:
       - LLM_API_KEY=ollama

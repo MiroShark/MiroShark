@@ -14,11 +14,13 @@ concurrency:
 # over the runs since the uv switch, rounded up to whole minutes, min 2. A
 # slowdown then turns the job red instead of quietly eating CI minutes.
 # Re-measure and raise a limit when a job legitimately grows.
+# GitHub runners, not Blacksmith: this repo is public (free minutes) and every
+# job is under 30 s, so Blacksmith's queue wait was the biggest part of each.
 jobs:
   unit:
     timeout-minutes: 2
     name: Backend unit tests
-    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
@@ -74,7 +76,7 @@ jobs:
   frontend:
     timeout-minutes: 2
     name: Frontend build
-    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: frontend
@@ -97,7 +99,7 @@ jobs:
   camel-smoke:
     timeout-minutes: 3
     name: Camel agent smoke test
-    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
@@ -156,7 +158,7 @@ jobs:
   lint:
     timeout-minutes: 2
     name: Lint (ruff + i18n)
-    runs-on: ${{ github.repository_owner == 'MiroShark' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
