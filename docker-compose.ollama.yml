@@ -30,9 +30,7 @@ services:
     restart: unless-stopped
 
   miroshark:
-    # Pulls the image docker-image.yml publishes from main; with no image
-    # (or `docker compose up --build`) it builds from the local Dockerfile.
-    image: ghcr.io/aeonfun/miroshark:latest
+    # Builds from the local Dockerfile (no prebuilt image is published).
     build: .
     container_name: miroshark
     environment:
