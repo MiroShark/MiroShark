@@ -6,8 +6,8 @@
 
 <p align="center">
   <a href="https://www.miroshark.xyz/docs"><img src="https://img.shields.io/badge/Docs-miroshark.xyz-blue?style=flat-square&logo=gitbook&logoColor=white&labelColor=1a1a2e" alt="ドキュメント"></a>
-  <a href="https://github.com/aaronjmars/MiroShark/stargazers"><img src="https://img.shields.io/github/stars/aaronjmars/MiroShark?style=flat-square&logo=github" alt="GitHub stars"></a>
-  <a href="https://github.com/aaronjmars/MiroShark/network/members"><img src="https://img.shields.io/github/forks/aaronjmars/MiroShark?style=flat-square&logo=github" alt="GitHub forks"></a>
+  <a href="https://github.com/aeonfun/MiroShark/stargazers"><img src="https://img.shields.io/github/stars/aeonfun/MiroShark?style=flat-square&logo=github" alt="GitHub stars"></a>
+  <a href="https://github.com/aeonfun/MiroShark/network/members"><img src="https://img.shields.io/github/forks/aeonfun/MiroShark?style=flat-square&logo=github" alt="GitHub forks"></a>
   <a href="https://x.com/miroshark_"><img src="https://img.shields.io/badge/%40miroshark__-black?style=flat-square&logo=x&labelColor=000000" alt="@miroshark_ on X"></a>
   <a href="https://bankr.bot/discover/0xd7bc6a05a56655fb2052f742b012d1dfd66e1ba3"><img src="https://img.shields.io/badge/%24miroshark%20on-Bankr-orange?style=flat-square&labelColor=1a1a2e" alt="$miroshark on Bankr"></a>
 </p>
@@ -56,7 +56,7 @@ Neo4j をインストールしてください — ランチャーが起動を引
 その後:
 
 ```bash
-git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
+git clone https://github.com/aeonfun/MiroShark.git && cd MiroShark
 cp .env.example .env
 # OpenRouter のキーを LLM_API_KEY / SMART_API_KEY /
 # NER_API_KEY / OPENAI_API_KEY / EMBEDDING_API_KEY の

@@ -30,7 +30,7 @@ services:
   miroshark:
     # Pulls the image docker-image.yml publishes from main; with no image
     # (or `docker compose up --build`) it builds from the local Dockerfile.
-    image: ghcr.io/miroshark/miroshark:latest
+    image: ghcr.io/aeonfun/miroshark:latest
     build: .
     container_name: miroshark
     environment:

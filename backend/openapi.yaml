@@ -38,10 +38,10 @@ info:
 
   contact:
     name: MiroShark on GitHub
-    url: https://github.com/MiroShark/MiroShark
+    url: https://github.com/aeonfun/MiroShark
   license:
     name: AGPL-3.0
-    url: https://github.com/MiroShark/MiroShark/blob/main/LICENSE
+    url: https://github.com/aeonfun/MiroShark/blob/main/LICENSE
 
 servers:
   - url: http://localhost:5001
@@ -8071,7 +8071,7 @@ components:
           type: [integer, "null"]
           minimum: 1
           description: |
-            PR number on `MiroShark/MiroShark` that introduced the
+            PR number on `aeonfun/MiroShark` that introduced the
             surface, or `null` for surfaces that predate per-PR
             instrumentation. Nullable so a consumer can sort or filter
             by "shipped after PR N" without special-casing absence.
