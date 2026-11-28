@@ -1,6 +1,6 @@
 name: Build and push Docker image
 
-# Publishes ghcr.io/miroshark/miroshark:latest from main (so docker-compose.yml
+# Publishes ghcr.io/aeonfun/miroshark:latest from main (so docker-compose.yml
 # has an image to pull) and a versioned image on every tag.
 on:
   push:
@@ -28,7 +28,7 @@ jobs:
   build-and-push:
     timeout-minutes: 30
     # The Blacksmith Docker actions only run on Blacksmith, so forks skip this.
-    if: github.repository_owner == 'MiroShark'
+    if: github.repository_owner == 'aeonfun'
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
       - name: Checkout

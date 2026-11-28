@@ -11,7 +11,7 @@ in scope and how to report a problem privately.
 **Please don't open a public issue for a security problem.** Use GitHub's
 **Private Vulnerability Reporting (PVR)** instead:
 
-➡️ **[Report a vulnerability](https://github.com/aaronjmars/MiroShark/security/advisories/new)**
+➡️ **[Report a vulnerability](https://github.com/aeonfun/MiroShark/security/advisories/new)**
 
 (Repo → **Security** tab → **Report a vulnerability**.) This opens a private
 advisory that only the maintainers can see — never a public issue, so a fix can
@@ -46,7 +46,7 @@ rather stay anonymous.
 ## Supported versions
 
 MiroShark is deployed from source. Security fixes land on the `main` branch of
-[`aaronjmars/MiroShark`](https://github.com/aaronjmars/MiroShark); pull `main` to
+[`aeonfun/MiroShark`](https://github.com/aeonfun/MiroShark); pull `main` to
 receive them.
 
 | Version | Supported |

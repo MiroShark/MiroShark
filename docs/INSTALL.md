@@ -61,7 +61,7 @@ Deploy to the cloud in under 3 minutes — no local setup required.
 
 ### Railway (recommended — persistent storage, free trial)
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.app/new/template?template=https://github.com/MiroShark/MiroShark)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.app/new/template?template=https://github.com/aeonfun/MiroShark)
 
 After clicking, set these environment variables in the Railway dashboard:
 
@@ -75,7 +75,7 @@ After clicking, set these environment variables in the Railway dashboard:
 
 ### Render (free tier — 750 hrs/month, spins down after 15 min idle)
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/MiroShark/MiroShark)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/aeonfun/MiroShark)
 
 Render reads `render.yaml` automatically. Set the same env vars above when prompted.
 
@@ -90,7 +90,7 @@ Render reads `render.yaml` automatically. Set the same env vars above when promp
 **Prereqs** — Python 3.11+, Node 18+, Neo4j (`brew install neo4j` / `sudo apt install neo4j`), and an OpenRouter key.
 
 ```bash
-git clone https://github.com/MiroShark/MiroShark.git && cd MiroShark
+git clone https://github.com/aeonfun/MiroShark.git && cd MiroShark
 cp .env.example .env
 ```
 
@@ -287,7 +287,7 @@ Open `http://localhost:3000`. Backend API at `http://localhost:5001`.
 ## Option B: Docker — local Ollama
 
 ```bash
-git clone https://github.com/MiroShark/MiroShark.git
+git clone https://github.com/aeonfun/MiroShark.git
 cd MiroShark
 docker compose up -d
 

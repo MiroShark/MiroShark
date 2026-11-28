@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Star us&nbsp;❤️&nbsp;→</strong>&nbsp;&nbsp;
-  <a href="https://github.com/MiroShark/MiroShark/stargazers"><img src="../docs/images/btn-star.svg" alt="Star MiroShark on GitHub" height="34" align="absmiddle"></a>&nbsp;&nbsp;
+  <a href="https://github.com/aeonfun/MiroShark/stargazers"><img src="../docs/images/btn-star.svg" alt="Star MiroShark on GitHub" height="34" align="absmiddle"></a>&nbsp;&nbsp;
   <a href="https://www.miroshark.xyz"><img src="../docs/images/btn-site.svg" alt="miroshark.xyz" height="34" align="absmiddle"></a>&nbsp;&nbsp;
   <a href="https://www.miroshark.xyz/docs"><img src="../docs/images/btn-docs.svg" alt="MiroShark docs" height="34" align="absmiddle"></a>&nbsp;&nbsp;
   <a href="https://x.com/miroshark_"><img src="../docs/images/btn-x.svg" alt="@miroshark_ on X" height="34" align="absmiddle"></a>&nbsp;&nbsp;
@@ -22,8 +22,8 @@
 
 <div align="center">
 
-[![stars](https://img.shields.io/github/stars/MiroShark/MiroShark?style=flat-square&label=stars&color=8B5CF6)](https://github.com/MiroShark/MiroShark/stargazers)
-[![forks](https://img.shields.io/github/forks/MiroShark/MiroShark?style=flat-square&label=forks&color=F97316)](https://github.com/MiroShark/MiroShark/network/members)
+[![stars](https://img.shields.io/github/stars/aeonfun/MiroShark?style=flat-square&label=stars&color=8B5CF6)](https://github.com/aeonfun/MiroShark/stargazers)
+[![forks](https://img.shields.io/github/forks/aeonfun/MiroShark?style=flat-square&label=forks&color=F97316)](https://github.com/aeonfun/MiroShark/network/members)
 [![license](https://img.shields.io/badge/license-AGPL--3.0-8B5CF6?style=flat-square)](../LICENSE)
 [![python](https://img.shields.io/badge/python-3.11+-3572A5?style=flat-square)](https://www.python.org/)
 [![node](https://img.shields.io/badge/node-18+-16A534?style=flat-square)](https://nodejs.org/)
@@ -55,7 +55,7 @@
 <h3 align="center">Get started</h3>
 
 ```bash
-git clone https://github.com/aaronjmars/MiroShark.git && cd MiroShark
+git clone https://github.com/aeonfun/MiroShark.git && cd MiroShark
 cp .env.example .env    # paste one OpenRouter key
 ./miroshark             # deps + Neo4j + servers → http://localhost:3000
 ```

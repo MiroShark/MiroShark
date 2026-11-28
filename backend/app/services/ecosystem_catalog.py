@@ -187,7 +187,7 @@ _CATALOG: List[Dict[str, Any]] = [
         "description": "Open-source builder-code affiliation kit behind MiroShark's x402 API: on-chain affiliate splits for any x402 seller.",
         "category": "tool",
         "x_handle": None,
-        "repo": "https://github.com/MiroShark/x402aff",
+        "repo": "https://github.com/aeonfun/x402aff",
     },
     {
         "name": "Xerg",
